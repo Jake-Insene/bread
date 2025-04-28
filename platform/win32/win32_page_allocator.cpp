@@ -1,0 +1,62 @@
+#include "mem/page_allocator.h"
+
+#include "mem/utils.h"
+
+#include "platform/platform_header.h"
+
+
+namespace mem
+{
+
+    Slice<u8> PageAllocator::alloc(usize size, usize alignment)
+    {
+        Slice<u8> ptr = {};
+
+        const usize aligned_size = mem::align_up(size, mem::get_page_size());
+
+        ptr.items = (u8*)VirtualAllocEx(GetCurrentProcess(),
+            nullptr, aligned_size,
+            MEM_RESERVE | MEM_COMMIT,
+            PAGE_READWRITE
+        );
+        ptr.len = aligned_size;
+
+        return ptr;
+    }
+
+    bool PageAllocator::realloc(Slice<u8> ptr, usize new_size, usize alignment)
+    {
+        const usize aligned_new_size = mem::align_up(new_size, mem::get_page_size());
+
+        const usize aligned_ptr_size = mem::align_up(ptr.len, mem::get_page_size());
+        if (aligned_new_size == aligned_ptr_size)
+            return true;
+
+        if (aligned_new_size < aligned_ptr_size) {
+            u8* ptr_out = ((u8*)ptr.items) + aligned_new_size;
+            (void)VirtualFreeEx(GetCurrentProcess(), ptr_out, aligned_ptr_size - aligned_new_size, MEM_RELEASE);
+            return true;
+        }
+
+        return false;
+    }
+
+    void PageAllocator::free(Slice<u8> ptr)
+    {
+        (void)VirtualFreeEx(GetCurrentProcess(), ptr.items, ptr.len, MEM_RELEASE);
+    }
+
+    Allocator PageAllocator::allocator()
+    {
+        return Allocator
+        {
+            .vtable =
+            {
+                .alloc = (decltype(Allocator::VTable::alloc))&PageAllocator::alloc,
+                .realloc = (decltype(Allocator::VTable::realloc))&PageAllocator::realloc,
+                .free = (decltype(Allocator::VTable::free))&PageAllocator::free,
+            },
+            .self = (Allocator*)this,
+        };
+    }
+}

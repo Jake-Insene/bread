@@ -1,0 +1,69 @@
+#pragma once
+#include "core/slice.h"
+#include "mem/utils.h"
+
+
+namespace mem
+{
+    
+    struct Allocator
+    {
+        struct VTable
+        {
+            Slice<u8>(Allocator::*alloc)(usize, usize);
+            bool(Allocator::*realloc)(Slice<u8>, usize, usize);
+            void(Allocator::*free)(Slice<u8>);
+        };
+        
+        Slice<u8> alloc(usize size, usize alignment) const
+        {
+            FailOn(self == nullptr, "self is null")
+            return (self->*vtable.alloc)(size, alignment);
+        }
+        
+        bool realloc(Slice<u8> ptr, usize new_size, usize alignment) const
+        {
+            FailOn(self == nullptr, "self is null")
+            return (self->*vtable.realloc)(ptr, new_size, alignment);
+        }
+        
+        void free(Slice<u8> ptr) const
+        {
+            FailOn(self == nullptr, "self is null")
+            (self->*vtable.free)(ptr);
+        }
+
+
+        template<typename T>
+        Slice<T> array(usize count) const
+        {
+            Slice<T> array = mem::from_bytes<T>(alloc(sizeof(T) * count, alignof(T)));
+            construct_array(array);
+            return array;
+        }
+
+        template<typename T>
+        constexpr void construct_array(Slice<T> array) const
+        {
+            ::new(array.ptr()) T[array.len]{};
+        }
+
+        template<typename T, typename... TArgs>
+        constexpr T* object(TArgs&&... args)
+        {
+            T* instance = reinterpret_cast<T*>(alloc(sizeof(T), alignof(T)).items);
+            construct(instance, args...);
+            return instance;
+        }
+        
+        template<typename T, typename... TArgs>
+        constexpr void construct(T* instance, TArgs&&... args)
+        {
+            ::new(instance) T(args...);
+        }
+
+        VTable vtable;
+        Allocator* self;
+    };
+    
+}

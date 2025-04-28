@@ -1,0 +1,61 @@
+#pragma once
+#include "2d/object_2d.h"
+
+#include "debug/debug.h"
+#include "physics/physics_2d.h"
+
+
+struct Body2D : Object2D
+{
+    OBJECT(Body2D, Object2D);
+
+    enum BodyType
+    {
+        UNKNOWN = 0,
+
+        STATIC = Physics2D::STATIC,
+        DYNAMIC = Physics2D::DYNAMIC,
+        KINEMATIC = Physics2D::KINEMATIC,
+    };
+    
+    // As everything in a struct is public we need to hide data
+    // that should not be modified/access directly, this also
+    // resolve some namespace problems.
+    struct InternalData
+    {
+        Physics2D::BodyID body_id = Physics2D::BodyID::InvalidID;
+        BodyType type = DYNAMIC;
+        
+        Vector2 velocity{0, 0};
+        f32 mass = 1;
+        f32 friction = 1;
+
+        bool grounded = false;
+    } data;
+    
+    void init(const CreateInfo&);
+    void deinit();
+    
+    void start();
+    void exit();
+    
+    void set_type(Body2D::BodyType new_type);
+    Body2D::BodyType get_type() const { return data.type;}
+    
+    void as_rect(const Vector2& size);
+    
+    void set_velocity(const Vector2& new_velocity);
+    Vector2 get_velocity() const { return data.velocity; }
+
+    void set_mass(f32 new_mass);
+    [[nodiscard]] f32 get_mass() const { return data.mass; }
+
+    void set_friction(f32 new_friction);
+    [[nodiscard]] f32 get_friction() const { return data.friction; }
+
+    void apply_force(const Vector2& point, const Vector2& force) const;
+    void apply_impulse(const Vector2& point, const Vector2& force) const;
+    void set_fixed_rotation(bool enable) const;
+
+    [[nodiscard]] bool is_on_ground() const { return data.grounded; }
+};
