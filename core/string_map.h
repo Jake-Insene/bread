@@ -245,7 +245,7 @@ struct [[nodiscard]] StringMap
         if(entries.len == 0)
         {
             new_size = new_size > 0 ? new_size : DefaultCapacity;
-            entries = mem::from_bytes<MapEntry*>(allocator.alloc(sizeof(MapEntry*) * new_size, alignof(MapEntry*)));
+            entries = allocator.array<MapEntry*>(new_size);
             return;
         }
 
@@ -256,7 +256,7 @@ struct [[nodiscard]] StringMap
         
         if(!allocator.realloc(mem::to_bytes(entries), sizeof(MapEntry*) * new_size, alignof(MapEntry*)))
         {
-            auto new_items = mem::from_bytes<MapEntry*>(allocator.alloc(sizeof(MapEntry*) * new_size, alignof(MapEntry*)));
+            auto new_items = allocator.array<MapEntry*>(new_size);
             if(entries.ptr())
             {
                 std::memcpy(new_items.ptr(), entries.ptr(), sizeof(MapEntry) * entries.len);
@@ -283,7 +283,7 @@ struct [[nodiscard]] StringMap
         u64 hash = hashfunc(str);
         usize pos = InvalidPos;
         (void)_find_entry(hash, pos);
-        DebugAssert(pos != InvalidPos, "The item don't exists!");
+        DebugAssert(pos != InvalidPos, "the item don't exists!");
         return entries[pos]->kv.value;
     }
     
@@ -292,7 +292,7 @@ struct [[nodiscard]] StringMap
         u64 hash = hashfunc(str);
         usize pos = InvalidPos;
         (void)_find_entry(hash, pos);
-        DebugAssert(pos != InvalidPos, "The item don't exists!");
+        DebugAssert(pos != InvalidPos, "the item don't exists!");
         return entries[pos]->kv.value;
     }
     

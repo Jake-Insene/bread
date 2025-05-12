@@ -127,4 +127,9 @@ namespace math
         return a < b ? a : b;
     }
     
+    template<typename T>
+    [[nodiscard]] constexpr T sign(T v)
+    {
+        return v >= 0 ? 1 : -1;
+    }
 }

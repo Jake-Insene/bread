@@ -1,6 +1,7 @@
 #include "mem/page_allocator.h"
 
 #include "mem/utils.h"
+#include "os/os.h"
 
 #include "platform/platform_header.h"
 
@@ -12,7 +13,7 @@ namespace mem
     {
         Slice<u8> ptr = {};
 
-        const usize aligned_size = mem::align_up(size, mem::get_page_size());
+        const usize aligned_size = mem::align_up(size, OS::get_page_size());
 
         ptr.items = (u8*)VirtualAllocEx(GetCurrentProcess(),
             nullptr, aligned_size,
@@ -26,9 +27,9 @@ namespace mem
 
     bool PageAllocator::realloc(Slice<u8> ptr, usize new_size, usize alignment)
     {
-        const usize aligned_new_size = mem::align_up(new_size, mem::get_page_size());
+        const usize aligned_new_size = mem::align_up(new_size, OS::get_page_size());
 
-        const usize aligned_ptr_size = mem::align_up(ptr.len, mem::get_page_size());
+        const usize aligned_ptr_size = mem::align_up(ptr.len, OS::get_page_size());
         if (aligned_new_size == aligned_ptr_size)
             return true;
 

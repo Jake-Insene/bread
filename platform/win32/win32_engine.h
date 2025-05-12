@@ -4,5 +4,14 @@
 
 struct Win32Engine : Engine
 {
-	static inline HWND window = nullptr;
+	struct InternalData
+	{
+	};
+
+	static InternalData data;
+
+	static Engine::VTable get_vtable();
+
+	static Vector2I get_window_pos();
+	static void set_window_size(const Vector2I& new_size);
 };

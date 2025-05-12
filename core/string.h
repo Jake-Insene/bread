@@ -27,13 +27,13 @@ struct [[nodiscard]] StringView : Slice<const char>
 
     constexpr StringView add(const usize offset) const
     {
-        DebugAssert(ptr() && ((len - offset) > 0 || (len - offset) <= len), "Invalid offset");
+        DebugAssert(ptr() && ((len - offset) > 0 || (len - offset) <= len), "invalid offset");
         return StringView(items + offset, len - offset);
     }
 
     constexpr StringView sub(const usize offset) const
     {
-        DebugAssert(ptr() && ((len + offset) >= len), "Invalid offset");
+        DebugAssert(ptr() && ((len + offset) >= len), "invalid offset");
         return StringView(items - offset, len + offset);
     }
     

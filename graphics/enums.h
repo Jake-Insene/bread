@@ -19,3 +19,4 @@ enum TextureFilter
     TEXTURE_FILTER_NEAREST,
     TEXTURE_FILTER_LINEAR,
 };
+

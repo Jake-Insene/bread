@@ -3,7 +3,7 @@
 #include "graphics/gles/gles_driver.h"
 
 
-void Graphics::initialize(mem::Allocator& allocator, DriverType driver)
+void Graphics::initialize(const mem::Allocator& allocator, DriverType driver)
 {
 	switch (driver)
 	{

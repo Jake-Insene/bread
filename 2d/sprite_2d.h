@@ -19,10 +19,15 @@ struct Sprite2D : Object2D
 
     Color color{255, 255, 255, 255};
     Rect2D src_rect{};
+    bool centered = true;
+    bool flip_v = false;
+    bool flip_h = false;
     
     void init(const CreateInfo& info);
     void render();
 
     void set_texture(Texture2D* new_texture);
     [[nodiscard]] Texture2D* get_texture() const { return data.texture; }
+
+    u32 get_render_flags();
 };

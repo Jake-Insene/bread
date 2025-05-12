@@ -15,7 +15,6 @@ struct SceneManager
     {
         mem::Allocator allocator;
         RenderTarget display_target;
-        Vector2I window_size;
     
         Color clear_color;
         Object* current_scene;
@@ -31,9 +30,6 @@ struct SceneManager
         Array<Control*> gui_roots;
         Array<Control*> touched_focus;
     };
-    
-    static constexpr i32 DefaultWidth = 600;
-    static constexpr i32 DefaultHeight = 800;
     
     static inline InternalData data;
     
@@ -51,6 +47,8 @@ struct SceneManager
     static void handle_input(const InputEvent& event);
 
     static void set_camera_2d(Camera2D* camera);
-    
+
     static void add_root_control(Control* c);
+
+    static RenderTarget get_display_target() { return data.display_target; }
 };

@@ -9,4 +9,5 @@ struct [[nodiscard]] RenderTarget
     static RenderTarget create(Vector2I size);
     
     Vector2I get_size() const;
+    void set_size(const Vector2I& new_size) const;
 };

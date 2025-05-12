@@ -9,39 +9,40 @@ struct AABB
 
 struct [[nodiscard]] Shape2D
 {
-    Vector2 position;
-    Vector2 size;
+    // 0 -> Top left
+    // 1 -> Top right
+    // 2 -> Bottom right
+    // 3 -> Bottom left
+    Vector2 vertices[4]{};
 
-    void set_position(const Vector2& new_pos)
+    void translate(Vector2 translation)
     {
-        position = new_pos;
-    }
-
-    Vector2 get_position() const
-    {
-        return position;
-    }
-
-    void translate(const Vector2& translation)
-    {
-        position += translation;
+        vertices[0] += translation;
+        vertices[1] += translation;
+        vertices[2] += translation;
+        vertices[3] += translation;
     }
 
     void set_size(const Vector2& new_size)
     {
-        size = new_size;
+        vertices[0] = Vector2(-new_size.x, new_size.y);
+        vertices[1] = Vector2(new_size.x, new_size.y);
+        vertices[2] = Vector2(new_size.x, -new_size.y);
+        vertices[3] = Vector2(-new_size.x, -new_size.y);
     }
 
     Vector2 get_size() const
     {
-        return size;
+        return vertices[0].abs() * 2;
     }
 
-    [[nodiscard]] bool intersect(const Shape2D& other)
+    AABB get_aabb() const { return AABB{ vertices[0], vertices[2] }; }
+
+    [[nodiscard]] bool intersect(const Shape2D& other) const
     {
-        return position.x < other.position.x + other.size.x &&
-            position.x + size.x > other.position.x &&
-            position.y > other.position.y - other.size.y &&
-            position.y - size.y < other.position.y;
+        return vertices[0].x < other.vertices[2].x &&
+            vertices[2].x > other.vertices[0].x &&
+            vertices[0].y > other.vertices[2].y &&
+            vertices[2].y < other.vertices[0].y;
     }
 };

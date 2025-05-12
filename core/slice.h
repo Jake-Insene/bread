@@ -27,13 +27,13 @@ struct [[nodiscard]] Slice
     
     [[nodiscard]] constexpr T& operator[](const usize index)
     {
-        DebugAssert(index < len, "Index out of range");
+        DebugAssert(index < len, "index out of range");
         return items[index];
     }
     
     [[nodiscard]] constexpr const T& operator[](const usize index) const
     {
-        DebugAssert(index < len, "Index out of range");
+        DebugAssert(index < len, "index out of range");
         return items[index];
     }
 
@@ -50,13 +50,13 @@ struct [[nodiscard]] Slice
 
     constexpr Slice<T> add(const usize offset) const
     {
-        DebugAssert(ptr() && ((len - offset) > 0 || (len - offset) <= len), "Invalid offset");
+        DebugAssert(ptr() && ((len - offset) > 0 || (len - offset) <= len), "invalid offset");
         return Slice(items + offset, len - offset);
     }
 
     constexpr Slice<T> sub(const usize offset) const
     {
-        DebugAssert(ptr() && ((len + offset) >= len), "Invalid offset");
+        DebugAssert(ptr() && ((len + offset) >= len), "invalid offset");
         return Slice(items - offset, len + offset);
     }
 };

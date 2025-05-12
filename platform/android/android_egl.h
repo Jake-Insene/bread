@@ -2,7 +2,7 @@
 #include "graphics/egl/egl.h"
 #include "platform/platform_header.h"
 
-struct AndroidEGL : EGL
+struct AndroidEGL
 {
     struct InternalData
     {
@@ -14,7 +14,9 @@ struct AndroidEGL : EGL
     
     static inline InternalData data;
     
-    static void initialize(mem::Allocator& allocator);
+    static EGL::VTable get_vtable();
+
+    static void initialize(const mem::Allocator& allocator);
     static void shutdown();
     
     static void recreate_window_surface();

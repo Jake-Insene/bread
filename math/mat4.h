@@ -126,13 +126,13 @@ struct [[nodiscard]] Mat4
 
     constexpr Vector4& operator[](usize index)
     {
-        DebugAssert(index < 4, "Index can only be 0, 1, 2 or 3");
+        DebugAssert(index < 4, "index can only be 0, 1, 2 or 3");
         return matrix[index];
     }
 
     constexpr const Vector4& operator[](usize index) const
     {
-        DebugAssert(index < 4, "Index can only be 0, 1, 2 or 3");
+        DebugAssert(index < 4, "index can only be 0, 1, 2 or 3");
         return matrix[index];
     }
     

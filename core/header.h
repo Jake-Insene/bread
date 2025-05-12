@@ -2,6 +2,7 @@
 
 #include "core/array.h"
 #include "core/bits.h"
+#include "core/event.h"
 #include "core/hash_map.h"
 #include "core/id.h"
 #include "core/macros.h"

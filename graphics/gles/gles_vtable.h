@@ -4,7 +4,7 @@
 
 
 #if defined(ENGINE_ANDROID)
-inline EGLAPI __eglMustCastToProperFunctionPointerType (*platform_get_proc)(const char* name) = eglGetProcAddress;
+inline EGLAPI __eglMustCastToProperFunctionPointerType (*platform_get_proc)(const char* name) = nullptr;
 #elif defined(ENGINE_WIN32)
 inline void* (*platform_get_proc)(const char* name) = nullptr;
 #endif 
@@ -60,6 +60,7 @@ struct GLESVTable {
     PFNGLBINDTEXTUREPROC glBindTexture;
     PFNGLTEXPARAMETERIPROC glTexParameteri;
     PFNGLTEXIMAGE2DPROC glTexImage2D;
+    PFNGLTEXSTORAGE2DPROC glTexStorage2D;
 
     PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers;
     PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers;
@@ -74,6 +75,8 @@ struct GLESVTable {
 
     PFNGLDRAWARRAYSPROC glDrawArrays;
     PFNGLDRAWELEMENTSINSTANCEDPROC glDrawElementsInstanced;
+
+    PFNGLLINEWIDTHPROC glLineWidth;
 };
 
 inline GLESVTable gl{};

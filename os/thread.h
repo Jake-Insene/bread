@@ -1,28 +1,24 @@
 #pragma once
-#include "core/types.h"
-
+#include "os/os.h"
 
 struct [[nodiscard]] Thread
 {
-	usize handle;
+	OS::ThreadID id;
 
-	using ThreadFn = void(*)(void*);
-
-	static Thread create(ThreadFn fn, void* arg);
+	static Thread create(OS::ThreadFn fn, void* arg);
 
 	void destroy() const;
 
-	bool join() const;
+	[[nnodiscard]] bool join() const;
 };
 
 
 struct [[nodiscard]] ScopedThread
 {
 	Thread thread;
-	ScopedThread(Thread::ThreadFn fn, void* arg)
+	ScopedThread(OS::ThreadFn fn, void* arg)
 		: thread(Thread::create(fn, arg))
-	{
-	}
+	{}
 	~ScopedThread()
 	{
 		thread.join();

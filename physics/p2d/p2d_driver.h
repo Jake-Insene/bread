@@ -2,18 +2,39 @@
 #include "physics/physics_2d.h"
 #include "physics/p2d/shape_2d.h"
 
+struct CollisionID
+{
+    Physics2D::BodyID id1;
+    Physics2D::BodyID id2;
+};
+
+template<>
+struct HashOfType<CollisionID>
+{
+    [[nodiscard]] static constexpr u64 hashfunc(const CollisionID& k)
+    {
+        return k.id1.id | k.id2.id;
+    }
+    [[nodiscard]] static constexpr bool compare(const CollisionID& k1, const CollisionID& k2)
+    {
+        return (k1.id1 == k2.id1 && k1.id2 == k2.id2) || (k1.id1 == k2.id2 && k1.id2 == k2.id1);
+    }
+};
 
 struct P2DDriver
 {
-    struct BodyFlags
+    struct CollisionCallback
     {
-        u32 fixed_rotation : 1;
+        bool two_ways;
+        Body2D* b1;
+        Body2D* b2;
     };
 
     struct [[nodiscard]] Body
     {
         Body2D* target;
         Physics2D::BodyID self;
+        u64 index_process;
         Shape2D shape;
 
         Vector2 last_updated_pos;
@@ -23,7 +44,8 @@ struct P2DDriver
         f32 mass;
         f32 friction;
 
-        BodyFlags flags;
+        u32 fixed_rotation : 1;
+        u32 is_on_floor : 1;
     };
 
     struct InternalData
@@ -34,6 +56,9 @@ struct P2DDriver
 
         QueueArray<Body, Physics2D::BodyID> current_bodies;
         Array<Physics2D::BodyID> process_bodies;
+
+        HashMap<CollisionID, u32> collision_callbacks_map;
+        Array<CollisionCallback> collision_callbacks;
     };
 
     static inline InternalData data;
@@ -49,23 +74,27 @@ struct P2DDriver
         return data.current_bodies.get(bodyid);
     }
 
-    static void initialize(mem::Allocator& allocator);
+    static void initialize(const mem::Allocator& allocator);
     static void shutdown();
 
     static void step(f32 dt);
 
-    static Physics2D::BodyID create_body(Body2D* object_body);
-    static void destroy_body(Physics2D::BodyID bodyid);
+    static Physics2D::BodyID create_body(Body2D* object);
+    static void destroy_body(Physics2D::BodyID body_id);
 
-    static void body_as_box(Physics2D::BodyID bodyid, const Vector2& new_size);
-    static void body_set_type(Physics2D::BodyID bodyid, Physics2D::BodyType new_type);
-    static void body_set_velocity(Physics2D::BodyID bodyid, const Vector2& new_velocity);
-    static Vector2 body_get_velocity(Physics2D::BodyID bodyid);
-    static void body_set_mass(Physics2D::BodyID bodyid, f32 new_mass);
-    static f32 body_get_mass(Physics2D::BodyID bodyid);
-    static void body_set_friction(Physics2D::BodyID bodyid, f32 new_friction);
-    static f32 body_get_friction(Physics2D::BodyID bodyid);
-    static void body_apply_force(Physics2D::BodyID bodyid, const Vector2& point, const Vector2& force);
-    static void body_apply_impulse(Physics2D::BodyID bodyid, const Vector2& point, const Vector2& force);
-    static void body_set_fixed_rotation(Physics2D::BodyID bodyid, bool enable);
+    static void body_as_box(Physics2D::BodyID body_id, const Vector2& new_size);
+    static void body_set_type(Physics2D::BodyID body_id, Physics2D::BodyType new_type);
+    static void body_set_velocity(Physics2D::BodyID body_id, const Vector2& new_velocity);
+    static Vector2 body_get_velocity(Physics2D::BodyID body_id);
+    static void body_set_mass(Physics2D::BodyID body_id, f32 new_mass);
+    static f32 body_get_mass(Physics2D::BodyID body_id);
+    static void body_set_friction(Physics2D::BodyID body_id, f32 new_friction);
+    static f32 body_get_friction(Physics2D::BodyID body_id);
+    static void body_apply_force(Physics2D::BodyID body_id, const Vector2& point, const Vector2& force);
+    static void body_apply_impulse(Physics2D::BodyID body_id, const Vector2& point, const Vector2& force);
+    static void body_set_fixed_rotation(Physics2D::BodyID body_id, bool enable);
+    static bool body_is_on_floor(Physics2D::BodyID body_id);
+
+    static void _step_body(Body& body, f32 dt);
+    static void _resolve_collision_callbacks();
 };

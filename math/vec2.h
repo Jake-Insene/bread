@@ -63,13 +63,13 @@ union [[nodiscard]] Vector2T
 
     [[nodiscard]] constexpr T& operator[](const usize index)
     {
-        DebugAssert(index < 2, "Index can only be 0 or 1");
+        DebugAssert(index < 2, "index can only be 0 or 1");
         return comp[index];
     }
 
     [[nodiscard]] constexpr const T& operator[](const usize index) const
     {
-        DebugAssert(index < 2, "Index can only be 0 or 1");
+        DebugAssert(index < 2, "index can only be 0 or 1");
         return comp[index];
     }
 
@@ -170,6 +170,19 @@ union [[nodiscard]] Vector2T
     {
         return math::sqrt(x * x + y * y);
     }
+
+    constexpr Vector2T normalized() const
+    {
+        Vector2T v = *this;
+        const T len = (T)math::sqrt(x * x + y * y);
+        if (len)
+        {
+            v.x /= len;
+            v.y /= len;
+        }
+
+        return v;
+    }
     
     constexpr void normalize()
     {
@@ -179,6 +192,11 @@ union [[nodiscard]] Vector2T
             x /= len;
             y /= len;
         }
+    }
+
+    constexpr Vector2T abs() const
+    {
+        return Vector2T(math::abs(x), math::abs(y));
     }
     
     constexpr T dot(const Vector2T& v) const

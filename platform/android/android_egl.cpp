@@ -6,8 +6,23 @@
 
 #include "android/native_window_jni.h"
 
-void AndroidEGL::initialize(mem::Allocator&)
+
+EGL::VTable AndroidEGL::get_vtable()
 {
+    return EGL::VTable
+    {
+        .initialize = &AndroidEGL::initialize,
+        .shutdown = &AndroidEGL::shutdown,
+        .recreate_window_surface = &AndroidEGL::recreate_window_surface,
+        .destroy_window_surface = &AndroidEGL::destroy_window_surface,
+        .present = &AndroidEGL::present,
+    }
+}
+
+void AndroidEGL::initialize(const mem::Allocator&)
+{
+    platform_get_proc = eglGetProcAddress;
+
     // Initialize OpenGL ES and EGL
     // Format R8G8B8A8 D24 S8
     const EGLint attributes[] =
@@ -38,7 +53,7 @@ void AndroidEGL::initialize(mem::Allocator&)
         num_configs, &num_configs
     );
 
-    DebugAssert(num_configs != 0, "It should be at least one config.");
+    DebugAssert(num_configs != 0, "it should be at least one config.");
     EGLint i = 0;
     for (; i < (EGLint)supported_configs.count; i++)
     {
@@ -146,5 +161,4 @@ void AndroidEGL::present()
 {
     eglSwapBuffers(data.display, data.surface);
 }
-
 

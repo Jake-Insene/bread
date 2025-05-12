@@ -33,7 +33,6 @@ namespace mem
             (self->*vtable.free)(ptr);
         }
 
-
         template<typename T>
         Slice<T> array(usize count) const
         {

@@ -5,16 +5,25 @@
 
 #if defined(ENGINE_ANDROID)
 #include "platform/android/android_egl.h"
-using PlatformEGL = AndroidEGL;
 #elif defined(ENGINE_WIN32)
 #include "platform/win32/win32_egl.h"
-using PlatformEGL = Win32EGL;
-#endif // ENGINE_ANDROID
+#endif
 
-void EGL::initialize(mem::Allocator& allocator)
+static inline EGL::VTable get_vtable()
+{
+#if defined(ENGINE_ANDROID)
+    return AndroidEGL::get_vtable();
+#elif defined(ENGINE_WIN32)
+    return Win32EGL::get_vtable();
+#endif
+}
+
+void EGL::initialize(const mem::Allocator& allocator)
 {
     data.allocator = allocator;
-    PlatformEGL::initialize(allocator);
+
+    vtable = get_vtable();
+    vtable.initialize(allocator);
 
     REQUIRED_LOAD(glGetIntegerv);
     REQUIRED_LOAD(glGetString);
@@ -63,6 +72,7 @@ void EGL::initialize(mem::Allocator& allocator)
     REQUIRED_LOAD(glBindTexture);
     REQUIRED_LOAD(glTexParameteri);
     REQUIRED_LOAD(glTexImage2D);
+    REQUIRED_LOAD(glTexStorage2D);
 
     REQUIRED_LOAD(glGenFramebuffers);
     REQUIRED_LOAD(glDeleteFramebuffers);
@@ -77,29 +87,7 @@ void EGL::initialize(mem::Allocator& allocator)
 
     REQUIRED_LOAD(glDrawArrays);
     REQUIRED_LOAD(glDrawElementsInstanced);
+
+    REQUIRED_LOAD(glLineWidth);
 }
 
-void EGL::shutdown()
-{
-    PlatformEGL::shutdown();
-}
-
-void EGL::recreate_window_surface()
-{
-    PlatformEGL::recreate_window_surface();
-}
-
-void EGL::uncreate_window_surface()
-{
-    PlatformEGL::destroy_window_surface();
-}
-
-void EGL::present()
-{
-    PlatformEGL::present();
-}
-
-Vector2I EGL::get_surface_size()
-{
-    return data.surface_size;
-}

@@ -1,27 +1,54 @@
 #pragma once
 #include "core/macros.h"
-#include "core/types.h"
+#include "core/templates.h"
 
+
+#include <concepts> 
 
 template<typename Fn>
-constexpr bool IsMemberFunction = false;
+struct IsMemberFunctionT
+{
+	static constexpr bool Value = false;
+};
 
 template<typename RT, typename T, typename... TArgs>
-constexpr bool IsMemberFunction<RT(T::*)(TArgs&&...)> = true;
+struct IsMemberFunctionT<RT(T::*)(TArgs...)>
+{
+	static constexpr bool Value = true;
+};
+
+template<typename RT, typename T, typename... TArgs>
+struct IsMemberFunctionT<RT(T::*)(TArgs...) const>
+{
+	static constexpr bool Value = true;
+};
+
+template<typename Fn>
+inline constexpr bool IsMemberFunction = IsMemberFunctionT<Fn>::Value;
 
 template<typename Fn>
 struct EventFnDecomposed;
 
 template<typename RT, typename... TArgs>
-struct EventFnDecomposed<RT(*)(TArgs&&...)>
+struct EventFnDecomposed<RT(*)(TArgs...)>
 {
-	using RetType = RT;
+	using ReturnType = RT;
+	using ObjectType = RT*;
 };
 
 template<typename RT, typename T, typename... TArgs>
-struct EventFnDecomposed<RT(T::*)(TArgs&&...)>
+struct EventFnDecomposed<RT(T::*)(TArgs...)>
 {
-	using RetType = RT;
+	static constexpr bool IsConst = false;
+	using ReturnType = RT;
+	using ObjectType = T;
+};
+
+template<typename RT, typename T, typename... TArgs>
+struct EventFnDecomposed<RT(T::*)(TArgs...) const>
+{
+	static constexpr bool IsConst = true;
+	using ReturnType = RT;
 	using ObjectType = T;
 };
 
@@ -30,62 +57,64 @@ struct [[nodiscard]] Event
 {
 	using Decomposed = EventFnDecomposed<Fn>;
 
-	using ReturnType = Decomposed::RetType;
+	using ReturnType = Decomposed::ReturnType;
+
+	Event(Fn fn = nullptr) : func(fn) {}
+	
+	Event& operator=(Fn fn)
+	{
+		func = fn;
+		return *this;
+	}
 
 	Fn func;
 
-	template<typename... TArgs>
-	constexpr ReturnType call(TArgs&&... args)
+	template<typename T>
+	constexpr void bind(T fn)
 	{
-		if constexpr (IsMemberFunction<Fn>)
+		func = (Fn)fn;
+	}
+
+	template<typename... TArgs>
+	constexpr ReturnType call(TArgs&&... args) const
+	{
+		if constexpr (IsSame<ReturnType, void>)
 		{
-			if constexpr (IsSame<ReturnType, void>)
+			if constexpr (IsMemberFunction<Fn>)
 			{
-				call_method(args...);
-			}
-			else
-			{
-				return call_method(args...);
-			}
-		}
-		else
-		{
-			if constexpr(IsSame<ReturnType, void>)
-			{
-				return func(args...);
+				_call_method(args...);
 			}
 			else
 			{
 				func(args...);
 			}
 		}
+		else
+		{
+			if constexpr (IsMemberFunction<Fn>)
+			{
+				return _call_method(args...);
+			}
+			else
+			{
+				return func(args...);
+			}
+		}
 	}
 
 	template<typename... TArgs>
-	constexpr ReturnType call_method(Decomposed::ObjectType& instance, TArgs&&... args)
+	constexpr ReturnType _call_method(EventFnDecomposed<Fn>::ObjectType*& instance, TArgs&&... args) const
 	{
 		if constexpr (IsSame<ReturnType, void>)
 		{
-			(instance.*func)(args...);
+			(instance->*func)(args...);
 		}
 		else
 		{
-			return (instance.*func)(args...);
+			return (instance->*func)(args...);
 		}
 	}
 
-	template<>
-	constexpr ReturnType call_method<>(Decomposed::ObjectType& instance)
-	{
-		if constexpr (IsSame<ReturnType, void>)
-		{
-			(instance.*func)();
-		}
-		else
-		{
-			return (instance.*func)();
-		}
-	}
-
+	constexpr bool has_func() const { return func != nullptr; }
 };
 

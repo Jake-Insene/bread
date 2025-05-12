@@ -35,13 +35,13 @@ void Body2D::set_type(Body2D::BodyType new_type)
             set_velocity(Vector2(1, 1));
             break;
         default:
-            DebugAssert(false, "Invalid body type");
+            DebugAssert(false, "invalid body type");
         }
         Physics2D::body_set_type(data.body_id, Physics2D::BodyType(new_type));
     }
 }
 
-void Body2D::as_rect(const Vector2& size)
+void Body2D::as_box(const Vector2& size)
 {
     Physics2D::body_as_box(data.body_id, size);
 }

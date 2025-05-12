@@ -111,3 +111,5 @@ inline constexpr bool IsFloatingPoint = IsAnyOf<
 template<typename T>
 inline constexpr bool IsArithmetic = 
     IsInteger<T> || IsFloatingPoint<T>;
+
+

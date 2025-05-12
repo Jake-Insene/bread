@@ -1,25 +1,35 @@
 #pragma once
-#include "mem/allocator.h"
+#include "core/header.h"
 #include "math/vec2.h"
 
 struct EGL
 {
+    struct VTable
+    {
+        VTFunc(void, initialize, const mem::Allocator&);
+        VTFunc(void, shutdown);
+        
+        VTFunc(void, recreate_window_surface);
+        VTFunc(void, destroy_window_surface);
+        VTFunc(void, present);
+        VTFunc(void, set_vsync, bool);
+    };
+
     struct InternalData
     {
         mem::Allocator allocator;
-        
-        Vector2I surface_size;
     };
     
+    static inline VTable vtable;
     static inline InternalData data;
     
-    static void initialize(mem::Allocator& allocator);
-    static void shutdown();
+    static void initialize(const mem::Allocator& allocator);
     
-    static void recreate_window_surface();
-    static void uncreate_window_surface();
-    
-    static void present();
-    
-    static Vector2I get_surface_size();
+    VTFuncDefS(shutdown);
+
+    VTFuncDefS(recreate_window_surface);
+    VTFuncDefS(destroy_window_surface);
+    VTFuncDefS(present);
+
+    VTFuncDefArg1S(set_vsync, bool);
 };

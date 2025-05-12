@@ -3,7 +3,7 @@
 #include "physics/p2d/p2d_driver.h"
 
 
-void Physics2D::initialize(mem::Allocator& allocator, Physics2D::DriverType driver)
+void Physics2D::initialize(const mem::Allocator& allocator, Physics2D::DriverType driver)
 {
     data.allocator = allocator;
     switch (driver)

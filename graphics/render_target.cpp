@@ -21,3 +21,8 @@ Vector2I RenderTarget::get_size() const
 {
     return Graphics::render_target_get_size(render_target_id);
 }
+
+void RenderTarget::set_size(const Vector2I& new_size) const
+{
+    Graphics::render_target_set_size(render_target_id, new_size);
+}

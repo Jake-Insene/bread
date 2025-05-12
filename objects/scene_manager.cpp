@@ -17,9 +17,8 @@ void SceneManager::initialize(mem::Allocator allocator)
     data.allocator = allocator;
 
     data.display_target = RenderTarget::create(
-        Vector2I(DefaultWidth, DefaultHeight)
+        Vector2I(Display::DefaultWidth, Display::DefaultHeight)
     );
-    data.window_size = EGL::get_surface_size();
 
     data.clear_color = {0, 0, 0, 255};
     
@@ -130,9 +129,10 @@ Vector2 SceneManager::screen_make_local(Vector2 pos)
 {
     // converting touch position into local scene position
     Vector2I scene_size = data.display_target.get_size();
-            
-    f32 normalized_x = pos.x / (f32)data.window_size.x;
-    f32 normalized_y = pos.y / (f32)data.window_size.y;
+    Vector2I window_size = Engine::get_main_window().get_size();
+
+    f32 normalized_x = pos.x / (f32)window_size.x;
+    f32 normalized_y = pos.y / (f32)window_size.y;
             
     // Setting new position
     return Vector2(
@@ -204,7 +204,7 @@ void SceneManager::handle_input(const InputEvent& event)
                 if (c)
                 {
                     // is_in_area will be always false
-                    new_event.left = false;
+                    new_event.pressed = false;
                     ObjectCallRef(c, event, new_event);
                 }
                 data.touched_focus[0] = nullptr;

@@ -1,4 +1,5 @@
 #pragma once
+#include "core/header.h"
 
 #if defined(ENGINE_ANDROID)
 #include "platform/android/android_header.h"

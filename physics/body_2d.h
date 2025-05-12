@@ -32,6 +32,10 @@ struct Body2D : Object2D
 
         bool grounded = false;
     } data;
+
+    Event<void(Body2D::*)(Body2D*)> colliding_with;
+    // Ignore collision
+    bool ignore_collision;
     
     void init(const CreateInfo&);
     void deinit();
@@ -42,7 +46,7 @@ struct Body2D : Object2D
     void set_type(Body2D::BodyType new_type);
     Body2D::BodyType get_type() const { return data.type;}
     
-    void as_rect(const Vector2& size);
+    void as_box(const Vector2& size);
     
     void set_velocity(const Vector2& new_velocity);
     Vector2 get_velocity() const { return data.velocity; }
@@ -57,5 +61,5 @@ struct Body2D : Object2D
     void apply_impulse(const Vector2& point, const Vector2& force) const;
     void set_fixed_rotation(bool enable) const;
 
-    [[nodiscard]] bool is_on_ground() const { return data.grounded; }
+    [[nodiscard]] bool is_on_floor() const { return Physics2D::body_is_on_floor(data.body_id); }
 };

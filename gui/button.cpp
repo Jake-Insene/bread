@@ -61,15 +61,18 @@ void Button::event(const InputEvent& e)
 	if (e.type == INPUT_EVENT_MOUSE_BUTTON)
 	{
 		const auto& em = e.get<InputEventMouseButton>();
-		if (is_inside(em.position))
-		{
-			current_texture = hover_texture;
-			is_pressed = em.left;
-		}
-        else
+        if(em.button == MOUSE_BUTTON_LEFT)
         {
-            current_texture = normal_texture;
-            is_pressed = false;
+            if (is_inside(em.position))
+            {
+                current_texture = hover_texture;
+                is_pressed = em.pressed;
+            }
+            else
+            {
+                current_texture = normal_texture;
+                is_pressed = false;
+            }
         }
 	}
 }

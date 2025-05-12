@@ -15,10 +15,25 @@ static inline void* get_proc_address(const char* name)
 	return proc;
 }
 
-
-void Win32EGL::initialize(mem::Allocator&)
+EGL::VTable Win32EGL::get_vtable()
 {
-    Win32EGL::data.current_window = Win32Engine::window;
+	return EGL::VTable
+	{
+		.initialize = &Win32EGL::initialize,
+		.shutdown = &Win32EGL::shutdown,
+
+		.recreate_window_surface = &Win32EGL::recreate_window_surface,
+		.destroy_window_surface = &Win32EGL::destroy_window_surface,
+		.present = &Win32EGL::present,
+		.set_vsync = &Win32EGL::set_vsync,
+	};
+}
+
+void Win32EGL::initialize(const mem::Allocator&)
+{
+	platform_get_proc = &get_proc_address;
+
+    Win32EGL::data.current_window = (HWND)Engine::data.main_window.get_native_handle();
 	Win32EGL::data.device_context = GetDC(Win32EGL::data.current_window);
 
 	gllib = LoadLibraryA("opengl32.dll");
@@ -49,8 +64,8 @@ void Win32EGL::initialize(mem::Allocator&)
 
 	int attribs[] =
 	{
-		WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
-		WGL_CONTEXT_MINOR_VERSION_ARB, 6,
+		WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+		WGL_CONTEXT_MINOR_VERSION_ARB, 3,
 		WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
 #if DEBUG
 		WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_DEBUG_BIT_ARB,
@@ -59,22 +74,17 @@ void Win32EGL::initialize(mem::Allocator&)
 	};
 
 	HGLRC real_context = wgl.wglCreateContextAttribsARB(Win32EGL::data.device_context, 0, attribs);
-	DebugAssert(real_context, "Couldn't create the OpenGL context");
+	DebugAssert(real_context, "couldn't create the OpenGL context");
 
 	wglDeleteContext(tmp_ctx);
 	wglMakeCurrent(Win32EGL::data.device_context, real_context);
 
 	Win32EGL::data.context = real_context;
 
-	platform_get_proc = &get_proc_address;
-	
 	RECT rect{};
 	GetClientRect(Win32EGL::data.current_window, &rect);
 	
-	EGL::data.surface_size = Vector2I{ rect.right - rect.left, rect.bottom - rect.top };
-
 	wgl.wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
-	//wgl.wglSwapIntervalEXT(1);
 }
 
 void Win32EGL::shutdown()
@@ -92,10 +102,6 @@ void Win32EGL::shutdown()
 
 void Win32EGL::recreate_window_surface()
 {
-	RECT rect{};
-	GetClientRect(Win32EGL::data.current_window, &rect);
-
-	EGL::data.surface_size = Vector2I{ rect.right - rect.left, rect.bottom - rect.top };
 }
 
 void Win32EGL::destroy_window_surface()
@@ -105,6 +111,11 @@ void Win32EGL::destroy_window_surface()
 void Win32EGL::present()
 {
 	wglSwapLayerBuffers(Win32EGL::data.device_context, WGL_SWAP_MAIN_PLANE);
+}
+
+void Win32EGL::set_vsync(bool vsync)
+{
+	wgl.wglSwapIntervalEXT(vsync ? 1 : 0);
 }
 
 

@@ -10,7 +10,10 @@ struct RenderCommand
 {
     enum SpriteFlags
     {
+        FLAG_NONE = 0x0,
         FLAG_TOP_LEFT = 0x1,
+        FLAG_FLIP_V = 0x2,
+        FLAG_FLIP_H = 0x4,
     };
 
     enum CommandType
@@ -40,7 +43,7 @@ struct RenderCommand
             Rect2D src_rect;
             ResourceID texture;
             Color color;
-            u32 flags;
+            SpriteFlags flags;
         } sprite;
         
         struct

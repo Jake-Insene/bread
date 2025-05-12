@@ -45,13 +45,13 @@ struct [[nodiscard]] Array
     
     [[nodiscard]] constexpr T& operator[](const usize index)
     {
-        DebugAssert(index < count, "Index out of range");
+        DebugAssert(index < count, "index out of range");
         return items[index];
     }
     
     [[nodiscard]] constexpr const T& operator[](const usize index) const
     {
-        DebugAssert(index < count, "Index out of range");
+        DebugAssert(index < count, "index out of range");
         return items[index];
     }
     

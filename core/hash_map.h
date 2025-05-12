@@ -9,7 +9,7 @@ template<typename T>
 struct HashOfType
 {
     [[nodiscard]] static constexpr u64 hashfunc(const T& k) { return (u64)k; }
-    [[nodiscard]] static constexpr bool compare(const T& k1, const T& k2) { return k1 != k2; }
+    [[nodiscard]] static constexpr bool compare(const T& k1, const T& k2) { return k1 == k2; }
 };
 
 template<typename K, typename V>
@@ -182,8 +182,16 @@ struct [[nodiscard]] HashMap
     
     [[nodiscard]] MapEntry* _insert_or_replace(const K& k, const V& value)
     {
-        u64 hash = HashOfType<K>::hashfunc(k);
+        if (count >= entries.len)
+        {
+            resize(entries.len << 1);
+        }
+        else if (entries.len == 0)
+        {
+            resize(DefaultCapacity);
+        }
         
+        u64 hash = HashOfType<K>::hashfunc(k);
         usize pos = InvalidPos;
         if(_find_entry(hash, pos))
         {
@@ -192,15 +200,6 @@ struct [[nodiscard]] HashMap
         }
         else
         {
-            if(count >= entries.len)
-            {
-                resize(entries.len << 1);
-            }
-            else if(entries.len == 0)
-            {
-                resize(DefaultCapacity);
-            }
-            
             usize i = hash & (entries.len - 1);
             while(true)
             {
@@ -252,11 +251,11 @@ struct [[nodiscard]] HashMap
         if(entries.len == 0)
         {
             new_size = new_size > 0 ? new_size : DefaultCapacity;
-            entries = mem::from_bytes<MapEntry*>(allocator.alloc(sizeof(MapEntry*) * new_size, alignof(MapEntry*)));
+            entries = allocator.array<MapEntry*>(new_size);
             return;
         }
 
-        if(count >= new_size)
+        if(entries.len >= new_size)
         {
             return;
         }
@@ -291,7 +290,7 @@ struct [[nodiscard]] HashMap
         u64 hash = HashOfType<K>::hashfunc(k);
         usize pos = InvalidPos;
         (void)_find_entry(hash, pos);
-        DebugAssert(pos != InvalidPos, "The item don't exists!");
+        DebugAssert(pos != InvalidPos, "the item don't exists!");
         return entries[pos]->kv.value;
     }
     
@@ -300,7 +299,7 @@ struct [[nodiscard]] HashMap
         u64 hash = HashOfType<K>::hashfunc(k);
         usize pos = InvalidPos;
         (void)_find_entry(hash, pos);
-        DebugAssert(pos != InvalidPos, "The item don't exists!");
+        DebugAssert(pos != InvalidPos, "the item don't exists!");
         return entries[pos]->kv.value;
     }
     
@@ -308,6 +307,18 @@ struct [[nodiscard]] HashMap
     {
         return _insert_or_replace(k, value)->kv.value;
     }
-    
-    // string map utilities
+  
+    void clear()
+    {
+        for (auto& entry : entries)
+        {
+            if (entry)
+            {
+                entry->kv.hash = EmptyHash;
+            }
+        }
+
+        count = 0;
+        first = last = nullptr;
+    }
 };

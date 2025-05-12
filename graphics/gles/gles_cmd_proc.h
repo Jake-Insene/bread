@@ -1,10 +1,11 @@
 #pragma once
 #include "graphics/command_interface.h"
+#include "graphics/gles/gles_memory_allocator.h"
 
 struct GLESCommandProcessor
 {
     static constexpr u32 MaxInstancesPerBatch = 128;
-    static constexpr u32 MaxPrimitivePointsPerBatch = 1024;
+    static constexpr u32 MaxPrimitivePointsPerBatch = 128 * 8;
     
     struct SpriteInstance
     {
@@ -68,7 +69,7 @@ struct GLESCommandProcessor
         
         u32 texture_units[MaxInstancesPerBatch];
         
-        Slice<u8> instances;
+        Slice<SpriteInstance> instances;
     };
     
     struct QuadBatch
@@ -79,7 +80,7 @@ struct GLESCommandProcessor
         
         u32 count;
         
-        Slice<u8> instances;
+        Slice<QuadInstance> instances;
     };
 
     struct PrimitiveBatch
@@ -90,7 +91,7 @@ struct GLESCommandProcessor
 
         u32 count;
 
-        Slice<u8> primitives;
+        Slice<PrimitivePoint> primitives;
     };
     
     struct ExecutionState
@@ -126,12 +127,14 @@ struct GLESCommandProcessor
     
     static void initialize(mem::Allocator allocator);
     static void shutdown();
-    
+
+    static void bind_program(GLID program);
+    static void bind_scene_buffer();
+    static void update_scene_uniform();
+
     static void end_sprite_batch();
     static void end_quad_batch();
     static void end_primitive_batch();
-
-    static void update_scene_uniform();
 
     static void render();
     

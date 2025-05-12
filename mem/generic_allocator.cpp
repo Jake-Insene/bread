@@ -1,6 +1,6 @@
 #include "mem/generic_allocator.h"
 
-#include "mem/utils.h"
+#include "os/os.h"
 
 
 namespace mem
@@ -25,7 +25,7 @@ namespace mem
             while(header)
             {
                 header_count++;
-                DebugAssert((header->tags & Allocated) == 0, "Forget to call free.");
+                DebugAssert((header->tags & Allocated) == 0, "forget to call free.");
                 header = header->next;
             }
             Log::info("Page at address %p of size %llu, with %llu headers", page.bytes.ptr(), page.bytes.len, header_count);
@@ -42,7 +42,7 @@ namespace mem
     GenericAllocator::Page& GenericAllocator::allocate_new_page(usize size)
     {
         Page& page = allocated_pages[page_count++];
-        page.bytes = internal_allocator.alloc(size, mem::get_page_size());
+        page.bytes = internal_allocator.alloc(size, OS::get_page_size());
         page.first_header = nullptr;
         page.last_header = nullptr;
 #if !defined(NDEBUG)
@@ -53,7 +53,7 @@ namespace mem
     
     Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
     {
-        DebugAssert(alignment == mem::align_up<usize>(alignment, 2), "Alignment must be a power of 2");
+        DebugAssert(alignment == mem::align_up<usize>(alignment, 2), "alignment must be a power of 2");
 
         if(allocated_pages.null())
         {
@@ -149,6 +149,7 @@ namespace mem
                             page.last_header = remain_header;
                         }
 
+                        // Fill with zeroes
                         return Slice<u8>
                         {
                             aligned_base,
@@ -205,10 +206,10 @@ namespace mem
         
     bool GenericAllocator::realloc(Slice<u8> ptr, usize new_size, usize alignment)
     {
-        DebugAssert(alignment == mem::align_up<usize>(alignment, 2), "Alignment must be a power of 2");
-        DebugAssert(ptr.ptr(), "Invalid pointer");
+        DebugAssert(alignment == mem::align_up<usize>(alignment, 2), "alignment must be a power of 2");
+        DebugAssert(ptr.ptr(), "invalid pointer");
         Header* header = get_header(ptr);
-        DebugAssert(header->tags & Allocated, "The given block is already free.");
+        DebugAssert(header->tags & Allocated, "the given block is already free.");
 
         if(header->len >= new_size)
         {
@@ -220,9 +221,9 @@ namespace mem
         
     void GenericAllocator::free(Slice<u8> ptr)
     {
-        DebugAssert(ptr.ptr(), "Invalid pointer");
+        DebugAssert(ptr.ptr(), "invalid pointer");
         Header* header = get_header(ptr);
-        DebugAssert(ptr.ptr() && (header->tags & Allocated), "The given block is already free.");
+        DebugAssert(ptr.ptr() && (header->tags & Allocated), "the given block is already free.");
 
         header->tags = None;
         if (header->prev && (header->prev->tags & Allocated) == 0)

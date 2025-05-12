@@ -15,13 +15,13 @@ static void* _realloc(void* ptr, usize old_size, usize new_size)
         return ptr;
     }
     
-    void* new_mem = ResourceManager::get_allocator().alloc(new_size, alignof(usize)).items;
-    if(ptr)
+    Slice<u8> new_mem = ResourceManager::get_allocator().alloc(new_size, alignof(usize));
+    if(new_mem.ptr() && ptr != nullptr && old_size != old_size)
     {
-        std::memcpy(new_mem, ptr, old_size);
+        mem::copy(old_mem, new_mem);
     }
     
-    return new_mem;
+    return new_mem.ptr();
 }
 
 static void _free(void* ptr)

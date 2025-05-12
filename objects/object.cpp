@@ -9,9 +9,9 @@ void Object::_bind_vtable(VTable&)
 
 void Object::handle_internal_update(f64 dt)
 {
-    for(auto child : data.childs)
+    for(auto it : data.childs)
     {
-        child->handle_internal_update(dt);
+        it.value->handle_internal_update(dt);
     }
     
     if(has_internal_update())
@@ -22,9 +22,9 @@ void Object::handle_internal_update(f64 dt)
 
 void Object::handle_update(f64 dt)
 {
-    for(auto child : data.childs)
+    for(auto it : data.childs)
     {
-        child->handle_update(dt);
+        it.value->handle_update(dt);
     }
     
     if(can_update())
@@ -35,9 +35,9 @@ void Object::handle_update(f64 dt)
 
 void Object::handle_render()
 {
-    for(auto child : data.childs)
+    for(auto it : data.childs)
     {
-        child->handle_render();
+        it.value->handle_render();
     }
     
     if(can_render())
@@ -48,7 +48,7 @@ void Object::handle_render()
 
 void Object::add_child(Object *obj)
 {
-    Object* child = data.childs.add(obj);
+    Object* child = data.childs.insert(obj->id, obj);
     
     child->data.parent = this;
     
@@ -63,7 +63,7 @@ void Object::init(const CreateInfo& info)
     allocator = info.allocator;
     data.name = String::with_allocator(allocator);
     data.parent = nullptr;
-    data.childs = Array<Object*>::with_allocator(allocator);
+    data.childs = HashMap<ObjectID, Object*>::with_allocator(allocator);
     
     data.flags.clear();
 }
@@ -72,9 +72,9 @@ void Object::deinit()
 {
     data.name.destroy();
     
-    for(Object* child : data.childs)
+    for(auto& it : data.childs)
     {
-        DestroyObject(child);
+        DestroyObject(it.value);
     }
 
     data.childs.destroy();
@@ -86,28 +86,28 @@ void Object::start()
     // and add_child only when the parent is already into the scene.
     data.flags.set(FLAG_IN_SCENE, true);
 
-    for(auto& child : data.childs)
+    for(auto it: data.childs)
     {
-        ObjectCallRef(child, start);
+        ObjectCallRef(it.value, start);
     }
 }
 
 void Object::exit()
 {
     data.flags.clear();
-    for(auto child : data.childs)
+    for(auto it : data.childs)
     {
-        ObjectCallRef(child, exit);
+        ObjectCallRef(it.value, exit);
     }
 }
 
 void Object::event(const InputEvent& event)
 {
-    for(auto child : data.childs)
+    for(auto it : data.childs)
     {
-        if(child->can_handle_event())
+        if(it.value->can_handle_event())
         {
-            ObjectCallRef(child, event, event);
+            ObjectCallRef(it.value, event, event);
         }
     }
 }

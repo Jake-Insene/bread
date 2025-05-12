@@ -7,15 +7,16 @@
 template<typename T, typename SlotID = u32>
 struct [[nodiscard]] QueueArray
 {
+    static constexpr SlotID InvalidSlot = SlotID(0xEEFFEEFF'EEFFEEFF);
+
     static_assert(
         sizeof(T) >= sizeof(SlotID),
         "T in size must to be greater or equal to the size of SlotType"
     );
 
-    static constexpr SlotID InvalidSlot = SlotID(-1);
-
     Array<T> array;
     SlotID last_free_element;
+    u32 count;
 
     static QueueArray from_allocator(mem::Allocator& allocator)
     {
@@ -23,15 +24,17 @@ struct [[nodiscard]] QueueArray
         {
             .array = Array<T>::with_allocator(allocator),
             .last_free_element = InvalidSlot,
+            .count = 0,
         };
     }
 
-    static QueueArray with_size(mem::Allocator& allocator, const SlotID size)
+    static QueueArray with_size(const mem::Allocator& allocator, const SlotID size)
     {
         return QueueArray
         {
             .array = Array<T>::with_size(allocator, size),
             .last_free_element = InvalidSlot,
+            .count = 0,
         };
     }
 
@@ -56,13 +59,15 @@ struct [[nodiscard]] QueueArray
         }
 
         (void)array.add(item);
+        count++;
         return SlotID(array.count - 1);
     }
 
     void remove(const SlotID slot)
     {
-        DebugAssert(slot < array.count, "Invalid slot");
-        DebugAssert(((SlotID*)&array[slot])[0] != InvalidSlot, "Slot is already free");
+        count--;
+        DebugAssert(slot < array.count, "invalid slot");
+        DebugAssert(((SlotID*)&array[slot])[0] != InvalidSlot, "slot is already free");
 
         if(last_free_element == InvalidSlot)
         {
@@ -88,15 +93,8 @@ struct [[nodiscard]] QueueArray
 
     [[nodiscard]] T& get(const SlotID slot)
     {
-        DebugAssert(slot < array.count, "Invalid slot");
-        DebugAssert(((SlotID*)&array[slot])[0] != InvalidSlot, "Slot isn't free");
-        return array[slot];
-    }
-
-    [[nodiscard]] const T& get(const SlotID slot) const
-    {
-        DebugAssert(slot < array.count, "Invalid slot");
-        DebugAssert(((const SlotID*)&array[slot])[0] != InvalidSlot, "Slot isn't free");
+        DebugAssert(slot < array.count, "invalid slot");
+        DebugAssert(((SlotID*)&array[slot])[0] != InvalidSlot, "slot isn't free");
         return array[slot];
     }
 

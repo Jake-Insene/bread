@@ -27,13 +27,13 @@ struct [[nodiscard]] Transform2D
     
     constexpr Vector2& operator[](usize index)
     {
-        DebugAssert(index < 3, "Index can only be 0, 1 or 2");
+        DebugAssert(index < 3, "index can only be 0, 1 or 2");
         return rows[index];
     }
 
     constexpr const Vector2& operator[](usize index) const
     {
-        DebugAssert(index < 3, "Index can only be 0, 1 or 2");
+        DebugAssert(index < 3, "index can only be 0, 1 or 2");
         return rows[index];
     }
 

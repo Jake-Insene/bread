@@ -3,13 +3,20 @@
 
 namespace mem
 {
-    usize get_page_size();
-    
     template<typename T>
     inline Slice<u8> to_bytes(const Slice<T>& items)
     {
         return Slice<u8>(
             (u8*)items.items,
+            items.len * sizeof(T)
+        );
+    }
+
+    template<typename T>
+    inline Slice<const u8> to_const_bytes(const Slice<T>& items)
+    {
+        return Slice<const u8>(
+            (const u8*)items.items,
             items.len * sizeof(T)
         );
     }
@@ -59,7 +66,7 @@ namespace mem
     template<typename T>
     constexpr void copy(Slice<T> dest, const Slice<T>& src)
     {
-        DebugAssert(dest.len >= src.len, "Invalid destination");
+        DebugAssert(dest.len >= src.len, "invalid destination");
 
         for(usize i = 0; i < src.len; i++)
         {

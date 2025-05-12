@@ -27,13 +27,13 @@ union [[nodiscard]] Vector4T
 
     [[nodiscard]] constexpr T& operator[](const usize index)
     {
-        DebugAssert(index < 4, "Index can only be 0, 1, 2 or 3");
+        DebugAssert(index < 4, "index can only be 0, 1, 2 or 3");
         return comp[index];
     }
 
     [[nodiscard]] constexpr const T& operator[](const usize index) const
     {
-        DebugAssert(index < 4, "Index can only be 0, 1, 2 or 3");
+        DebugAssert(index < 4, "index can only be 0, 1, 2 or 3");
         return comp[index];
     }
 

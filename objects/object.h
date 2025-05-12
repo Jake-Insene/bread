@@ -2,7 +2,6 @@
 #include "core/header.h"
 #include "io/input.h"
 #include "objects/object_id.h"
-#include "mem/allocator.h"
 
 
 #define OBJECT_FUNCV(klass, base, name)\
@@ -146,8 +145,8 @@ struct Object
 
     static void _bind_vtable(VTable& vtable);
     
-    ObjectID id{InvalidObjectID};
-    const Class* klass = nullptr;
+    ObjectID id;
+    const Class* klass{};
     mem::Allocator allocator{};
     
     enum
@@ -171,7 +170,7 @@ struct Object
     {
         String name{}; // necessary?
         Object* parent = nullptr;
-        Array<Object*> childs{};
+        HashMap<ObjectID, Object*> childs{};
 
         BitField<128> flags{};
     } data;

@@ -19,8 +19,9 @@ struct Graphics
 
     struct VTable
     {
-        VTFunc(void, initialize, mem::Allocator&);
+        VTFunc(void, initialize, const mem::Allocator&);
         VTFunc(void, shutdown);
+
         VTFunc(void, recreate);
         VTFunc(void, destroy);
         
@@ -35,11 +36,12 @@ struct Graphics
         
         VTFunc(ResourceID, render_target_create, const RenderTargetCreateInfo&);
         VTFunc(Vector2I, render_target_get_size, ResourceID);
+        VTFunc(void, render_target_set_size, ResourceID, const Vector2I&);
     };
     
     static inline VTable vtable;
     
-    static void initialize(mem::Allocator& allocator, DriverType driver);
+    static void initialize(const mem::Allocator& allocator, DriverType driver);
     VTFuncDefS(shutdown);
     
     VTFuncDefS(recreate);
@@ -58,6 +60,7 @@ struct Graphics
     // Render Target
     VTFuncDefArg1RetS(ResourceID, render_target_create, const RenderTargetCreateInfo&);
     VTFuncDefArg1RetS(Vector2I, render_target_get_size, ResourceID);
+    VTFuncDefArg2S(render_target_set_size, ResourceID, const Vector2I&);
 };
 
 namespace Graphics2D

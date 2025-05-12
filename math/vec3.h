@@ -42,13 +42,13 @@ union [[nodiscard]] Vector3T
 
     [[nodiscard]] constexpr T& operator[](const usize index)
     {
-        DebugAssert(index < 3, "Index can only be 0, 1 or 2");
+        DebugAssert(index < 3, "index can only be 0, 1 or 2");
         return comp[index];
     }
 
     [[nodiscard]] constexpr const T& operator[](const usize index) const
     {
-        DebugAssert(index < 3, "Index can only be 0, 1 or 2");
+        DebugAssert(index < 3, "index can only be 0, 1 or 2");
         return comp[index];
     }
 

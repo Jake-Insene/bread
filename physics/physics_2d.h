@@ -30,7 +30,7 @@ struct Physics2D
 
     struct VTable
     {
-        VTFunc(void, initialize, mem::Allocator&);
+        VTFunc(void, initialize, const mem::Allocator&);
         VTFunc(void, shutdown);
 
         VTFunc(void, step, f32);
@@ -49,6 +49,7 @@ struct Physics2D
         VTFunc(void, body_apply_force, BodyID, const Vector2&, const Vector2&);
         VTFunc(void, body_apply_impulse, BodyID, const Vector2&, const Vector2&);
         VTFunc(void, body_set_fixed_rotation, BodyID, bool);
+        VTFunc(bool, body_is_on_floor, BodyID);
     };
 
     struct InternalData
@@ -59,7 +60,7 @@ struct Physics2D
     static inline VTable vtable;
     static inline InternalData data{};
 
-    static void initialize(mem::Allocator& allocator, DriverType driver);
+    static void initialize(const mem::Allocator& allocator, DriverType driver);
     VTFuncDefS(shutdown);
     
     VTFuncDefArg1S(step, f32);
@@ -78,4 +79,5 @@ struct Physics2D
     VTFuncDefArg3S(body_apply_force, BodyID, const Vector2&, const Vector2&);
     VTFuncDefArg3S(body_apply_impulse, BodyID, const Vector2&, const Vector2&);
     VTFuncDefArg2S(body_set_fixed_rotation, BodyID, bool);
+    VTFuncDefArg1RetS(bool, body_is_on_floor, BodyID);
 };
