@@ -55,7 +55,7 @@ void Win32EGL::initialize(const mem::Allocator&)
 	pfd.cStencilBits = 8;
     
 	int format = ChoosePixelFormat(Win32EGL::data.device_context, &pfd);
-	BOOL result = SetPixelFormat(Win32EGL::data.device_context, format, &pfd);
+	SetPixelFormat(Win32EGL::data.device_context, format, &pfd);
 
 	HGLRC tmp_ctx = wglCreateContext(Win32EGL::data.device_context);
 	wglMakeCurrent(Win32EGL::data.device_context, tmp_ctx);

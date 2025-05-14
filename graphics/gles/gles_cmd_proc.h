@@ -65,9 +65,9 @@ struct GLESCommandProcessor
         u32 program;
         
         u32 count;
-        u32 texture_index;
+        i32 texture_index;
         
-        u32 texture_units[MaxInstancesPerBatch];
+        i32 texture_units[MaxInstancesPerBatch];
         
         Slice<SpriteInstance> instances;
     };

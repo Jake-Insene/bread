@@ -1,6 +1,6 @@
 #pragma once
 #include "core/header.h"
-#include "io/input.h"
+#include "input/input.h"
 #include "objects/object_id.h"
 
 

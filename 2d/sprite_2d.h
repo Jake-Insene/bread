@@ -29,5 +29,5 @@ struct Sprite2D : Object2D
     void set_texture(Texture2D* new_texture);
     [[nodiscard]] Texture2D* get_texture() const { return data.texture; }
 
-    u32 get_render_flags();
+    u32 _get_render_flags();
 };

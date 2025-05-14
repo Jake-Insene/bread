@@ -9,7 +9,7 @@ struct [[nodiscard]] Thread
 
 	void destroy() const;
 
-	[[nnodiscard]] bool join() const;
+	[[nodiscard]] bool join() const;
 };
 
 
@@ -21,6 +21,6 @@ struct [[nodiscard]] ScopedThread
 	{}
 	~ScopedThread()
 	{
-		thread.join();
+		(void)thread.join();
 	}
 };

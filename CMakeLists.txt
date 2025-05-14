@@ -50,9 +50,10 @@ file(GLOB ENGINE_SRC
     graphics/egl/egl.cpp
     graphics/graphics.cpp
     graphics/render_target.cpp
+
+    input/input.cpp
     
     io/image.cpp
-    io/input.cpp
     io/texture.cpp
     io/resource.cpp
     io/resource_manager.cpp
@@ -69,6 +70,7 @@ file(GLOB ENGINE_SRC
     objects/object.cpp
     objects/object_allocator.cpp
     objects/scene_manager.cpp
+    objects/timer.cpp
 
     gui/button.cpp
     gui/control.cpp
@@ -114,7 +116,6 @@ elseif(WIN32)
         platform/win32/win32_egl.cpp
         platform/win32/win32_engine.cpp
         platform/win32/win32_file.cpp
-        platform/win32/win32_input.cpp
         platform/win32/win32_log.cpp
         platform/win32/win32_main.cpp
         platform/win32/win32_os.cpp

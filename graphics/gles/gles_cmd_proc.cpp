@@ -212,7 +212,7 @@ void GLESCommandProcessor::end_sprite_batch()
         data.sprite_batch.instancebo, 0, mem::to_const_bytes(data.sprite_batch.instances), GL_ARRAY_BUFFER
     );
     
-    for(u32 i = 0; i < GLESDriver::data.limits.max_texture_units; i++)
+    for(i32 i = 0; i < GLESDriver::data.limits.max_texture_units; i++)
     {
         gl.glActiveTexture(GL_TEXTURE0 + i);
         gl.glBindTexture(GL_TEXTURE_2D, data.sprite_batch.texture_units[i]);
@@ -317,8 +317,8 @@ void GLESCommandProcessor::render()
             
             GLID tex = GLESMemoryAllocator::texture_get_handle(cmd.sprite.texture);
 
-            u32 texunit = u32(-1);
-            for(u32 t = 0; t < GLESDriver::data.limits.max_texture_units; t++)
+            i32 texunit = -1;
+            for(i32 t = 0; t < GLESDriver::data.limits.max_texture_units; t++)
             {
                 if(data.sprite_batch.texture_units[t] == tex)
                 {
@@ -327,7 +327,7 @@ void GLESCommandProcessor::render()
                 }
             }
 
-            if(texunit == u32(-1))
+            if(texunit == -1)
             {
                 texunit = data.sprite_batch.texture_index;
                 data.sprite_batch.texture_units[data.sprite_batch.texture_index] = tex;

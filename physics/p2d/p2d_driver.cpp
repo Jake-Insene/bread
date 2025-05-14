@@ -400,10 +400,10 @@ void P2DDriver::_resolve_collision_callbacks()
         Body2D* b1 = callback.value.b1;
         Body2D* b2 = callback.value.b2;
 
-        b1->colliding_with.call(b1, b2);
+        b1->colliding_with.call(b2);
         if (callback.value.two_ways)
         {
-            b2->colliding_with.call(b2, b1);
+            b2->colliding_with.call(b1);
         }
     }
 

@@ -1,6 +1,6 @@
 #pragma once
 #include "display/window.h"
-#include "io/input.h"
+#include "input/input.h"
 #include "io/texture.h"
 #include "mem/generic_allocator.h"
 

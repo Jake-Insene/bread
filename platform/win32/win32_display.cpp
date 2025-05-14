@@ -1,7 +1,7 @@
 #include "platform/win32/win32_display.h"
 
 #include "engine/engine.h"
-#include "io/input.h"
+#include "input/input.h"
 #include "objects/scene_manager.h"
 
 

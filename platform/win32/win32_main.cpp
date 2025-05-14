@@ -4,7 +4,7 @@
 #include "objects/scene_manager.h"
 
 
-int WINAPI wWinMain(HINSTANCE hinstance, HINSTANCE previnstance, LPWSTR cmdline, int showcmd)
+int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int)
 {
 	if (!SetCurrentDirectoryA("assets"))
 	{

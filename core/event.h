@@ -1,9 +1,6 @@
 #pragma once
-#include "core/macros.h"
 #include "core/templates.h"
 
-
-#include <concepts> 
 
 template<typename Fn>
 struct IsMemberFunctionT
@@ -33,7 +30,6 @@ template<typename RT, typename... TArgs>
 struct EventFnDecomposed<RT(*)(TArgs...)>
 {
 	using ReturnType = RT;
-	using ObjectType = RT*;
 };
 
 template<typename RT, typename T, typename... TArgs>
@@ -52,32 +48,59 @@ struct EventFnDecomposed<RT(T::*)(TArgs...) const>
 	using ObjectType = T;
 };
 
+
+template<typename Fn>
+struct EventStorage
+{
+	Fn func;
+};
+
+
+template<typename RT, typename T, typename... TArgs>
+struct EventStorage<RT(T::*)(TArgs...)>
+{
+	T* instance;
+	RT(T::*func)(TArgs...);
+};
+
+template<typename RT, typename T, typename... TArgs>
+struct EventStorage<RT(T::*)(TArgs...) const>
+{
+	T* instance;
+	RT(T::*func)(TArgs...) const;
+};
+
+
 template<typename Fn>
 struct [[nodiscard]] Event
 {
 	using Decomposed = EventFnDecomposed<Fn>;
-
 	using ReturnType = Decomposed::ReturnType;
 
-	Event(Fn fn = nullptr) : func(fn) {}
-	
-	Event& operator=(Fn fn)
+	EventStorage<Fn> storage{};
+
+	template<typename = EnableIf<!IsMemberFunction<Fn>, int>, typename T, typename... TArgs>
+	constexpr void bind(T func)
 	{
-		func = fn;
-		return *this;
+		storage.func = (Fn)func;
 	}
 
-	Fn func;
-
-	template<typename T>
-	constexpr void bind(T fn)
+	template<typename = EnableIf<IsMemberFunction<Fn>, int>, typename T, typename Fn2>
+	constexpr void bind(T* instance, Fn2 func)
 	{
-		func = (Fn)fn;
+		storage.instance = (decltype(storage.instance))instance;
+		storage.func = (Fn)func;
 	}
 
 	template<typename... TArgs>
 	constexpr ReturnType call(TArgs&&... args) const
 	{
+		DebugAssert(storage.func != nullptr, "function pointer don't set");
+		if constexpr (IsMemberFunction<Fn>)
+		{
+			DebugAssert(storage.instance != nullptr, "instance pointer don't set");
+		}
+
 		if constexpr (IsSame<ReturnType, void>)
 		{
 			if constexpr (IsMemberFunction<Fn>)
@@ -86,7 +109,7 @@ struct [[nodiscard]] Event
 			}
 			else
 			{
-				func(args...);
+				storage.func(args...);
 			}
 		}
 		else
@@ -97,24 +120,24 @@ struct [[nodiscard]] Event
 			}
 			else
 			{
-				return func(args...);
+				return storage.func(args...);
 			}
 		}
 	}
 
 	template<typename... TArgs>
-	constexpr ReturnType _call_method(EventFnDecomposed<Fn>::ObjectType*& instance, TArgs&&... args) const
+	constexpr ReturnType _call_method(TArgs&&... args) const
 	{
 		if constexpr (IsSame<ReturnType, void>)
 		{
-			(instance->*func)(args...);
+			(storage.instance->*storage.func)(args...);
 		}
 		else
 		{
-			return (instance->*func)(args...);
+			return (storage.instance->*storage.func)(args...);
 		}
 	}
 
-	constexpr bool has_func() const { return func != nullptr; }
+	constexpr bool has_func() const { return storage.func != nullptr; }
 };
 

@@ -16,7 +16,7 @@
 #endif
 
 
-void* operator new(size_t size)
+void* operator new(size_t)
 {
     FailOn(true, "Avoid 'new' statements!");
     return nullptr;

@@ -1,8 +1,8 @@
 #pragma once
+#include "core/pair.h"
 #include "mem/allocator.h"
 #include "mem/utils.h"
 
-#include <memory>
 
 // Default hash
 template<typename T>

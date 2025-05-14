@@ -9,7 +9,7 @@
 namespace mem
 {
 
-    Slice<u8> PageAllocator::alloc(usize size, usize alignment)
+    Slice<u8> PageAllocator::alloc(usize size, usize)
     {
         Slice<u8> ptr = {};
 

@@ -100,7 +100,7 @@ struct [[nodiscard]] Array
         return items[count++];
     }
 
-    [[nodiscard]] void remove(usize index)
+    void remove(usize index)
     {
         DebugAssert(index < count && count != 0, "index out of range");
         if (count == 1)
@@ -114,7 +114,7 @@ struct [[nodiscard]] Array
         }
     }
 
-    [[nodiscard]] void remove_equal(const T& item)
+    void remove_equal(const T& item)
     {
         for (usize i = 0; i < count; i++)
         {

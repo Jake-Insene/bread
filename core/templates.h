@@ -1,5 +1,4 @@
 #pragma once
-#include "core/types.h"
 
 // Type comparision
 template<typename A, typename B>
@@ -113,3 +112,16 @@ inline constexpr bool IsArithmetic =
     IsInteger<T> || IsFloatingPoint<T>;
 
 
+template<bool Test, typename T>
+struct EnableIfT
+{
+};
+
+template<typename T>
+struct EnableIfT<true, T>
+{
+  using Type = T;  
+};
+
+template<bool Test, typename T = void>
+using EnableIf = typename EnableIfT<Test, T>::Type;

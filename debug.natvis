@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+    <Type Name="Array&lt;*&gt;">
+        <DisplayString>{{ count={count} }}</DisplayString>
+        <Expand>
+            <Item Name="[count]" ExcludeView="simple">count</Item>
+            <Item Name="[capacity]" ExcludeView="simple">items.len</Item>
+            <ArrayItems>
+                <Size>count</Size>
+                <ValuePointer>items.ptr()</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+    <Type Name="Slice&lt;*&gt;">
+        <DisplayString>{{ len={len} }}</DisplayString>
+        <Expand>
+            <Item Name="[count]" ExcludeView="simple">len</Item>
+            <ArrayItems>
+                <Size>len</Size>
+                <ValuePointer>items</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+	<Type Name="StringView">
+		<DisplayString>{items,[len]na}</DisplayString>
+		<StringView>items,[len]na</StringView>
+	</Type>
+
+	<Type Name="StringMap&lt;*&gt;">
+		<DisplayString>{{ count = {count} }}</DisplayString>
+		<Expand>
+			<CustomListItems MaxItemsPerView="5000" ExcludeView="Test">
+				<Variable Name="iterator" InitialValue="first" />
+				<Size>count</Size>
+				<Loop>
+					<Break Condition="iterator == nullptr" />
+					<Item Name="[{iterator->kv.hash}]">iterator->kv.value</Item>
+					<Exec>iterator = iterator->next</Exec>
+				</Loop>
+			</CustomListItems>
+		</Expand>
+	</Type>
+
+	<Type Name="HashMap&lt;*&gt;">
+		<DisplayString>{{ count = {count} }}</DisplayString>
+		<Expand>
+			<CustomListItems MaxItemsPerView="5000" ExcludeView="Test">
+				<Variable Name="iterator" InitialValue="first" />
+				<Size>count</Size>
+				<Loop>
+					<Break Condition="iterator == nullptr" />
+					<Item Name="[{iterator->kv.hash}]">iterator->kv.value</Item>
+					<Exec>iterator = iterator->next</Exec>
+				</Loop>
+			</CustomListItems>
+		</Expand>
+	</Type>
+	
+</AutoVisualizer>
