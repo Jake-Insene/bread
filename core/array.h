@@ -99,6 +99,32 @@ struct [[nodiscard]] Array
         items[count] = item;
         return items[count++];
     }
+
+    [[nodiscard]] void remove(usize index)
+    {
+        DebugAssert(index < count && count != 0, "index out of range");
+        if (count == 1)
+        {
+            count--;
+        }
+        else
+        {
+            count--;
+            mem::copy(items.add(index), items.add(index + 1));
+        }
+    }
+
+    [[nodiscard]] void remove_equal(const T& item)
+    {
+        for (usize i = 0; i < count; i++)
+        {
+            if (items[i] == item)
+            {
+                remove(i);
+                return;
+            }
+        }
+    }
     
     void resize(const usize new_size)
     {

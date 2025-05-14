@@ -9,14 +9,8 @@ struct Body2D : Object2D
 {
     OBJECT(Body2D, Object2D);
 
-    enum BodyType
-    {
-        UNKNOWN = 0,
-
-        STATIC = Physics2D::STATIC,
-        DYNAMIC = Physics2D::DYNAMIC,
-        KINEMATIC = Physics2D::KINEMATIC,
-    };
+    using BodyType = Physics2D::BodyType;
+    using CollisionMask = Physics2D::CollisionMask;
     
     // As everything in a struct is public we need to hide data
     // that should not be modified/access directly, this also
@@ -24,18 +18,19 @@ struct Body2D : Object2D
     struct InternalData
     {
         Physics2D::BodyID body_id = Physics2D::BodyID::InvalidID;
-        BodyType type = DYNAMIC;
+        BodyType type = BodyType::DYNAMIC;
         
         Vector2 velocity{0, 0};
         f32 mass = 1;
         f32 friction = 1;
 
         bool grounded = false;
+
+        CollisionMask residence_mask = CollisionMask::COLLISION_MASK_0;
+        CollisionMask collision_mask = CollisionMask::COLLISION_MASK_0;
     } data;
 
     Event<void(Body2D::*)(Body2D*)> colliding_with;
-    // Ignore collision
-    bool ignore_collision;
     
     void init(const CreateInfo&);
     void deinit();
@@ -62,4 +57,10 @@ struct Body2D : Object2D
     void set_fixed_rotation(bool enable) const;
 
     [[nodiscard]] bool is_on_floor() const { return Physics2D::body_is_on_floor(data.body_id); }
+
+    void set_residence_mask(CollisionMask mask);
+    [[nodiscard]] CollisionMask get_residence_mask() const { return data.residence_mask; }
+
+    void set_collision_mask(CollisionMask mask);
+    [[nodiscard]] CollisionMask get_collision_mask() const { return data.collision_mask; }
 };

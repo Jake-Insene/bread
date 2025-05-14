@@ -34,7 +34,8 @@ struct P2DDriver
     {
         Body2D* target;
         Physics2D::BodyID self;
-        u64 index_process;
+        Physics2D::CollisionMask residence_mask;
+        Physics2D::CollisionMask collision_mask;
         Shape2D shape;
 
         Vector2 last_updated_pos;
@@ -48,17 +49,29 @@ struct P2DDriver
         u32 is_on_floor : 1;
     };
 
+    struct CollisionMaskGroup
+    {
+        bool active;
+        Array<Physics2D::BodyID> bodies;
+    };
+
+    struct CollisionResult
+    {
+        Vector2 advance;
+    };
+
     struct InternalData
     {
         mem::Allocator allocator;
 
         Vector2 gravity;
 
-        QueueArray<Body, Physics2D::BodyID> current_bodies;
-        Array<Physics2D::BodyID> process_bodies;
+        CollisionMaskGroup residence_mask_groups[Physics2D::MAX_COLLISION_MASKS];
+        CollisionMaskGroup collision_mask_groups[Physics2D::MAX_COLLISION_MASKS];
 
-        HashMap<CollisionID, u32> collision_callbacks_map;
-        Array<CollisionCallback> collision_callbacks;
+        QueueArray<Body, Physics2D::BodyID> current_bodies;
+
+        HashMap<CollisionID, CollisionCallback> collision_callbacks_map;
     };
 
     static inline InternalData data;
@@ -69,7 +82,7 @@ struct P2DDriver
     {
         return data.allocator;
     }
-    [[nodiscard]] static Body& get_body(Physics2D::BodyID bodyid)
+    [[nodiscard]] static Body& _get_body(Physics2D::BodyID bodyid)
     {
         return data.current_bodies.get(bodyid);
     }
@@ -95,6 +108,18 @@ struct P2DDriver
     static void body_set_fixed_rotation(Physics2D::BodyID body_id, bool enable);
     static bool body_is_on_floor(Physics2D::BodyID body_id);
 
+    static void body_set_residence_mask(Physics2D::BodyID body_id, Physics2D::CollisionMask mask);
+    static Physics2D::CollisionMask body_get_residence_mask(Physics2D::BodyID body_id);
+    static void body_set_collision_mask(Physics2D::BodyID body_id, Physics2D::CollisionMask mask);
+    static Physics2D::CollisionMask body_get_collision_mask(Physics2D::BodyID body_id);
+
     static void _step_body(Body& body, f32 dt);
+    static void _check_collision_in_group(CollisionMaskGroup& group, Body& body,
+        Vector2 velocity, CollisionResult& collision_result);
     static void _resolve_collision_callbacks();
+
+    static void _residence_group_add(Physics2D::BodyID body_id, usize group_index);
+    static void _residence_group_remove(Physics2D::BodyID body_id, usize group_index);
+    static void _collision_group_add(Physics2D::BodyID body_id, usize group_index);
+    static void _collision_group_remove(Physics2D::BodyID body_id, usize group_index);
 };

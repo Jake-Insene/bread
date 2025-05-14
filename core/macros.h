@@ -1,11 +1,10 @@
 #pragma once
 #include "core/log.h"
-
-#include <cstdlib>
+#include "debug/debug.h"
 
 #define DEBUG (NDEBUG != 1)
 
-#define Fatal(...) Log::error(__VA_ARGS__); std::abort()
+#define Fatal(...) Log::error(__VA_ARGS__); Debug::breakpoint();
 
 #define FailOn(cond, ...) \
     if(cond)\
@@ -14,17 +13,14 @@
     }
 
 #if defined(NDEBUG)
-
 #define DebugAssert(cond, ...)
-
 #else
-
 #define DebugAssert(cond, ...) \
     if(!(cond))\
     {\
-        Fatal(__VA_ARGS__);\
+        Log::error(__VA_ARGS__);\
+        Debug::breakpoint();\
     }
-    
 #endif // NDEBUG
 
 // Utility

@@ -49,13 +49,24 @@ void Object::handle_render()
 void Object::add_child(Object *obj)
 {
     Object* child = data.childs.insert(obj->id, obj);
-    
     child->data.parent = this;
     
     if(is_in_scene())
     {
         ObjectCallRef(child, start);
     }
+}
+
+void Object::remove_child(Object* child)
+{
+    data.childs.remove(child->id);
+    ObjectCallRef(child, exit);
+    DestroyObject(child);
+}
+
+void Object::queue_free()
+{
+    SceneManager::_queue_free(get_parent(), this);
 }
 
 void Object::init(const CreateInfo& info)

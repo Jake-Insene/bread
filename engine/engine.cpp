@@ -19,6 +19,7 @@
 void* operator new(size_t size)
 {
     FailOn(true, "Avoid 'new' statements!");
+    return nullptr;
 }
 
 void operator delete(void*)
@@ -97,7 +98,7 @@ void Engine::step()
 
 void Engine::handle_input(const InputEvent& event)
 {
-    SceneManager::handle_input(event);
+    SceneManager::_handle_input(event);
 }
 
 void Engine::set_vsync(bool vsync)

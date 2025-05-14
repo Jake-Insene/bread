@@ -53,9 +53,17 @@ Object* ObjectAllocator::allocate_object(const Object::Class* klass)
     {
         ObjectID copied_id = chunk.last_free_id;
         Object* obj = get_by_id(copied_id);
-        chunk.last_free_id = obj->id;
-
+        if(obj->id != chunk.last_free_id)
+        {
+            chunk.last_free_id = obj->id;
+        }
+        else
+        {
+            chunk.last_free_id = InvalidObjectID;
+        }
+        
         klass->vtable.construct(obj);
+        obj->klass = klass;
         obj->id = copied_id;
         return obj;
     }

@@ -39,6 +39,10 @@ Physics2D::VTable P2DDriver::get_vtable()
         .body_apply_impulse = &P2DDriver::body_apply_impulse,
         .body_set_fixed_rotation = &P2DDriver::body_set_fixed_rotation,
         .body_is_on_floor = &P2DDriver::body_is_on_floor,
+        .body_set_residence_mask = &P2DDriver::body_set_residence_mask,
+        .body_get_residence_mask = &P2DDriver::body_get_residence_mask,
+        .body_set_collision_mask = &P2DDriver::body_set_collision_mask,
+        .body_get_collision_mask = &P2DDriver::body_get_collision_mask,
     };
 }
 
@@ -48,46 +52,60 @@ void P2DDriver::initialize(const mem::Allocator& allocator)
 
     data.gravity = Vector2(0, -98);
 
-    data.current_bodies = QueueArray<Body, Physics2D::BodyID>::with_size(data.allocator, 4);
-    data.process_bodies = Array<Physics2D::BodyID>::with_size(data.allocator, 60);
+    for (usize i = 0; i < Physics2D::MAX_COLLISION_MASKS; i++)
+    {
+        data.residence_mask_groups[i].active = false;
+        data.residence_mask_groups[i].bodies = Array<Physics2D::BodyID>::with_size(data.allocator, 4);
 
-    data.collision_callbacks_map = HashMap<CollisionID, u32>::with_size(data.allocator, 4);
-    data.collision_callbacks = Array<CollisionCallback>::with_size(data.allocator, 4);
+        data.collision_mask_groups[i].active = false;
+        data.collision_mask_groups[i].bodies = Array<Physics2D::BodyID>::with_size(data.allocator, 4);
+    }
+
+    data.current_bodies = QueueArray<Body, Physics2D::BodyID>::with_size(data.allocator, 4);
+
+    data.collision_callbacks_map = HashMap<CollisionID, CollisionCallback>::with_size(data.allocator, 4);
 }
 
 void P2DDriver::shutdown()
 {
+    for (usize i = 0; i < Physics2D::MAX_COLLISION_MASKS; i++)
+    {
+        data.residence_mask_groups[i].bodies.destroy();
+        data.collision_mask_groups[i].bodies.destroy();
+    }
+
     data.current_bodies.destroy();
-    data.process_bodies.destroy();
     data.collision_callbacks_map.destroy();
-    data.collision_callbacks.destroy();
 }
 
 void P2DDriver::step(f32 dt)
 {
-    for (auto& bodyid : data.process_bodies)
+    for (usize i = 0; i < Physics2D::MAX_COLLISION_MASKS; i++)
     {
-        Body& body = get_body(bodyid);
-        _step_body(body, dt);
+        CollisionMaskGroup& group = data.residence_mask_groups[i];
+        if (!group.active)
+        {
+            continue;
+        }
 
-        _resolve_collision_callbacks();
+        for (auto& bodyid : group.bodies)
+        {
+            _step_body(_get_body(bodyid), dt);
+        }
     }
+
+    _resolve_collision_callbacks();
 }
 
 Physics2D::BodyID P2DDriver::create_body(Body2D* object)
 {
-    if(data.current_bodies.count == 0)
-    {
-        data.process_bodies.clear();
-    }
-
     Physics2D::BodyID id = data.current_bodies.add(Body());
     Body& b = data.current_bodies.get(id);
-    (void)data.process_bodies.add(id);
-    b.index_process = data.process_bodies.count - 1;
 
     b.target = object;
     b.self = id;
+    b.residence_mask = Physics2D::CollisionMask(0);
+    b.collision_mask = Physics2D::CollisionMask(0);
 
     b.type = (Physics2D::BodyType)object->get_type();
     b.mass = object->get_mass();
@@ -105,185 +123,166 @@ Physics2D::BodyID P2DDriver::create_body(Body2D* object)
 
 void P2DDriver::destroy_body(Physics2D::BodyID body_id)
 {
+    body_set_residence_mask(body_id, Physics2D::CollisionMask(0));
+    body_set_collision_mask(body_id, Physics2D::CollisionMask(0));
     data.current_bodies.remove(body_id);
-    if(data.current_bodies.count == 0)
-    {
-        data.process_bodies.clear();
-    }
+
+    Debug::info("P2D: Destroy Body[%u]", body_id);
 }
 
 void P2DDriver::body_as_box(Physics2D::BodyID body_id, const Vector2& new_size)
 {
-    Body& body = get_body(body_id);
+    Body& body = _get_body(body_id);
     body.shape.set_size(new_size);
 }
 
 void P2DDriver::body_set_type(Physics2D::BodyID body_id, Physics2D::BodyType new_type)
 {
-    Body& body = get_body(body_id);
+    Body& body = _get_body(body_id);
     body.type = new_type;
 }
 
 void P2DDriver::body_set_velocity(Physics2D::BodyID body_id, const Vector2& new_velocity)
 {
-    Body& body = get_body(body_id);
+    Body& body = _get_body(body_id);
     body.velocity = new_velocity;
 }
 
 Vector2 P2DDriver::body_get_velocity(Physics2D::BodyID body_id)
 {
-    Body& body = get_body(body_id);
+    Body& body = _get_body(body_id);
     return body.velocity;
 }
 
 void P2DDriver::body_set_mass(Physics2D::BodyID body_id, f32 new_mass)
 {
-    Body& body = get_body(body_id);
+    Body& body = _get_body(body_id);
     body.mass = new_mass;
 }
 
 f32 P2DDriver::body_get_mass(Physics2D::BodyID body_id)
 {
-    const Body& body = get_body(body_id);
+    const Body& body = _get_body(body_id);
     return body.mass;
 }
 
 void P2DDriver::body_set_friction(Physics2D::BodyID body_id, f32 new_friction)
 {
-    Body& body = get_body(body_id);
+    Body& body = _get_body(body_id);
     body.friction = new_friction;
 }
 
 f32 P2DDriver::body_get_friction(Physics2D::BodyID body_id)
 {
-    const Body& body = get_body(body_id);
+    const Body& body = _get_body(body_id);
     return body.friction;
 }
 
 void P2DDriver::body_apply_force(Physics2D::BodyID body_id, const Vector2& point, const Vector2& force)
 {
-    Body& body = get_body(body_id);
+    Body& body = _get_body(body_id);
 }
 
 void P2DDriver::body_apply_impulse(Physics2D::BodyID body_id, const Vector2& point, const Vector2& impulse)
 {
-    Body& body = get_body(body_id);
+    Body& body = _get_body(body_id);
 }
 
 void P2DDriver::body_set_fixed_rotation(Physics2D::BodyID body_id, bool enable)
 {
-    Body& body = get_body(body_id);
+    Body& body = _get_body(body_id);
     body.fixed_rotation = enable;
 }
 
 bool P2DDriver::body_is_on_floor(Physics2D::BodyID body_id)
 {
-    const Body& body = get_body(body_id);
+    const Body& body = _get_body(body_id);
     return body.is_on_floor;
+}
+
+void P2DDriver::body_set_residence_mask(Physics2D::BodyID body_id, Physics2D::CollisionMask mask)
+{
+    Body& body = _get_body(body_id);
+
+    for (usize i = 0; i < Physics2D::MAX_COLLISION_MASKS; i++)
+    {
+        if ((body.residence_mask & 1 << i) && (mask & 1 << i))
+            continue;
+
+        if (mask & 1<<i)
+        {
+            _residence_group_add(body_id, i);
+        }
+        else
+        {
+            _residence_group_remove(body_id, i);
+        }
+    }
+
+    body.residence_mask = mask;
+}
+
+Physics2D::CollisionMask P2DDriver::body_get_residence_mask(Physics2D::BodyID body_id)
+{
+    return _get_body(body_id).residence_mask;
+}
+
+void P2DDriver::body_set_collision_mask(Physics2D::BodyID body_id, Physics2D::CollisionMask mask)
+{
+    Body& body = _get_body(body_id);
+
+    for (usize i = 0; i < Physics2D::MAX_COLLISION_MASKS; i++)
+    {
+        if ((body.collision_mask & 1 << i) && (mask & 1 << i))
+            continue;
+
+        if (mask & 1 << i)
+        {
+            _collision_group_add(body_id, i);
+        }
+        else
+        {
+            _collision_group_remove(body_id, i);
+        }
+    }
+
+    body.collision_mask = mask;
+}
+
+Physics2D::CollisionMask P2DDriver::body_get_collision_mask(Physics2D::BodyID body_id)
+{
+    return _get_body(body_id).collision_mask;
 }
 
 void P2DDriver::_step_body(Body& body, f32 dt)
 {
-    const Vector2 body_size = body.shape.get_size();
-    const Vector2 body_position = body.target->get_position();
-
     // Handle collisions
-    f32 xvelocity = (data.gravity.x * body.mass + body.velocity.x) * dt;
-    f32 yvelocity = (data.gravity.y * body.mass + body.velocity.y) * dt;
+    Vector2 velocity = Vector2(0);
+    velocity.x = (data.gravity.x * body.mass + body.velocity.x) * dt;
+    velocity.y = (data.gravity.y * body.mass + body.velocity.y) * dt;
 
-    bool can_advancex = true;
-    bool can_advancey = true;
-
-    for (auto& bodyjd : data.process_bodies)
+    CollisionResult collision_result =
     {
-        if (body.self == bodyjd || (xvelocity == 0 && yvelocity == 0))
+        .advance = Vector2(1),
+    };
+
+    body.is_on_floor = false;
+    for (usize i = 0; i < Physics2D::MAX_COLLISION_MASKS; i++)
+    {
+        if (1 << i & body.collision_mask)
         {
-            continue;
-        }
-
-        Body& bodyj = get_body(bodyjd);
-        if (bodyj.target->ignore_collision)
-        {
-            continue;
-        }
-
-        Shape2D test_shape = body.shape;
-        Shape2D shapej = bodyj.shape;
-        shapej.translate(bodyj.target->get_position());
-
-        test_shape.translate(body_position + Vector2(xvelocity, 0));
-        if (test_shape.intersect(shapej))
-        {
-            // X correction
-            can_advancex = false;
-
-            Shape2D real_shape = body.shape;
-            real_shape.translate(body_position);
-
-            AABB aabb = real_shape.get_aabb();
-            AABB aabbj = shapej.get_aabb();
-
-            // It doesn't make sense to check if xvelocity == 0 here 
-            if (xvelocity > 0) // Rightwards collision
+            CollisionMaskGroup& group = data.collision_mask_groups[i];
+            _check_collision_in_group(group, body, velocity, collision_result);
+            if (collision_result.advance.x == 0 && collision_result.advance.y == 0)
             {
-                xvelocity = aabbj.min.x - aabb.max.x;
-            }
-            else if (xvelocity < 0) // Leftwards collision
-            {
-                xvelocity = aabbj.max.x - aabb.min.x;
-            }
-        }
-
-        test_shape.translate(Vector2(-xvelocity, yvelocity));
-        if (test_shape.intersect(shapej))
-        {
-            // Y correction
-            can_advancey = false;
-            body.is_on_floor = yvelocity < 0;
-
-            Shape2D real_shape = body.shape;
-            real_shape.translate(body_position);
-
-            AABB aabb = real_shape.get_aabb();
-            AABB aabbj = shapej.get_aabb();
-
-            // It doesn't make sense to check if yvelocity == 0 here
-            if(can_advancex)
-            {
-                if (yvelocity > 0) // Upwards collision
-                {
-                    yvelocity = aabbj.max.y - aabb.min.y;
-                }
-                else if (yvelocity < 0) // Downwards collision
-                {
-                    yvelocity = aabbj.min.y - aabb.max.y;
-                }
-            }
-        }
-
-        if (!can_advancex || !can_advancey) // Collision in any way
-        {
-            CollisionID id = CollisionID(body.self, bodyjd);
-            if (!data.collision_callbacks_map.has(id) &&
-                (body.target->colliding_with.has_func() || bodyj.target->colliding_with.has_func()))
-            {
-                (void)data.collision_callbacks.add(
-                    CollisionCallback
-                    {
-                        .two_ways = body.target->colliding_with.has_func() && bodyj.target->colliding_with.has_func(),
-                        .b1 = body.target->colliding_with.has_func() ? body.target : bodyj.target,
-                        .b2 = body.target->colliding_with.has_func() ? bodyj.target : body.target,
-                    }
-                    );
-
-                data.collision_callbacks_map.insert(id, data.collision_callbacks.count - 1);
+                break;
             }
         }
     }
 
-    body.is_on_floor = can_advancey && yvelocity != 0 ? false : body.is_on_floor;
+    body.is_on_floor = collision_result.advance.y && velocity.y != 0 ? false : body.is_on_floor;
 
-    body.target->translate(Vector2(xvelocity, yvelocity));
+    body.target->translate(velocity * collision_result.advance);
 
     // Debug draw
     Shape2D shape = body.shape;
@@ -300,20 +299,139 @@ void P2DDriver::_step_body(Body& body, f32 dt)
     Graphics2D::draw_line(Color{ 0, 255, 0, 255 }, bottom_left, top_left);
 }
 
+void P2DDriver::_check_collision_in_group(CollisionMaskGroup& group, Body& body, 
+    Vector2 velocity, CollisionResult& collision_result)
+{
+    const Vector2 body_position = body.target->get_position();
+
+    for (auto& bodyjd : group.bodies)
+    {
+        if (body.self == bodyjd || (velocity.x == 0 && velocity.y == 0))
+        {
+            continue;
+        }
+
+        CollisionResult tmp_result =
+        {
+            .advance = Vector2(1),
+        };
+
+        Body& bodyj = _get_body(bodyjd);
+        Shape2D test_shape = body.shape;
+        Shape2D shapej = bodyj.shape;
+        shapej.translate(bodyj.target->get_position());
+
+        test_shape.translate(body_position + Vector2(velocity.x, 0));
+        if (test_shape.intersect(shapej))
+        {
+            // X correction
+            tmp_result.advance.x = false;
+
+            Shape2D real_shape = body.shape;
+            real_shape.translate(body_position);
+
+            AABB aabb = real_shape.get_aabb();
+            AABB aabbj = shapej.get_aabb();
+
+            // It doesn't make sense to check if xvelocity == 0 here 
+            if (velocity.x > 0) // Rightwards collision
+            {
+                velocity.x = aabbj.min.x - aabb.max.x;
+            }
+            else if (velocity.x < 0) // Leftwards collision
+            {
+                velocity.x = aabbj.max.x - aabb.min.x;
+            }
+        }
+
+        test_shape.translate(Vector2(-velocity.x, velocity.y));
+        if (test_shape.intersect(shapej))
+        {
+            // Y correction
+            tmp_result.advance.y = false;
+            body.is_on_floor = velocity.y < 0;
+
+            Shape2D real_shape = body.shape;
+            real_shape.translate(body_position);
+
+            AABB aabb = real_shape.get_aabb();
+            AABB aabbj = shapej.get_aabb();
+
+            // It doesn't make sense to check if yvelocity == 0 here
+            if (tmp_result.advance.x)
+            {
+                if (velocity.y > 0) // Upwards collision
+                {
+                    velocity.y = aabbj.max.y - aabb.min.y;
+                }
+                else if (velocity.y < 0) // Downwards collision
+                {
+                    velocity.y = aabbj.min.y - aabb.max.y;
+                }
+            }
+        }
+
+        if (!tmp_result.advance.x || !tmp_result.advance.y) // Collision in any way
+        {
+            CollisionID id = CollisionID(body.self, bodyjd);
+            if (!data.collision_callbacks_map.has(id) &&
+                (body.target->colliding_with.has_func() || bodyj.target->colliding_with.has_func()))
+            {
+                (void)data.collision_callbacks_map.insert(id,
+                    CollisionCallback
+                    {
+                        .two_ways = body.target->colliding_with.has_func() && bodyj.target->colliding_with.has_func(),
+                        .b1 = body.target->colliding_with.has_func() ? body.target : bodyj.target,
+                        .b2 = body.target->colliding_with.has_func() ? bodyj.target : body.target,
+                    }
+                );
+            }
+        }
+
+        collision_result.advance.x = collision_result.advance.x ? tmp_result.advance.x : 0;
+        collision_result.advance.y = collision_result.advance.y ? tmp_result.advance.y : 0;
+    }
+}
+
 void P2DDriver::_resolve_collision_callbacks()
 {
-    for (auto& callback : data.collision_callbacks)
+    for (auto& callback : data.collision_callbacks_map)
     {
-        Body2D* b1 = callback.b1;
-        Body2D* b2 = callback.b2;
+        Body2D* b1 = callback.value.b1;
+        Body2D* b2 = callback.value.b2;
 
         b1->colliding_with.call(b1, b2);
-        if (callback.two_ways)
+        if (callback.value.two_ways)
         {
             b2->colliding_with.call(b2, b1);
         }
     }
 
     data.collision_callbacks_map.clear();
-    data.collision_callbacks.clear();
+}
+
+void P2DDriver::_residence_group_add(Physics2D::BodyID body_id, usize group_index)
+{
+    CollisionMaskGroup& group = data.residence_mask_groups[group_index];
+    group.active = true;
+    (void)group.bodies.add(body_id);
+}
+
+void P2DDriver::_residence_group_remove(Physics2D::BodyID body_id, usize group_index)
+{
+    CollisionMaskGroup& group = data.residence_mask_groups[group_index];
+    group.bodies.remove_equal(body_id);
+}
+
+void P2DDriver::_collision_group_add(Physics2D::BodyID body_id, usize group_index)
+{
+    CollisionMaskGroup& group = data.collision_mask_groups[group_index];
+    group.active = true;
+    (void)group.bodies.add(body_id);
+}
+
+void P2DDriver::_collision_group_remove(Physics2D::BodyID body_id, usize group_index)
+{
+    CollisionMaskGroup& group = data.collision_mask_groups[group_index];
+    group.bodies.remove_equal(body_id);
 }

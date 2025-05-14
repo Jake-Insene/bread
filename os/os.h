@@ -1,5 +1,8 @@
 #pragma once
-#include "core/header.h"
+#include "core/types.h"
+#include "core/id.h"
+#include "core/vtable.h"
+
 
 struct OS
 {
@@ -13,6 +16,7 @@ struct OS
         VTFunc(void, initialize);
         VTFunc(void, shutdown);
 
+        VTFunc(void, exit, u64);
         VTFunc(usize, get_page_size);
 
         VTFunc(ThreadID, thread_create, ThreadFn, void*);
@@ -32,6 +36,7 @@ struct OS
 
     VTFuncDefS(shutdown);
 
+    VTFuncDefArg1S(exit, u64);
     VTFuncDefRetS(usize, get_page_size);
 
     VTFuncDefArg2RetS(ThreadID, thread_create, ThreadFn, void*);

@@ -16,5 +16,14 @@ struct Debug
             Log::info(fmt, args...);
         }
     }
+
+    static void breakpoint()
+    {
+#if defined(_WIN32)
+        __debugbreak();
+#else
+        * (nullptr);
+#endif
+    }
     
 };

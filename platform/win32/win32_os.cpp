@@ -19,6 +19,7 @@ OS::VTable Win32OS::get_vtable()
         .initialize = &Win32OS::initialize,
         .shutdown = &Win32OS::shutdown,
 
+        .exit = &Win32OS::exit,
         .get_page_size = &Win32OS::get_page_size,
 
         .thread_create = &Win32OS::thread_create,
@@ -46,6 +47,11 @@ void Win32OS::initialize()
 
 void Win32OS::shutdown()
 {}
+
+void Win32OS::exit(u64 code)
+{
+    ExitProcess((UINT)code);
+}
 
 usize Win32OS::get_page_size()
 {

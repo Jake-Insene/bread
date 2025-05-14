@@ -198,10 +198,12 @@ struct Object
     // Object std functions
     
     // Can be null on root scene
-    [[nodiscard]] Object* get_parent() { return data.parent; }
     [[nodiscard]] Object* get_parent() const { return data.parent; }
+
     void add_child(Object* obj);
-    
+    void remove_child(Object* obj);
+
+    void queue_free();
     
     // Object callbacks
 #define OBJECT_FDEFAULT(name)\

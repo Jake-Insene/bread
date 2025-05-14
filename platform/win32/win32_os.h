@@ -49,6 +49,7 @@ struct Win32OS : OS
     static void initialize();
     static void shutdown();
 
+    static void exit(u64 code);
     static usize get_page_size();
 
     static ThreadID thread_create(ThreadFn fn, void* arg);

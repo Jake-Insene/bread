@@ -42,6 +42,8 @@ void SceneManager::initialize(mem::Allocator allocator)
 
 	// To avoid any Out Of Range error in handle_input
     data.touched_focus.resize(1);
+
+    data.queue_frees = HashMap<ObjectID, QueueFreeInfo>::with_size(allocator, 4);
 }
 
 void SceneManager::shutdown()
@@ -54,6 +56,7 @@ void SceneManager::shutdown()
 
     data.touched_focus.destroy();
     data.gui_roots.destroy();
+    data.queue_frees.destroy();
 }
 
 void SceneManager::change_scene(Object* new_scene)
@@ -122,10 +125,18 @@ void SceneManager::step()
         Graphics::present();
         
         data.fps_acum++;
+
+        for (auto& qf : data.queue_frees)
+        {
+            Debug::info("Queue Free: %llu", qf.value.child->id);
+            qf.value.parent->remove_child(qf.value.child);
+        }
+
+        data.queue_frees.clear();
     }
 }
 
-Vector2 SceneManager::screen_make_local(Vector2 pos)
+Vector2 SceneManager::_screen_make_local(Vector2 pos)
 {
     // converting touch position into local scene position
     Vector2I scene_size = data.display_target.get_size();
@@ -141,7 +152,7 @@ Vector2 SceneManager::screen_make_local(Vector2 pos)
     );
 }
 
-Control* SceneManager::find_control_in_pos(Vector2 pos)
+Control* SceneManager::_find_control_in_pos(Vector2 pos)
 {
     for(auto& c : data.gui_roots)
     {
@@ -154,7 +165,7 @@ Control* SceneManager::find_control_in_pos(Vector2 pos)
     return nullptr;
 }
 
-void SceneManager::handle_input(const InputEvent& event)
+void SceneManager::_handle_input(const InputEvent& event)
 {
     if(data.current_scene && data.current_scene->can_handle_event())
     {
@@ -164,9 +175,9 @@ void SceneManager::handle_input(const InputEvent& event)
             InputEventTouch new_event = et;
             new_event = et;
             
-            new_event.position = screen_make_local(et.position);
+            new_event.position = _screen_make_local(et.position);
             data.touched_focus.resize(et.pointer+1);
-            if(Control* c = find_control_in_pos(new_event.position))
+            if(Control* c = _find_control_in_pos(new_event.position))
             {
                 data.touched_focus[et.pointer] = c;
                 ObjectCallRef(c, event, new_event);
@@ -192,8 +203,8 @@ void SceneManager::handle_input(const InputEvent& event)
             InputEventMouseButton new_event = et;
             new_event = et;
 
-            new_event.position = screen_make_local(et.position);
-            if (Control* c = find_control_in_pos(new_event.position))
+            new_event.position = _screen_make_local(et.position);
+            if (Control* c = _find_control_in_pos(new_event.position))
             {
                 data.touched_focus[0] = c;
                 ObjectCallRef(c, event, new_event);
@@ -220,7 +231,19 @@ void SceneManager::set_camera_2d(Camera2D* camera)
     data.current_camera = camera;
 }
 
-void SceneManager::add_root_control(Control* c)
+void SceneManager::_add_root_control(Control* c)
 {
     (void)data.gui_roots.add(c);
+}
+
+void SceneManager::_queue_free(Object* parent, Object* child)
+{
+    if(parent)
+    {
+        (void)data.queue_frees.try_insert(child->id, QueueFreeInfo(parent, child));
+    }
+    else
+    {
+        DestroyObject(child);
+    }
 }

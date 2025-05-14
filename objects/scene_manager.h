@@ -11,6 +11,12 @@ struct Camera2D;
 
 struct SceneManager
 {
+    struct QueueFreeInfo
+    {
+        Object* parent;
+        Object* child;
+    };
+
     struct InternalData
     {
         mem::Allocator allocator;
@@ -29,11 +35,13 @@ struct SceneManager
         
         Array<Control*> gui_roots;
         Array<Control*> touched_focus;
+        HashMap<ObjectID, QueueFreeInfo> queue_frees;
     };
     
     static inline InternalData data;
     
     static f64 get_delta_time() { return data.delta_time; }
+    static RenderTarget get_display_target() { return data.display_target; }
     
     static void initialize(mem::Allocator allocator);
     static void shutdown();
@@ -41,14 +49,14 @@ struct SceneManager
     static void change_scene(Object* new_scene);
     
     static void step();
-    
-    static Vector2 screen_make_local(Vector2 pos);
-    static Control* find_control_in_pos(Vector2 pos);
-    static void handle_input(const InputEvent& event);
+
+    static Vector2 _screen_make_local(Vector2 pos);
+    static Control* _find_control_in_pos(Vector2 pos);
+    static void _handle_input(const InputEvent& event);
 
     static void set_camera_2d(Camera2D* camera);
 
-    static void add_root_control(Control* c);
-
-    static RenderTarget get_display_target() { return data.display_target; }
+    static void _add_root_control(Control* c);
+    
+    static void _queue_free(Object* parent, Object* child);
 };

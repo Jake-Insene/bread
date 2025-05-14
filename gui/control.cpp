@@ -16,7 +16,7 @@ void Control::start()
     Object* parent = get_parent();
     if(parent && !parent->has_flag(FLAG_CONTROL))
     {
-        SceneManager::add_root_control(this);
+        SceneManager::_add_root_control(this);
     }
     
 }

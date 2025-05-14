@@ -8,7 +8,7 @@
 template<typename T>
 struct [[nodiscard]] StringMap
 {
-    static constexpr u64 EmptyHash = 0;
+    static constexpr u64 InvalidHash = u64(-1);
     static constexpr usize InvalidPos = usize(-1);
     static constexpr usize DefaultCapacity = 4;
     
@@ -130,7 +130,7 @@ struct [[nodiscard]] StringMap
         {
             for(auto entry : entries)
             {
-                if(entry)
+                if(entry != nullptr)
                 {
                     allocator.free(mem::to_bytes(Slice<MapEntry>(entry, 1)));
                 }
@@ -175,8 +175,16 @@ struct [[nodiscard]] StringMap
     
     [[nodiscard]] MapEntry* _insert_or_replace(StringView str, const T& value)
     {
+        if (count >= entries.len)
+        {
+            resize(entries.len << 1);
+        }
+        else if (entries.len == 0)
+        {
+            resize(DefaultCapacity);
+        }
+
         u64 hash = hashfunc(str);
-        
         usize pos = InvalidPos;
         if(_find_entry(hash, pos))
         {
@@ -185,15 +193,6 @@ struct [[nodiscard]] StringMap
         }
         else
         {
-            if(count >= entries.len)
-            {
-                resize(entries.len << 1);
-            }
-            else if(entries.len == 0)
-            {
-                resize(DefaultCapacity);
-            }
-            
             usize i = hash & (entries.len - 1);
             while(true)
             {
@@ -221,12 +220,27 @@ struct [[nodiscard]] StringMap
                     count++;
                     return entry;
                 }
-                else if(entries[i]->kv.hash == EmptyHash)
+                else if(entries[i]->kv.hash == InvalidHash)
                 {
-                    entries[i]->kv.hash = hash;
-                    entries[i]->kv.value = value;
+                    MapEntry* entry = entries[i];
+                    entry->kv.hash = hash;
+                    entry->kv.value = value;
+                    entry->next = nullptr;
+
+                    if (first == nullptr)
+                    {
+                        first = entry;
+                        last = entry;
+                    }
+                    else
+                    {
+                        last->next = entry;
+                        entry->prev = last;
+                        last = entry;
+                    }
+
                     count++;
-                    return entries[i];
+                    return entry;
                 }
                 
                 i++;
@@ -249,7 +263,7 @@ struct [[nodiscard]] StringMap
             return;
         }
 
-        if(count >= new_size)
+        if(entries.len >= new_size)
         {
             return;
         }
@@ -259,7 +273,7 @@ struct [[nodiscard]] StringMap
             auto new_items = allocator.array<MapEntry*>(new_size);
             if(entries.ptr())
             {
-                std::memcpy(new_items.ptr(), entries.ptr(), sizeof(MapEntry) * entries.len);
+                mem::copy(new_items, entries);
                 allocator.free(mem::to_bytes(entries));
             }
             
@@ -267,6 +281,7 @@ struct [[nodiscard]] StringMap
         }
         else
         {
+            allocator.construct_array(entries.add(new_size - entries.len));
             entries.len = new_size;
         }
     }
@@ -300,9 +315,48 @@ struct [[nodiscard]] StringMap
     {
         return _insert_or_replace(str, value)->kv.value;
     }
+   
+    void remove(StringView str)
+    {
+        u64 hash = hashfunc(str);
+        usize pos = InvalidPos;
+        (void)_find_entry(hash, pos);
+        if (_find_entry(hash, pos) == false)
+        {
+            FailOn(true, "the item don't exists!");
+        }
+
+        MapEntry* entry = entries[pos];
+        if (entry->prev)
+        {
+            entry->prev->next = entry->next;
+        }
+
+        if (entry->next)
+        {
+            entry->next->prev = entry->prev;
+        }
+
+        if (entry == first && entry == last)
+        {
+            first = nullptr;
+            last = nullptr;
+        }
+        else if (entry == first)
+        {
+            first = entry->next;
+        }
+        else if (entry == last)
+        {
+            last = entry->prev;
+        }
+
+        entry->kv.hash = InvalidHash;
+        count--;
+    }
     
-    // string map utilities
-    
+    // String map utilities
+
     // FNV-1a
     static u64 hashfunc(StringView key)
     {

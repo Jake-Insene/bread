@@ -15,7 +15,7 @@ struct HashOfType
 template<typename K, typename V>
 struct [[nodiscard]] HashMap
 {
-    static constexpr u64 EmptyHash = 0;
+    static constexpr u64 InvalidHash = u64(-1);
     static constexpr usize InvalidPos = usize(-1);
     static constexpr usize DefaultCapacity = 4;
     
@@ -137,7 +137,7 @@ struct [[nodiscard]] HashMap
         {
             for(auto entry : entries)
             {
-                if(entry)
+                if(entry != nullptr)
                 {
                     allocator.free(mem::to_bytes(Slice<MapEntry>(entry, 1)));
                 }
@@ -227,12 +227,28 @@ struct [[nodiscard]] HashMap
                     count++;
                     return entry;
                 }
-                else if(entries[i]->kv.hash == EmptyHash)
+                else if(entries[i]->kv.hash == InvalidHash)
                 {
-                    entries[i]->kv.hash = hash;
-                    entries[i]->kv.value = value;
+                    MapEntry* entry = entries[i];
+                    entry->kv.hash = hash;
+                    entry->kv.value = value;
+                    entry->prev = nullptr;
+                    entry->next = nullptr;
+
+                    if (first == nullptr)
+                    {
+                        first = entry;
+                        last = entry;
+                    }
+                    else
+                    {
+                        last->next = entry;
+                        entry->prev = last;
+                        last = entry;
+                    }
+
                     count++;
-                    return entries[i];
+                    return entry;
                 }
                 
                 i++;
@@ -307,6 +323,59 @@ struct [[nodiscard]] HashMap
     {
         return _insert_or_replace(k, value)->kv.value;
     }
+
+    V& try_insert(const K& k, const V& value)
+    {
+        u64 hash = HashOfType<K>::hashfunc(k);
+        usize pos = InvalidPos;
+        if (_find_entry(hash, pos))
+        {
+            return entries[pos]->kv.value;
+        }
+        else
+        {
+            return _insert_or_replace(k, value)->kv.value;
+        }
+    }
+
+    void remove(const K& k)
+    {
+        u64 hash = HashOfType<K>::hashfunc(k);
+        usize pos = InvalidPos;
+        (void)_find_entry(hash, pos);
+        if (_find_entry(hash, pos) == false)
+        {
+            FailOn(true, "the item don't exists!");
+        }
+
+        MapEntry* entry = entries[pos];
+        if (entry->prev)
+        {
+            entry->prev->next = entry->next;
+        }
+
+        if (entry->next)
+        {
+            entry->next->prev = entry->prev;
+        }
+
+        if (entry == first && entry == last)
+        {
+            first = nullptr;
+            last = nullptr;
+        }
+        else if (entry == first)
+        {
+            first = entry->next;
+        }
+        else if (entry == last)
+        {
+            last = entry->prev;
+        }
+
+        entry->kv.hash = InvalidHash;
+        count--;
+    }
   
     void clear()
     {
@@ -314,7 +383,7 @@ struct [[nodiscard]] HashMap
         {
             if (entry)
             {
-                entry->kv.hash = EmptyHash;
+                entry->kv.hash = InvalidHash;
             }
         }
 

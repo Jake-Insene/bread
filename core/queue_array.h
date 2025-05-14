@@ -53,7 +53,12 @@ struct [[nodiscard]] QueueArray
             {
                 last_free_element = last_element[0];
             }
+            else
+            {
+                last_free_element = InvalidSlot;
+            }
 
+            count++;
             (*(T*)last_element) = item;
             return id;
         }
@@ -65,13 +70,16 @@ struct [[nodiscard]] QueueArray
 
     void remove(const SlotID slot)
     {
-        count--;
         DebugAssert(slot < array.count, "invalid slot");
         DebugAssert(((SlotID*)&array[slot])[0] != InvalidSlot, "slot is already free");
+
+        count--;
 
         if(last_free_element == InvalidSlot)
         {
             last_free_element = slot;
+            SlotID* last_element = (SlotID*)&array[last_free_element];
+            last_element[0] = InvalidSlot;
             return;
         }
 
@@ -86,8 +94,7 @@ struct [[nodiscard]] QueueArray
         {
             SlotID* free_element = (SlotID*)&array[slot];
             free_element[0] = InvalidSlot;
-            last_element[0] = last_free_element;
-            last_free_element = slot;
+            last_element[0] = slot;
         }
     }
 
