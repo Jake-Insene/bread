@@ -4,8 +4,8 @@
 #include "graphics/graphics.h"
 #include "graphics/egl/egl.h"
 #include "io/resource_manager.h"
-#include "objects/scene_manager.h"
-#include "objects/object_allocator.h"
+#include "object/object_allocator.h"
+#include "scene/scene_manager.h"
 #include "os/os.h"
 #include "physics/physics_2d.h"
 
@@ -16,10 +16,10 @@
 #endif
 
 
-void* operator new(size_t)
+void* operator new(size_t size)
 {
     FailOn(true, "Avoid 'new' statements!");
-    return nullptr;
+    return Engine::data.allocator.alloc(size, alignof(usize)).ptr();
 }
 
 void operator delete(void*)
@@ -29,22 +29,11 @@ void operator delete(void*)
 
 extern Object* bread_main();
 
-static Engine::VTable get_engine_vtable()
-{
-#if defined(ENGINE_ANDROID)
-    return AndroidEngine::get_vtable();
-#elif defined(ENGINE_WIN32)
-    return Win32Engine::get_vtable();
-#endif
-}
-
 void Engine::initialize()
 {
     data.allocator = {};
     data.fps = 60;
     auto allocator = data.allocator.allocator();
-
-    vtable = get_engine_vtable();
 
     OS::initialize();
     

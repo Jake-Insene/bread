@@ -24,13 +24,14 @@ namespace mem
             Header* prev;
             Header* next;
         };
-        static_assert(sizeof(Header) == 32);
+        static_assert(sizeof(Header) == 32, "invalid header alignment");
+
+        static constexpr usize MinimumValidRemain = mem::align_up(sizeof(Header) * 2, alignof(Header));
 
         struct Page
         {
             Slice<u8> bytes;
             Header* first_header;
-            Header* last_header;
         };
 
         PageAllocator internal_allocator;
@@ -40,6 +41,7 @@ namespace mem
         void destroy();
 
         Page& allocate_new_page(usize size);
+        void check_integrity();
         
         Slice<u8> alloc(usize size, usize alignment);
         

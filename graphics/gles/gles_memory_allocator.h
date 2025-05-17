@@ -43,7 +43,6 @@ struct GLESMemoryAllocator
         mem::Allocator allocator;
 
         usize allocated_bytes;
-        usize free_bytes;
 
         Array<GLESBuffer> buffers;
         Array<GLESTexture> textures;

@@ -1,6 +1,7 @@
 #pragma once
 #include "core/types.h"
-#include "macros.h"
+#include "core/macros.h"
+#include "core/templates.h"
 
 #include <initializer_list>
 
@@ -12,13 +13,15 @@ struct [[nodiscard]] Slice
     
     constexpr Slice() : items(nullptr), len(0) {}
     
+    constexpr Slice(const Slice<RemoveConst<T>>& slice) : items(slice.items), len(slice.len) {}
+
     template<usize Len>
     constexpr Slice(T(&_items)[Len])
     {
         items = _items;
         len = Len;
     }
-    
+
     constexpr Slice(T* _items, const usize _len)
     {
         items = _items;

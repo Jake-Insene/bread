@@ -5,9 +5,7 @@
 template<usize bits = sizeof(usize)*8>
 struct [[nodiscard]] BitField
 {
-    static_assert((bits & 0x3F) != bits, "Bits is not a multiple of 64");
-
-    usize data[bits/64];
+    usize data[(bits >> 6) + 1];
     
     constexpr void set(const usize index, const bool v)
     {

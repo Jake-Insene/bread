@@ -1,5 +1,6 @@
 #pragma once
 #include "core/string.h"
+#include "core/pair.h"
 #include "mem/allocator.h"
 #include "mem/utils.h"
 
@@ -10,16 +11,13 @@ struct [[nodiscard]] StringMap
     static constexpr u64 InvalidHash = u64(-1);
     static constexpr usize InvalidPos = usize(-1);
     static constexpr usize DefaultCapacity = 4;
-    
-    struct MapKeyValue
-    {
-        T value;
-        u64 hash;
-    };
+
+    using HashType = u64;
+    using KeyValue = Pair<HashType, T>;
     
     struct MapEntry
     {
-        MapKeyValue kv;
+        KeyValue kv;
         
         MapEntry* prev;
         MapEntry* next;
@@ -29,8 +27,8 @@ struct [[nodiscard]] StringMap
     {
         MapEntry* entry;
         
-        MapKeyValue& operator*() const { return entry->kv; }
-        MapKeyValue* operator->() const { return &entry->kv; }
+        KeyValue& operator*() const { return entry->kv; }
+        KeyValue* operator->() const { return &entry->kv; }
         
         Iterator& operator++()
         {
@@ -64,8 +62,8 @@ struct [[nodiscard]] StringMap
     {
         const MapEntry* entry;
         
-        MapKeyValue& operator*() const { return entry->kv; }
-        MapKeyValue* operator->() const { return &entry->kv; }
+        KeyValue& operator*() const { return entry->kv; }
+        KeyValue* operator->() const { return &entry->kv; }
         
         ConstIterator& operator++()
         {
@@ -135,6 +133,7 @@ struct [[nodiscard]] StringMap
                 }
             }
             allocator.free(mem::to_bytes(entries));
+            entries = {};
         }
     }
     
@@ -145,7 +144,7 @@ struct [[nodiscard]] StringMap
     
     // non user funcs
     
-    [[nodiscard]] bool _find_entry(const u64 hash, usize& pos)
+    [[nodiscard]] bool _find_entry(const u64 hash, usize& pos) const
     {
         u64 i = hash & (entries.len - 1);
         usize dist = 0;
@@ -157,7 +156,7 @@ struct [[nodiscard]] StringMap
                 return false;
             }
             
-            if(entries[i] != nullptr && entries[i]->kv.hash == hash)
+            if(entries[i] != nullptr && entries[i]->kv.first == hash)
             {
                 pos = i;
                 return true;
@@ -187,7 +186,7 @@ struct [[nodiscard]] StringMap
         usize pos = InvalidPos;
         if(_find_entry(hash, pos))
         {
-            entries[pos]->kv.value = value;
+            entries[pos]->kv.second = value;
             return entries[pos];
         }
         else
@@ -198,8 +197,7 @@ struct [[nodiscard]] StringMap
                 if(entries[i] == nullptr)
                 {
                     MapEntry* entry = mem::from_bytes<MapEntry>(allocator.alloc(sizeof(MapEntry), alignof(MapEntry))).ptr();
-                    entry->kv.hash = hash;
-                    entry->kv.value = value;
+                    entry->kv = KeyValue(hash, value);
                     entry->prev = nullptr;
                     entry->next = nullptr;
 
@@ -219,11 +217,11 @@ struct [[nodiscard]] StringMap
                     count++;
                     return entry;
                 }
-                else if(entries[i]->kv.hash == InvalidHash)
+                else if(entries[i]->kv.first == InvalidHash)
                 {
                     MapEntry* entry = entries[i];
-                    entry->kv.hash = hash;
-                    entry->kv.value = value;
+                    entry->kv = KeyValue(hash, value);
+                    entry->prev = nullptr;
                     entry->next = nullptr;
 
                     if (first == nullptr)
@@ -267,15 +265,12 @@ struct [[nodiscard]] StringMap
             return;
         }
         
-        if(!allocator.realloc(mem::to_bytes(entries), sizeof(MapEntry*) * new_size, alignof(MapEntry*)))
+        if (!allocator.realloc(mem::to_bytes(entries), sizeof(MapEntry*) * new_size, alignof(MapEntry*)))
         {
             auto new_items = allocator.array<MapEntry*>(new_size);
-            if(entries.ptr())
-            {
-                mem::copy(new_items, entries);
-                allocator.free(mem::to_bytes(entries));
-            }
-            
+            mem::copy(new_items, entries);
+            allocator.free(mem::to_bytes(entries));
+
             entries = new_items;
         }
         else
@@ -285,7 +280,7 @@ struct [[nodiscard]] StringMap
         }
     }
     
-    [[nodiscard]] bool has(StringView str)
+    [[nodiscard]] bool has(StringView str) const
     {
         u64 hash = hashfunc(str);
         usize pos = InvalidPos;
@@ -298,7 +293,7 @@ struct [[nodiscard]] StringMap
         usize pos = InvalidPos;
         (void)_find_entry(hash, pos);
         DebugAssert(pos != InvalidPos, "the item don't exists!");
-        return entries[pos]->kv.value;
+        return entries[pos]->kv.second;
     }
     
     [[nodiscard]] const T& get(StringView str) const
@@ -307,12 +302,12 @@ struct [[nodiscard]] StringMap
         usize pos = InvalidPos;
         (void)_find_entry(hash, pos);
         DebugAssert(pos != InvalidPos, "the item don't exists!");
-        return entries[pos]->kv.value;
+        return entries[pos]->kv.second;
     }
     
     T& insert(StringView str, const T& value)
     {
-        return _insert_or_replace(str, value)->kv.value;
+        return _insert_or_replace(str, value)->kv.second;
     }
    
     void remove(StringView str)
@@ -352,6 +347,20 @@ struct [[nodiscard]] StringMap
 
         entry->kv.hash = InvalidHash;
         count--;
+    }
+
+    void clear()
+    {
+        for (auto& entry : entries)
+        {
+            if (entry)
+            {
+                entry->kv.first = InvalidHash;
+            }
+        }
+
+        count = 0;
+        first = last = nullptr;
     }
     
     // String map utilities

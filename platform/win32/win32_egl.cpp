@@ -1,9 +1,8 @@
 #include "platform/win32/win32_egl.h"
 
-#include "core/array.h"
 #include "graphics/gles/gles_vtable.h"
-#include "platform/win32/win32_engine.h"
-#include "objects/scene_manager.h"
+#include "engine/engine.h"
+
 
 static inline HMODULE gllib = nullptr;
 

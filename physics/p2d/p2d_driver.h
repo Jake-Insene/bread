@@ -66,8 +66,7 @@ struct P2DDriver
 
         Vector2 gravity;
 
-        CollisionMaskGroup residence_mask_groups[Physics2D::MAX_COLLISION_MASKS];
-        CollisionMaskGroup collision_mask_groups[Physics2D::MAX_COLLISION_MASKS];
+        CollisionMaskGroup mask_groups[Physics2D::MAX_COLLISION_MASKS];
 
         QueueArray<Body, Physics2D::BodyID> current_bodies;
 
@@ -115,11 +114,9 @@ struct P2DDriver
 
     static void _step_body(Body& body, f32 dt);
     static void _check_collision_in_group(CollisionMaskGroup& group, Body& body,
-        Vector2 velocity, CollisionResult& collision_result);
+        Vector2& velocity, CollisionResult& collision_result);
     static void _resolve_collision_callbacks();
 
-    static void _residence_group_add(Physics2D::BodyID body_id, usize group_index);
-    static void _residence_group_remove(Physics2D::BodyID body_id, usize group_index);
-    static void _collision_group_add(Physics2D::BodyID body_id, usize group_index);
-    static void _collision_group_remove(Physics2D::BodyID body_id, usize group_index);
+    static void _mask_group_add(Physics2D::BodyID body_id, usize group_index);
+    static void _mask_group_remove(Physics2D::BodyID body_id, usize group_index);
 };

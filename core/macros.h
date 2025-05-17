@@ -2,8 +2,6 @@
 #include "core/log.h"
 #include "debug/debug.h"
 
-#define DEBUG (NDEBUG != 1)
-
 #define Fatal(...) Log::error(__VA_ARGS__); Debug::breakpoint();
 
 #define FailOn(cond, ...) \
@@ -12,15 +10,15 @@
         Fatal(__VA_ARGS__);\
     }
 
-#if defined(NDEBUG)
-#define DebugAssert(cond, ...)
-#else
+#if DEBUG
 #define DebugAssert(cond, ...) \
     if(!(cond))\
     {\
-        Log::error(__VA_ARGS__);\
+        Debug::error(__VA_ARGS__);\
         Debug::breakpoint();\
     }
+#else
+#define DebugAssert(cond, ...)
 #endif // NDEBUG
 
 // Utility

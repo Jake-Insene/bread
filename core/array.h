@@ -16,7 +16,7 @@ struct [[nodiscard]] Array
     
     static Array with_allocator(const mem::Allocator& allocator)
     {
-        auto items = mem::from_bytes<T>(allocator.alloc(sizeof(T) * DefaultCapacity, alignof(T)));
+        auto items = allocator.array<T>(DefaultCapacity);
         return Array
         {
             .allocator = allocator,
@@ -33,6 +33,19 @@ struct [[nodiscard]] Array
             .items = allocator.array<T>(size),
             .count = 0,
         };
+    }
+
+    static Array from_items(const mem::Allocator& allocator, Slice<T> items)
+    {
+        Array array =
+        {
+            .allocator = allocator,
+            .items = allocator.array<T>(items.len),
+            .count = items.len,
+        };
+
+        mem::copy(array.items, items);
+        return array;
     }
     
     void destroy()
@@ -88,8 +101,8 @@ struct [[nodiscard]] Array
         }
         else
         {
-            allocator.construct_array(items.add(new_cap - items.len));
             items.len = new_cap;
+            allocator.construct_array(items.add(count));
         }
     }
     

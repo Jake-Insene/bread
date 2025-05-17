@@ -6,7 +6,7 @@ void Object2D::_bind_vtable(VTable&)
 
 void Object2D::init(const CreateInfo&)
 {
-    Object::data.flags.set(FLAG_2D, true);
+    Object::data.marks.set(MARK_2D, true);
 }
 
 void Object2D::set_position(Vector2 npos)
@@ -51,7 +51,7 @@ f32 Object2D::get_rotation() const
 Transform2D Object2D::get_transform() const
 {
     Object* parent = get_parent();
-    if(parent && parent->has_flag(FLAG_2D))
+    if(parent && parent->has_mark(MARK_2D))
     {
         Object2D* p2d = (Object2D*)parent;
         return p2d->get_transform() * data.transform;

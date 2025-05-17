@@ -9,7 +9,8 @@ struct Camera2D : Object2D
     bool enable = false;
 
     void init(const CreateInfo& info);
-    void start();
+    void enter();
+    void exit();
 
     void set_enable(bool _enable);
     

@@ -10,6 +10,16 @@ else()
     )
 endif()
 
+set(BREAD_BUILD_DEFINITIONS "")
+
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DDEBUG -DSHOW_DEBUG_INFO")
+elseif(${CMAKE_BUILD_TYPE} STREQUAL "Release")
+    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DRELEASE")
+elseif(${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
+    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DDEBUG -DSHOW_DEBUG_INFO")
+endif()
+
 # External sources
 file(GLOB EXTERNAL_SRC
     # freetype
@@ -55,8 +65,9 @@ file(GLOB ENGINE_SRC
     
     io/image.cpp
     io/texture.cpp
-    io/resource.cpp
     io/resource_manager.cpp
+    io/sprite_animation.cpp
+    io/resource.cpp
     
     mem/utils.cpp
     mem/generic_allocator.cpp
@@ -66,15 +77,16 @@ file(GLOB ENGINE_SRC
     os/semaphore.cpp
     os/thread.cpp
 
-    objects/canvas_object.cpp
-    objects/object.cpp
-    objects/object_allocator.cpp
-    objects/scene_manager.cpp
-    objects/timer.cpp
+    object/canvas_object.cpp
+    object/object.cpp
+    object/object_allocator.cpp
+    object/scene_manager.cpp
+    object/timer.cpp
 
     gui/button.cpp
     gui/control.cpp
 
+    2d/animated_sprite_2d.cpp
     2d/camera_2d.cpp
     2d/object_2d.cpp
     2d/sprite_2d.cpp
@@ -84,6 +96,8 @@ file(GLOB ENGINE_SRC
 
     # Default 2d physics driver
     physics/p2d/p2d_driver.cpp
+
+    scene/scene_manager.cpp
 )
 
 file(GLOB GLES_RENDERER_SRC
@@ -108,7 +122,7 @@ if(ANDROID)
 
         ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c
     )
-    add_definitions(-DENGINE_ANDROID)
+    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DENGINE_ANDROID")
     set(PLATFORM_LIBRARIES GLESv3 EGL android log)
 elseif(WIN32)
     file(GLOB PLATFORM_SRC
@@ -122,7 +136,7 @@ elseif(WIN32)
         platform/win32/win32_page_allocator.cpp
         platform/win32/win32_time.cpp
     )
-    add_definitions(-DENGINE_WIN32)
+    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DENGINE_WIN32")
     set(PLATFORM_LIBRARIES opengl32)
 endif()
 
@@ -138,6 +152,8 @@ add_library(
     STATIC
     ${SOURCE_FILES}
 )
+
+target_compile_definitions("bread" PUBLIC ${BREAD_BUILD_DEFINITIONS})
 
 target_include_directories(
     "bread"

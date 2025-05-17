@@ -2,7 +2,7 @@
 
 #include "engine/engine.h"
 #include "input/input.h"
-#include "objects/scene_manager.h"
+#include "scene/scene_manager.h"
 
 
 static inline Win32Display::WindowData& _get_window_data(Display::WindowID id)

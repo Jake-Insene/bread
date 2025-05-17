@@ -3,9 +3,11 @@
 #include "math/vec2.h"
 
 
-// Represents an collection of pixels in memory.
+// Represents a collection of pixels in memory.
 struct Image : Resource
 {
+    RESOURCE(RESOURCE_IMAGE, .LoadFromAssets = true, .Extensions = "png");
+
     enum ImageFormat
     {
         FORMAT_UNKNOWN = 0,

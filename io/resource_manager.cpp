@@ -2,6 +2,7 @@
 
 #include "debug/debug.h"
 #include "graphics/graphics.h"
+#include "os/os.h"
 
 #include <external/stb_image.h>
 
@@ -10,6 +11,8 @@ void ResourceManager::initialize(mem::Allocator& allocator)
 {
     data = {};
     data.allocator = allocator;
+
+    FailOn(OS::set_current_directory("assets") == false, "assets directory not found")
     
     stbi_set_flip_vertically_on_load(true);
     data.resources = StringMap<Resource*>::with_size(
@@ -23,32 +26,102 @@ void ResourceManager::initialize(mem::Allocator& allocator)
 
 void ResourceManager::shutdown()
 {
-    for(auto& entry : data.resources)
+    for(auto& it : data.resources)
     {
-        if(entry.value->type == RESOURCE_IMAGE)
+        switch (it.second->type)
         {
-            Image* image = (Image*)entry.value;
+        case RESOURCE_IMAGE:
+        {
+            Image* image = (Image*)it.second;
             image->destroy();
+        }
+            break;
+        case RESOURCE_SPRITE_ANIMATION:
+        {
+            SpriteAnimation* sa = (SpriteAnimation*)it.second;
+            sa->destroy();
+        }
+            break;
         }
         
         data.allocator.free(
-            mem::to_bytes(Slice<Image>((Image*)entry.value, 1))
+            mem::to_bytes(Slice<Resource>(it.second, 1))
         );
     }
     
-    for(auto& entry : data.cached_images)
+    for(auto& it : data.cached_images)
     {
-        if(entry.value)
+        if(it.second)
         {
-            entry.value->destroy();
+            it.second->destroy();
             data.allocator.free(
-                mem::to_bytes(Slice<Texture>(entry.value, 1))
+                mem::to_bytes(Slice<Texture>(it.second, 1))
             );
         }
     }
 
     data.resources.destroy();
     data.cached_images.destroy();
+}
+
+Resource* ResourceManager::load_resource(ResourceType type,
+    ResourceTypeSpecification specification, StringView path)
+{
+    switch (type)
+    {
+    case RESOURCE_IMAGE:
+        return load_image(path);
+    case RESOURCE_TEXTURE:
+        break;
+    case RESOURCE_TEXTURE_2D:
+        return ResourceManager::load_texture_2d(
+            path,
+            TextureLoadInfo
+            {
+                .type = TEXTURE_2D,
+                .min_filter = TEXTURE_FILTER_NEAREST,
+                .mag_filter = TEXTURE_FILTER_NEAREST,
+            }
+        );
+    case RESOURCE_SPRITE_ANIMATION:
+    {
+        if (data.resources.has(path))
+        {
+            return data.resources.get(path);
+        }
+        return nullptr;
+    }
+    default:
+        return nullptr;
+    }
+
+    return nullptr;
+}
+
+
+Image* ResourceManager::load_image(StringView path)
+{
+    Image* image = nullptr;
+    if (data.resources.has(path))
+    {
+        image = (Image*)data.resources.get(path);
+    }
+    else
+    {
+        Image tmp_image{};
+        if (!tmp_image.load(path))
+        {
+            Fatal("Couldn't load the image '%.*s'", (i32)path.len, path.items);
+        }
+
+        image = get_allocator().object<Image>();
+        *image = tmp_image;
+        image->type = RESOURCE_IMAGE;
+        image->path = String::from_chars(get_allocator(), path);
+        data.resources.insert(path, (Resource*)image);
+    }
+
+    return image;
 }
 
 
@@ -61,10 +134,10 @@ Texture2D* ResourceManager::load_texture_2d(StringView path, const TextureLoadIn
     }
     else
     {
-        image = data.allocator.object<Image>();
+        image = get_allocator().object<Image>();
 
         image->type = RESOURCE_IMAGE;
-        image->path = String::from_chars(data.allocator, path);
+        image->path = String::from_chars(get_allocator(), path);
         data.resources.insert(path, (Resource*)image);
         
         if(!image->load(path))
@@ -81,9 +154,9 @@ Texture2D* ResourceManager::load_texture_2d(StringView path, const TextureLoadIn
     else
     {
         Debug::info("Loading the texture '%.*s'...", (i32)path.len, path.items);
-        tex = data.allocator.object<Texture2D>();
+        tex = get_allocator().object<Texture2D>();
         tex->type = RESOURCE_TEXTURE_2D;
-        tex->path = String::from_chars(data.allocator, path);
+        tex->path = String::from_chars(get_allocator(), path);
         
         TextureCreateInfo create_info =
         {
@@ -104,3 +177,19 @@ Texture2D* ResourceManager::load_texture_2d(StringView path, const TextureLoadIn
     return tex;
 }
 
+
+SpriteAnimation* ResourceManager::create_sprite_animation(StringView name)
+{
+    if (data.resources.has(name))
+    {
+        return nullptr;
+    }
+
+    SpriteAnimation* sprite_animation = get_allocator().object<SpriteAnimation>();
+    data.resources.insert(name, sprite_animation);
+
+    sprite_animation->type = RESOURCE_SPRITE_ANIMATION;
+    sprite_animation->path = String::from_chars(get_allocator(), name);
+    sprite_animation->animations = StringMap<SpriteAnimation::Animation>::with_allocator(get_allocator());
+    return sprite_animation;
+}

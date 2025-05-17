@@ -1,4 +1,4 @@
-#include "objects/scene_manager.h"
+#include "scene/scene_manager.h"
 
 #include "core/time.h"
 #include "core/event.h"
@@ -8,7 +8,7 @@
 #include "graphics/egl/egl.h"
 #include "gui/control.h"
 #include "2d/camera_2d.h"
-#include "objects/object_allocator.h"
+#include "object/object_allocator.h"
 #include "physics/physics_2d.h"
 
 
@@ -69,7 +69,7 @@ void SceneManager::change_scene(Object* new_scene)
     }
     
     data.current_scene = new_scene;
-    ObjectCallRef(data.current_scene, start);
+    ObjectCallRef(data.current_scene, enter);
 }
 
 void SceneManager::step()
@@ -94,6 +94,8 @@ void SceneManager::step()
         data.current_scene->handle_internal_update(data.delta_time);
         data.current_scene->handle_update(data.delta_time);
         
+        Physics2D::step(data.delta_time);
+
         Graphics::add_cmd(
             RenderCommand
             {
@@ -117,7 +119,16 @@ void SceneManager::step()
             }
         );
 
-        Physics2D::step(data.delta_time);
+        if(data.current_camera)
+        {
+            Graphics::add_cmd(
+                RenderCommand
+                {
+                    .type = RenderCommand::SET_SCENE_TRANSFORM,
+                    .transform = data.current_camera->get_transform()
+                }
+            );
+        }
 
         data.current_scene->handle_render();
         
@@ -126,10 +137,9 @@ void SceneManager::step()
         
         data.fps_acum++;
 
-        for (auto& qf : data.queue_frees)
+        for (auto& it : data.queue_frees)
         {
-            Debug::info("Queue Free: %llu", qf.value.child->id);
-            qf.value.parent->remove_child(qf.value.child);
+            it.second.parent->remove_child(it.second.child);
         }
 
         data.queue_frees.clear();
@@ -167,7 +177,7 @@ Control* SceneManager::_find_control_in_pos(Vector2 pos)
 
 void SceneManager::_handle_input(const InputEvent& event)
 {
-    if(data.current_scene && data.current_scene->can_handle_event())
+    if(data.current_scene && data.current_scene->has_mark(Object::MARK_HANDLE_EVENT))
     {
         if(event.type == INPUT_EVENT_TOUCH)
         {
@@ -240,7 +250,7 @@ void SceneManager::_queue_free(Object* parent, Object* child)
 {
     if(parent)
     {
-        (void)data.queue_frees.try_insert(child->id, QueueFreeInfo(parent, child));
+        (void)data.queue_frees.insert(child->id, QueueFreeInfo(parent, child));
     }
     else
     {

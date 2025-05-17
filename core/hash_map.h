@@ -18,16 +18,13 @@ struct [[nodiscard]] HashMap
     static constexpr u64 InvalidHash = u64(-1);
     static constexpr usize InvalidPos = usize(-1);
     static constexpr usize DefaultCapacity = 4;
-    
-    struct MapKeyValue
-    {
-        u64 hash;
-        V value;
-    };
-    
+
+    using HashType = u64;
+    using KeyValue = Pair<HashType, V>;
+
     struct MapEntry
     {
-        MapKeyValue kv;
+        KeyValue kv;
         
         MapEntry* prev;
         MapEntry* next;
@@ -37,8 +34,8 @@ struct [[nodiscard]] HashMap
     {
         MapEntry* entry;
         
-        MapKeyValue& operator*() const { return entry->kv; }
-        MapKeyValue* operator->() const { return &entry->kv; }
+        KeyValue& operator*() const { return entry->kv; }
+        KeyValue* operator->() const { return &entry->kv; }
         
         Iterator& operator++()
         {
@@ -72,8 +69,8 @@ struct [[nodiscard]] HashMap
     {
         const MapEntry* entry;
         
-        MapKeyValue& operator*() const { return entry->kv; }
-        MapKeyValue* operator->() const { return &entry->kv; }
+        KeyValue& operator*() const { return entry->kv; }
+        KeyValue* operator->() const { return &entry->kv; }
         
         ConstIterator& operator++()
         {
@@ -133,16 +130,17 @@ struct [[nodiscard]] HashMap
     
     void destroy()
     {
-        if(entries.ptr())
+        if (entries.ptr())
         {
-            for(auto entry : entries)
+            for (auto entry : entries)
             {
-                if(entry != nullptr)
+                if (entry != nullptr)
                 {
                     allocator.free(mem::to_bytes(Slice<MapEntry>(entry, 1)));
                 }
             }
             allocator.free(mem::to_bytes(entries));
+            entries = {};
         }
     }
     
@@ -153,7 +151,7 @@ struct [[nodiscard]] HashMap
     
     // non user funcs
     
-    [[nodiscard]] bool _find_entry(const u64 hash, usize& pos)
+    [[nodiscard]] bool _find_entry(const u64 hash, usize& pos) const
     {
         u64 i = hash & (entries.len - 1);
         usize dist = 0;
@@ -165,7 +163,7 @@ struct [[nodiscard]] HashMap
                 return false;
             }
             
-            if(entries[i] != nullptr && entries[i]->kv.hash == hash)
+            if(entries[i] != nullptr && entries[i]->kv.first == hash)
             {
                 pos = i;
                 return true;
@@ -195,7 +193,7 @@ struct [[nodiscard]] HashMap
         usize pos = InvalidPos;
         if(_find_entry(hash, pos))
         {
-            entries[pos]->kv.value = value;
+            entries[pos]->kv.second = value;
             return entries[pos];
         }
         else
@@ -206,8 +204,7 @@ struct [[nodiscard]] HashMap
                 if(entries[i] == nullptr)
                 {
                     MapEntry* entry = mem::from_bytes<MapEntry>(allocator.alloc(sizeof(MapEntry), alignof(MapEntry))).ptr();
-                    entry->kv.hash = hash;
-                    entry->kv.value = value;
+                    entry->kv = KeyValue(hash, value);
                     entry->prev = nullptr;
                     entry->next = nullptr;
 
@@ -227,11 +224,10 @@ struct [[nodiscard]] HashMap
                     count++;
                     return entry;
                 }
-                else if(entries[i]->kv.hash == InvalidHash)
+                else if(entries[i]->kv.first == InvalidHash)
                 {
                     MapEntry* entry = entries[i];
-                    entry->kv.hash = hash;
-                    entry->kv.value = value;
+                    entry->kv = KeyValue(hash, value);
                     entry->prev = nullptr;
                     entry->next = nullptr;
 
@@ -276,15 +272,12 @@ struct [[nodiscard]] HashMap
             return;
         }
         
-        if(!allocator.realloc(mem::to_bytes(entries), sizeof(MapEntry*) * new_size, alignof(MapEntry*)))
+        if (!allocator.realloc(mem::to_bytes(entries), sizeof(MapEntry*) * new_size, alignof(MapEntry*)))
         {
             auto new_items = allocator.array<MapEntry*>(new_size);
-            if(entries.ptr())
-            {
-                mem::copy(new_items, entries);
-                allocator.free(mem::to_bytes(entries));
-            }
-            
+            mem::copy(new_items, entries);
+            allocator.free(mem::to_bytes(entries));
+
             entries = new_items;
         }
         else
@@ -294,7 +287,7 @@ struct [[nodiscard]] HashMap
         }
     }
     
-    [[nodiscard]] bool has(const K& k)
+    [[nodiscard]] bool has(const K& k) const
     {
         u64 hash = HashOfType<K>::hashfunc(k);
         usize pos = InvalidPos;
@@ -307,7 +300,7 @@ struct [[nodiscard]] HashMap
         usize pos = InvalidPos;
         (void)_find_entry(hash, pos);
         DebugAssert(pos != InvalidPos, "the item don't exists!");
-        return entries[pos]->kv.value;
+        return entries[pos]->kv.second;
     }
     
     [[nodiscard]] const V& get(const K& k) const
@@ -316,26 +309,12 @@ struct [[nodiscard]] HashMap
         usize pos = InvalidPos;
         (void)_find_entry(hash, pos);
         DebugAssert(pos != InvalidPos, "the item don't exists!");
-        return entries[pos]->kv.value;
+        return entries[pos]->kv.second;
     }
     
     V& insert(const K& k, const V& value)
     {
-        return _insert_or_replace(k, value)->kv.value;
-    }
-
-    V& try_insert(const K& k, const V& value)
-    {
-        u64 hash = HashOfType<K>::hashfunc(k);
-        usize pos = InvalidPos;
-        if (_find_entry(hash, pos))
-        {
-            return entries[pos]->kv.value;
-        }
-        else
-        {
-            return _insert_or_replace(k, value)->kv.value;
-        }
+        return _insert_or_replace(k, value)->kv.second;
     }
 
     void remove(const K& k)
@@ -373,7 +352,7 @@ struct [[nodiscard]] HashMap
             last = entry->prev;
         }
 
-        entry->kv.hash = InvalidHash;
+        entry->kv.first = InvalidHash;
         count--;
     }
   
@@ -383,7 +362,7 @@ struct [[nodiscard]] HashMap
         {
             if (entry)
             {
-                entry->kv.hash = InvalidHash;
+                entry->kv.first = InvalidHash;
             }
         }
 

@@ -1,4 +1,4 @@
-#include "objects/canvas_object.h"
+#include "object/canvas_object.h"
 
 
 void CanvasObject::_bind_vtable(CanvasObject::VTable& vtable)
@@ -9,7 +9,7 @@ void CanvasObject::_bind_vtable(CanvasObject::VTable& vtable)
 
 void CanvasObject::init(const CreateInfo&)
 {
-    mark_render();
+    mark(MARK_RENDER);
     
     data.transform = Transform2D();
 }

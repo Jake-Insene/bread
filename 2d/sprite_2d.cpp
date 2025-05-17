@@ -6,7 +6,7 @@
 
 void Sprite2D::init(const CreateInfo&)
 {
-    mark_render();
+    mark(MARK_RENDER);
 }
 
 void Sprite2D::render()

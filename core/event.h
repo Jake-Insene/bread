@@ -79,17 +79,19 @@ struct [[nodiscard]] Event
 
 	EventStorage<Fn> storage{};
 
-	template<typename = EnableIf<!IsMemberFunction<Fn>, int>, typename T, typename... TArgs>
-	constexpr void bind(T func)
+	template<typename T>
+	constexpr void bind(this Event& self, T func)
+		requires(!IsMemberFunction<Fn>)
 	{
-		storage.func = (Fn)func;
+		self.storage.func = (Fn)func;
 	}
 
-	template<typename = EnableIf<IsMemberFunction<Fn>, int>, typename T, typename Fn2>
-	constexpr void bind(T* instance, Fn2 func)
+	template<typename T, typename Fn2>
+	constexpr void bind(this Event& self, T* instance, Fn2 func)
+		requires(IsMemberFunction<Fn>)
 	{
-		storage.instance = (decltype(storage.instance))instance;
-		storage.func = (Fn)func;
+		self.storage.instance = (decltype(storage.instance))instance;
+		self.storage.func = (Fn)func;
 	}
 
 	template<typename... TArgs>

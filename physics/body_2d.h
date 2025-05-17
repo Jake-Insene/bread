@@ -26,8 +26,8 @@ struct Body2D : Object2D
 
         bool grounded = false;
 
-        CollisionMask residence_mask = CollisionMask::COLLISION_MASK_0;
-        CollisionMask collision_mask = CollisionMask::COLLISION_MASK_0;
+        CollisionMask residence_mask = Physics2D::COLLISION_MASK_0;
+        CollisionMask collision_mask = Physics2D::COLLISION_MASK_0;
     } data;
 
     Event<void(Body2D::*)(Body2D*)> colliding_with;
@@ -35,7 +35,7 @@ struct Body2D : Object2D
     void init(const CreateInfo&);
     void deinit();
     
-    void start();
+    void enter();
     void exit();
     
     void set_type(Body2D::BodyType new_type);

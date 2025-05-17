@@ -17,6 +17,11 @@ enum class Key
 
     SHIFT = 0x10,
 
+    LEFT = 0x25,
+    UP = 0x26,
+    RIGHT = 0x27,
+    DOWN = 0x28,
+
     A = 0x41,
     B = 0x42,
     C = 0x43,

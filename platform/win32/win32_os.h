@@ -1,7 +1,5 @@
 #pragma once
 #include "os/os.h"
-
-#include "os/thread.h"
 #include "platform/platform_header.h"
 
 
@@ -43,24 +41,6 @@ struct Win32OS : OS
     };
 
     static inline InternalData data;
-
-    static OS::VTable get_vtable();
-
-    static void initialize();
-    static void shutdown();
-
-    static void exit(u64 code);
-    static usize get_page_size();
-
-    static ThreadID thread_create(ThreadFn fn, void* arg);
-    static void thread_destroy(ThreadID tid);
-    static bool thread_join(ThreadID tid);
-
-    static MutexID mutex_create();
-    static void mutex_destroy(MutexID mid);
-    static void mutex_lock(MutexID mid);
-    static bool mutex_try_lock(MutexID mid);
-    static void mutex_unlock(MutexID mid);
 
     static ThreadID thread_data_allocate();
     static ThreadData& thread_data_get(ThreadID tid);

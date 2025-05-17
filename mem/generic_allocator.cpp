@@ -20,15 +20,20 @@ namespace mem
         {
             Page& page = allocated_pages[i];
 #if DEBUG
+            usize page_size_acumulator = 0;
+
             Header* header = page.first_header;
             usize header_count = 0;
             while(header)
             {
+                page_size_acumulator += header->len + sizeof(Header);
                 header_count++;
                 DebugAssert((header->tags & Allocated) == 0, "forget to call free.");
                 header = header->next;
             }
-            Log::info("Page at address %p of size %llu, with %llu headers", page.bytes.ptr(), page.bytes.len, header_count);
+
+            DebugAssert(page_size_acumulator == page.bytes.len, "allocator corruption");
+            Debug::info("Page at address %p of size %llu, with %llu headers", page.bytes.ptr(), page.bytes.len, header_count);
 #endif
             internal_allocator.free(page.bytes);
         }
@@ -44,11 +49,27 @@ namespace mem
         Page& page = allocated_pages[page_count++];
         page.bytes = internal_allocator.alloc(size, OS::get_page_size());
         page.first_header = nullptr;
-        page.last_header = nullptr;
-#if !defined(NDEBUG)
-        Log::info("Page allocated at %p with size %llu", page.bytes.ptr(), page.bytes.len);
+#if SHOW_DEBUG_INFO
+        Debug::info("Page allocated at %p with size %llu", page.bytes.ptr(), page.bytes.len);
 #endif
         return page;
+    }
+
+    void GenericAllocator::check_integrity()
+    {
+        for (usize i = 0; i < page_count; i++)
+        {
+            usize page_size_acumulator = 0;
+            Page& page = allocated_pages[i];
+            Header* header = page.first_header;
+            while (header)
+            {
+                page_size_acumulator += header->len + sizeof(Header);
+                header = header->next;
+            }
+
+            DebugAssert(page_size_acumulator == page.bytes.len, "allocator corruption");
+        }
     }
     
     Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
@@ -79,7 +100,6 @@ namespace mem
         }
 
         const usize aligned_size = mem::align_up(size, alignment);
-        constexpr usize MinimumValidRemain = mem::align_up(sizeof(Header) * 2, alignof(Header));
         for(usize i = 0; i < page_count; i++)
         {
             Page& page = allocated_pages[i];
@@ -95,11 +115,8 @@ namespace mem
                         continue;
                     }
 
-                    const usize required_size = mem::align_up(aligned_size + sizeof(Header), alignment);
-                    if(allocated_mem->len >= required_size)
+                    if(allocated_mem->len >= aligned_size)
                     {
-                        allocated_mem->tags |= Allocated;
-
                         u8* aligned_base = (u8*)mem::align_up(usize(allocated_mem) + sizeof(Header), alignment);
                         isize offset = aligned_base - ((u8*)allocated_mem + sizeof(Header));
 
@@ -110,15 +127,23 @@ namespace mem
                                 const Header copied_block = *allocated_mem;
                                 Header* prev = allocated_mem->prev;
 
-                                allocated_mem = (Header*)((u8*)allocated_mem + offset);
-                                *allocated_mem = copied_block;
-                                allocated_mem->len -= offset;
+                                allocated_mem = (Header*)(aligned_base - sizeof(Header));
+                                allocated_mem->len = copied_block.len - offset;
+                                allocated_mem->page_index = i;
+                                allocated_mem->tags = 0;
 
+                                // Is impossible that a header that start at 0xXXXX'X000 it is not aligned correctly.
+                                prev->len += offset;
                                 prev->next = allocated_mem;
-                                if(allocated_mem->next)
-                                {
+
+                                allocated_mem->prev = copied_block.prev;
+                                allocated_mem->next = copied_block.next;
+                                if (allocated_mem->next)
                                     allocated_mem->next->prev = allocated_mem;
-                                }
+
+#if DEBUG
+                                check_integrity();
+#endif
                             }
                             else
                             {
@@ -128,28 +153,38 @@ namespace mem
                             }
                         }
 
-                        const usize remain = allocated_mem->len - aligned_size;
+                        if ((usize(allocated_mem) & 0xFFF) == 0x420)
+                        {
+                            int i = 0;
+                        }
 
-                        allocated_mem->len = aligned_size;
-                        page.last_header = allocated_mem;
+                        const usize remain = allocated_mem->len - aligned_size;
 
                         if (remain >= MinimumValidRemain)
                         {
                             u8* remain_base = (u8*)(usize(aligned_base) + aligned_size);
 
                             Header* remain_header = (Header*)remain_base;
-                            allocated_mem->next = remain_header;
 
                             remain_header->len = remain - sizeof(Header);
                             remain_header->page_index = allocated_mem->page_index;
                             remain_header->tags = 0;
                             remain_header->prev = allocated_mem;
-                            remain_header->next = nullptr;
+                            remain_header->next = allocated_mem->next;
 
-                            page.last_header = remain_header;
+                            allocated_mem->len = aligned_size;
+                            allocated_mem->next = remain_header;
+
+                            if (remain_header->next)
+                            {
+                                remain_header->next->prev = remain_header;
+                            }
                         }
 
-                        // Fill with zeroes
+                        allocated_mem->tags |= Allocated;
+#if DEBUG
+                        check_integrity();
+#endif
                         return Slice<u8>
                         {
                             aligned_base,
@@ -175,7 +210,6 @@ namespace mem
         allocation_header->next = nullptr;
         
         new_page.first_header = allocation_header;
-        new_page.last_header = allocation_header;
 
         // Trying to dividing the memory if the requested memory is too slow
         if(allocation_header->len > aligned_size)
@@ -193,10 +227,11 @@ namespace mem
                 
                 allocation_header->len = aligned_size;
                 allocation_header->next = fill_header;
-                new_page.last_header = fill_header;
             }
         }
-        
+#if DEBUG
+        check_integrity();
+#endif
         return Slice<u8>
         {
             aligned_mem,
@@ -213,39 +248,52 @@ namespace mem
 
         if(header->len >= new_size)
         {
+#if DEBUG
+            check_integrity();
+#endif
             return true;
         }
 
+#if DEBUG
+        check_integrity();
+#endif
         return false;
     }
         
     void GenericAllocator::free(Slice<u8> ptr)
     {
-        DebugAssert(ptr.ptr(), "invalid pointer");
+        DebugAssert(ptr.ptr() != nullptr, "invalid pointer");
         Header* header = get_header(ptr);
         DebugAssert(ptr.ptr() && (header->tags & Allocated), "the given block is already free.");
 
         header->tags = None;
-        if (header->prev && (header->prev->tags & Allocated) == 0)
+
+        if(header && header->prev && header->prev->tags == 0)
         {
-            Header* prev = header->prev;
-            prev->len += header->len + sizeof(Header);
-            prev->next = header->next;
-            if(prev->next)
-            {
-                prev->next->prev = prev;
-            }
-        }
-        else if (header->next && (header->next->tags & Allocated) == 0)
-        {
-            Header* next = header->next;
-            header->len += next->len + sizeof(Header);
-            header->next = next->next;
+            header->prev->len += header->len + sizeof(Header);
+            header->prev->next = header->next;
+
             if (header->next)
-            {
-                header->next->prev = header;
-            }
+                header->next->prev = header->prev;
+
+            header = header->prev;
         }
+
+
+        if(header && header->next && header->next->tags == 0)
+        {
+            header->len += header->next->len + sizeof(Header);
+            header->next = header->next->next;
+            
+            if (header->next)
+                header->next->prev = header;
+
+            header = header->next;
+        }
+
+#if DEBUG
+        check_integrity();
+#endif
     }
         
     Allocator GenericAllocator::allocator()

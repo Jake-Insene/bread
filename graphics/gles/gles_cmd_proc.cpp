@@ -255,7 +255,7 @@ void GLESCommandProcessor::end_primitive_batch()
 }
 
 void GLESCommandProcessor::render()
-{
+{   
     //Debug::info("Processing commands: %llu", data.commands.count);
     for(usize i = 0; i < data.commands.count; i++)
     {
@@ -308,7 +308,8 @@ void GLESCommandProcessor::render()
             break;
         case RenderCommand::DRAW_SPRITE:
         {
-            if(data.sprite_batch.count >= MaxInstancesPerBatch || data.sprite_batch.texture_index >= GLESDriver::data.limits.max_texture_units)
+            if(data.sprite_batch.count >= MaxInstancesPerBatch || 
+                data.sprite_batch.texture_index >= GLESDriver::data.limits.max_texture_units)
             {
                 Debug::info("Sprite Batch full, flushing...");
                 update_scene_uniform();
@@ -317,19 +318,19 @@ void GLESCommandProcessor::render()
             
             GLID tex = GLESMemoryAllocator::texture_get_handle(cmd.sprite.texture);
 
-            i32 texunit = -1;
+            i32 tex_unit = -1;
             for(i32 t = 0; t < GLESDriver::data.limits.max_texture_units; t++)
             {
-                if(data.sprite_batch.texture_units[t] == tex)
+                if(data.sprite_batch.texture_units[t] == i32(tex))
                 {
-                    texunit = t;
+                    tex_unit = t;
                     break;
                 }
             }
 
-            if(texunit == -1)
+            if(tex_unit == -1)
             {
-                texunit = data.sprite_batch.texture_index;
+                tex_unit = data.sprite_batch.texture_index;
                 data.sprite_batch.texture_units[data.sprite_batch.texture_index] = tex;
                 data.sprite_batch.texture_index++;
             }
@@ -340,7 +341,7 @@ void GLESCommandProcessor::render()
             data.sprite_batch.instances[index].transform_1 = cmd.sprite.transform[1];
             
             data.sprite_batch.instances[index].transform_2 = cmd.sprite.transform[2];
-            data.sprite_batch.instances[index].unit = texunit;
+            data.sprite_batch.instances[index].unit = tex_unit;
             data.sprite_batch.instances[index].flags = cmd.sprite.flags;
             
             data.sprite_batch.instances[index].texture_extent = cmd.sprite.texture_extent;
@@ -392,6 +393,20 @@ void GLESCommandProcessor::render()
             data.primitive_batch.primitives[index+1].flags = 0;
 
             data.primitive_batch.count += 2;
+        }
+            break;
+        case RenderCommand::SET_SCENE_TRANSFORM:
+        {
+            auto& rt = GLESMemoryAllocator::render_target_get(data.state.current_fb);
+
+            data.scene_data.scene_transform = Mat4(
+                Vector4(cmd.transform[0][0], cmd.transform[0][1], 0, 0),
+                Vector4(cmd.transform[1][0], cmd.transform[1][1], 0, 0),
+                Vector4(0, 0, 1, 0),
+                Vector4(-cmd.transform[2][0] + (rt.size.x / 2), cmd.transform[2][1] + (rt.size.y / 2), 0, 1)
+            );
+
+            data.scene_data_ubo_update = true;
         }
             break;
         default:

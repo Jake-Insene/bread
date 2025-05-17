@@ -64,11 +64,22 @@ namespace mem
 
 
     template<typename T>
-    constexpr void copy(Slice<T> dest, const Slice<T>& src)
+    constexpr void copy(Slice<T> dest, const Slice<const T>& src)
     {
         DebugAssert(dest.len >= src.len, "invalid destination");
 
         for(usize i = 0; i < src.len; i++)
+        {
+            dest[i] = src[i];
+        }
+    }
+
+    template<typename T>
+    constexpr void copy(Slice<T> dest, const Slice<T>& src)
+    {
+        DebugAssert(dest.len >= src.len, "invalid destination");
+
+        for (usize i = 0; i < src.len; i++)
         {
             dest[i] = src[i];
         }

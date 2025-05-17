@@ -3,7 +3,6 @@
 #include "mem/allocator.h"
 #include "mem/utils.h"
 
-#include <memory>
 
 inline constexpr usize stringlen(const char* str)
 {
@@ -73,6 +72,9 @@ struct [[nodiscard]] String
     
     void destroy();
     
+    void set(StringView new_chars);
+    void resize(usize new_size);
+
     [[nodiscard]] bool equals(StringView str) const;
     [[nodiscard]] bool ends_with(StringView str) const;
     

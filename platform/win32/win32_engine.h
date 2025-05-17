@@ -9,9 +9,4 @@ struct Win32Engine : Engine
 	};
 
 	static InternalData data;
-
-	static Engine::VTable get_vtable();
-
-	static Vector2I get_window_pos();
-	static void set_window_size(const Vector2I& new_size);
 };

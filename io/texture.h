@@ -7,6 +7,7 @@
 // A group of pixels allocated in the gpu.
 struct Texture : Resource
 {
+    RESOURCE(RESOURCE_TEXTURE, .LoadFromAssets = true, .Extensions = "png");
     ResourceID texture_id;
     
     void destroy();
@@ -17,6 +18,6 @@ struct Texture : Resource
 // Same as Texture but specialized for 2D.
 struct Texture2D : Texture
 {
-    [[nodiscard]] static Texture2D* load_from_file(StringView path);
+    RESOURCE(RESOURCE_TEXTURE_2D, .LoadFromAssets = true, .Extensions = "png");
 };
 

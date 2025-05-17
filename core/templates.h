@@ -27,6 +27,7 @@ struct RemoveConstT<const T>
 template<typename T>
 using RemoveConst = typename RemoveConstT<T>::Type;
 
+
 template<typename T>
 struct RemoveVolatileT
 {
@@ -111,17 +112,6 @@ template<typename T>
 inline constexpr bool IsArithmetic = 
     IsInteger<T> || IsFloatingPoint<T>;
 
-
-template<bool Test, typename T>
-struct EnableIfT
-{
-};
-
 template<typename T>
-struct EnableIfT<true, T>
-{
-  using Type = T;  
-};
+inline constexpr bool IsConst = IsAnyOf<T, const T, const T*, const T*>;
 
-template<bool Test, typename T = void>
-using EnableIf = typename EnableIfT<Test, T>::Type;

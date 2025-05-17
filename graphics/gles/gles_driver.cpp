@@ -4,15 +4,13 @@
 #include "engine/engine.h"
 #include "graphics/egl/egl.h"
 #include "graphics/gles/gles_vtable.h"
-#include "graphics/gles/gles_utility.h"
 #include "graphics/gles/gles_cmd_proc.h"
 #include "graphics/gles/gles_shader.h"
 #include "graphics/gles/gles_memory_allocator.h"
-#include "io/texture.h"
-#include "io/resource_manager.h"
 
 #include <cstdio>
 
+#if SHOW_DEBUG_INFO
 static inline void debug_callback(
     GLenum, GLenum, GLuint, GLenum severity,
     GLsizei length, const GLchar* message,
@@ -22,18 +20,19 @@ static inline void debug_callback(
     switch(severity)
     {
     case GL_DEBUG_SEVERITY_LOW:
-        Log::info("GLInfo: %.*s\n", length, message);
+        Debug::info("GLInfo: %.*s\n", length, message);
         break;
     case GL_DEBUG_SEVERITY_MEDIUM:
-        Log::warning("GLWarn: %.*s\n", length, message);
+        Debug::warning("GLWarn: %.*s\n", length, message);
         break;
     case GL_DEBUG_SEVERITY_HIGH:
-        Log::error("GLError: %.*s\n", length, message);
+        Debug::error("GLError: %.*s\n", length, message);
         break;
     default:
         break;
     }
 }
+#endif
 
 
 Graphics::VTable GLESDriver::get_vtable()
@@ -63,7 +62,7 @@ Graphics::VTable GLESDriver::get_vtable()
 
 void GLESDriver::initialize(const mem::Allocator& allocator)
 {
-    Log::info("Initializing renderer...");
+    Debug::info("Initializing renderer...");
     data.allocator = allocator;
 
     GLESMemoryAllocator::initialize(allocator);
@@ -146,6 +145,8 @@ void GLESDriver::add_cmd(const RenderCommand& cmd)
 void GLESDriver::_init_context()
 {
     // Check openGL on the system
+    // Debugging
+#if SHOW_DEBUG_INFO
     GLint opengl_info[] = { GL_VENDOR, GL_RENDERER, GL_VERSION };
     for (auto name : opengl_info)
     {
@@ -161,7 +162,6 @@ void GLESDriver::_init_context()
         Debug::info("%s", gl.glGetStringi(GL_EXTENSIONS, i));
     }
 
-    // Debugging
 #if DEBUG
     gl.glEnable(GL_DEBUG_OUTPUT);
     gl.glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // Immediate debug messages
@@ -174,6 +174,8 @@ void GLESDriver::_init_context()
     Vector2I size = Engine::get_main_window().get_size();
     Debug::info("Viewport: W=%i H=%i", size.x, size.y);
     gl.glViewport(0, 0, size.x, size.y);
+
+#endif
 
     GLESCommandProcessor::initialize(data.allocator);
 }

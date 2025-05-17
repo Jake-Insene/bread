@@ -2,6 +2,8 @@
 #include "core/slice.h"
 #include "mem/utils.h"
 
+#include <new>
+
 
 namespace mem
 {
@@ -17,19 +19,21 @@ namespace mem
         
         Slice<u8> alloc(usize size, usize alignment) const
         {
-            FailOn(self == nullptr, "self is null")
-            return (self->*vtable.alloc)(size, alignment);
+            FailOn(self == nullptr, "self is null");
+            Slice<u8> ptr = (self->*vtable.alloc)(size, alignment);
+            return ptr;
         }
         
         bool realloc(Slice<u8> ptr, usize new_size, usize alignment) const
         {
-            FailOn(self == nullptr, "self is null")
+            FailOn(self == nullptr, "self is null");
             return (self->*vtable.realloc)(ptr, new_size, alignment);
         }
         
         void free(Slice<u8> ptr) const
         {
-            FailOn(self == nullptr, "self is null")
+            FailOn(self == nullptr, "self is null");
+            
             (self->*vtable.free)(ptr);
         }
 

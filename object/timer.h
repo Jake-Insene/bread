@@ -1,5 +1,5 @@
 #pragma once
-#include "objects/object.h"
+#include "object/object.h"
 
 
 struct Timer : Object
@@ -9,7 +9,6 @@ struct Timer : Object
     // Timer duration in seconds, when it reaches 0 the timeout event is called,
     // if loop is true the timer will reset and start again.
     f64 duration = 0;
-    bool loop = false;
     
     Event<void(Object::*)()> timeout;
 
@@ -19,10 +18,15 @@ struct Timer : Object
     struct InternalData
     {
         f64 acumulator = 0;
+        bool loop = false;
     } data;
 
-    void start();
-
+    void enter();
     void internal_update(f64 dt);
 
+    void start();
+    void stop();
+
+    void set_loop(bool enable);
+    [[nodiscard]] bool get_loop() const { return data.loop; }
 };

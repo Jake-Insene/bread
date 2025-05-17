@@ -1,7 +1,7 @@
 #include "graphics/egl/egl.h"
 
 #include "graphics/gles/gles_vtable.h"
-#include "objects/scene_manager.h"
+#include "scene/scene_manager.h"
 
 #if defined(ENGINE_ANDROID)
 #include "platform/android/android_egl.h"

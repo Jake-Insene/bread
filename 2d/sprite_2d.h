@@ -23,7 +23,7 @@ struct Sprite2D : Object2D
     bool flip_v = false;
     bool flip_h = false;
     
-    void init(const CreateInfo& info);
+    void init(const CreateInfo&);
     void render();
 
     void set_texture(Texture2D* new_texture);

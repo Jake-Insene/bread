@@ -1,7 +1,7 @@
-#include "objects/object.h"
+#include "object/object.h"
 
-#include "objects/object_allocator.h"
-#include "objects/scene_manager.h"
+#include "object/object_allocator.h"
+#include "scene/scene_manager.h"
 
 
 void Object::_bind_vtable(VTable&)
@@ -11,10 +11,10 @@ void Object::handle_internal_update(f64 dt)
 {
     for(auto it : data.childs)
     {
-        it.value->handle_internal_update(dt);
+        it.second->handle_internal_update(dt);
     }
     
-    if(has_internal_update())
+    if(has_mark(MARK_INTERNAL_UPDATE))
     {
         ObjectCall(internal_update, dt);
     }
@@ -24,10 +24,10 @@ void Object::handle_update(f64 dt)
 {
     for(auto it : data.childs)
     {
-        it.value->handle_update(dt);
+        it.second->handle_update(dt);
     }
     
-    if(can_update())
+    if(has_mark(MARK_UPDATE))
     {
         ObjectCall(update, dt);
     }
@@ -37,10 +37,10 @@ void Object::handle_render()
 {
     for(auto it : data.childs)
     {
-        it.value->handle_render();
+        it.second->handle_render();
     }
     
-    if(can_render())
+    if(has_mark(MARK_RENDER))
     {
         ObjectCall(render);
     }
@@ -51,9 +51,9 @@ void Object::add_child(Object *obj)
     Object* child = data.childs.insert(obj->id, obj);
     child->data.parent = this;
     
-    if(is_in_scene())
+    if(has_mark(MARK_IN_SCENE))
     {
-        ObjectCallRef(child, start);
+        ObjectCallRef(child, enter);
     }
 }
 
@@ -76,7 +76,7 @@ void Object::init(const CreateInfo& info)
     data.parent = nullptr;
     data.childs = HashMap<ObjectID, Object*>::with_allocator(allocator);
     
-    data.flags.clear();
+    data.marks.clear();
 }
 
 void Object::deinit()
@@ -85,40 +85,38 @@ void Object::deinit()
     
     for(auto& it : data.childs)
     {
-        DestroyObject(it.value);
+        DestroyObject(it.second);
     }
 
     data.childs.destroy();
 }
 
-void Object::start()
+void Object::enter()
 {
     // This function is only called in SceneManager when you change the scene
     // and add_child only when the parent is already into the scene.
-    data.flags.set(FLAG_IN_SCENE, true);
+    mark(MARK_IN_SCENE);
 
-    for(auto it: data.childs)
+    for(auto& it: data.childs)
     {
-        ObjectCallRef(it.value, start);
+        ObjectCallRef(it.second, enter);
     }
 }
 
 void Object::exit()
 {
-    data.flags.clear();
+    data.marks.clear();
     for(auto it : data.childs)
     {
-        ObjectCallRef(it.value, exit);
+        ObjectCallRef(it.second, exit);
     }
 }
 
 void Object::event(const InputEvent& event)
 {
-    for(auto it : data.childs)
+    for(auto& it: data.childs)
     {
-        if(it.value->can_handle_event())
-        {
-            ObjectCallRef(it.value, event, event);
-        }
+        if(it.second->has_mark(MARK_HANDLE_EVENT))
+            ObjectCallRef(it.second, event, event);
     }
 }

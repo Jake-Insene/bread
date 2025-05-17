@@ -7,23 +7,30 @@
             <Item Name="[capacity]" ExcludeView="simple">items.len</Item>
             <ArrayItems>
                 <Size>count</Size>
-                <ValuePointer>items.ptr()</ValuePointer>
+                <ValuePointer>items.items</ValuePointer>
             </ArrayItems>
         </Expand>
     </Type>
+	
     <Type Name="Slice&lt;*&gt;">
         <DisplayString>{{ len={len} }}</DisplayString>
         <Expand>
-            <Item Name="[count]" ExcludeView="simple">len</Item>
+			<Item Name="[address]" ExcludeView="simple">items,X</Item>
+			<Item Name="[count]" ExcludeView="simple">len</Item>
             <ArrayItems>
                 <Size>len</Size>
                 <ValuePointer>items</ValuePointer>
             </ArrayItems>
         </Expand>
     </Type>
+	
 	<Type Name="StringView">
 		<DisplayString>{items,[len]na}</DisplayString>
 		<StringView>items,[len]na</StringView>
+	</Type>
+
+	<Type Name="String">
+		<DisplayString>{chars.items,[count]na}</DisplayString>
 	</Type>
 
 	<Type Name="StringMap&lt;*&gt;">
@@ -34,7 +41,7 @@
 				<Size>count</Size>
 				<Loop>
 					<Break Condition="iterator == nullptr" />
-					<Item Name="[{iterator->kv.hash}]">iterator->kv.value</Item>
+					<Item Name="[{iterator->kv.first}]">iterator->kv.second</Item>
 					<Exec>iterator = iterator->next</Exec>
 				</Loop>
 			</CustomListItems>
@@ -49,10 +56,42 @@
 				<Size>count</Size>
 				<Loop>
 					<Break Condition="iterator == nullptr" />
-					<Item Name="[{iterator->kv.hash}]">iterator->kv.value</Item>
+					<Item Name="[{iterator->kv.first}]">iterator->kv.second</Item>
 					<Exec>iterator = iterator->next</Exec>
 				</Loop>
 			</CustomListItems>
+		</Expand>
+	</Type>
+
+	<Type Name="mem::GenericAllocator::Page">
+		<DisplayString>{{ size = {bytes.len} }}</DisplayString>
+		<Expand>
+			<Item Name="[address]" ExcludeView="simple">bytes.items,X</Item>
+			<Item Name="[first_header]" ExcludeView="simple">first_header</Item>
+			<CustomListItems MaxItemsPerView="5000" ExcludeView="Test">
+				<Variable Name="iterator" InitialValue="first_header" />
+				<Variable Name="acumulator" InitialValue="0" />
+				<Loop>
+					<If Condition="iterator == nullptr">
+						<Item Name="[integrity size]">acumulator</Item>
+						<Break></Break>
+					</If>
+					<Item>iterator,na</Item>
+					<Exec>acumulator += iterator->len + sizeof(Header)</Exec>
+					<Exec>iterator = iterator->next</Exec>
+				</Loop>	
+			</CustomListItems>
+		</Expand>
+	</Type>
+
+	<Type Name="mem::GenericAllocator::Header">
+		<DisplayString>{{ len = {len}, tags = {tags} }}</DisplayString>
+		<Expand>
+			<Item Name="[address]" ExcludeView="simple">(this),X</Item>
+			<Item Name="[pointer]" ExcludeView="simple">((u8*)this) + sizeof(mem::GenericAllocator::Header),X</Item>
+			<Item Name="[len]" ExcludeView="simple">len</Item>
+			<Item Name="[prev]" ExcludeView="simple">prev</Item>
+			<Item Name="[next]" ExcludeView="simple">next</Item>
 		</Expand>
 	</Type>
 	

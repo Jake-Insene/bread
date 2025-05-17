@@ -25,16 +25,18 @@ struct RenderCommand
         DRAW_SPRITE,
         DRAW_QUAD,
         DRAW_LINE,
+
+        SET_SCENE_TRANSFORM,
     } type;
     
     union
     {
-        struct
+        struct BindSource
         {
             ResourceID source_id;
         } bind;
         
-        struct
+        struct DrawSprite
         {
             Transform2D transform;
             // The size of the rectangle where the texture will be draw.
@@ -46,26 +48,27 @@ struct RenderCommand
             SpriteFlags flags;
         } sprite;
         
-        struct
+        struct ClearRT
         {
             ResourceID rid;
             Color color;
             // TODO: add depth
         } clear;
         
-        struct
+        struct DrawQuad
         {
             Transform2D transform;
             Vector2 size;
             Color color;
         } quad;
 
-        struct
+        struct DrawLine
         {
             Vector2 start;
             Vector2 end;
             Color color;
         } line;
 
+        Transform2D transform;
     };
 };

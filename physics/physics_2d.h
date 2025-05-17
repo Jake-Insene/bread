@@ -28,7 +28,7 @@ struct Physics2D
         KINEMATIC,
     };
 
-    enum CollisionMask
+    enum
     {
         COLLISION_MASK_0 = Bit(0),
         COLLISION_MASK_1 = Bit(1),
@@ -49,6 +49,8 @@ struct Physics2D
 
         MAX_COLLISION_MASKS = 16,
     };
+
+    using CollisionMask = u32;
 
     enum Physics2DSetting
     {

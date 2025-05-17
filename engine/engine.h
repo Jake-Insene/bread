@@ -21,8 +21,6 @@ struct Engine
         i32 fps;
     };
 
-    static inline VTable vtable;
-    
     static inline InternalData data;
     
     static void initialize();

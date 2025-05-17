@@ -1,5 +1,5 @@
 #pragma once
-#include "objects/object.h"
+#include "object/object.h"
 #include "math/transform_2d.h"
 #include "math/color.h"
 

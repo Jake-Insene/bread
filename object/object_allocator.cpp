@@ -1,11 +1,11 @@
-#include "objects/object_allocator.h"
+#include "object/object_allocator.h"
 
 void ObjectAllocator::initialize()
 {
-    object_allocator = {};
+    data.object_allocator = {};
     usize object_size = math::next_pow2(sizeof(Object));
 
-    for(ObjectChunk& chunk : chunks)
+    for(ObjectChunk& chunk : data.chunks)
     {
         chunk = {};
         chunk.last_free_id = InvalidObjectID,
@@ -16,18 +16,18 @@ void ObjectAllocator::initialize()
 
 void ObjectAllocator::shutdown()
 {
-    for(ObjectChunk& chunk : chunks)
+    for(ObjectChunk& chunk : data.chunks)
     {
         for(ObjectBlock& block : chunk.blocks)
         {
             if(block.bytes.ptr())
             {
-                internal_object_allocator.free(block.bytes);
+                data.internal_object_allocator.free(block.bytes);
             }
         }
     }
 
-    object_allocator.destroy();
+    data.object_allocator.destroy();
 }
 
 Object* ObjectAllocator::allocate_class(const Object::Class* klass)
@@ -36,7 +36,7 @@ Object* ObjectAllocator::allocate_class(const Object::Class* klass)
     ObjectCallRef(obj, init,
         Object::CreateInfo
         {
-            .allocator = object_allocator.allocator(),
+            .allocator = data.object_allocator.allocator(),
         }
     );
         
@@ -48,7 +48,7 @@ Object* ObjectAllocator::allocate_object(const Object::Class* klass)
     // where it gonna be allocated
     usize chunk_index = math::log2(math::next_pow2(klass->class_size)) - ChunkBase;
     
-    ObjectChunk& chunk = chunks[chunk_index];
+    ObjectChunk& chunk = data.chunks[chunk_index];
     if(chunk.last_free_id != InvalidObjectID)
     {
         ObjectID copied_id = chunk.last_free_id;
@@ -105,7 +105,7 @@ void ObjectAllocator::destroy_object(Object* obj)
     FailOn(obj == nullptr || !obj->id.is_valid(), "Invalid Object");
     
     u32 chunk_index = obj->id.chunk();
-    ObjectChunk& chunk = chunks[chunk_index];
+    ObjectChunk& chunk = data.chunks[chunk_index];
     if(chunk.last_free_id != InvalidObjectID)
     {
         Object* last_free = get_by_id(chunk.last_free_id);
@@ -119,7 +119,7 @@ void ObjectAllocator::allocate_new_block(
     ObjectBlock& block, usize count, usize object_size
 )
 {
-    block.bytes = internal_object_allocator.alloc(object_size * count, object_size);
+    block.bytes = data.internal_object_allocator.alloc(object_size * count, object_size);
     block.count = count;
 }
 
@@ -127,6 +127,6 @@ Object* ObjectAllocator::get_by_id(ObjectID& id)
 {
     FailOn(!id.is_valid(), "Invalid ObjectID");
     
-    ObjectChunk& chunk = chunks[id.chunk()];
+    ObjectChunk& chunk = data.chunks[id.chunk()];
     return (Object*)(chunk.blocks[id.block()].bytes.add(id.slot() * chunk.object_size).ptr());
 }

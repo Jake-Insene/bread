@@ -11,10 +11,10 @@ void Body2D::deinit()
     Physics2D::destroy_body(data.body_id);
 }
 
-void Body2D::start()
+void Body2D::enter()
 {
-    Physics2D::body_set_residence_mask(data.body_id, CollisionMask(data.residence_mask | CollisionMask::COLLISION_MASK_0));
-    Physics2D::body_set_collision_mask(data.body_id, CollisionMask(data.collision_mask | CollisionMask::COLLISION_MASK_0));
+    Physics2D::body_set_residence_mask(data.body_id, data.residence_mask);
+    Physics2D::body_set_collision_mask(data.body_id, data.collision_mask);
     Physics2D::body_set_velocity(data.body_id, data.velocity);
     Physics2D::body_set_friction(data.body_id, data.mass);
     Physics2D::body_set_mass(data.body_id, data.friction);

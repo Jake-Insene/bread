@@ -1,6 +1,6 @@
 #pragma once
 #include "graphics/render_target.h"
-#include "objects/object.h"
+#include "object/object.h"
 #include "math/color.h"
 #include "math/vec2.h"
 #include "mem/generic_allocator.h"
@@ -55,6 +55,7 @@ struct SceneManager
     static void _handle_input(const InputEvent& event);
 
     static void set_camera_2d(Camera2D* camera);
+    [[nodiscard]] static Camera2D* get_camera_2d() { return data.current_camera; }
 
     static void _add_root_control(Control* c);
     

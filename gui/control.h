@@ -1,5 +1,5 @@
 #pragma once
-#include "objects/canvas_object.h"
+#include "object/canvas_object.h"
 
 
 struct Control : CanvasObject
@@ -10,7 +10,7 @@ struct Control : CanvasObject
 
     void init(const CreateInfo&);
 
-    void start();
+    void enter();
 
     [[nodiscard]] bool is_control() const { return true; }
 };

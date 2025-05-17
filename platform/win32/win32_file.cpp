@@ -2,12 +2,10 @@
 
 #include "platform/platform_header.h"
 
-#include <memory>
-
 Slice<u8> File::read_all(mem::Allocator& allocator, StringView path)
 {
     char tmp[256] = {};
-    std::memcpy(tmp, path.ptr(), path.len);
+    mem::copy(Slice(tmp), path);
 	
 	HANDLE file = CreateFileA(tmp, GENERIC_READ, FILE_SHARE_READ, 
         nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr

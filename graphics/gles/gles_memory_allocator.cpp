@@ -96,13 +96,11 @@ void GLESMemoryAllocator::initialize(const mem::Allocator& allocator)
 
 void GLESMemoryAllocator::shutdown()
 {
-#if defined(DEBUG)
+#if defined(SHOW_DEBUG_INFO)
     Debug::info(
         "Graphics:\n"
-        "\tCurrent Allocated bytes: %llu\n"
-        "\tCurrent Free bytes: %llu",
-        data.allocated_bytes,
-        data.free_bytes
+        "\tCurrent Allocated bytes: %llu\n",
+        data.allocated_bytes
     );
 #endif
 
@@ -143,7 +141,6 @@ void GLESMemoryAllocator::buffer_free(ResourceID rid)
     gl.glDeleteBuffers(1, &buffer.buffer);
 
     data.allocated_bytes -= buffer.size;
-    data.free_bytes += buffer.size;
 }
 
 GLID GLESMemoryAllocator::buffer_allocate_handle()
@@ -157,7 +154,6 @@ void GLESMemoryAllocator::buffer_deallocate_handle(GLID buffer, usize size)
 {
     gl.glDeleteBuffers(1, &buffer);
     data.allocated_bytes -= size;
-    data.free_bytes += size;
 }
 
 void GLESMemoryAllocator::buffer_fill_memory(GLID buffer, Slice<const u8> mem, GLenum target, GLenum usage)
@@ -204,9 +200,8 @@ void GLESMemoryAllocator::texture_free(ResourceID rid)
     GLESTexture& texture = texture_get(rid);
     gl.glDeleteTextures(1, &texture.texture);
 
-    usize allocation_size = texture.size.width* texture.size.height* _get_format_size(texture.internal_format);
+    usize allocation_size = texture.size.width * texture.size.height* _get_format_size(texture.internal_format);
     data.allocated_bytes -= allocation_size;
-    data.free_bytes += allocation_size;
 }
 
 GLID GLESMemoryAllocator::texture_allocate_handle()
@@ -292,7 +287,6 @@ void GLESMemoryAllocator::render_target_free(ResourceID rid)
 
     usize allocation_size = rt.size.width * rt.size.height * _get_format_size(rt.format);
     data.allocated_bytes -= allocation_size;
-    data.free_bytes += allocation_size;
 }
 
 GLID GLESMemoryAllocator::render_target_allocate_handle()
@@ -387,15 +381,14 @@ void GLESMemoryAllocator::render_target_set_size(ResourceID rid, const Vector2I&
 {
     GLESRenderTarget& rt = render_target_get(rid);
     
-    usize old_size = rt.size.width * rt.size.height * _get_format_size(rt.format);
-    data.allocated_bytes -= old_size;
-    data.free_bytes += old_size;
+    usize old_byte_size = rt.size.width * rt.size.height * _get_format_size(rt.format);
+    data.allocated_bytes -= old_byte_size;
     texture_allocate_memory(rt.color_buffer, GL_TEXTURE_2D, new_size, rt.format, 0, {});
 
     gl.glBindFramebuffer(GL_FRAMEBUFFER, rt.framebuffer);
     gl.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rt.color_buffer, 0);
     gl.glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    
+
     rt.size = new_size;
 }
 

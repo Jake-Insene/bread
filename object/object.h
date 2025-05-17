@@ -1,7 +1,7 @@
 #pragma once
 #include "core/header.h"
 #include "input/input.h"
-#include "objects/object_id.h"
+#include "object/object_id.h"
 
 
 #define OBJECT_FUNCV(klass, base, name)\
@@ -68,7 +68,7 @@
             tmp.construct = [](Object* obj) -> void { ::new ((name*)obj) name(); };\
             tmp.init = VTCastGet(Object::VTable::init, name::initv);\
             tmp.deinit = VTCastGet(Object::VTable::deinit, name::deinitv);\
-            tmp.start = VTCastGet(Object::VTable::start, name::startv);\
+            tmp.enter = VTCastGet(Object::VTable::enter, name::enterv);\
             tmp.internal_update = VTCastGet(Object::VTable::internal_update, name::internal_updatev);\
             tmp.update = VTCastGet(Object::VTable::update, name::update);\
             tmp.render = VTCastGet(Object::VTable::render, name::render);\
@@ -89,7 +89,7 @@
     \
     OBJECT_FUNCV_ARG1(name, base, init, const CreateInfo&)\
     OBJECT_RFUNCV(name, base, deinit)\
-    OBJECT_FUNCV(name, base, start)\
+    OBJECT_FUNCV(name, base, enter)\
     OBJECT_FUNCV_ARG1(name, base, internal_update, f64)\
     OBJECT_FUNCV(name, base, exit)\
     OBJECT_FUNCV_ARG1(name, base, event, const InputEvent&)\
@@ -120,7 +120,7 @@ struct Object
         void(Object::*init)(const CreateInfo&);
         void(Object::*deinit)();
         
-        void(Object::*start)();
+        void(Object::*enter)();
         void(Object::*internal_update)(f64);
         void(Object::*update)(f64);
         void(Object::*render)();
@@ -151,16 +151,22 @@ struct Object
     
     enum
     {
-        FLAG_NONE = 0,
-        
-        FLAG_UPDATE,
-        FLAG_RENDER,
-        FLAG_HANDLE_EVENT,
-        FLAG_IN_SCENE,
-        FLAG_INTERNAL_UPDATE,
+        MARK_UPDATE,
+        MARK_RENDER,
+        MARK_HANDLE_EVENT,
+        MARK_IN_SCENE,
+        MARK_INTERNAL_UPDATE,
 
-        FLAG_2D,
-        FLAG_CONTROL,
+        MARK_2D,
+        MARK_CONTROL,
+
+        MARK_COUNT,
+    };
+
+    enum
+    {
+        MARK_DISABLE = 0,
+        MARK_ENABLE = 1,
     };
     
     // As everything in a struct is public we need to hide data
@@ -172,7 +178,7 @@ struct Object
         Object* parent = nullptr;
         HashMap<ObjectID, Object*> childs{};
 
-        BitField<128> flags{};
+        BitField<MARK_COUNT> marks{};
     } data;
     
     // Internal, you should not use them
@@ -181,19 +187,10 @@ struct Object
     void handle_render();
 
     // Query info
-    [[nodiscard]] bool has_flag(u64 flag) const { return data.flags.is_set(flag); }
-    
-    [[nodiscard]] bool can_update() const { return has_flag(FLAG_UPDATE); }
-    [[nodiscard]] bool can_render() const { return has_flag(FLAG_RENDER); }
-    [[nodiscard]] bool can_handle_event() const { return has_flag(FLAG_HANDLE_EVENT); }
-    [[nodiscard]] bool is_in_scene() const { return has_flag(FLAG_IN_SCENE); }
-    [[nodiscard]] bool has_internal_update() const { return has_flag(FLAG_INTERNAL_UPDATE); }
-    
-    // Marking
-    void mark_update() { data.flags.set(FLAG_UPDATE, true); }
-    void mark_render() { data.flags.set(FLAG_RENDER, true); }
-    void mark_handle_event() { data.flags.set(FLAG_HANDLE_EVENT, true); }
-    void mark_internal_update() { data.flags.set(FLAG_INTERNAL_UPDATE, true); }
+    [[nodiscard]] bool has_mark(u64 mark) const { return data.marks.is_set(mark); }
+    void set_mark(u64 mark, bool value) { data.marks.set(mark, value); }
+    void mark(u64 mark) { data.marks.set(mark, MARK_ENABLE); }
+    void unmark(u64 mark) { data.marks.unset(mark); }
     
     // Object std functions
     
@@ -230,7 +227,7 @@ struct Object
     // update and render should not be recursive
     OBJECT_FDEFAULT_ARG1(init, const CreateInfo&);
     OBJECT_FDEFAULT(deinit);
-    OBJECT_FDEFAULT(start);
+    OBJECT_FDEFAULT(enter);
     OBJECT_FDEFAULT_ARG1(internal_update, f64);
     OBJECT_FDEFAULT(exit);
     OBJECT_FDEFAULT_ARG1(event, const InputEvent&);
@@ -241,7 +238,7 @@ struct Object
     void init(const CreateInfo& info);
     void deinit();
 
-    void start();
+    void enter();
     void internal_update(f64) {}
     void update(f64) {}
     void render() {}

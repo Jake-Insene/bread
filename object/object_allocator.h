@@ -1,7 +1,7 @@
 #pragma once
 #include "mem/page_allocator.h"
 #include "mem/generic_allocator.h"
-#include "objects/object.h"
+#include "object/object.h"
 #include "math/funcs.h"
 
 
@@ -25,11 +25,15 @@ struct ObjectAllocator
         ObjectID last_free_id;
         usize object_size;
     };
+
+    struct InternalData
+    {
+        ObjectChunk chunks[MaxObjectChunks];
+        mem::PageAllocator internal_object_allocator;
+        mem::GenericAllocator object_allocator;
+    };
     
-    static inline ObjectChunk chunks[MaxObjectChunks];
-    
-    static inline mem::PageAllocator internal_object_allocator;
-    static inline mem::GenericAllocator object_allocator;
+    static inline InternalData data;
     
     static void initialize();
     static void shutdown();
