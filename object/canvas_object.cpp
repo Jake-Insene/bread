@@ -3,7 +3,7 @@
 
 void CanvasObject::_bind_vtable(CanvasObject::VTable& vtable)
 {
-    vtable.is_inside = &CanvasObject::is_inside;
+    vtable.is_inside.bind(&CanvasObject::is_inside);
 };
 
 

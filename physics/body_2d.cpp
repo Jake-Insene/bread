@@ -51,11 +51,11 @@ void Body2D::set_type(Body2D::BodyType new_type)
     }
 }
 
-void Body2D::as_box(const Vector2& size)
+void Body2D::shape_as_box(const Vector2& size)
 {
     if (data.body_id != Physics2D::BodyID::InvalidID)
     {
-        Physics2D::body_as_box(data.body_id, size);
+        Physics2D::body_shape_as_box(data.body_id, size);
     }
 }
 

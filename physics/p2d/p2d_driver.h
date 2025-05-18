@@ -94,7 +94,7 @@ struct P2DDriver
     static Physics2D::BodyID create_body(Body2D* object);
     static void destroy_body(Physics2D::BodyID body_id);
 
-    static void body_as_box(Physics2D::BodyID body_id, const Vector2& new_size);
+    static void body_shape_as_box(Physics2D::BodyID body_id, const Vector2& new_size);
     static void body_set_type(Physics2D::BodyID body_id, Physics2D::BodyType new_type);
     static void body_set_velocity(Physics2D::BodyID body_id, const Vector2& new_velocity);
     static Vector2 body_get_velocity(Physics2D::BodyID body_id);

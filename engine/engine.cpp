@@ -27,7 +27,8 @@ void operator delete(void*)
     FailOn(true, "Avoid 'delete' statements!");
 }
 
-extern Object* bread_main();
+
+extern EngineConfiguration __configuration;
 
 void Engine::initialize()
 {
@@ -36,7 +37,7 @@ void Engine::initialize()
     auto allocator = data.allocator.allocator();
 
     OS::initialize();
-    
+
     ObjectAllocator::initialize();
     ResourceManager::initialize(allocator);
 
@@ -47,14 +48,18 @@ void Engine::initialize()
 
     Physics2D::initialize(allocator, Physics2D::DEFAULT_DRIVER);
     Graphics::initialize(allocator, Graphics::DEFAULT_DRIVER);
-    
+
     // default resources
     data.white_texture = GetResource<Texture2D>("white.png");
-    
+
     SceneManager::initialize(allocator);
-    
+
+    Engine::get_main_window().set_size(__configuration.WindowSize);
+    SceneManager::get_display_target().set_size(__configuration.DisplayTargetSize);
+    Engine::set_vsync(__configuration.VSync);
+
     // Entry point for app
-    SceneManager::change_scene(bread_main());
+    SceneManager::change_scene(__configuration.CreateMainScene());
 }
 
 void Engine::shutdown()

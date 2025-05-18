@@ -24,7 +24,7 @@ template<typename Fn>
 inline constexpr bool IsMemberFunction = IsMemberFunctionT<Fn>::Value;
 
 template<typename Fn>
-struct EventFnDecomposed;
+struct EventFnDecomposed {};
 
 template<typename RT, typename... TArgs>
 struct EventFnDecomposed<RT(*)(TArgs...)>
@@ -49,7 +49,7 @@ struct EventFnDecomposed<RT(T::*)(TArgs...) const>
 };
 
 
-template<typename Fn>
+template<typename Fn, bool UseInstance>
 struct EventStorage
 {
 	Fn func;
@@ -57,57 +57,80 @@ struct EventStorage
 
 
 template<typename RT, typename T, typename... TArgs>
-struct EventStorage<RT(T::*)(TArgs...)>
+struct EventStorage<RT(T::*)(TArgs...), true>
 {
 	T* instance;
 	RT(T::*func)(TArgs...);
 };
 
 template<typename RT, typename T, typename... TArgs>
-struct EventStorage<RT(T::*)(TArgs...) const>
+struct EventStorage<RT(T::*)(TArgs...), false>
+{
+	RT(T::*func)(TArgs...);
+};
+
+template<typename RT, typename T, typename... TArgs>
+struct EventStorage<RT(T::*)(TArgs...) const, true>
 {
 	T* instance;
 	RT(T::*func)(TArgs...) const;
 };
 
+template<typename RT, typename T, typename... TArgs>
+struct EventStorage<RT(T::*)(TArgs...) const, false>
+{
+	RT(T::*func)(TArgs...) const;
+};
 
-template<typename Fn>
+
+template<typename Fn, bool UseInstance = true>
 struct [[nodiscard]] Event
 {
 	using Decomposed = EventFnDecomposed<Fn>;
 	using ReturnType = Decomposed::ReturnType;
 
-	EventStorage<Fn> storage{};
+	EventStorage<Fn, UseInstance> storage{};
 
 	template<typename T>
-	constexpr void bind(this Event& self, T func)
+	constexpr void bind(T func)
 		requires(!IsMemberFunction<Fn>)
 	{
-		self.storage.func = (Fn)func;
+		storage.func = (Fn)func;
+	}
+
+	template<typename T>
+	constexpr void bind(T func)
+		requires(!UseInstance)
+	{
+		storage.func = Fn(func);
 	}
 
 	template<typename T, typename Fn2>
-	constexpr void bind(this Event& self, T* instance, Fn2 func)
-		requires(IsMemberFunction<Fn>)
+	constexpr void bind(T* instance, Fn2 func)
+		requires(IsMemberFunction<Fn> && UseInstance)
 	{
-		self.storage.instance = (decltype(storage.instance))instance;
-		self.storage.func = (Fn)func;
+		storage.instance = (decltype(storage.instance))instance;
+		storage.func = (Fn)func;
 	}
 
 	template<typename... TArgs>
 	constexpr ReturnType call(TArgs&&... args) const
 	{
 		DebugAssert(storage.func != nullptr, "function pointer don't set");
-		if constexpr (IsMemberFunction<Fn>)
+		if constexpr (IsMemberFunction<Fn> && UseInstance)
 		{
 			DebugAssert(storage.instance != nullptr, "instance pointer don't set");
 		}
 
 		if constexpr (IsSame<ReturnType, void>)
 		{
-			if constexpr (IsMemberFunction<Fn>)
+			if constexpr (IsMemberFunction<Fn> && UseInstance)
 			{
-				_call_method(args...);
+				(storage.instance->*storage.func)(args...);
+			}
+			else if constexpr (IsMemberFunction<Fn> && !UseInstance)
+			{
+				_call_method<Decomposed>(args...);
 			}
 			else
 			{
@@ -116,9 +139,13 @@ struct [[nodiscard]] Event
 		}
 		else
 		{
-			if constexpr (IsMemberFunction<Fn>)
+			if constexpr (IsMemberFunction<Fn> && UseInstance)
 			{
-				return _call_method(args...);
+				(storage.instance->*storage.func)(args...);
+			}
+			else if constexpr (IsMemberFunction<Fn> && !UseInstance)
+			{
+				return _call_method<Decomposed>(args...);
 			}
 			else
 			{
@@ -127,16 +154,17 @@ struct [[nodiscard]] Event
 		}
 	}
 
-	template<typename... TArgs>
-	constexpr ReturnType _call_method(TArgs&&... args) const
+	template<typename DecomposedFn, typename... TArgs>
+	requires(IsMemberFunction<Fn>)
+	constexpr ReturnType _call_method(DecomposedFn::ObjectType* instance, TArgs&&... args) const
 	{
 		if constexpr (IsSame<ReturnType, void>)
 		{
-			(storage.instance->*storage.func)(args...);
+			(instance->*storage.func)(args...);
 		}
 		else
 		{
-			return (storage.instance->*storage.func)(args...);
+			return (instance->*storage.func)(args...);
 		}
 	}
 

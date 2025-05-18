@@ -42,6 +42,8 @@ void ResourceManager::shutdown()
             sa->destroy();
         }
             break;
+        default:
+            break;
         }
         
         data.allocator.free(
@@ -65,7 +67,7 @@ void ResourceManager::shutdown()
 }
 
 Resource* ResourceManager::load_resource(ResourceType type,
-    ResourceTypeSpecification specification, StringView path)
+    ResourceTypeSpecification, StringView path)
 {
     switch (type)
     {

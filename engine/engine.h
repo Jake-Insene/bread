@@ -4,6 +4,27 @@
 #include "io/texture.h"
 #include "mem/generic_allocator.h"
 
+
+#define ENGINE_CONFIGURATION(...) EngineConfiguration __configuration = {__VA_ARGS__};
+#define ENGINE_DEFAULT_CONFIGURATION(main_scene) \
+    EngineConfiguration __configuration =\
+    {\
+        .WindowSize = Vector2I(Display::DefaultWidth, Display::DefaultHeight),\
+        .DisplayTargetSize = Vector2I(Display::DefaultWidth, Display::DefaultHeight),\
+        .VSync = true,\
+        .CreateMainScene = []() -> Object* { return CreateObject<main_scene>(); },\
+    }
+
+struct Object;
+
+struct EngineConfiguration
+{
+    Vector2I WindowSize;
+    Vector2I DisplayTargetSize;
+    bool VSync;
+    Object* (*CreateMainScene)();
+};
+
 struct Engine
 {
     struct VTable

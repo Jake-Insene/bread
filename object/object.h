@@ -47,9 +47,9 @@
     }
 
 #define OBJECT(name, base)\
-    static void(*get_bind_vtable()) (Object::VTable&)\
+    static void* get_bind_vtable()\
     {\
-        return reinterpret_cast<void(*)(Object::VTable&)>(&name::_bind_vtable);\
+        return reinterpret_cast<void*>(&name::_bind_vtable);\
     }\
     static bool try_bind_vtable(name::VTable& vtable)\
     {\
@@ -65,15 +65,15 @@
         static name::VTable vtable = []()\
         {\
             name::VTable tmp = {};\
-            tmp.construct = [](Object* obj) -> void { ::new ((name*)obj) name(); };\
-            tmp.init = VTCastGet(Object::VTable::init, name::initv);\
-            tmp.deinit = VTCastGet(Object::VTable::deinit, name::deinitv);\
-            tmp.enter = VTCastGet(Object::VTable::enter, name::enterv);\
-            tmp.internal_update = VTCastGet(Object::VTable::internal_update, name::internal_updatev);\
-            tmp.update = VTCastGet(Object::VTable::update, name::update);\
-            tmp.render = VTCastGet(Object::VTable::render, name::render);\
-            tmp.exit = VTCastGet(Object::VTable::exit, name::exitv);\
-            tmp.event = VTCastGet(Object::VTable::event, name::eventv);\
+            tmp.construct.bind([](Object* obj) -> void { ::new ((name*)obj) name(); });\
+            tmp.init.bind(&name::initv);\
+            tmp.deinit.bind(&name::deinitv);\
+            tmp.enter.bind(&name::enterv);\
+            tmp.internal_update.bind(&name::internal_updatev);\
+            tmp.update.bind(&name::update);\
+            tmp.render.bind(&name::render);\
+            tmp.exit.bind(&name::exitv);\
+            tmp.event.bind(&name::eventv);\
             return tmp;\
         }();\
         static bool unused = name::try_bind_vtable(vtable);\
@@ -97,10 +97,9 @@
     
 // Dont use VTableCall because it reference the member vtable that
 // is not in an object.
-#define ObjectCallVTable(ref, vtable) ((RemoveConstPointer<decltype(ref)>::VTable&)vtable)
-#define ObjectCall(name, ...) (*this.*ObjectCallVTable(this, this->klass->vtable).name)(__VA_ARGS__)
+#define ObjectCall(name, ...) static_cast<RemoveConstPointer<decltype(this)>::VTable>(klass->vtable).name.call(this, __VA_ARGS__)
 
-#define ObjectCallRef(ref, name, ...) (*ref.*ObjectCallVTable(ref, ref->klass->vtable).name)(__VA_ARGS__)
+#define ObjectCallRef(ref, name, ...) static_cast<RemoveConstPointer<decltype(ref)>::VTable>(ref->klass->vtable).name.call(ref, __VA_ARGS__)
 
 
 #define DefineVTable(base) struct VTable : base::VTable
@@ -115,20 +114,20 @@ struct Object
     
     struct VTable
     {
-        void(*construct)(Object*);
+        Event<void(*)(Object*)> construct;
 
-        void(Object::*init)(const CreateInfo&);
-        void(Object::*deinit)();
+        Event<void(Object::*)(const CreateInfo&), false> init;
+        Event<void(Object::*)(), false> deinit;
         
-        void(Object::*enter)();
-        void(Object::*internal_update)(f64);
-        void(Object::*update)(f64);
-        void(Object::*render)();
-        void(Object::*exit)();
+        Event<void(Object::*)(), false> enter;
+        Event<void(Object::*)(f64), false> internal_update;
+        Event<void(Object::*)(f64), false> update;
+        Event<void(Object::*)(), false> render;
+        Event<void(Object::*)(), false> exit;
         
-        void(Object::*event)(const InputEvent&);
+        Event<void(Object::*)(const InputEvent&), false> event;
     };
-    
+
     struct Class
     {
         StringView class_name;
@@ -136,7 +135,7 @@ struct Object
         VTable& vtable;
     };
     
-    static void(*get_bind_vtable()) (VTable&) { return &Object::_bind_vtable; }
+    static void* get_bind_vtable() { return reinterpret_cast<void*>(&Object::_bind_vtable); }
     
     static void try_bind_vtable(VTable& vtable)
     {

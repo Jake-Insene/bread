@@ -68,7 +68,7 @@ struct Physics2D
         VTFunc(BodyID, create_body, Body2D*);
         VTFunc(void, destroy_body, BodyID);
 
-        VTFunc(void, body_as_box, BodyID, const Vector2&);
+        VTFunc(void, body_shape_as_box, BodyID, const Vector2&);
         VTFunc(void, body_set_type, BodyID, BodyType);
         VTFunc(void, body_set_velocity, BodyID, const Vector2&);
         VTFunc(Vector2, body_get_velocity, BodyID);
@@ -102,7 +102,7 @@ struct Physics2D
     VTFuncDefArg1RetS(BodyID, create_body, Body2D*);
     VTFuncDefArg1S(destroy_body, BodyID);
 
-    VTFuncDefArg2S(body_as_box, BodyID, const Vector2&);
+    VTFuncDefArg2S(body_shape_as_box, BodyID, const Vector2&);
     VTFuncDefArg2S(body_set_type, BodyID, BodyType);
     VTFuncDefArg2S(body_set_velocity, BodyID, const Vector2&);
     VTFuncDefArg1RetS(Vector2, body_get_velocity, BodyID);

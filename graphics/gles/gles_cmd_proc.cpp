@@ -319,7 +319,7 @@ void GLESCommandProcessor::render()
             GLID tex = GLESMemoryAllocator::texture_get_handle(cmd.sprite.texture);
 
             i32 tex_unit = -1;
-            for(i32 t = 0; t < GLESDriver::data.limits.max_texture_units; t++)
+            for(i32 t = 0; t < data.sprite_batch.texture_index; t++)
             {
                 if(data.sprite_batch.texture_units[t] == i32(tex))
                 {

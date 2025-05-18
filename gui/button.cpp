@@ -7,7 +7,7 @@
 
 void Button::_bind_vtable(VTable& vtable)
 {
-    vtable.is_inside = (bool(CanvasObject::*)(Vector2) const)&Button::is_inside;
+    vtable.is_inside.bind(&Button::is_inside);
 }
 
 void Button::init(const CreateInfo&)

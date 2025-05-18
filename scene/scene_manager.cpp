@@ -1,11 +1,9 @@
 #include "scene/scene_manager.h"
 
 #include "core/time.h"
-#include "core/event.h"
 #include "debug/debug.h"
 #include "engine/engine.h"
 #include "graphics/graphics.h"
-#include "graphics/egl/egl.h"
 #include "gui/control.h"
 #include "2d/camera_2d.h"
 #include "object/object_allocator.h"

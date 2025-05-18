@@ -25,7 +25,7 @@ namespace mem
         return ptr;
     }
 
-    bool PageAllocator::realloc(Slice<u8> ptr, usize new_size, usize alignment)
+    bool PageAllocator::realloc(Slice<u8> ptr, usize new_size, usize)
     {
         const usize aligned_new_size = mem::align_up(new_size, OS::get_page_size());
 

@@ -1,6 +1,5 @@
 #include "io/resource_manager.h"
 
-#include <memory>
 
 static void* _alloc(usize size)
 {
@@ -16,7 +15,7 @@ static void* _realloc(void* ptr, usize old_size, usize new_size)
     }
     
     Slice<u8> new_mem = ResourceManager::get_allocator().alloc(new_size, alignof(usize));
-    if(new_mem.ptr() && ptr != nullptr && old_size != old_size)
+    if(new_mem.ptr() && ptr != nullptr && old_size != 0)
     {
         mem::copy(old_mem, new_mem);
     }

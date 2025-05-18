@@ -153,11 +153,6 @@ namespace mem
                             }
                         }
 
-                        if ((usize(allocated_mem) & 0xFFF) == 0x420)
-                        {
-                            int i = 0;
-                        }
-
                         const usize remain = allocated_mem->len - aligned_size;
 
                         if (remain >= MinimumValidRemain)

@@ -1,6 +1,5 @@
 #include "physics/p2d/p2d_driver.h"
 
-#include "engine/engine.h"
 #include "graphics/graphics.h"
 #include "physics/body_2d.h"
 
@@ -27,7 +26,7 @@ Physics2D::VTable P2DDriver::get_vtable()
         .create_body = &P2DDriver::create_body,
         .destroy_body = &P2DDriver::destroy_body,
 
-        .body_as_box = &P2DDriver::body_as_box,
+        .body_shape_as_box = &P2DDriver::body_shape_as_box,
         .body_set_type = &P2DDriver::body_set_type,
         .body_set_velocity = &P2DDriver::body_set_velocity,
         .body_get_velocity = &P2DDriver::body_get_velocity,
@@ -124,7 +123,7 @@ void P2DDriver::destroy_body(Physics2D::BodyID body_id)
     data.current_bodies.remove(body_id);
 }
 
-void P2DDriver::body_as_box(Physics2D::BodyID body_id, const Vector2& new_size)
+void P2DDriver::body_shape_as_box(Physics2D::BodyID body_id, const Vector2& new_size)
 {
     Body& body = _get_body(body_id);
     body.shape.set_size(new_size);
@@ -172,14 +171,12 @@ f32 P2DDriver::body_get_friction(Physics2D::BodyID body_id)
     return body.friction;
 }
 
-void P2DDriver::body_apply_force(Physics2D::BodyID body_id, const Vector2& point, const Vector2& force)
+void P2DDriver::body_apply_force(Physics2D::BodyID, const Vector2&, const Vector2&)
 {
-    Body& body = _get_body(body_id);
 }
 
-void P2DDriver::body_apply_impulse(Physics2D::BodyID body_id, const Vector2& point, const Vector2& impulse)
+void P2DDriver::body_apply_impulse(Physics2D::BodyID, const Vector2&, const Vector2&)
 {
-    Body& body = _get_body(body_id);
 }
 
 void P2DDriver::body_set_fixed_rotation(Physics2D::BodyID body_id, bool enable)

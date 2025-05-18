@@ -11,7 +11,5 @@ struct Control : CanvasObject
     void init(const CreateInfo&);
 
     void enter();
-
-    [[nodiscard]] bool is_control() const { return true; }
 };
 

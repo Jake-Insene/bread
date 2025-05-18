@@ -22,29 +22,6 @@ endif()
 
 # External sources
 file(GLOB EXTERNAL_SRC
-    # freetype
-    external/freetype/src/base/ftsystem.c
-    external/freetype/src/base/ftinit.c
-    external/freetype/src/base/ftglyph.c
-    external/freetype/src/base/ftstroke.c
-    external/freetype/src/base/ftbitmap.c
-    external/freetype/src/base/ftoutln.c
-    external/freetype/src/base/ftobjs.c
-    external/freetype/src/base/ftutil.c
-    external/freetype/src/base/ftcalc.c
-    external/freetype/src/base/ftstream.c
-    external/freetype/src/base/fttrigon.c
-    external/freetype/src/base/ftlcdfil.c
-    external/freetype/src/base/ftgloadr.c
-    external/freetype/src/base/ftfntfmt.c
-    external/freetype/src/base/ftrfork.c
-    external/freetype/src/base/ftmm.c
-    external/freetype/src/base/ftdebug.c
-    external/freetype/src/gzip/ftgzip.c
-    external/freetype/src/truetype/truetype.c
-    external/freetype/src/smooth/smooth.c
-    external/freetype/src/sfnt/sfnt.c
-    
     # stb
     external/stb_image.cpp
 )

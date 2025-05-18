@@ -3,8 +3,6 @@
 #include "core/macros.h"
 #include "core/templates.h"
 
-#include <initializer_list>
-
 template<typename T>
 struct [[nodiscard]] Slice
 {
@@ -26,6 +24,14 @@ struct [[nodiscard]] Slice
     {
         items = _items;
         len = _len;
+    }
+
+    constexpr Slice& operator=(const Slice<RemoveConst<T>>& slice)
+    {
+        items = slice.items;
+        len = slice.len;
+        return *this;
+        
     }
     
     [[nodiscard]] constexpr T& operator[](const usize index)

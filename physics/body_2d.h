@@ -41,7 +41,7 @@ struct Body2D : Object2D
     void set_type(Body2D::BodyType new_type);
     Body2D::BodyType get_type() const { return data.type;}
     
-    void as_box(const Vector2& size);
+    void shape_as_box(const Vector2& size);
     
     void set_velocity(const Vector2& new_velocity);
     Vector2 get_velocity() const { return data.velocity; }

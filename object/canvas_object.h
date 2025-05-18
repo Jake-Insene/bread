@@ -10,7 +10,7 @@ struct CanvasObject : Object
     OBJECT(CanvasObject, Object);
     DefineVTable(Object)
     {
-        bool(CanvasObject::*is_inside)(Vector2) const;
+        Event<bool(CanvasObject::*)(Vector2) const, false> is_inside;
     };
     
     static void _bind_vtable(CanvasObject::VTable& vtable);
