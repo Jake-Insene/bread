@@ -110,7 +110,6 @@ struct GLESCommandProcessor
         SpriteBatch sprite_batch;
         QuadBatch quad_batch;
         PrimitiveBatch primitive_batch;
-        u32 blit_program;
 
         u32 scene_data_ubo;
         bool scene_data_ubo_update;

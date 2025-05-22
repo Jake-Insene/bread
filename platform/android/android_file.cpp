@@ -9,7 +9,7 @@ Slice<u8> File::read_all(mem::Allocator& allocator, StringView path)
     char tmp[256] = {};
     std::memcpy(tmp, path.ptr(), path.len);
     
-    AAsset* asset = AAssetManager_open(AndroidEngine::asset_manager, tmp, AASSET_MODE_UNKNOWN);
+    AAsset* asset = AAssetManager_open(AndroidEngine::data.asset_manager, tmp, AASSET_MODE_UNKNOWN);
     const void* buffer = AAsset_getBuffer(asset);
     usize length = AAsset_getLength64(asset);
     

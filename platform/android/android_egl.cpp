@@ -1,10 +1,25 @@
 #include "platform/android/android_egl.h"
 
 #include "core/array.h"
-#include "objects/scene_manager.h"
+#include "platform/android/android_display.h"
 #include "platform/android/android_engine.h"
+#include "scene/scene_manager.h"
+#include "graphics/gles/gles_vtable.h"
 
-#include "android/native_window_jni.h"
+
+static constexpr EGLint context_attributes_es31[] =
+{
+    EGL_CONTEXT_MAJOR_VERSION, 3, // OpenGL ES 3.1
+    EGL_CONTEXT_MINOR_VERSION, 1,
+    EGL_NONE
+};
+
+static constexpr EGLint context_attributes_es32[] =
+{
+    EGL_CONTEXT_MAJOR_VERSION, 3, // OpenGL ES 3.2
+    EGL_CONTEXT_MINOR_VERSION, 2,
+    EGL_NONE
+};
 
 
 EGL::VTable AndroidEGL::get_vtable()
@@ -13,10 +28,13 @@ EGL::VTable AndroidEGL::get_vtable()
     {
         .initialize = &AndroidEGL::initialize,
         .shutdown = &AndroidEGL::shutdown,
+
         .recreate_window_surface = &AndroidEGL::recreate_window_surface,
         .destroy_window_surface = &AndroidEGL::destroy_window_surface,
         .present = &AndroidEGL::present,
-    }
+
+        .set_vsync = &AndroidEGL::set_vsync,
+    };
 }
 
 void AndroidEGL::initialize(const mem::Allocator&)
@@ -76,52 +94,60 @@ void AndroidEGL::initialize(const mem::Allocator&)
     
     data.surface = eglCreateWindowSurface(
         data.display, data.config,
-        AndroidEngine::app->window, nullptr
+        AndroidEngine::data.app->window, nullptr
     );
 
-    const EGLint context_attributes[] =
-    {
-        EGL_CONTEXT_MAJOR_VERSION, 3, // OpenGL ES 3.2
-        EGL_CONTEXT_MINOR_VERSION, 2,
-#if defined(NDEBUG)
-        EGL_CONTEXT_OPENGL_NO_ERROR_KHR, EGL_TRUE,
-#endif
-        EGL_NONE
-    };
-    
     data.context = eglCreateContext(
-        data.display, data.config,
-        EGL_NO_CONTEXT, context_attributes
+            data.display, data.config,
+            EGL_NO_CONTEXT, context_attributes_es32
     );
+
+    if(data.context == nullptr)
+    {
+        // Fallback to GL ES 3.1
+        data.context = eglCreateContext(
+            data.display, data.config,
+            EGL_NO_CONTEXT, context_attributes_es31
+        );
+        EGL::data.gles32 = false;
+    }
+    else
+    {
+        EGL::data.gles32 = true;
+    }
+    FailOn(data.context == nullptr, "Unable to setting up the EGL context");
 
     EGLBoolean result = eglMakeCurrent(
-        data.display, data.surface,
-        data.surface, data.context
+            data.display, data.surface,
+            data.surface, data.context
     );
     FailOn(result == EGL_FALSE, "Unable to setting up the EGL context");
-    
-    eglQuerySurface(data.display, data.surface, EGL_WIDTH, &EGL::data.surface_size.x);
-    eglQuerySurface(data.display, data.surface, EGL_HEIGHT, &EGL::data.surface_size.y);
+
+    if(AndroidEngine::data.app->window != nullptr)
+    {
+        AndroidDisplay::update_native_size(
+            Vector2I(
+                ANativeWindow_getWidth(AndroidEngine::data.app->window),
+                ANativeWindow_getHeight(AndroidEngine::data.app->window)
+            )
+        );
+    }
 }
 
-void AndroidEGL::shutdown()
-{
-    if (data.display != EGL_NO_DISPLAY)
-    {
+void AndroidEGL::shutdown() {
+    if (data.display != EGL_NO_DISPLAY) {
         eglMakeCurrent(
-            data.display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT
+                data.display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT
         );
-        if (data.context != EGL_NO_CONTEXT)
-        {
+        if (data.context != EGL_NO_CONTEXT) {
             eglDestroyContext(data.display, data.context);
         }
-        if (data.surface != EGL_NO_SURFACE)
-        {
+        if (data.surface != EGL_NO_SURFACE) {
             eglDestroySurface(data.display, data.surface);
         }
         eglTerminate(data.display);
     }
-    
+
     data.display = EGL_NO_DISPLAY;
     data.context = EGL_NO_CONTEXT;
     data.surface = EGL_NO_SURFACE;
@@ -130,19 +156,29 @@ void AndroidEGL::shutdown()
 
 void AndroidEGL::recreate_window_surface()
 {
-    data.surface = eglCreateWindowSurface(
-        data.display, data.config,
-        AndroidEngine::app->window, nullptr
-    );
-    
+    if(data.surface == nullptr)
+    {
+        data.surface = eglCreateWindowSurface(
+                data.display, data.config,
+                AndroidEngine::data.app->window, nullptr
+        );
+    }
+
+    if(AndroidEngine::data.app->window != nullptr)
+    {
+        AndroidDisplay::update_native_size(
+                Vector2I(
+                        ANativeWindow_getWidth(AndroidEngine::data.app->window),
+                        ANativeWindow_getHeight(AndroidEngine::data.app->window)
+                )
+        );
+    }
+
     EGLBoolean result = eglMakeCurrent(
         data.display, data.surface,
         data.surface, data.context
     );
     FailOn(result == EGL_FALSE, "Unable to setting up the EGL context");
-    
-    eglQuerySurface(data.display, data.surface, EGL_WIDTH, &EGL::data.surface_size.x);
-    eglQuerySurface(data.display, data.surface, EGL_HEIGHT, &EGL::data.surface_size.y);
 }
 
 void AndroidEGL::destroy_window_surface()
@@ -160,5 +196,10 @@ void AndroidEGL::destroy_window_surface()
 void AndroidEGL::present()
 {
     eglSwapBuffers(data.display, data.surface);
+}
+
+void AndroidEGL::set_vsync(bool enable)
+{
+    eglSwapInterval(data.display, enable);
 }
 

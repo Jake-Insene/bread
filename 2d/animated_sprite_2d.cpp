@@ -6,7 +6,6 @@
 void AnimatedSprite2D::init(const CreateInfo&)
 {
 	mark(MARK_RENDER);
-	mark(MARK_INTERNAL_UPDATE);
 	data.current_animation = String::with_allocator(allocator);
 }
 
@@ -28,7 +27,10 @@ void AnimatedSprite2D::internal_update(f64 dt)
 
 			SpriteAnimation::Animation& anim = animation->get_animation(data.current_animation.view());
 			if (!anim.loop)
+			{
 				data.playing = false;
+				unmark(MARK_INTERNAL_UPDATE);
+			}
 		}
 
 		SpriteAnimation::SpriteFrame& frame = animation->get_frame(data.current_animation.view(), data.frame);
@@ -51,7 +53,7 @@ void AnimatedSprite2D::render()
 				.type = RenderCommand::DRAW_SPRITE,
 				.sprite =
 				{
-					.transform = get_transform(),
+					.transform = get_global_transform(),
 					.texture_extent = extent,
 					.src_rect = src_rect,
 					.texture = current_frame.sprite->texture_id,
@@ -73,6 +75,7 @@ void AnimatedSprite2D::play(StringView anim)
 
 	data.current_animation.set(anim);
 	data.remain = animation->get_frame(anim, 0).duration;
+	mark(MARK_INTERNAL_UPDATE);
 }
 
 void AnimatedSprite2D::stop()
@@ -80,6 +83,7 @@ void AnimatedSprite2D::stop()
 	data.playing = false;
 	data.frame = 0;
 	data.current_animation.set("");
+	unmark(MARK_INTERNAL_UPDATE);
 }
 
 

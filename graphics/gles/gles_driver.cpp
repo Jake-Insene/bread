@@ -70,6 +70,8 @@ void GLESDriver::initialize(const mem::Allocator& allocator)
     EGL::initialize(allocator);
     
     gl.glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &data.limits.max_texture_units);
+    gl.glEnable(GL_BLEND);
+    gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glsl_shader_constants_len = std::snprintf(
         glsl_shader_constants,
@@ -97,6 +99,9 @@ void GLESDriver::recreate()
 
     Vector2I size = Engine::get_main_window().get_size();
     gl.glViewport(0, 0, size.x, size.y);
+#if SHOW_DEBUG_INFO
+    Debug::info("Viewport: W=%i H=%i", size.x, size.y);
+#endif
 }
 
 void GLESDriver::destroy()
@@ -146,6 +151,8 @@ void GLESDriver::_init_context()
 {
     // Check openGL on the system
     // Debugging
+    Vector2I size = Engine::get_main_window().get_size();
+
 #if SHOW_DEBUG_INFO
     GLint opengl_info[] = { GL_VENDOR, GL_RENDERER, GL_VERSION };
     for (auto name : opengl_info)
@@ -163,19 +170,19 @@ void GLESDriver::_init_context()
     }
 
 #if DEBUG
-    gl.glEnable(GL_DEBUG_OUTPUT);
-    gl.glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // Immediate debug messages
-    gl.glDebugMessageCallback(debug_callback, nullptr);
-    gl.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    if(EGL::data.gles32)
+    {
+        gl.glEnable(GL_DEBUG_OUTPUT);
+        gl.glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // Immediate debug messages
+        gl.glDebugMessageCallback(debug_callback, nullptr);
+        gl.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    }
 #endif
 
     Debug::info("Texture Units: %llu", data.limits.max_texture_units);
-
-    Vector2I size = Engine::get_main_window().get_size();
     Debug::info("Viewport: W=%i H=%i", size.x, size.y);
-    gl.glViewport(0, 0, size.x, size.y);
-
 #endif
+    gl.glViewport(0, 0, size.x, size.y );
 
     GLESCommandProcessor::initialize(data.allocator);
 }

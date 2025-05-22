@@ -38,7 +38,7 @@ union [[nodiscard]] Vector2T
     }
 
 
-    static constexpr Vector2T rotate_around_point(const Vector2T& vertice, const Vector2T& point, const f32 rot)
+    static constexpr Vector2T rotate_around_point(const Vector2T& vertice, const Vector2T& point, const T rot)
     {
         Vector2T rotated{};
 
@@ -52,6 +52,11 @@ union [[nodiscard]] Vector2T
 		rotated += point;
 
 		return rotated;
+    }
+
+    static constexpr Vector2T lerp(const Vector2T& v0, const Vector2T& v1, const T& t)
+    {
+        return math::lerp<Vector2T>(v0, v1, t);
     }
     
     constexpr Vector2T() = default;

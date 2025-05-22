@@ -18,6 +18,7 @@ struct EGL
     struct InternalData
     {
         mem::Allocator allocator;
+        bool gles32;
     };
     
     static inline VTable vtable;

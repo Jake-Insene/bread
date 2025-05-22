@@ -20,7 +20,14 @@ void Semaphore::destroy()
 void Semaphore::signal()
 {
     mutex.lock();
-    value++;
+    {
+        if (value >= MaxValue)
+        {
+            mutex.unlock();
+            return;
+        }
+        value++;
+    }
     mutex.unlock();
 }
 

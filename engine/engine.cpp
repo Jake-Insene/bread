@@ -28,7 +28,8 @@ void operator delete(void*)
 }
 
 
-extern EngineConfiguration __configuration;
+extern EngineConfiguration __configuration__;
+void __preload__();
 
 void Engine::initialize()
 {
@@ -54,12 +55,14 @@ void Engine::initialize()
 
     SceneManager::initialize(allocator);
 
-    Engine::get_main_window().set_size(__configuration.WindowSize);
-    SceneManager::get_display_target().set_size(__configuration.DisplayTargetSize);
-    Engine::set_vsync(__configuration.VSync);
+    Engine::get_main_window().set_size(__configuration__.WindowSize);
+    SceneManager::get_display_target().set_size(__configuration__.DisplayTargetSize);
+    Engine::set_vsync(__configuration__.VSync);
+    
+    __preload__();
 
     // Entry point for app
-    SceneManager::change_scene(__configuration.CreateMainScene());
+    SceneManager::change_scene(__configuration__.CreateMainScene());
 }
 
 void Engine::shutdown()

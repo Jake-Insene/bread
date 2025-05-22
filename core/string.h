@@ -75,6 +75,8 @@ struct [[nodiscard]] String
     void set(StringView new_chars);
     void resize(usize new_size);
 
+    void add(StringView str);
+
     [[nodiscard]] bool equals(StringView str) const;
     [[nodiscard]] bool ends_with(StringView str) const;
     

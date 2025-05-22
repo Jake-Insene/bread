@@ -59,9 +59,9 @@ struct [[nodiscard]] Mat4
         };
     }
 
-    static constexpr Mat4 rotation_z(const f32 degress)
+    static constexpr Mat4 rotation_z(const f32 degrees)
     {
-        const f32 r = math::rads(degress);
+        const f32 r = math::rads(degrees);
         const f32 c = math::cos(r);
         const f32 s = math::sin(r);
 
@@ -72,26 +72,6 @@ struct [[nodiscard]] Mat4
             Vector4(0, 0, 1, 0),
             Vector4(0, 0, 0, 1)
         };
-    }
-
-    constexpr void look_at(const Vector3& eye, const Vector3& target, const Vector3& up)
-    {
-        Vector3 z = target - eye;
-        z.normalize();
-        Vector3 x = Vector3::cross(up, z);
-        x.normalize();
-        Vector3 y = Vector3::cross(z, x);
-        y.normalize();
-        
-        matrix[0] = Vector4(x.x, x.y, x.z, -x.dot(eye));
-        matrix[0] = Vector4(y.x, y.y, y.z, -y.dot(eye));
-        matrix[0] = Vector4(z.x, z.y, z.z, -z.dot(eye));
-        matrix[0] = Vector4(0, 0, 0, 1);
-    }
-    
-    constexpr void translate(const Vector3& t)
-    {
-        matrix[3] += Vector4(t.x, t.y, t.z, 0);
     }
     
     constexpr Mat4()
@@ -200,6 +180,35 @@ struct [[nodiscard]] Mat4
         }
 
 		::new(this) Mat4(transposed);
+    }
+
+    constexpr void look_at(const Vector3& eye, const Vector3& target, const Vector3& up)
+    {
+        Vector3 z = target - eye;
+        z.normalize();
+        Vector3 x = Vector3::cross(up, z);
+        x.normalize();
+        Vector3 y = Vector3::cross(z, x);
+        y.normalize();
+
+        matrix[0] = Vector4(x.x, x.y, x.z, -x.dot(eye));
+        matrix[1] = Vector4(y.x, y.y, y.z, -y.dot(eye));
+        matrix[2] = Vector4(z.x, z.y, z.z, -z.dot(eye));
+        matrix[3] = Vector4(0, 0, 0, 1);
+    }
+
+    constexpr void translate(const Vector3& t)
+    {
+        matrix[0][3] += t.x;
+        matrix[1][3] += t.y;
+        matrix[2][3] += t.z;
+    }
+
+    constexpr void scale(const Vector3& s)
+    {
+        matrix[0] *= s.x;
+        matrix[1] *= s.y;
+        matrix[2] *= s.z;
     }
     
     constexpr Mat4 inverse()

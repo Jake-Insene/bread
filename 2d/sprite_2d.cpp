@@ -20,7 +20,7 @@ void Sprite2D::render()
                 .type = RenderCommand::DRAW_SPRITE,
                 .sprite =
                 {
-                    .transform = get_transform(),
+                    .transform = get_global_transform(),
                     .texture_extent = tex_size,
                     .src_rect = src_rect,
                     .texture = data.texture->texture_id,

@@ -89,3 +89,9 @@ StringView String::view()
 {
     return StringView{chars.ptr(), count};
 }
+
+void String::add(StringView str)
+{
+    resize(count + str.len);
+    mem::copy(chars.add(count), str);
+}

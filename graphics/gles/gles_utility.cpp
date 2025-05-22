@@ -107,8 +107,9 @@ namespace gles
         gl.glGetShaderiv(vs, GL_COMPILE_STATUS, &status);
         if(status == GL_FALSE)
         {
-            gl.glGetShaderInfoLog(vs, 512, nullptr, log);
-            Fatal("Error compiling the vertex shader: '%s':\n%s", program_path, log);
+            i32 len = 0;
+            gl.glGetShaderInfoLog(vs, 512, &len, log);
+            Fatal("Error compiling the vertex shader: '%.*s':\n%.*s", program_path.len, program_path.ptr(), len, log);
         }
         
         sources[source_count-1] = (const char*)fsstring.ptr();
@@ -121,8 +122,9 @@ namespace gles
         gl.glGetShaderiv(fs, GL_COMPILE_STATUS, &status);
         if(status == GL_FALSE)
         {
-            gl.glGetShaderInfoLog(fs, 512, nullptr, log);
-            Fatal("Error compiling the fragment shader: '%s':\n%s", program_path, log);
+            i32 len = 0;
+            gl.glGetShaderInfoLog(fs, 512, &len, log);
+            Fatal("Error compiling the fragment shader: '%.*s':\n%.*s", program_path.len, program_path.ptr(), len, log);
         }
         
         u32 program = gl.glCreateProgram();
@@ -133,8 +135,9 @@ namespace gles
         gl.glGetProgramiv(program, GL_LINK_STATUS, &status);
         if(status == GL_FALSE)
         {
-            gl.glGetProgramInfoLog(program, 512, nullptr, log);
-            Fatal("Error linking the shader program: '%s'", program_path, log);
+            i32 len = 0;
+            gl.glGetProgramInfoLog(program, 512, &len, log);
+            Fatal("Error linking the shader program: '%.*s':\n%.*s", program_path.len, program_path.ptr(), len, log);
         }
         
         gl.glDeleteShader(vs);

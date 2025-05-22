@@ -53,8 +53,8 @@ struct Debug
     {
 #if defined(ENGINE_WIN32)
         __debugbreak();
-#else
-        *((void*)0x1);
+#elif defined(ENGINE_ANDROID)
+        __builtin_trap();
 #endif
     }
     

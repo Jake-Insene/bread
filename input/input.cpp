@@ -3,7 +3,7 @@
 
 bool Input::is_key_down(Key k)
 {
-	return data.keys[(int)k] == true;
+	return data.keys[(i32)k];
 }
 
 bool Input::is_mouse_button_pressed(MouseButton button)

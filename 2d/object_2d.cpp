@@ -37,10 +37,13 @@ Vector2 Object2D::get_scale() const
     return data.scale_cache;
 }
 
-void Object2D::set_rotation(f32 nrot)
+void Object2D::set_rotation(f32 new_rot)
 {
-    data.rot_cache = nrot;
-    data.transform.set_rotation(nrot);
+    if(data.rot_cache != new_rot)
+    {
+        data.rot_cache = new_rot;
+        data.transform.set_rotation(new_rot);
+    }
 }
 
 f32 Object2D::get_rotation() const
@@ -50,12 +53,18 @@ f32 Object2D::get_rotation() const
 
 Transform2D Object2D::get_transform() const
 {
+    return data.transform;
+}
+
+Transform2D Object2D::get_global_transform() const
+{
     Object* parent = get_parent();
-    if(parent && parent->has_mark(MARK_2D))
+    if (parent && parent->has_mark(MARK_2D))
     {
         Object2D* p2d = (Object2D*)parent;
-        return p2d->get_transform() * data.transform;
+        return p2d->get_global_transform() * data.transform;
     }
 
     return data.transform;
 }
+

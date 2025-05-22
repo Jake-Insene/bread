@@ -16,3 +16,11 @@ struct [[nodiscard]] Semaphore
     void signal();
     void wait();
 };
+
+struct [[nodiscard]] ScopedSemaphore
+{
+    Semaphore sem;
+
+    ScopedSemaphore(usize value) : sem(Semaphore::create(value)) {}
+    ~ScopedSemaphore() { sem.destroy(); }
+};

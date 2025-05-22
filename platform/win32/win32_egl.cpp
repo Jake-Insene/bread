@@ -79,9 +79,6 @@ void Win32EGL::initialize(const mem::Allocator&)
 	wglMakeCurrent(Win32EGL::data.device_context, real_context);
 
 	Win32EGL::data.context = real_context;
-
-	RECT rect{};
-	GetClientRect(Win32EGL::data.current_window, &rect);
 	
 	wgl.wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
 }

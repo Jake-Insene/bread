@@ -2,9 +2,14 @@
 #include "engine/engine.h"
 #include "platform/platform_header.h"
 
-struct AndroidEngine
+struct AndroidEngine : Engine
 {
-    static inline android_app* app = nullptr;
-    static inline AAssetManager* asset_manager = nullptr;
+    struct InternalData
+    {
+        android_app* app;
+        AAssetManager* asset_manager;
+    };
+
+    static inline InternalData data;
 };
 

@@ -1,8 +1,8 @@
 #include "debug/debug.h"
-#include "objects/scene_manager.h"
+#include "scene/scene_manager.h"
 #include "platform/android/android_engine.h"
 
-#define BUILD_APP 1
+#include "platform/android/android_mapped_keycodes.h"
 
 struct SaveState
 {
@@ -12,40 +12,51 @@ SaveState save_state = {};
 
 bool running = true;
 
+
 static int32_t engine_handle_input(android_app*, AInputEvent* event)
 {
     i32 type = AInputEvent_getType(event);
     i32 source = AInputEvent_getSource(event);
-    if (type == AINPUT_EVENT_TYPE_MOTION) {
-        if(source == AINPUT_SOURCE_TOUCHSCREEN)
+    switch(type)
+    {
+    case AINPUT_EVENT_TYPE_MOTION:
+    {
+        if (source == AINPUT_SOURCE_TOUCHSCREEN)
         {
             i32 action_pointer = AMotionEvent_getAction(event);
             i32 action = action_pointer & AMOTION_EVENT_ACTION_MASK;
-            size_t pointer_count = (size_t)AMotionEvent_getPointerCount(event);
-            for(size_t p = 0; p < pointer_count; p++)
+            usize pointer_count = AMotionEvent_getPointerCount(event);
+            for (size_t p = 0; p < pointer_count; p++)
             {
                 InputEventTouch e = {};
-                
+
                 // Y positive is up
                 e.type = INPUT_EVENT_TOUCH;
                 e.position = Vector2
-                (
-                    AMotionEvent_getX(event, p),
-                    -AMotionEvent_getY(event, p)
-                );
-                e.pressed =
-                (action == AMOTION_EVENT_ACTION_DOWN
-                 || action == AMOTION_EVENT_ACTION_MOVE
-                 || action == AMOTION_EVENT_ACTION_POINTER_DOWN);
-                 e.pointer = (i32)p;
-                
+                        (
+                                AMotionEvent_getX(event, p),
+                                -AMotionEvent_getY(event, p)
+                        );
+                e.pressed = (action == AMOTION_EVENT_ACTION_DOWN
+                             || action == AMOTION_EVENT_ACTION_MOVE
+                             || action == AMOTION_EVENT_ACTION_POINTER_DOWN);
+                e.pointer = (i32) p;
+
                 Engine::handle_input(e);
-                
-                //Log::info("action pointer: %08X, action: %d, pointer: %d", action_pointer, action, p);
+
+                Debug::info("action pointer: %08X, action: %d, pointer: %d", action_pointer, action, p);
             }
         }
-        
+    }
         return 1;
+    case AINPUT_EVENT_TYPE_KEY:
+    {
+        i32 action = AKeyEvent_getAction(event);
+        i32 keycode = AKeyEvent_getKeyCode(event);
+        Input::data.keys[(i32)MappedKeycodes[keycode]] = action == AKEY_EVENT_ACTION_DOWN;
+    }
+    default:
+        break;
     }
     return 0;
 }
@@ -63,18 +74,14 @@ static void engine_handle_cmd(android_app* app, int32_t cmd)
         break;
     case APP_CMD_INIT_WINDOW:
         // The window is being shown, get it ready.
-        if (AndroidEngine::app->window != nullptr)
+        if (AndroidEngine::data.app->window != nullptr)
         {
-#if BUILD_APP
-        Engine::recreate_window();
-#endif
+            Engine::recreate_window();
     	}
         break;
     case APP_CMD_TERM_WINDOW:
         // The window is being hidden or closed, clean it up.
-#if BUILD_APP
-            Engine::destroy();
-#endif 
+        Engine::destroy();
         running = false;
         break;
     case APP_CMD_GAINED_FOCUS:
@@ -90,8 +97,8 @@ static void engine_handle_cmd(android_app* app, int32_t cmd)
 
 void android_main(android_app* app)
 {
-    AndroidEngine::app = app;
-    AndroidEngine::asset_manager = app->activity->assetManager;
+    AndroidEngine::data.app = app;
+    AndroidEngine::data.asset_manager = app->activity->assetManager;
     app->onAppCmd = engine_handle_cmd;
     app->onInputEvent = engine_handle_input;
     
@@ -99,9 +106,7 @@ void android_main(android_app* app)
     Debug::info("External data path: %s", app->activity->externalDataPath);
     Debug::info("Obb path: %s", app->activity->obbPath);
     
-#if BUILD_APP
     AndroidEngine::initialize();
-#endif
 
     while (!app->destroyRequested) {
         android_poll_source *source = nullptr;
@@ -116,21 +121,17 @@ void android_main(android_app* app)
             source->process(app, source);
         }
 
-        if (AndroidEngine::app->destroyRequested)
+        if (AndroidEngine::data.app->destroyRequested)
         {
             break;
         }
         
         if(running)
         {
-#if BUILD_APP
             AndroidEngine::step();
-#endif
         }
     }
     
-#if BUILD_APP
     AndroidEngine::shutdown();
-#endif
 }
 

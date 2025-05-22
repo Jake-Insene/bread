@@ -8,21 +8,22 @@ struct [[nodiscard]] Transform2D
     // It has the following layout
     // [0][0] [0][1] scale & rotation
     // [1][0] [1][1]
+    Vector2 rows[2];
     // [2][0] [2][1] position
-    Vector2 rows[3];
+    Vector2 origin;
     
     explicit constexpr Transform2D()
     {
         rows[0] = Vector2(1, 0);
         rows[1] = Vector2(0, 1);
-        rows[2] = Vector2(0, 0);
+        origin = Vector2(0, 0);
     }
     
     explicit constexpr Transform2D(Vector2 xx, Vector2 yy, Vector2 zz)
     {
         rows[0] = xx;
         rows[1] = yy;
-        rows[2] = zz;
+        origin = zz;
     }
     
     constexpr Vector2& operator[](usize index)
@@ -41,8 +42,8 @@ struct [[nodiscard]] Transform2D
     {
         const Vector2 new_pos
         {
-            (rows[0][0] * t[2].x + rows[0][1] * t[2].y) + rows[2].x,
-            (rows[1][0] * t[2].x + rows[1][1] * t[2].y) + rows[2].y,
+            (rows[0][0] * t.origin.x + rows[0][1] * t.origin.y) + origin.x,
+            (rows[1][0] * t.origin.x + rows[1][1] * t.origin.y) + origin.y,
         };
 
         return Transform2D
@@ -60,15 +61,15 @@ struct [[nodiscard]] Transform2D
     
     constexpr Vector2 get_position() const
     {
-        return rows[2];
+        return origin;
     }
     
     constexpr void translate(Vector2 t)
     {
-        rows[2] += t;
+        origin += t;
     }
     
-    constexpr void set_scale(Vector2 scale)
+    constexpr void set_scale(const Vector2& scale)
     {
         rows[0].normalize();
         rows[1].normalize();
@@ -86,10 +87,11 @@ struct [[nodiscard]] Transform2D
         const Vector2 scale = get_scale();
         const f32 c = math::cos(rads);
         const f32 s = math::sin(rads);
-        rows[0][0] = scale.x * c;
-        rows[0][1] = scale.x * s;
-        rows[1][0] = scale.y * -s;
-        rows[1][1] = scale.y * c;
+        rows[0][0] = c;
+        rows[0][1] = -s;
+        rows[1][0] = s;
+        rows[1][1] = c;
+        set_scale(scale);
     }
     
     [[nodiscard]] constexpr f32 get_rotation() const

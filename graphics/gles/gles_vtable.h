@@ -13,13 +13,15 @@ inline void* (*platform_get_proc)(const char* name) = nullptr;
     gl.name = (decltype(gl.name))platform_get_proc(#name); \
     FailOn(gl.name == nullptr, "Couldn't load the function %s", #name);
 
-struct GLESVTable {
+struct GLESVTable
+        {
     PFNGLGETINTEGERVPROC glGetIntegerv;
     PFNGLGETSTRINGPROC glGetString;
     PFNGLGETSTRINGIPROC glGetStringi;
 
     PFNGLENABLEPROC glEnable;
     PFNGLDISABLEPROC glDisable;
+    PFNGLBLENDFUNCPROC glBlendFunc;
     PFNGLVIEWPORTPROC glViewport;
 
     // Debug only

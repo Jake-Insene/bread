@@ -5,23 +5,25 @@
 #include "mem/generic_allocator.h"
 
 
-#define ENGINE_CONFIGURATION(...) EngineConfiguration __configuration = {__VA_ARGS__};
+#define ENGINE_CONFIGURATION(...) EngineConfiguration __configuration__ = {__VA_ARGS__};
 #define ENGINE_DEFAULT_CONFIGURATION(main_scene) \
-    EngineConfiguration __configuration =\
+    EngineConfiguration __configuration__ =\
     {\
-        .WindowSize = Vector2I(Display::DefaultWidth, Display::DefaultHeight),\
-        .DisplayTargetSize = Vector2I(Display::DefaultWidth, Display::DefaultHeight),\
-        .VSync = true,\
         .CreateMainScene = []() -> Object* { return CreateObject<main_scene>(); },\
     }
+
+#define PRELOAD_BEGIN() void __preload__()\
+    {
+
+#define PRELOAD_END() }
 
 struct Object;
 
 struct EngineConfiguration
 {
-    Vector2I WindowSize;
-    Vector2I DisplayTargetSize;
-    bool VSync;
+    Vector2I WindowSize = Vector2I(Display::DefaultWidth, Display::DefaultHeight);
+    Vector2I DisplayTargetSize = Vector2I(Display::DefaultWidth, Display::DefaultHeight);
+    bool VSync = true;
     Object* (*CreateMainScene)();
 };
 

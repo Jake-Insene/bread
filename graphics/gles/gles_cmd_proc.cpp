@@ -116,8 +116,6 @@ void GLESCommandProcessor::initialize(mem::Allocator allocator)
         data.primitive_batch.program = gles::compile_program("shaders/primitive.glsl", "#define PRIMITIVE");
     }
 
-    data.blit_program = gles::compile_program("shaders/blit.glsl", {});
-
     data.scene_data_ubo = GLESMemoryAllocator::buffer_allocate_handle();
     GLESMemoryAllocator::buffer_fill_memory(
         data.scene_data_ubo, Slice<const u8>(nullptr, sizeof(SceneUniform)), GL_UNIFORM_BUFFER, GL_DYNAMIC_DRAW
@@ -173,8 +171,6 @@ void GLESCommandProcessor::shutdown()
 
         data.allocator.free(mem::to_bytes(data.primitive_batch.primitives));
     }
-
-    gl.glDeleteProgram(data.blit_program);
 
     GLESMemoryAllocator::buffer_deallocate_handle(data.scene_data_ubo, sizeof(SceneUniform));
 }
@@ -265,14 +261,14 @@ void GLESCommandProcessor::render()
         case RenderCommand::BIND_RENDER_TARGET:
         {
             auto& rt = GLESMemoryAllocator::render_target_get(cmd.bind.source_id);
+            
             data.scene_data.screen_transform = Projection::orthographic(
-                0, (f32)rt.size.width, (f32)rt.size.height, 0, 1, -1
+                0, rt.size.width, rt.size.height, 0, -1.f, 1.f
             );
             data.scene_data.screen_transform.transpose();
 
             data.scene_data_ubo_update = true;
            
-            //Log::info("fbo: %i, current: %i", rt.gl_id, current_fbo);
             if(data.state.current_fbo != rt.framebuffer)
             {
                 data.state.current_fb = cmd.bind.source_id;
@@ -340,7 +336,11 @@ void GLESCommandProcessor::render()
             data.sprite_batch.instances[index].transform_0 = cmd.sprite.transform[0];
             data.sprite_batch.instances[index].transform_1 = cmd.sprite.transform[1];
             
-            data.sprite_batch.instances[index].transform_2 = cmd.sprite.transform[2];
+            data.sprite_batch.instances[index].transform_2 = Vector2(
+                cmd.quad.transform[2].x,
+                cmd.quad.transform[2].y
+            );
+
             data.sprite_batch.instances[index].unit = tex_unit;
             data.sprite_batch.instances[index].flags = cmd.sprite.flags;
             
@@ -365,7 +365,10 @@ void GLESCommandProcessor::render()
             
             data.quad_batch.instances[index].transform_0 = cmd.quad.transform[0];
             data.quad_batch.instances[index].transform_1 = cmd.quad.transform[1];
-            data.quad_batch.instances[index].transform_2 = cmd.quad.transform[2];
+            data.quad_batch.instances[index].transform_2 = Vector2(
+                cmd.quad.transform[2].x,
+                cmd.quad.transform[2].y
+            );
             
             data.quad_batch.instances[index].size = cmd.quad.size;
             data.quad_batch.instances[index].color = cmd.quad.color;
@@ -398,12 +401,13 @@ void GLESCommandProcessor::render()
         case RenderCommand::SET_SCENE_TRANSFORM:
         {
             auto& rt = GLESMemoryAllocator::render_target_get(data.state.current_fb);
+            const Vector2 translation = cmd.transform[2];
 
             data.scene_data.scene_transform = Mat4(
-                Vector4(cmd.transform[0][0], cmd.transform[0][1], 0, 0),
-                Vector4(cmd.transform[1][0], cmd.transform[1][1], 0, 0),
+                Vector4(1, 0, 0, 0),
+                Vector4(0, 1, 0, 0),
                 Vector4(0, 0, 1, 0),
-                Vector4(-cmd.transform[2][0] + (rt.size.x / 2), cmd.transform[2][1] + (rt.size.y / 2), 0, 1)
+                Vector4(-translation.x + (rt.size.width / 2.f), translation.y + (rt.size.height / 2.f), 0, 1)
             );
 
             data.scene_data_ubo_update = true;
@@ -413,22 +417,20 @@ void GLESCommandProcessor::render()
             break;
         }
     }
-    
+
+    update_scene_uniform();
     if(data.sprite_batch.count > 0)
     {
-        update_scene_uniform();
         end_sprite_batch();
     }
     
     if(data.quad_batch.count > 0)
     {
-        update_scene_uniform();
         end_quad_batch();
     }
 
     if(data.primitive_batch.count > 0)
     {
-        update_scene_uniform();
         end_primitive_batch();
     }
   

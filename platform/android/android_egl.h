@@ -21,6 +21,7 @@ struct AndroidEGL
     
     static void recreate_window_surface();
     static void destroy_window_surface();
-    
     static void present();
+
+    static void set_vsync(bool enable);
 };

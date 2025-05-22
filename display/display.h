@@ -33,10 +33,10 @@ struct Display
     static mem::Allocator get_allocator() { return data.allocator; }
 
     static void initialize(const mem::Allocator& allocator);
-    
-    VTFuncDefS(shutdown);
-    VTFuncDefRetS(WindowID, window_create);
-    VTFuncDefArg1RetS(Vector2I, window_get_size, WindowID);
-    VTFuncDefArg2S(window_set_size, WindowID, const Vector2I&);
-    VTFuncDefArg1RetS(void*, window_get_native_handle, WindowID);
+    static void shutdown();
+
+    static WindowID window_create();
+    static Vector2I window_get_size(WindowID window_id);
+    static void window_set_size(WindowID window_id, const Vector2I& new_size);
+    static void* window_get_native_handle(WindowID window_id);
 };

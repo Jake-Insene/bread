@@ -38,7 +38,7 @@ void SceneManager::initialize(mem::Allocator allocator)
         data.allocator, 4
     );
 
-	// To avoid any Out Of Range error in handle_input
+	// To avoid any out of range error in handle_input
     data.touched_focus.resize(1);
 
     data.queue_frees = HashMap<ObjectID, QueueFreeInfo>::with_size(allocator, 4);
@@ -123,7 +123,7 @@ void SceneManager::step()
                 RenderCommand
                 {
                     .type = RenderCommand::SET_SCENE_TRANSFORM,
-                    .transform = data.current_camera->get_transform()
+                    .transform = data.current_camera->get_camera_transform()
                 }
             );
         }

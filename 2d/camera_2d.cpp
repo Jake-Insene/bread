@@ -18,16 +18,24 @@ void Camera2D::exit()
 
 void Camera2D::set_enable(bool _enable)
 {
-    if (enable != _enable && has_mark(MARK_IN_SCENE))
+    if (data.enable != _enable && has_mark(MARK_IN_SCENE))
     {
-        enable = _enable;
-        if(enable)
+        data.enable = _enable;
+        if(data.enable)
         {
             SceneManager::set_camera_2d(this);
         }
     }
 }
 
-void Camera2D::set_position(const Vector2&)
+Transform2D Camera2D::get_camera_transform()
 {
+    Transform2D camera_transform = get_global_transform();
+    
+    f64 dt = SceneManager::get_delta_time();
+    data.old_pos = Vector2::lerp(data.old_pos, camera_transform.get_position(), speed * dt);
+
+    Transform2D transform;
+    transform.translate(data.old_pos);
+    return transform;
 }

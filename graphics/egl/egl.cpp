@@ -31,6 +31,7 @@ void EGL::initialize(const mem::Allocator& allocator)
 
     REQUIRED_LOAD(glEnable);
     REQUIRED_LOAD(glDisable);
+    REQUIRED_LOAD(glBlendFunc);
     REQUIRED_LOAD(glViewport);
 
     // Debug only

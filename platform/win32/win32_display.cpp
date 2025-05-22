@@ -84,47 +84,33 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 	return DefWindowProcA(handle, msg, wparam, lparam);
 }
 
-Display::VTable Win32Display::get_vtable()
+void Display::initialize(const mem::Allocator& allocator)
 {
-    return Display::VTable
-    {
-        .initialize = &Win32Display::initialize,
-        .shutdown = &Win32Display::shutdown,
-
-		.window_create = &Win32Display::window_create,
-		.window_get_size = &Win32Display::window_get_size,
-		.window_set_size = &Win32Display::window_set_size,
-		.window_get_native_handle = &Win32Display::window_get_native_handle,
-    };
-}
-
-void Win32Display::initialize(const mem::Allocator& allocator)
-{
-    data.allocator = allocator;
-    data.windows = QueueArray<WindowData, Display::WindowID>::with_size(allocator, 4);
+    Win32Display::data.allocator = allocator;
+    Win32Display::data.windows = QueueArray<Win32Display::WindowData, Display::WindowID>::with_size(allocator, 4);
 
     WNDCLASSEXA wc = {};
     wc.cbSize = sizeof(wc);
     wc.lpfnWndProc = _default_window_proc;
-    wc.lpszClassName = WindowClassName;
+    wc.lpszClassName = Win32Display::WindowClassName;
     wc.hIcon = LoadIconA(0, IDI_APPLICATION);
     wc.hCursor = LoadCursorA(0, IDC_ARROW);
     wc.hIconSm = LoadIconA(0, IDI_APPLICATION);
 
     RegisterClassExA(&wc);
 
-	GetClientRect(GetDesktopWindow(), &data.fullscreen_rect);
+	GetClientRect(GetDesktopWindow(), &Win32Display::data.fullscreen_rect);
 }
 
-void Win32Display::shutdown()
+void Display::shutdown()
 {
-    data.windows.destroy();
+	Win32Display::data.windows.destroy();
 }
 
-Display::WindowID Win32Display::window_create()
+Display::WindowID Display::window_create()
 {
-    Display::WindowID new_id = data.windows.add(WindowData());
-    WindowData& new_window = _get_window_data(new_id);
+    Display::WindowID new_id = Win32Display::data.windows.add(Win32Display::WindowData());
+	Win32Display::WindowData& new_window = _get_window_data(new_id);
 
     RECT window_rect = {};
     window_rect.right = Display::DefaultWidth;
@@ -134,7 +120,7 @@ Display::WindowID Win32Display::window_create()
 
     new_window.window_rect = window_rect;
     new_window.handle = CreateWindowExA(
-        WS_EX_OVERLAPPEDWINDOW, WindowClassName, Display::DefaultTitle, WS_OVERLAPPEDWINDOW,
+        WS_EX_OVERLAPPEDWINDOW, Win32Display::WindowClassName, Display::DefaultTitle, WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, window_rect.right - window_rect.left, window_rect.bottom - window_rect.top,
         0, 0, GetModuleHandleA(nullptr), 0
     );
@@ -146,9 +132,9 @@ Display::WindowID Win32Display::window_create()
     return new_id;
 }
 
-Vector2I Win32Display::window_get_size(Display::WindowID wid)
+Vector2I Display::window_get_size(Display::WindowID wid)
 {
-	WindowData& window_data = _get_window_data(wid);
+	Win32Display::WindowData& window_data = _get_window_data(wid);
 	RECT rect;
 	GetClientRect(window_data.handle, &rect);
 
@@ -158,9 +144,9 @@ Vector2I Win32Display::window_get_size(Display::WindowID wid)
 	);
 }
 
-void Win32Display::window_set_size(Display::WindowID wid, const Vector2I& new_size)
+void Display::window_set_size(Display::WindowID wid, const Vector2I& new_size)
 {
-	WindowData& window_data = _get_window_data(wid);
+	Win32Display::WindowData& window_data = _get_window_data(wid);
 
 	RECT rect = { 0, 0, new_size.x, new_size.y };
 	AdjustWindowRectEx(&rect, WS_OVERLAPPEDWINDOW, FALSE, WS_EX_OVERLAPPEDWINDOW);
@@ -174,9 +160,9 @@ void Win32Display::window_set_size(Display::WindowID wid, const Vector2I& new_si
 	);
 }
 
-void* Win32Display::window_get_native_handle(Display::WindowID wid)
+void* Display::window_get_native_handle(Display::WindowID wid)
 {
-	WindowData& window_data = _get_window_data(wid);
+	Win32Display::WindowData& window_data = _get_window_data(wid);
 	return (void*)window_data.handle;
 }
 

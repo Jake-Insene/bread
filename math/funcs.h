@@ -132,4 +132,10 @@ namespace math
     {
         return v >= 0 ? 1 : -1;
     }
+
+    template<typename T, typename TStep>
+    [[nodiscard]] constexpr T lerp(const T start, const T end, const TStep step)
+    {
+        return start + (end - start) * step;
+    }
 }

@@ -257,14 +257,14 @@ void GLESMemoryAllocator::texture_allocate_memory(GLID texture, GLenum target, c
     GLenum internal_format, GLenum input_format, Slice<u8> bytes)
 {
     DebugAssert(
-        size.width * size.height * _get_format_size(input_format) == bytes.len,
+        bytes.len == 0 || size.width * size.height * _get_format_size(input_format) == bytes.len,
         "inconsistent buffer size"
     );
 
     gl.glBindTexture(target, texture);
     gl.glTexImage2D(
         target, 0, internal_format, size.width, size.height,
-        0, input_format ? input_format : GL_RGB, GL_UNSIGNED_BYTE, bytes.ptr()
+        0, input_format ? input_format : GL_RGBA, GL_UNSIGNED_BYTE, bytes.ptr()
     );
     gl.glBindTexture(target, 0);
 
@@ -305,7 +305,7 @@ ResourceID GLESMemoryAllocator::allocate_render_target_from_info(const RenderTar
     rt.color_buffer = texture_allocate_handle();
     texture_filter(rt.color_buffer, GL_TEXTURE_2D, GL_NEAREST, GL_NEAREST);
 
-    texture_allocate_memory(rt.color_buffer, GL_TEXTURE_2D, create_info.size, rt.format, 0, {});
+    texture_allocate_memory(rt.color_buffer, GL_TEXTURE_2D, create_info.size, rt.format, GL_RGBA, {});
 
     rt.framebuffer = render_target_allocate_handle();
     render_target_bind_texture(rt.framebuffer, rt.color_buffer);
@@ -383,7 +383,7 @@ void GLESMemoryAllocator::render_target_set_size(ResourceID rid, const Vector2I&
     
     usize old_byte_size = rt.size.width * rt.size.height * _get_format_size(rt.format);
     data.allocated_bytes -= old_byte_size;
-    texture_allocate_memory(rt.color_buffer, GL_TEXTURE_2D, new_size, rt.format, 0, {});
+    texture_allocate_memory(rt.color_buffer, GL_TEXTURE_2D, new_size, rt.format, GL_RGBA, {});
 
     gl.glBindFramebuffer(GL_FRAMEBUFFER, rt.framebuffer);
     gl.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rt.color_buffer, 0);

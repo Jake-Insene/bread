@@ -15,12 +15,12 @@ enum class Key
 {
     None = 0,
 
-    SHIFT = 0x10,
+    ShiftLeft = 0x10,
 
-    LEFT = 0x25,
-    UP = 0x26,
-    RIGHT = 0x27,
-    DOWN = 0x28,
+    Left = 0x25,
+    Up = 0x26,
+    Right = 0x27,
+    Down = 0x28,
 
     A = 0x41,
     B = 0x42,

@@ -2,7 +2,7 @@ project("bread")
 
 if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_FLAGS} /GR- /EHsc-")
+    set(CMAKE_CXX_FLAGS "${CMAKE_FLAGS} /GR- /EHsc- /Zc:preprocessor")
 else()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
     set(CMAKE_CXX_FLAGS
@@ -19,6 +19,11 @@ elseif(${CMAKE_BUILD_TYPE} STREQUAL "Release")
 elseif(${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DDEBUG -DSHOW_DEBUG_INFO")
 endif()
+
+
+# Dependencies
+add_subdirectory(external/freetype)
+
 
 # External sources
 file(GLOB EXTERNAL_SRC
@@ -144,4 +149,5 @@ target_include_directories(
 target_link_libraries(
     "bread"
     ${PLATFORM_LIBRARIES}
+    freetype
 )

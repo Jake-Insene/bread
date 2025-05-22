@@ -6,7 +6,18 @@ struct Camera2D : Object2D
 {
     OBJECT(Camera2D, Object2D);
 
-    bool enable = false;
+
+    // As everything in a struct is public we need to hide data
+    // that should not be modified/access directly, this also
+    // resolve some namespace problems.
+    struct InternalData
+    {
+        bool enable = false;
+        Vector2 old_pos = Vector2(0);
+        f32 old_rot = 0;
+    } data;
+    
+    f32 speed = 1;
 
     void init(const CreateInfo& info);
     void enter();
@@ -14,5 +25,6 @@ struct Camera2D : Object2D
 
     void set_enable(bool _enable);
     
-    void set_position(const Vector2& pos);
+    Transform2D get_camera_transform();
+
 };

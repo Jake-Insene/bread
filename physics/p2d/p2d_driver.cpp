@@ -4,15 +4,6 @@
 #include "physics/body_2d.h"
 
 
-Vector2 centered_to_top_left(const Vector2& size, const Vector2& center)
-{
-    return Vector2(center.x - (size.x / 2), center.y + (size.y / 2));
-}
-
-Vector2 top_left_to_centered(const Vector2& size, const Vector2& top_left)
-{
-    return Vector2(top_left.x + (size.x / 2), top_left.y - (size.y / 2));
-}
 
 Physics2D::VTable P2DDriver::get_vtable()
 {
@@ -257,17 +248,8 @@ void P2DDriver::_step_body(Body& body, f32 dt)
 
     // Debug draw
     Shape2D shape = body.shape;
-    shape.translate(body.target->get_position());
-
-    Vector2 top_left = shape.vertices[0];
-    Vector2 top_right = shape.vertices[1];
-    Vector2 bottom_right = shape.vertices[2];
-    Vector2 bottom_left = shape.vertices[3];
-    
-    Graphics2D::draw_line(Color{ 0, 255, 0, 255 }, top_left, top_right);
-    Graphics2D::draw_line(Color{ 0, 255, 0, 255 }, top_right, bottom_right);
-    Graphics2D::draw_line(Color{ 0, 255, 0, 255 }, bottom_right, bottom_left);
-    Graphics2D::draw_line(Color{ 0, 255, 0, 255 }, bottom_left, top_left);
+    Transform2D transform = body.target->get_global_transform();
+    Graphics2D::draw_quad(Color{0, 255, 0, 127}, shape.get_size(), transform);
 }
 
 void P2DDriver::_check_collision_in_group(CollisionMaskGroup& group, Body& body, 

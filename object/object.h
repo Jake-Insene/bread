@@ -97,9 +97,11 @@
     
 // Dont use VTableCall because it reference the member vtable that
 // is not in an object.
-#define ObjectCall(name, ...) static_cast<RemoveConstPointer<decltype(this)>::VTable>(klass->vtable).name.call(this, __VA_ARGS__)
+#define ObjectCall(name, ...) \
+    static_cast<RemoveConstPointer<decltype(this)>::VTable>(klass->vtable).name.call(this __VA_OPT__(,) __VA_ARGS__)
 
-#define ObjectCallRef(ref, name, ...) static_cast<RemoveConstPointer<decltype(ref)>::VTable>(ref->klass->vtable).name.call(ref, __VA_ARGS__)
+#define ObjectCallRef(ref, name, ...) \
+    static_cast<RemoveConstPointer<decltype(ref)>::VTable>(ref->klass->vtable).name.call(ref __VA_OPT__(,) __VA_ARGS__)
 
 
 #define DefineVTable(base) struct VTable : base::VTable
@@ -178,6 +180,7 @@ struct Object
         HashMap<ObjectID, Object*> childs{};
 
         BitField<MARK_COUNT> marks{};
+        BitField<64> bit_groups;
     } data;
     
     // Internal, you should not use them
@@ -190,8 +193,14 @@ struct Object
     void set_mark(u64 mark, bool value) { data.marks.set(mark, value); }
     void mark(u64 mark) { data.marks.set(mark, MARK_ENABLE); }
     void unmark(u64 mark) { data.marks.unset(mark); }
+
+    [[nodiscard]] bool has_group(u64 group_bit) const { return data.bit_groups.is_set(group_bit); }
+    void set_group(u64 group_bit, bool value) { data.bit_groups.set(group_bit, value); }
     
     // Object std functions
+
+    template<typename T>
+    [[nodiscard]] T* cast() const { return (T*)this; }
     
     // Can be null on root scene
     [[nodiscard]] Object* get_parent() const { return data.parent; }
