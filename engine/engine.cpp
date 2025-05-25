@@ -29,7 +29,7 @@ void operator delete(void*)
 
 
 extern EngineConfiguration __configuration__;
-void __preload__();
+extern void __preload__();
 
 void Engine::initialize()
 {

@@ -15,14 +15,14 @@ struct [[nodiscard]] Rect2DT
     constexpr explicit Rect2DT(const T x, const T y, const T w, const T h) : position(x, y), size(w, h) {}
     constexpr explicit Rect2DT(const Vector2T<T>& p, const Vector2T<T>& s) : position(p), size(s) {}
     
-    [[nodiscard]] constexpr bool is_in_area(const Vector2T<T>& p)
+    [[nodiscard]] constexpr bool point_is_in(const Vector2T<T>& p)
     {
-        if(p.x < position.x || p.y > position.y)
+        if(p.x < position.x || p.y < position.y)
         {
             return false;
         }
         
-        if(p.x > (position.x + size.x) || p.y < (position.y - size.y))
+        if(p.x > (position.x + size.width) || p.y > (position.y + size.height))
         {
             return false;
         }
@@ -34,16 +34,16 @@ struct [[nodiscard]] Rect2DT
     {
         return r.position.x >= position.x &&
                r.position.x + r.size.width <= position.x + size.width &&
-               r.position.y <= position.y - size.height &&
-               r.position.y - r.size.height <= position.y - size.height;
+               r.position.y <= position.y + size.height &&
+               r.position.y + r.size.height <= position.y + size.height;
     }
 
     [[nodiscard]] constexpr bool is_colliding(const Rect2DT& r)
     {
         return position.x < r.position.x + r.size.width &&
                position.x + size.width > r.position.x &&
-               position.y < r.position.y - r.size.height &&
-               position.y - size.height <= r.position.y;
+               position.y < r.position.y + r.size.height &&
+               position.y + size.height <= r.position.y;
     }
 
 };

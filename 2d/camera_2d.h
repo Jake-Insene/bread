@@ -2,6 +2,7 @@
 #include "2d/object_2d.h"
 #include "math/projection.h"
 
+
 struct Camera2D : Object2D
 {
     OBJECT(Camera2D, Object2D);

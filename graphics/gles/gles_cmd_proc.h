@@ -18,12 +18,14 @@ struct GLESCommandProcessor
         u32 flags;
         // attrib 2
         Vector2 texture_extent;
-        Color color;
-        u32 padding;
+        Vector2 dest_extent;
         // attrib 3
         Rect2D src_rect;
+        // attrib 4
+        Color color;
+        u32 padding[3];
     };
-    static constexpr usize SpriteInstanceAttribCount = 4;
+    static constexpr usize SpriteInstanceAttribCount = 5;
     
     static_assert(
         sizeof(SpriteInstance) <= (16*sizeof(Vector4)),
@@ -106,6 +108,7 @@ struct GLESCommandProcessor
         mem::Allocator allocator;
         
         u32 global_quad_ibo;
+        i32 usable_texture_units;
         
         SpriteBatch sprite_batch;
         QuadBatch quad_batch;

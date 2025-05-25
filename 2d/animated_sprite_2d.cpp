@@ -55,6 +55,7 @@ void AnimatedSprite2D::render()
 				{
 					.transform = get_global_transform(),
 					.texture_extent = extent,
+					.dest_extent = extent,
 					.src_rect = src_rect,
 					.texture = current_frame.sprite->texture_id,
 					.color = Color(255, 255, 255, 255),

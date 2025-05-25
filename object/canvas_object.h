@@ -4,13 +4,13 @@
 #include "math/color.h"
 
 
-// Used currently in UI stuff, 2D objects are in a 2d world not a canvas
+// Used currently in UI stuff, 2D objects are in a 2d world not a canvas.
 struct CanvasObject : Object
 {
     OBJECT(CanvasObject, Object);
     DefineVTable(Object)
     {
-        Event<bool(CanvasObject::*)(Vector2) const, false> is_inside;
+        Event<bool(CanvasObject::*)(const Vector2&) const, false> is_inside;
     };
     
     static void _bind_vtable(CanvasObject::VTable& vtable);
@@ -33,6 +33,6 @@ struct CanvasObject : Object
     void set_scale(Vector2 nscale);
     Vector2 get_scale() const;
     
-    bool is_inside(Vector2 pos) const;
+    bool is_inside(const Vector2& pos) const;
 };
 

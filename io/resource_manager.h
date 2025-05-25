@@ -4,6 +4,7 @@
 #include "io/image.h"
 #include "io/texture.h"
 #include "io/sprite_animation.h"
+#include "io/tile_set.h"
 #include "mem/allocator.h"
 
 
@@ -35,6 +36,7 @@ struct ResourceManager
     [[nodiscard]] static Texture2D* load_texture_2d(StringView path, const TextureLoadInfo& load_info);
 
     [[nodiscard]] static SpriteAnimation* create_sprite_animation(StringView name);
+    [[nodiscard]] static TileSet* create_tile_set(StringView name, Vector2I tile_size);
 };
 
 // Try to load the resource of the given type, can return nullptr

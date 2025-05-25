@@ -2,6 +2,7 @@
 
 #include "scene/scene_manager.h"
 
+
 void Camera2D::init(const Object::CreateInfo&)
 {}
 

@@ -1,5 +1,6 @@
 #include "object/object.h"
 
+#include "input/input.h"
 #include "object/object_allocator.h"
 #include "scene/scene_manager.h"
 
@@ -112,11 +113,5 @@ void Object::exit()
     }
 }
 
-void Object::event(const InputEvent& event)
-{
-    for(auto& it: data.childs)
-    {
-        if(it.second->has_mark(MARK_HANDLE_EVENT))
-            ObjectCallRef(it.second, event, event);
-    }
-}
+void Object::event(const InputEvent&)
+{}

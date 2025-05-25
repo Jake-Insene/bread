@@ -9,7 +9,6 @@
 
 void ResourceManager::initialize(mem::Allocator& allocator)
 {
-    data = {};
     data.allocator = allocator;
 
     FailOn(OS::set_current_directory("assets") == false, "assets directory not found")
@@ -20,7 +19,7 @@ void ResourceManager::initialize(mem::Allocator& allocator)
     );
     
     data.cached_images = HashMap<Image*, Texture*>::with_size(
-            data.allocator, 4
+        data.allocator, 4
     );
 }
 
@@ -42,6 +41,12 @@ void ResourceManager::shutdown()
             sa->destroy();
         }
             break;
+        case RESOURCE_TILE_SET:
+        {
+            TileSet* ts = (TileSet*)it.second;
+            ts->destroy();
+        }
+        break;
         default:
             break;
         }
@@ -85,7 +90,9 @@ Resource* ResourceManager::load_resource(ResourceType type,
                 .mag_filter = TEXTURE_FILTER_NEAREST,
             }
         );
+        break;
     case RESOURCE_SPRITE_ANIMATION:
+    case RESOURCE_TILE_SET:
     {
         if (data.resources.has(path))
         {
@@ -93,6 +100,7 @@ Resource* ResourceManager::load_resource(ResourceType type,
         }
         return nullptr;
     }
+    break;
     default:
         return nullptr;
     }
@@ -184,6 +192,7 @@ SpriteAnimation* ResourceManager::create_sprite_animation(StringView name)
 {
     if (data.resources.has(name))
     {
+        FailOn(true, "SpriteAnimation already create");
         return nullptr;
     }
 
@@ -194,4 +203,23 @@ SpriteAnimation* ResourceManager::create_sprite_animation(StringView name)
     sprite_animation->path = String::from_chars(get_allocator(), name);
     sprite_animation->animations = StringMap<SpriteAnimation::Animation>::with_allocator(get_allocator());
     return sprite_animation;
+}
+
+TileSet* ResourceManager::create_tile_set(StringView name, Vector2I tile_size)
+{
+    if (data.resources.has(name))
+    {
+        FailOn(true, "TileSet already create");
+        return nullptr;
+    }
+
+    TileSet* tile_set = get_allocator().object<TileSet>();
+    data.resources.insert(name, tile_set);
+
+    tile_set->type = RESOURCE_TILE_SET;
+    tile_set->path = String::from_chars(get_allocator(), name);
+    tile_set->tiles = Array<TileSet::Tile>::with_allocator(get_allocator());
+    tile_set->tiles_data = Array<TileSet::TileData>::with_allocator(get_allocator());
+    tile_set->tile_size = tile_size;
+    return tile_set;
 }

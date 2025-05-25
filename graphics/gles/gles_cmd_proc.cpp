@@ -40,6 +40,8 @@ void GLESCommandProcessor::initialize(mem::Allocator allocator)
         data.global_quad_ibo, indices, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW
     );
 
+    data.usable_texture_units = 16;
+
     // Sprite_batch
     {
         data.sprite_batch = {};
@@ -262,9 +264,7 @@ void GLESCommandProcessor::render()
         {
             auto& rt = GLESMemoryAllocator::render_target_get(cmd.bind.source_id);
             
-            data.scene_data.screen_transform = Projection::orthographic(
-                0, rt.size.width, rt.size.height, 0, -1.f, 1.f
-            );
+            data.scene_data.screen_transform = Mat4::scaling(Vector3(2.f/rt.size.width, 2.f/rt.size.height, 1.f));
             data.scene_data.screen_transform.transpose();
 
             data.scene_data_ubo_update = true;
@@ -304,27 +304,27 @@ void GLESCommandProcessor::render()
             break;
         case RenderCommand::DRAW_SPRITE:
         {
-            if(data.sprite_batch.count >= MaxInstancesPerBatch || 
-                data.sprite_batch.texture_index >= GLESDriver::data.limits.max_texture_units)
+            if (data.sprite_batch.count >= MaxInstancesPerBatch ||
+                data.sprite_batch.texture_index >= data.usable_texture_units)
             {
                 Debug::info("Sprite Batch full, flushing...");
                 update_scene_uniform();
                 end_sprite_batch();
             }
-            
+
             GLID tex = GLESMemoryAllocator::texture_get_handle(cmd.sprite.texture);
 
             i32 tex_unit = -1;
-            for(i32 t = 0; t < data.sprite_batch.texture_index; t++)
+            for (i32 t = 0; t < data.sprite_batch.texture_index; t++)
             {
-                if(data.sprite_batch.texture_units[t] == i32(tex))
+                if (data.sprite_batch.texture_units[t] == i32(tex))
                 {
                     tex_unit = t;
                     break;
                 }
             }
 
-            if(tex_unit == -1)
+            if (tex_unit == -1)
             {
                 tex_unit = data.sprite_batch.texture_index;
                 data.sprite_batch.texture_units[data.sprite_batch.texture_index] = tex;
@@ -332,22 +332,19 @@ void GLESCommandProcessor::render()
             }
 
             u32 index = data.sprite_batch.count;
-            
+
             data.sprite_batch.instances[index].transform_0 = cmd.sprite.transform[0];
             data.sprite_batch.instances[index].transform_1 = cmd.sprite.transform[1];
-            
-            data.sprite_batch.instances[index].transform_2 = Vector2(
-                cmd.quad.transform[2].x,
-                cmd.quad.transform[2].y
-            );
+            data.sprite_batch.instances[index].transform_2 = cmd.quad.transform[2];
 
             data.sprite_batch.instances[index].unit = tex_unit;
             data.sprite_batch.instances[index].flags = cmd.sprite.flags;
             
             data.sprite_batch.instances[index].texture_extent = cmd.sprite.texture_extent;
-            data.sprite_batch.instances[index].color = cmd.sprite.color;
+            data.sprite_batch.instances[index].dest_extent = cmd.sprite.dest_extent;
             
             data.sprite_batch.instances[index].src_rect = cmd.sprite.src_rect;
+            data.sprite_batch.instances[index].color = cmd.sprite.color;
 
             data.sprite_batch.count++;
         }
@@ -365,10 +362,7 @@ void GLESCommandProcessor::render()
             
             data.quad_batch.instances[index].transform_0 = cmd.quad.transform[0];
             data.quad_batch.instances[index].transform_1 = cmd.quad.transform[1];
-            data.quad_batch.instances[index].transform_2 = Vector2(
-                cmd.quad.transform[2].x,
-                cmd.quad.transform[2].y
-            );
+            data.quad_batch.instances[index].transform_2 = cmd.quad.transform[2];
             
             data.quad_batch.instances[index].size = cmd.quad.size;
             data.quad_batch.instances[index].color = cmd.quad.color;
@@ -401,13 +395,13 @@ void GLESCommandProcessor::render()
         case RenderCommand::SET_SCENE_TRANSFORM:
         {
             auto& rt = GLESMemoryAllocator::render_target_get(data.state.current_fb);
-            const Vector2 translation = cmd.transform[2];
+            const Vector2 translation = cmd.transform[2] * -1;
 
             data.scene_data.scene_transform = Mat4(
                 Vector4(1, 0, 0, 0),
                 Vector4(0, 1, 0, 0),
                 Vector4(0, 0, 1, 0),
-                Vector4(-translation.x + (rt.size.width / 2.f), translation.y + (rt.size.height / 2.f), 0, 1)
+                Vector4(translation, 0, 1)
             );
 
             data.scene_data_ubo_update = true;

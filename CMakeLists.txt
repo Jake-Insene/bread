@@ -46,10 +46,11 @@ file(GLOB ENGINE_SRC
     input/input.cpp
     
     io/image.cpp
-    io/texture.cpp
+    io/resource.cpp
     io/resource_manager.cpp
     io/sprite_animation.cpp
-    io/resource.cpp
+    io/texture.cpp
+    io/tile_set.cpp
     
     mem/utils.cpp
     mem/generic_allocator.cpp
@@ -72,6 +73,7 @@ file(GLOB ENGINE_SRC
     2d/camera_2d.cpp
     2d/object_2d.cpp
     2d/sprite_2d.cpp
+    2d/tile_map.cpp
 
     physics/body_2d.cpp
     physics/physics_2d.cpp

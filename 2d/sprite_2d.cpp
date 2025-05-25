@@ -13,7 +13,7 @@ void Sprite2D::render()
 {
     if(data.texture)
     {
-        Vector2 tex_size = Vector2(data.texture->get_size());
+        Vector2 texture_extent = Vector2(data.texture->get_size());
         Graphics::add_cmd(
             RenderCommand
             {
@@ -21,7 +21,8 @@ void Sprite2D::render()
                 .sprite =
                 {
                     .transform = get_global_transform(),
-                    .texture_extent = tex_size,
+                    .texture_extent = texture_extent,
+                    .dest_extent = texture_extent,
                     .src_rect = src_rect,
                     .texture = data.texture->texture_id,
                     .color = color,

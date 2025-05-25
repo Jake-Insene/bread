@@ -22,7 +22,7 @@ struct SceneManager
         mem::Allocator allocator;
         RenderTarget display_target;
     
-        Color clear_color;
+        Color background_color;
         Object* current_scene;
         Camera2D* current_camera;
     
@@ -50,12 +50,15 @@ struct SceneManager
     
     static void step();
 
-    static Vector2 _screen_make_local(Vector2 pos);
-    static Control* _find_control_in_pos(Vector2 pos);
-    static void _handle_input(const InputEvent& event);
+    static void set_background_color(Color new_bg_color) { data.background_color = new_bg_color; }
+    static Color get_background_color() { return data.background_color; }
 
     static void set_camera_2d(Camera2D* camera);
     [[nodiscard]] static Camera2D* get_camera_2d() { return data.current_camera; }
+
+    static Vector2 _screen_make_local(const Vector2& pos);
+    static Control* _find_control_in_pos(const Vector2& pos);
+    static void _handle_input(const InputEvent& event);
 
     static void _add_root_control(Control* c);
     

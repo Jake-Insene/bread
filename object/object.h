@@ -1,6 +1,5 @@
 #pragma once
 #include "core/header.h"
-#include "input/input.h"
 #include "object/object_id.h"
 
 
@@ -47,14 +46,14 @@
     }
 
 #define OBJECT(name, base)\
-    static void* get_bind_vtable()\
+    static void* _get_bind_vtable()\
     {\
         return reinterpret_cast<void*>(&name::_bind_vtable);\
     }\
-    static bool try_bind_vtable(name::VTable& vtable)\
+    static bool _try_bind_vtable(name::VTable& vtable)\
     {\
-        base::try_bind_vtable(vtable);\
-        if(name::get_bind_vtable() != base::get_bind_vtable())\
+        base::_try_bind_vtable(vtable);\
+        if(name::_get_bind_vtable() != base::_get_bind_vtable())\
         {\
             name::_bind_vtable(static_cast<name::VTable&>(vtable));\
         }\
@@ -76,7 +75,7 @@
             tmp.event.bind(&name::eventv);\
             return tmp;\
         }();\
-        static bool unused = name::try_bind_vtable(vtable);\
+        static bool unused = name::_try_bind_vtable(vtable);\
         (void)unused;\
         static Class klass\
         {\
@@ -98,14 +97,16 @@
 // Dont use VTableCall because it reference the member vtable that
 // is not in an object.
 #define ObjectCall(name, ...) \
-    static_cast<RemoveConstPointer<decltype(this)>::VTable>(klass->vtable).name.call(this __VA_OPT__(,) __VA_ARGS__)
+    static_cast<RemoveConstPointer<decltype(this)>::VTable&>(klass->vtable).name.call(this __VA_OPT__(,) __VA_ARGS__)
 
 #define ObjectCallRef(ref, name, ...) \
-    static_cast<RemoveConstPointer<decltype(ref)>::VTable>(ref->klass->vtable).name.call(ref __VA_OPT__(,) __VA_ARGS__)
+    static_cast<RemoveConstPointer<decltype(ref)>::VTable&>(ref->klass->vtable).name.call(ref __VA_OPT__(,) __VA_ARGS__)
 
 
 #define DefineVTable(base) struct VTable : base::VTable
 
+
+struct InputEvent;
 
 struct Object
 {
@@ -137,9 +138,9 @@ struct Object
         VTable& vtable;
     };
     
-    static void* get_bind_vtable() { return reinterpret_cast<void*>(&Object::_bind_vtable); }
+    static void* _get_bind_vtable() { return reinterpret_cast<void*>(&Object::_bind_vtable); }
     
-    static void try_bind_vtable(VTable& vtable)
+    static void _try_bind_vtable(VTable& vtable)
     {
         return _bind_vtable(vtable);
     }

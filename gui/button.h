@@ -9,6 +9,7 @@ struct Button : Control
     
     static void _bind_vtable(VTable& vtable);
     
+    Vector2 size = Vector2(10);
     bool is_pressed;
     
     Texture* current_texture = nullptr;
@@ -23,5 +24,5 @@ struct Button : Control
     
     void event(const InputEvent& e);
     
-    bool is_inside(Vector2 pos) const;
+    bool is_inside(const Vector2& pos) const;
 };

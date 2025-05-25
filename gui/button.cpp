@@ -1,6 +1,7 @@
 #include "gui/button.h"
 
 #include "graphics/graphics.h"
+#include "input/input.h"
 #include "io/resource_manager.h"
 #include "math/rect_2d.h"
 
@@ -23,7 +24,7 @@ void Button::init(const CreateInfo&)
 
 void Button::render()
 {
-    Vector2 texsize = Vector2(current_texture->get_size());
+    Vector2 texture_extent = Vector2(current_texture->get_size());
     Graphics::add_cmd(
         RenderCommand
         {
@@ -31,8 +32,9 @@ void Button::render()
             .sprite =
             {
                 .transform = data.transform,
-                .texture_extent = texsize,
-                .src_rect = Rect2D(Vector2(), texsize),
+                .texture_extent = texture_extent,
+                .dest_extent = size,
+                .src_rect = Rect2D(Vector2(), texture_extent),
                 .texture = current_texture->texture_id,
                 .color = data.color,
                 .flags = RenderCommand::FLAG_TOP_LEFT,
@@ -58,29 +60,30 @@ void Button::event(const InputEvent& e)
         }
     }
     
-	if (e.type == INPUT_EVENT_MOUSE_BUTTON)
+	else if (e.type == INPUT_EVENT_MOUSE_BUTTON)
 	{
 		const auto& em = e.get<InputEventMouseButton>();
-        if(em.button == MOUSE_BUTTON_LEFT)
+        if(em.button == MOUSE_BUTTON_LEFT && em.pressed)
         {
-            if (is_inside(em.position))
-            {
-                current_texture = hover_texture;
-                is_pressed = em.pressed;
-            }
+            is_pressed = is_inside(em.position);
+
+            if (is_pressed)
+                current_texture = pressed_texture;
             else
-            {
                 current_texture = normal_texture;
-                is_pressed = false;
-            }
+        }
+        else
+        {
+            is_pressed = false;
+            current_texture = normal_texture;
         }
 	}
 }
 
-bool Button::is_inside(Vector2 pos) const
+bool Button::is_inside(const Vector2& pos) const
 {
     return Rect2D(
             get_position(),
-            Vector2(normal_texture->get_size()) * get_scale()
-    ).is_in_area(pos);
+            size * get_scale()
+    ).point_is_in(pos);
 }

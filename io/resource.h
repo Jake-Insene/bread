@@ -20,6 +20,7 @@ enum ResourceType
     RESOURCE_TEXTURE,
     RESOURCE_TEXTURE_2D,
     RESOURCE_SPRITE_ANIMATION,
+    RESOURCE_TILE_SET,
  };
 
 // A 'Resource' represents a collection of data that can be reused across the application.

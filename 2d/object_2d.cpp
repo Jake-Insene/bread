@@ -1,8 +1,8 @@
 #include "2d/object_2d.h"
 
+
 void Object2D::_bind_vtable(VTable&)
 {}
-
 
 void Object2D::init(const CreateInfo&)
 {

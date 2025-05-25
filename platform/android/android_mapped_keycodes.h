@@ -64,7 +64,7 @@ static constexpr Key MappedKeycodes[] =
     Key::None, // Period,
     Key::None, // Alt Left,
     Key::None, // Alt Right,
-    Key::ShiftLeft, // Shift Left,
+    Key::LeftShift, // Shift Left,
     Key::None, // Shift Right,
     Key::None, // Tab,
     Key::None, // Space,

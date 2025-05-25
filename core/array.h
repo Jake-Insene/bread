@@ -113,6 +113,20 @@ struct [[nodiscard]] Array
         return items[count++];
     }
 
+    void add_slice(Slice<T> new_items)
+    {
+        usize _count = count;
+        resize(count + new_items.len);
+        Slice<T> dest = items.add(_count);
+        mem::copy(dest, new_items);
+    }
+
+    void replace(Slice<T> new_items)
+    {
+        resize(new_items.len);
+        mem::copy(items, new_items);
+    }
+
     void remove(usize index)
     {
         DebugAssert(index < count && count != 0, "index out of range");

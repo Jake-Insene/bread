@@ -5,6 +5,7 @@
 #include "engine/engine.h"
 #include "graphics/graphics.h"
 #include "gui/control.h"
+#include "input/input.h"
 #include "2d/camera_2d.h"
 #include "object/object_allocator.h"
 #include "physics/physics_2d.h"
@@ -18,7 +19,7 @@ void SceneManager::initialize(mem::Allocator allocator)
         Vector2I(Display::DefaultWidth, Display::DefaultHeight)
     );
 
-    data.clear_color = {0, 0, 0, 255};
+    data.background_color = {0, 0, 0, 255};
     
     data.current_scene = nullptr;
     data.current_camera = nullptr;
@@ -112,7 +113,7 @@ void SceneManager::step()
                 .clear =
                 {
                     .rid = data.display_target.render_target_id,
-                    .color = data.clear_color,
+                    .color = data.background_color,
                 },
             }
         );
@@ -144,23 +145,38 @@ void SceneManager::step()
     }
 }
 
-Vector2 SceneManager::_screen_make_local(Vector2 pos)
+void SceneManager::set_camera_2d(Camera2D* camera)
 {
-    // converting touch position into local scene position
-    Vector2I scene_size = data.display_target.get_size();
-    Vector2I window_size = Engine::get_main_window().get_size();
-
-    f32 normalized_x = pos.x / (f32)window_size.x;
-    f32 normalized_y = pos.y / (f32)window_size.y;
-            
-    // Setting new position
-    return Vector2(
-        normalized_x * (f32)scene_size.x,
-        normalized_y * (f32)scene_size.y
-    );
+    data.current_camera = camera;
 }
 
-Control* SceneManager::_find_control_in_pos(Vector2 pos)
+Vector2 SceneManager::_screen_make_local(const Vector2& pos)
+{
+    // converting touch position into local scene position
+    const Vector2 display_size = Vector2(data.display_target.get_size()) / 2;
+    const Vector2 window_size = Vector2(Engine::get_main_window().get_size());
+    const Vector2 window_size_half = window_size / 2;
+
+    const Vector2 pos_around_center = pos + Vector2(-window_size_half.x, window_size_half.y);
+    const f32 normalized_x = pos_around_center.x / window_size_half.x;
+    const f32 normalized_y = pos_around_center.y / window_size_half.y;
+
+    const Vector2 local_position = Vector2(
+        normalized_x * (f32)display_size.x,
+        normalized_y * (f32)display_size.y
+    );
+
+    Transform2D transform = Transform2D();
+    if (data.current_camera)
+    {
+        transform = data.current_camera->get_camera_transform();
+    }
+            
+    // Setting new position
+    return transform * local_position;
+}
+
+Control* SceneManager::_find_control_in_pos(const Vector2& pos)
 {
     for(auto& c : data.gui_roots)
     {
@@ -195,7 +211,7 @@ void SceneManager::_handle_input(const InputEvent& event)
                 c = data.touched_focus[et.pointer];
                 if(c)
                 {
-                    // is_in_area will be always false
+                    // point_is_in will be always false
                     new_event.pressed = false;
                     ObjectCallRef(c, event, new_event);
                 }
@@ -204,8 +220,7 @@ void SceneManager::_handle_input(const InputEvent& event)
             
             ObjectCallRef(data.current_scene, event, new_event);
         }
-
-        if (event.type == INPUT_EVENT_MOUSE_BUTTON)
+        else if (event.type == INPUT_EVENT_MOUSE_BUTTON)
         {
             auto& et = event.get<InputEventMouseButton>();
             InputEventMouseButton new_event = et;
@@ -222,7 +237,7 @@ void SceneManager::_handle_input(const InputEvent& event)
                 c = data.touched_focus[0];
                 if (c)
                 {
-                    // is_in_area will be always false
+                    // point_is_in will be always false
                     new_event.pressed = false;
                     ObjectCallRef(c, event, new_event);
                 }
@@ -232,11 +247,6 @@ void SceneManager::_handle_input(const InputEvent& event)
             ObjectCallRef(data.current_scene, event, new_event);
         }
     }
-}
-
-void SceneManager::set_camera_2d(Camera2D* camera)
-{
-    data.current_camera = camera;
 }
 
 void SceneManager::_add_root_control(Control* c)

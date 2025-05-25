@@ -53,10 +53,21 @@ struct [[nodiscard]] Transform2D
             new_pos,
         };
     }
+
+    [[nodiscard]] constexpr Vector2 operator*(const Vector2& t) const
+    {
+        const Vector2 new_pos
+        {
+            (rows[0][0] * t.x + rows[0][1] * t.y) + origin.x,
+            (rows[1][0] * t.x + rows[1][1] * t.y) + origin.y,
+        };
+
+        return new_pos;
+    }
     
     constexpr void set_position(Vector2 position)
     {
-        rows[2] = position;
+        origin = position;
     }
     
     constexpr Vector2 get_position() const

@@ -24,8 +24,10 @@ struct RenderCommand
     struct DrawSprite
     {
         Transform2D transform;
-        // The size of the rectangle where the texture will be draw.
+        // The size of the texture binded.
         Vector2 texture_extent;
+        // The size of the rectangle where the texture will be draw.
+        Vector2 dest_extent;
         // In texture.
         Rect2D src_rect;
         ResourceID texture;

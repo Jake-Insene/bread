@@ -3,6 +3,7 @@
 
 #include "math/transform_2d.h"
 
+
 struct Object2D : Object
 {
     OBJECT(Object2D, Object);

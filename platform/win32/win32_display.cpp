@@ -50,10 +50,23 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		event.button = button;
 		Engine::handle_input(event);
 	}
+	break;
+	case WM_SYSKEYDOWN:
+	case WM_SYSKEYUP:
 	case WM_KEYDOWN:
 	case WM_KEYUP:
 	{
-		Input::data.keys[wparam] = msg == WM_KEYDOWN;
+		u8 scan_code = (lparam >> 16) & 0xFF;
+
+		// Extended key
+		// Shift, Ctr, Alt
+		if (wparam == VK_SHIFT || wparam == VK_CONTROL || wparam == VK_MENU)
+		{
+			UINT real_vk = MapVirtualKeyEx(scan_code, MAPVK_VSC_TO_VK_EX, GetKeyboardLayout(0));
+			Input::data.keys[real_vk] = msg == WM_KEYDOWN;
+		}
+
+		Input::data.keys[wparam] = msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN;
 
 		InputEventKey event{};
 		event.pressed = Input::data.keys[wparam];

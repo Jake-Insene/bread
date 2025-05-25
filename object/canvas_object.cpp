@@ -10,6 +10,7 @@ void CanvasObject::_bind_vtable(CanvasObject::VTable& vtable)
 void CanvasObject::init(const CreateInfo&)
 {
     mark(MARK_RENDER);
+    mark(MARK_HANDLE_EVENT);
     
     data.transform = Transform2D();
 }
@@ -34,7 +35,7 @@ Vector2 CanvasObject::get_scale() const
     return data.transform.get_scale();
 }
 
-bool CanvasObject::is_inside(Vector2) const
+bool CanvasObject::is_inside(const Vector2&) const
 {
     return false;
 }

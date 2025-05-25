@@ -15,12 +15,25 @@ enum class Key
 {
     None = 0,
 
-    ShiftLeft = 0x10,
+    Shift = 0x10,
+    Ctr = 0x11,
+    Alt = 0x12,
 
     Left = 0x25,
     Up = 0x26,
     Right = 0x27,
     Down = 0x28,
+
+    N0 = 0x30,
+    N1 = 0x31,
+    N2 = 0x32,
+    N3 = 0x33,
+    N4 = 0x34,
+    N5 = 0x35,
+    N6 = 0x36,
+    N7 = 0x37,
+    N8 = 0x38,
+    N9 = 0x39,
 
     A = 0x41,
     B = 0x42,
@@ -48,6 +61,24 @@ enum class Key
     X = 0x58,
     Y = 0x59,
     Z = 0x5A,
+
+    NumPad0 = 0x60,
+    NumPad1 = 0x61,
+    NumPad2 = 0x62,
+    NumPad3 = 0x63,
+    NumPad4 = 0x64,
+    NumPad5 = 0x65,
+    NumPad6 = 0x66,
+    NumPad7 = 0x67,
+    NumPad8 = 0x68,
+    NumPad9 = 0x69,
+
+    LeftShift = 0xA0,
+    RightShift = 0xA1,
+    LeftControl = 0xA2,
+    RightControl = 0xA3,
+    LeftAlt = 0xA4,
+    RightAlt = 0xA5,
 };
 
 enum MouseButton
