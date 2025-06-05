@@ -5,6 +5,7 @@ enum TextureFormat
     TEXTURE_FORMAT_UNKNOWN = 0,
     TEXTURE_FORMAT_RGB8,
     TEXTURE_FORMAT_RGBA8,
+    TEXTURE_FORMAT_R8,
 };
 
 enum TextureType

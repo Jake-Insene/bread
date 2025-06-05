@@ -1,6 +1,6 @@
 #pragma once
 #include "core/types.h"
-#include "core/macros.h"
+#include "debug/assertion.h"
 #include "math/funcs.h"
 #include "math/vec2.h"
 
@@ -127,7 +127,7 @@ union [[nodiscard]] Vector4T
     
     constexpr T length() const
     {
-        return ::sqrt(x * x + y * y + z * z + w * w);
+        return math::sqrt(x * x + y * y + z * z + w * w);
     }
 
     constexpr void normalize()

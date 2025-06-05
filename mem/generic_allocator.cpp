@@ -13,27 +13,26 @@ namespace mem
     
     void GenericAllocator::destroy()
     {
-#if DEBUG
-        Log::info("Allocated pages %llu", page_count);
-#endif
+        DebugInfo("Allocated pages {u}", page_count);
+      
         for(usize i = 0; i < page_count; i++)
         {
             Page& page = allocated_pages[i];
-#if DEBUG
-            usize page_size_acumulator = 0;
+#if defined(DEBUG)
+            usize page_size_accumulator = 0;
 
             Header* header = page.first_header;
             usize header_count = 0;
             while(header)
             {
-                page_size_acumulator += header->len + sizeof(Header);
+                page_size_accumulator += header->len + sizeof(Header);
                 header_count++;
                 DebugAssert((header->tags & Allocated) == 0, "forget to call free.");
                 header = header->next;
             }
 
-            DebugAssert(page_size_acumulator == page.bytes.len, "allocator corruption");
-            Debug::info("Page at address %p of size %llu, with %llu headers", page.bytes.ptr(), page.bytes.len, header_count);
+            DebugAssert(page_size_accumulator == page.bytes.len, "allocator corruption");
+            DebugInfo("Page at address {p} of size {u}, with {u} headers", page.bytes.ptr(), page.bytes.len, header_count);
 #endif
             internal_allocator.free(page.bytes);
         }
@@ -49,9 +48,7 @@ namespace mem
         Page& page = allocated_pages[page_count++];
         page.bytes = internal_allocator.alloc(size, OS::get_page_size());
         page.first_header = nullptr;
-#if SHOW_DEBUG_INFO
-        Debug::info("Page allocated at %p with size %llu", page.bytes.ptr(), page.bytes.len);
-#endif
+        DebugInfo("Page allocated at {p} with size {u}", page.bytes.ptr(), page.bytes.len);
         return page;
     }
 
@@ -59,16 +56,16 @@ namespace mem
     {
         for (usize i = 0; i < page_count; i++)
         {
-            usize page_size_acumulator = 0;
+            usize page_size_accumulator = 0;
             Page& page = allocated_pages[i];
             Header* header = page.first_header;
             while (header)
             {
-                page_size_acumulator += header->len + sizeof(Header);
+                page_size_accumulator += header->len + sizeof(Header);
                 header = header->next;
             }
 
-            DebugAssert(page_size_acumulator == page.bytes.len, "allocator corruption");
+            DebugAssert(page_size_accumulator == page.bytes.len, "allocator corruption");
         }
     }
     

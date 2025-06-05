@@ -1,6 +1,6 @@
 #pragma once
 #include "math/vec2.h"
-#include "core/string.h"
+#include "collections/string_view.h"
 
 namespace gles
 {

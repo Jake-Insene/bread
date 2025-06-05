@@ -1,9 +1,7 @@
 #include "graphics/gles/gles_cmd_proc.h"
 
-#include "debug/debug.h"
 #include "graphics/gles/gles_driver.h"
 #include "graphics/gles/gles_memory_allocator.h"
-#include "graphics/gles/gles_shader.h"
 #include "graphics/gles/gles_utility.h"
 #include "graphics/gles/gles_vtable.h"
 #include "graphics/egl/egl.h"
@@ -64,7 +62,7 @@ void GLESCommandProcessor::initialize(mem::Allocator allocator)
 
         gl.glBindVertexArray(0);
         
-        data.sprite_batch.program = gles::compile_program("shaders/sprite.glsl", {});
+        data.sprite_batch.program = gles::compile_program("shaders/sprite.gles.glsl", {});
     }
     
     // Quad batch
@@ -89,7 +87,7 @@ void GLESCommandProcessor::initialize(mem::Allocator allocator)
 
         gl.glBindVertexArray(0);
         
-        data.quad_batch.program = gles::compile_program("shaders/primitive.glsl", "#define QUAD");
+        data.quad_batch.program = gles::compile_program("shaders/primitive.gles.glsl", "#define QUAD");
     }
 
     // Primitive batch
@@ -115,7 +113,7 @@ void GLESCommandProcessor::initialize(mem::Allocator allocator)
 
         gl.glBindVertexArray(0);
 
-        data.primitive_batch.program = gles::compile_program("shaders/primitive.glsl", "#define PRIMITIVE");
+        data.primitive_batch.program = gles::compile_program("shaders/primitive.gles.glsl", "#define PRIMITIVE");
     }
 
     data.scene_data_ubo = GLESMemoryAllocator::buffer_allocate_handle();
@@ -210,7 +208,7 @@ void GLESCommandProcessor::end_sprite_batch()
         data.sprite_batch.instancebo, 0, mem::to_const_bytes(data.sprite_batch.instances), GL_ARRAY_BUFFER
     );
     
-    for(i32 i = 0; i < GLESDriver::data.limits.max_texture_units; i++)
+    for(i32 i = 0; i < GLESCommandProcessor::data.sprite_batch.texture_index; i++)
     {
         gl.glActiveTexture(GL_TEXTURE0 + i);
         gl.glBindTexture(GL_TEXTURE_2D, data.sprite_batch.texture_units[i]);
@@ -263,8 +261,10 @@ void GLESCommandProcessor::render()
         case RenderCommand::BIND_RENDER_TARGET:
         {
             auto& rt = GLESMemoryAllocator::render_target_get(cmd.bind.source_id);
-            
-            data.scene_data.screen_transform = Mat4::scaling(Vector3(2.f/rt.size.width, 2.f/rt.size.height, 1.f));
+            data.scene_data.screen_transform = Projection::orthographic_inv(
+                -2.f/rt.size.width, 2.f/rt.size.width, -2.f/rt.size.height, 2.f/rt.size.height,
+                1, -1
+            );
             data.scene_data.screen_transform.transpose();
 
             data.scene_data_ubo_update = true;
@@ -307,7 +307,7 @@ void GLESCommandProcessor::render()
             if (data.sprite_batch.count >= MaxInstancesPerBatch ||
                 data.sprite_batch.texture_index >= data.usable_texture_units)
             {
-                Debug::info("Sprite Batch full, flushing...");
+                DebugInfo("Sprite Batch full, flushing...");
                 update_scene_uniform();
                 end_sprite_batch();
             }
@@ -353,7 +353,7 @@ void GLESCommandProcessor::render()
         {
             if(data.quad_batch.count >= MaxInstancesPerBatch)
             {
-                Debug::info("Quad Batch full, flushing...");
+                DebugInfo("Quad Batch full, flushing...");
                 update_scene_uniform();
                 end_quad_batch();
             }
@@ -374,7 +374,7 @@ void GLESCommandProcessor::render()
         {
             if(data.primitive_batch.count >= MaxPrimitivePointsPerBatch)
             {
-                Debug::info("Primitive Batch full, flushing...");
+                DebugInfo("Primitive Batch full, flushing...");
                 update_scene_uniform();
                 end_primitive_batch();
             }
@@ -394,7 +394,6 @@ void GLESCommandProcessor::render()
             break;
         case RenderCommand::SET_SCENE_TRANSFORM:
         {
-            auto& rt = GLESMemoryAllocator::render_target_get(data.state.current_fb);
             const Vector2 translation = cmd.transform[2] * -1;
 
             data.scene_data.scene_transform = Mat4(

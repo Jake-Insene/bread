@@ -2,8 +2,8 @@
 
 #include "graphics/graphics.h"
 #include "input/input.h"
-#include "io/resource_manager.h"
 #include "math/rect_2d.h"
+#include "resource/resource_manager.h"
 
 
 void Button::_bind_vtable(VTable& vtable)

@@ -1,5 +1,6 @@
 #pragma once
-#include "core/slice.h"
+#include "collections/slice.h"
+#include "debug/debug.h"
 
 namespace mem
 {

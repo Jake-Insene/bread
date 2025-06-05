@@ -1,5 +1,5 @@
 #pragma once
-#include "io/resource_id.h"
+#include "resource/resource_id.h"
 #include "math/vec2.h"
 
 struct [[nodiscard]] RenderTarget

@@ -1,5 +1,6 @@
 #pragma once
 #include "core/header.h"
+#include "mem/allocator.h"
 #include "graphics/structs.h"
 #include "graphics/command_interface.h"
 #include "math/vec2.h"
@@ -65,35 +66,36 @@ struct Graphics
 
 namespace Graphics2D
 {
-    inline void draw_quad(const Color& color, const Vector2& size, const Transform2D& transform)
-    {
-        Graphics::add_cmd(
-            RenderCommand
+    
+inline void draw_quad(const Color& color, const Vector2& size, const Transform2D& transform)
+{
+    Graphics::add_cmd(
+        RenderCommand
+        {
+            .type = RenderCommand::DRAW_QUAD,
+            .quad =
             {
-                .type = RenderCommand::DRAW_QUAD,
-                .quad =
-                {
-                    .transform = transform,
-                    .size = size,
-                    .color = color,
-                }
+                .transform = transform,
+                .size = size,
+                .color = color,
             }
-        );
-    }
+        }
+    );
+}
 
-    inline void draw_line(Color color, Vector2 start, Vector2 end)
-    {
-        Graphics::add_cmd(
-            RenderCommand
+inline void draw_line(Color color, Vector2 start, Vector2 end)
+{
+    Graphics::add_cmd(
+        RenderCommand
+        {
+            .type = RenderCommand::DRAW_LINE,
+            .line =
             {
-                .type = RenderCommand::DRAW_LINE,
-                .line =
-                {
-                    .start = start,
-                    .end = end,
-                    .color = color,
-                }
+                .start = start,
+                .end = end,
+                .color = color,
             }
-        );
-    }
+        }
+    );
+}
 }

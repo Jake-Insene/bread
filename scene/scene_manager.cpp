@@ -84,7 +84,7 @@ void SceneManager::step()
         {
             data.fps_counter = data.fps_acum;
             Engine::data.fps = data.fps_counter;
-            Debug::info("FPS: %i, Avg Frame Time: %f", data.fps_counter, data.delta_time);
+            Log::info("FPS: {i}, Avg Frame Time: {d}", data.fps_counter, data.delta_time);
             
             data.fps_acum = 0;
             data.time_acum = 0;
@@ -125,6 +125,16 @@ void SceneManager::step()
                 {
                     .type = RenderCommand::SET_SCENE_TRANSFORM,
                     .transform = data.current_camera->get_camera_transform()
+                }
+            );
+        }
+        else
+        {
+            Graphics::add_cmd(
+                RenderCommand
+                {
+                    .type = RenderCommand::SET_SCENE_TRANSFORM,
+                    .transform = Transform2D()
                 }
             );
         }

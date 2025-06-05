@@ -8,7 +8,7 @@ void Control::_bind_vtable(VTable&)
 
 void Control::init(const CreateInfo&)
 {
-    Object::data.marks.set(MARK_CONTROL, 1);
+    mark(MARK_CONTROL);
 }
 
 void Control::enter()

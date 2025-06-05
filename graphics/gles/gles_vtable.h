@@ -3,6 +3,7 @@
 #include "platform/platform_header.h"
 
 
+
 #if defined(ENGINE_ANDROID)
 inline EGLAPI __eglMustCastToProperFunctionPointerType (*platform_get_proc)(const char* name) = nullptr;
 #elif defined(ENGINE_WIN32)
@@ -11,7 +12,7 @@ inline void* (*platform_get_proc)(const char* name) = nullptr;
 
 #define REQUIRED_LOAD(name) \
     gl.name = (decltype(gl.name))platform_get_proc(#name); \
-    FailOn(gl.name == nullptr, "Couldn't load the function %s", #name);
+    FailOn(gl.name == nullptr, "Couldn't load the function {v}", StringView(#name));
 
 struct GLESVTable
         {

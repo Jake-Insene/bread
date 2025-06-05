@@ -5,6 +5,8 @@
 
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int)
 {
+	AllocConsole();
+
 	Win32Engine::initialize();
 
 	while (true)
@@ -23,7 +25,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int)
 
 	Win32Engine::shutdown();
 
-	return 0;
+	ExitProcess(0);
 }
 
 

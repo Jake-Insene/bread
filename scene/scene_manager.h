@@ -1,4 +1,5 @@
 #pragma once
+#include "collections/array.h"
 #include "graphics/render_target.h"
 #include "object/object.h"
 #include "math/color.h"

@@ -1,4 +1,4 @@
-#include "io/resource_manager.h"
+#include "resource/resource_manager.h"
 
 
 static void* _alloc(usize size)
@@ -38,4 +38,13 @@ static void _free(void* ptr)
 #define STBI_REALLOC_SIZED(ptr, old_size, new_size)  _realloc(ptr, old_size, new_size)
 
 #define STB_IMAGE_IMPLEMENTATION
+#define STBI_NO_STDIO
+#define STBI_NO_LINEAR
+#define STBI_NO_HDR
+#define STBI_ASSERT(x) DebugAssert(x, "stb_image assertion fail")
+#define abs math::abs
+
+#include <memory>
+#define _lrotl(x, y) (((x) << (y)) | ((x) >> (-(y) & 31)))
+
 #include <external/stb_image.h>

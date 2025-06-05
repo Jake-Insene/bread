@@ -1,8 +1,8 @@
 #pragma once
 #include "2d/object_2d.h"
-#include "io/texture.h"
 #include "math/color.h"
 #include "math/rect_2d.h"
+#include "resource/texture.h"
 
 
 struct Sprite2D : Object2D

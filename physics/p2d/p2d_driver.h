@@ -1,4 +1,7 @@
 #pragma once
+#include "collections/array.h"
+#include "collections/hash_map.h"
+#include "collections/queue_array.h"
 #include "physics/physics_2d.h"
 #include "physics/p2d/shape_2d.h"
 

@@ -1,15 +1,5 @@
 project("bread")
 
-if(MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_FLAGS} /GR- /EHsc- /Zc:preprocessor")
-else()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
-    set(CMAKE_CXX_FLAGS
-        "${CMAKE_CXX_FLAGS} -fno-rtti -fno-exceptions -Wall -Wextra"
-    )
-endif()
-
 set(BREAD_BUILD_DEFINITIONS "")
 
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
@@ -19,7 +9,6 @@ elseif(${CMAKE_BUILD_TYPE} STREQUAL "Release")
 elseif(${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DDEBUG -DSHOW_DEBUG_INFO")
 endif()
-
 
 # Dependencies
 add_subdirectory(external/freetype)
@@ -32,25 +21,24 @@ file(GLOB EXTERNAL_SRC
 )
 
 file(GLOB ENGINE_SRC
-    core/string.cpp
+    collections/string.cpp
+    
+    debug/debug.cpp
     
     display/display.cpp
     display/window.cpp
     
     engine/engine.cpp
+
+    fs/file.cpp
     
     graphics/egl/egl.cpp
     graphics/graphics.cpp
     graphics/render_target.cpp
 
     input/input.cpp
-    
-    io/image.cpp
-    io/resource.cpp
-    io/resource_manager.cpp
-    io/sprite_animation.cpp
-    io/texture.cpp
-    io/tile_set.cpp
+
+    log/log.cpp
     
     mem/utils.cpp
     mem/generic_allocator.cpp
@@ -68,6 +56,7 @@ file(GLOB ENGINE_SRC
 
     gui/button.cpp
     gui/control.cpp
+    gui/label.cpp
 
     2d/animated_sprite_2d.cpp
     2d/camera_2d.cpp
@@ -80,6 +69,14 @@ file(GLOB ENGINE_SRC
 
     # Default 2d physics driver
     physics/p2d/p2d_driver.cpp
+
+    resource/font.cpp
+    resource/image.cpp
+    resource/resource.cpp
+    resource/resource_manager.cpp
+    resource/sprite_animation.cpp
+    resource/texture.cpp
+    resource/tile_set.cpp
 
     scene/scene_manager.cpp
 )
@@ -114,7 +111,6 @@ elseif(WIN32)
         platform/win32/win32_egl.cpp
         platform/win32/win32_engine.cpp
         platform/win32/win32_file.cpp
-        platform/win32/win32_log.cpp
         platform/win32/win32_main.cpp
         platform/win32/win32_os.cpp
         platform/win32/win32_page_allocator.cpp

@@ -1,6 +1,7 @@
 #pragma once
 #include "core/types.h"
-#include "core/macros.h"
+#include "debug/debug.h"
+#include "debug/assertion.h"
 #include "math/funcs.h"
 
 template <typename T>
@@ -138,12 +139,12 @@ union [[nodiscard]] Vector3T
     
     constexpr T length() const
     {
-        return ::sqrt(x * x + y * y + z * z);
+        return math::sqrt(x * x + y * y + z * z);
     }
 
     constexpr void normalize()
     {
-        const T len = (T)sqrt(x * x + y * y + z * z);
+        const T len = (T)math::sqrt(x * x + y * y + z * z);
         if(len)
         {
             x /= len;

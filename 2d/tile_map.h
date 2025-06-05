@@ -1,6 +1,6 @@
 #pragma once
 #include "2d/object_2d.h"
-#include "io/tile_set.h"
+#include "resource/tile_set.h"
 
 
 struct TileMap : Object2D

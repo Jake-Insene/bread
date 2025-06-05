@@ -63,7 +63,7 @@ OS::ThreadID OS::thread_create(OS::ThreadFn fn, void* arg)
 void OS::thread_destroy(ThreadID tid)
 {
     DebugAssert(tid != ThreadID::InvalidID && tid < Win32OS::MaxThreadCount, "invalid thread id");
-    FailOn(thread_join(tid) == false, "couldn't join the thread %d", tid);
+    FailOn(thread_join(tid) == false, "couldn't join the thread {u}", tid.id);
     Win32OS::ThreadData& thread_data = Win32OS::thread_data_get(tid);
     CloseHandle((HANDLE)thread_data.handle);
 

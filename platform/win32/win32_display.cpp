@@ -1,6 +1,7 @@
 #include "platform/win32/win32_display.h"
 
 #include "engine/engine.h"
+#include "graphics/graphics.h"
 #include "input/input.h"
 #include "scene/scene_manager.h"
 
@@ -80,7 +81,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		Win32Display::WindowData& window_data = _get_window_data(window_id);
 		if (window_id == Engine::data.main_window.window_id)
 		{
-			Engine::recreate_window();
+			Engine::request_recreate_window();
 		}
 
 		GetWindowRect(handle, &window_data.window_rect);

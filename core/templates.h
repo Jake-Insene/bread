@@ -1,6 +1,7 @@
 #pragma once
+#include "core/types.h"
 
-// Type comparision
+// Type comparison
 template<typename A, typename B>
 inline constexpr bool IsSame = false;
 
@@ -94,6 +95,21 @@ using RemoveConstPointer = RemoveConst<RemovePointer<RemoveReference<T>>>;
 // Type checking
 
 template<typename T>
+inline constexpr bool IsSigned = IsAnyOf<
+    RemoveConstVolatile<T>,
+    char, signed char, wchar_t, 
+    char8_t, char16_t, char32_t,
+    short, int, long, long long
+>;
+
+template<typename T>
+inline constexpr bool IsUnsigned = IsAnyOf<
+    RemoveConstVolatile<T>,
+    unsigned char, unsigned short, unsigned int, 
+    unsigned long, unsigned long long
+>;
+
+template<typename T>
 inline constexpr bool IsInteger = IsAnyOf<
     RemoveConstVolatile<T>, 
     bool, char, signed char, unsigned char, wchar_t, 
@@ -113,5 +129,107 @@ inline constexpr bool IsArithmetic =
     IsInteger<T> || IsFloatingPoint<T>;
 
 template<typename T>
-inline constexpr bool IsConst = IsAnyOf<T, const T, const T*, const T*>;
+inline constexpr bool IsConst = IsAnyOf<T, const T, T* const, const T*>;
+
+template<typename T>
+inline constexpr bool IsPointer = false;
+
+template<typename T>
+inline constexpr bool IsPointer<T*> = true;
+
+template<typename T>
+inline constexpr bool IsPointer<T* const> = true;
+
+template<typename T>
+inline constexpr bool IsPointer<T* volatile> = true;
+
+template<typename T>
+inline constexpr bool IsPointer<T* const volatile> = true;
+
+// Value Checking
+template<typename T, T Value1, T Value2>
+inline constexpr bool IsSameValue = false;
+
+template<typename T, T Value>
+inline constexpr bool IsSameValue<T, Value, Value> = true;
+
+template<typename T, T Value, T... Args>
+inline constexpr bool IsAnyOfValue = (IsSameValue<T, Value, Args> || ...);
+
+
+// Conditional Selection
+template<bool Value, typename T1, typename T2>
+struct ConditionalT
+{
+    using Type = T1;
+};
+
+template<typename T1, typename T2>
+struct ConditionalT<false, T1, T2>
+{
+    using Type = T2;
+};
+
+template<bool Value, typename T1, typename T2>
+using Conditional = ConditionalT<Value, T1, T2>::Type;
+
+template<typename T, bool Cond, T ValueTrue, T ValueFalse>
+struct ConditionalValueT
+{
+    static constexpr T Value = ValueTrue;
+};
+
+template<typename T, T ValueTrue, T ValueFalse>
+struct ConditionalValueT<T, false, ValueTrue, ValueFalse>
+{
+    static constexpr T Value = ValueFalse;
+};
+
+template<typename T, bool Cond, T ValueTrue, T ValueFalse>
+inline constexpr T ConditionalValue = ConditionalValueT<T, Cond, ValueTrue, ValueFalse>::Value;
+
+template<typename T>
+using MakeUnsigned = Conditional<sizeof(T) == 1, u8, Conditional<sizeof(T) == 2, u16, Conditional<sizeof(T) == 4, u32, u64>>>;
+
+
+template<typename T>
+struct TypeIdentityT
+{
+    using Type = T;
+};
+
+template<typename T>
+using TypeIdentity = TypeIdentityT<T>::Type;
+
+template<typename... TArgs>
+constexpr usize GetArgumentCount()
+{
+    return sizeof...(TArgs);
+}
+
+template<usize N, typename T, typename... TArgs>
+constexpr auto GetArgument(T first, TArgs... args)
+{
+    if constexpr (N == 0)
+    {
+        return TypeIdentity<T>(first);
+    }
+    else
+    {
+        return GetArgument<N - 1, TArgs...>(args...);
+    }
+}
+
+template<typename T>
+[[nodiscard]] constexpr T&& Forward(RemoveReference<T>& arg)
+{
+    return arg;
+}
+
+template<typename T>
+[[nodiscard]] constexpr T&& Forward(RemoveReference<T>&& arg)
+{
+    return arg;
+}
+
 

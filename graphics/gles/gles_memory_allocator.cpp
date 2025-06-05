@@ -96,13 +96,11 @@ void GLESMemoryAllocator::initialize(const mem::Allocator& allocator)
 
 void GLESMemoryAllocator::shutdown()
 {
-#if defined(SHOW_DEBUG_INFO)
-    Debug::info(
+    DebugInfo(
         "Graphics:\n"
-        "\tCurrent Allocated bytes: %llu\n",
+        "\tCurrent Allocated bytes: {u}\n",
         data.allocated_bytes
     );
-#endif
 
     // Unload graphics resources.
     for (auto& buffer : data.buffers)

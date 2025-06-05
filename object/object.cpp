@@ -47,6 +47,11 @@ void Object::handle_render()
     }
 }
 
+void Object::set_group(u64 group_bit, bool value)
+{
+    data.bit_groups.set(group_bit, value);
+}
+
 void Object::add_child(Object *obj)
 {
     Object* child = data.childs.insert(obj->id, obj);

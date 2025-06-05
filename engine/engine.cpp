@@ -3,11 +3,12 @@
 #include "display/display.h"
 #include "graphics/graphics.h"
 #include "graphics/egl/egl.h"
-#include "io/resource_manager.h"
+#include "log/log.h"
 #include "object/object_allocator.h"
 #include "scene/scene_manager.h"
 #include "os/os.h"
 #include "physics/physics_2d.h"
+#include "resource/resource_manager.h"
 
 #if defined(ENGINE_ANDROID)
 #include "platform/android/android_engine.h"
@@ -35,8 +36,9 @@ void Engine::initialize()
 {
     data.allocator = {};
     data.fps = 60;
-    auto allocator = data.allocator.allocator();
+    data.recreate_requested = false;
 
+    auto allocator = data.allocator.allocator();
     OS::initialize();
 
     ObjectAllocator::initialize();
@@ -90,12 +92,23 @@ void Engine::destroy()
 
 void Engine::step()
 {
+    if (data.recreate_requested)
+    {
+        data.recreate_requested = false;
+        Engine::recreate_window();
+    }
+
     SceneManager::step();
 }
 
 void Engine::handle_input(const InputEvent& event)
 {
     SceneManager::_handle_input(event);
+}
+
+void Engine::request_recreate_window()
+{
+    data.recreate_requested = true;
 }
 
 void Engine::set_vsync(bool vsync)

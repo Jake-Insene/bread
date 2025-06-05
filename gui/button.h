@@ -1,6 +1,6 @@
 #pragma once
 #include "gui/control.h"
-#include "io/texture.h"
+#include "resource/texture.h"
 
 
 struct Button : Control

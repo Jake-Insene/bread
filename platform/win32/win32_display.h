@@ -1,4 +1,5 @@
 #pragma once
+#include "collections/queue_array.h"
 #include "platform/platform_header.h"
 #include "display/display.h"
 

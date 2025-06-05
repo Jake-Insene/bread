@@ -1,8 +1,8 @@
 #pragma once
-#include "core/array.h"
+#include "collections/array.h"
 #include "graphics/graphics.h"
-#include "io/image.h"
 #include "platform/platform_header.h"
+#include "resource/image.h"
 
 struct GLESDriver
 {   

@@ -2,10 +2,9 @@
 
 #include "graphics/gles/gles_driver.h"
 #include "graphics/gles/gles_vtable.h"
-#include "graphics/gles/gles_shader.h"
-#include "io/file.h"
-#include "io/resource_manager.h"
+#include "fs/file.h"
 #include "platform/platform_header.h"
+#include "resource/resource_manager.h"
 
 
 namespace gles
@@ -62,6 +61,13 @@ namespace gles
     
     u32 compile_program(StringView program_path, StringView defines)
     {
+        constexpr StringView glsl_version_header =
+#if defined(ENGINE_ANDROID)
+        "#version 310 es\n";
+#else
+        "#version 450 core\n";
+#endif
+
         Slice<u8> program_content = File::read_all(GLESDriver::get_allocator(), program_path);
         
         StringView vsstring = {};
@@ -70,24 +76,14 @@ namespace gles
         
         const char* sources[] =
         { 
-#if defined(ENGINE_ANDROID)
-            (const char*)glsl_es_shader_header.ptr(),
-#else
-			(const char*)glsl_core_shader_header.ptr(),
-#endif
-            (const char*)glsl_shader_constants,
+			(const char*)glsl_version_header.ptr(),
             (const char*)defines.ptr(),
             nullptr,
         };
         
         GLint lengths[] =
         {
-#if defined(ENGINE_ANDROID)
-            (GLint)glsl_es_shader_header.len,
-#else
-            (GLint)glsl_core_shader_header.len,
-#endif
-            (GLint)glsl_shader_constants_len,
+            (GLint)glsl_version_header.len,
             (GLint)defines.len,
             0,
         };
@@ -109,7 +105,9 @@ namespace gles
         {
             i32 len = 0;
             gl.glGetShaderInfoLog(vs, 512, &len, log);
-            Fatal("Error compiling the vertex shader: '%.*s':\n%.*s", program_path.len, program_path.ptr(), len, log);
+            StringView log_view{ log, (usize)len };
+
+            Fatal("Error compiling the vertex shader: '{v}':\n{v}", program_path, log_view);
         }
         
         sources[source_count-1] = (const char*)fsstring.ptr();
@@ -124,7 +122,9 @@ namespace gles
         {
             i32 len = 0;
             gl.glGetShaderInfoLog(fs, 512, &len, log);
-            Fatal("Error compiling the fragment shader: '%.*s':\n%.*s", program_path.len, program_path.ptr(), len, log);
+            StringView log_view{ log, (usize)len };
+
+            Fatal("Error compiling the fragment shader: '{v}':\n{v}", program_path, log_view);
         }
         
         u32 program = gl.glCreateProgram();
@@ -137,7 +137,9 @@ namespace gles
         {
             i32 len = 0;
             gl.glGetProgramInfoLog(program, 512, &len, log);
-            Fatal("Error linking the shader program: '%.*s':\n%.*s", program_path.len, program_path.ptr(), len, log);
+            StringView log_view{ log, (usize)len };
+
+            Fatal("Error linking the shader program: '{v}':\n{v}", program_path, log_view);
         }
         
         gl.glDeleteShader(vs);

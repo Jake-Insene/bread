@@ -1,5 +1,8 @@
 #pragma once
-#include "core/header.h"
+#include "collections/bits.h"
+#include "collections/event.h"
+#include "collections/hash_map.h"
+#include "collections/string.h"
 #include "object/object_id.h"
 
 
@@ -196,7 +199,7 @@ struct Object
     void unmark(u64 mark) { data.marks.unset(mark); }
 
     [[nodiscard]] bool has_group(u64 group_bit) const { return data.bit_groups.is_set(group_bit); }
-    void set_group(u64 group_bit, bool value) { data.bit_groups.set(group_bit, value); }
+    void set_group(u64 group_bit, bool value);
     
     // Object std functions
 

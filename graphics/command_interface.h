@@ -1,6 +1,6 @@
 #pragma once
 #include "core/header.h"
-#include "io/resource_id.h"
+#include "resource/resource_id.h"
 #include "math/mat4.h"
 #include "math/transform_2d.h"
 #include "math/rect_2d.h"

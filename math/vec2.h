@@ -1,6 +1,6 @@
 #pragma once
 #include "core/types.h"
-#include "core/macros.h"
+#include "debug/assertion.h"
 #include "math/funcs.h"
 
 template <typename T>

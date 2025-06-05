@@ -3,6 +3,8 @@
 #include "math/vec3.h"
 #include "math/funcs.h"
 
+#include <new> 
+
 // Mat4 is in row major
 struct [[nodiscard]] Mat4
 {

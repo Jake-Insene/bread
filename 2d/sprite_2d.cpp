@@ -1,7 +1,7 @@
 #include "2d/sprite_2d.h"
 
 #include "graphics/graphics.h"
-#include "io/resource_manager.h"
+#include "resource/resource_manager.h"
 
 
 void Sprite2D::init(const CreateInfo&)

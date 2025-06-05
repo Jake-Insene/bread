@@ -1,0 +1,48 @@
+#pragma once
+#include "core/templates.h"
+
+namespace fmt
+{
+template<typename... TArgs>
+struct FormatString;
+}
+
+
+struct Log
+{
+    template<typename... TArgs>
+    static void error(const fmt::FormatString<TypeIdentity<TArgs>...> fmt, TArgs... args);
+
+    template<typename... TArgs>
+    static void warning(const fmt::FormatString<TypeIdentity<TArgs>...> fmt, TArgs... args);
+
+    template<typename... TArgs>
+    static void info(const fmt::FormatString<TypeIdentity<TArgs>...> fmt, TArgs... args);
+};
+
+#include "fs/file.h"
+#include "io/writer.h"
+
+template<typename... TArgs>
+void Log::error(const fmt::FormatString<TypeIdentity<TArgs>...> fmt, TArgs... args)
+{
+    auto err = File::get_stderr();
+    if (err.handle == 0) return;
+    fmt::format(err.writer(), fmt, args...);
+}
+
+template<typename... TArgs>
+void Log::warning(const fmt::FormatString<TypeIdentity<TArgs>...> fmt, TArgs... args)
+{
+    auto err = File::get_stderr();
+    if (err.handle == 0) return;
+    fmt::format(err.writer(), fmt, args...);
+}
+
+template<typename... TArgs>
+void Log::info(const fmt::FormatString<TypeIdentity<TArgs>...> fmt, TArgs... args)
+{
+    auto err = File::get_stdout();
+    if (err.handle == 0) return;
+    fmt::format(err.writer(), fmt, args...);
+}

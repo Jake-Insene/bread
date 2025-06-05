@@ -1,7 +1,10 @@
 #include "graphics/egl/egl.h"
 
+#include "debug/debug.h"
+#include "debug/fail.h"
 #include "graphics/gles/gles_vtable.h"
 #include "scene/scene_manager.h"
+#include "log/log.h"
 
 #if defined(ENGINE_ANDROID)
 #include "platform/android/android_egl.h"

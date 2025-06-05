@@ -5,10 +5,8 @@
 #include "graphics/egl/egl.h"
 #include "graphics/gles/gles_vtable.h"
 #include "graphics/gles/gles_cmd_proc.h"
-#include "graphics/gles/gles_shader.h"
 #include "graphics/gles/gles_memory_allocator.h"
 
-#include <cstdio>
 
 #if SHOW_DEBUG_INFO
 static inline void debug_callback(
@@ -17,16 +15,17 @@ static inline void debug_callback(
     const void*
 )
 {
+    StringView msg{ message, (usize)length };
     switch(severity)
     {
     case GL_DEBUG_SEVERITY_LOW:
-        Debug::info("GLInfo: %.*s\n", length, message);
+        Log::info("GLInfo: {v}\n", msg);
         break;
     case GL_DEBUG_SEVERITY_MEDIUM:
-        Debug::warning("GLWarn: %.*s\n", length, message);
+        Log::warning("GLWarn: {v}\n", msg);
         break;
     case GL_DEBUG_SEVERITY_HIGH:
-        Debug::error("GLError: %.*s\n", length, message);
+        Log::error("GLError: {v}\n", msg);
         break;
     default:
         break;
@@ -62,7 +61,7 @@ Graphics::VTable GLESDriver::get_vtable()
 
 void GLESDriver::initialize(const mem::Allocator& allocator)
 {
-    Debug::info("Initializing renderer...");
+    DebugInfo("Initializing renderer...");
     data.allocator = allocator;
 
     GLESMemoryAllocator::initialize(allocator);
@@ -73,21 +72,12 @@ void GLESDriver::initialize(const mem::Allocator& allocator)
     gl.glEnable(GL_BLEND);
     gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glsl_shader_constants_len = std::snprintf(
-        glsl_shader_constants,
-        gles_shader_constants_buffer_size,
-        R"(
-            #define MAX_TEXTURE_UNITS %d
-        )",
-        (i32)data.limits.max_texture_units
-    );
-
     _init_context();
 }
 
 void GLESDriver::shutdown()
 {
-    Debug::info("Shutting down renderer...");
+    DebugInfo("Shutting down renderer...");
     GLESCommandProcessor::shutdown();
     GLESMemoryAllocator::shutdown();
     EGL::shutdown();
@@ -99,9 +89,7 @@ void GLESDriver::recreate()
 
     Vector2I size = Engine::get_main_window().get_size();
     gl.glViewport(0, 0, size.x, size.y);
-#if SHOW_DEBUG_INFO
-    Debug::info("Viewport: W=%i H=%i", size.x, size.y);
-#endif
+    DebugInfo("Viewport: W={i} H={i}", size.x, size.y);
 }
 
 void GLESDriver::destroy()
@@ -157,16 +145,17 @@ void GLESDriver::_init_context()
     GLint opengl_info[] = { GL_VENDOR, GL_RENDERER, GL_VERSION };
     for (auto name : opengl_info)
     {
-        auto info = gl.glGetString(name);
-        Debug::info("OpenGL Info: %s", info);
+        const char* info = (const char*)gl.glGetString(name);
+        DebugInfo("OpenGL Info: {C}", info);
     }
 
     GLint num_extensions = 0;
     gl.glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
-    Debug::info("OpenGL Extensions: %d", num_extensions);
+    DebugInfo("OpenGL Extensions: {i}", num_extensions);
     for (GLint i = 0; i < num_extensions; i++)
     {
-        Debug::info("%s", gl.glGetStringi(GL_EXTENSIONS, i));
+        const char* extension = (const char*)gl.glGetStringi(GL_EXTENSIONS, i);
+        DebugInfo("{C}", extension);
     }
 
 #if DEBUG
@@ -179,8 +168,8 @@ void GLESDriver::_init_context()
     }
 #endif
 
-    Debug::info("Texture Units: %llu", data.limits.max_texture_units);
-    Debug::info("Viewport: W=%i H=%i", size.x, size.y);
+    DebugInfo("Texture Units: {i}", data.limits.max_texture_units);
+    DebugInfo("Viewport: W={i} H={i}", size.x, size.y);
 #endif
     gl.glViewport(0, 0, size.x, size.y );
 

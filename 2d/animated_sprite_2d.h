@@ -1,6 +1,6 @@
 #pragma once
 #include "2d/object_2d.h"
-#include "io/sprite_animation.h"
+#include "resource/sprite_animation.h"
 
 
 struct AnimatedSprite2D : Object2D
