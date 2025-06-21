@@ -5,7 +5,8 @@
 
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int)
 {
-	AllocConsole();
+	if(Engine::get_configuration().EnableDebugConsole)
+		AllocConsole();
 
 	Win32Engine::initialize();
 

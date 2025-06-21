@@ -1,5 +1,6 @@
 #pragma once
 #include "object/object.h"
+#include "math/rect_2d.h"
 #include "math/transform_2d.h"
 #include "math/color.h"
 
@@ -11,6 +12,7 @@ struct CanvasObject : Object
     DefineVTable(Object)
     {
         Event<bool(CanvasObject::*)(const Vector2&) const, false> is_inside;
+        Event<bool(CanvasObject::*)(const Vector2&) const, false> get_rect;
     };
     
     static void _bind_vtable(CanvasObject::VTable& vtable);
@@ -20,19 +22,35 @@ struct CanvasObject : Object
     // resolve some namespace problems.
     struct InternalData
     {
-        Transform2D transform;
-        
-        Color color;
+        Transform2D transform{};
+        Vector2 pos_cache = Vector2(0, 0);
+        Vector2 scale_cache = Vector2(1, 1);
+        // In Radians
+        f32 rot_cache = 0.f;
+
+        Vector2 size_cache;
     } data;
     
     void init(const CreateInfo&);
+
+    void enter();
     
-    void set_position(Vector2 npos);
+    void set_position(Vector2 new_pos);
     Vector2 get_position() const;
-    
-    void set_scale(Vector2 nscale);
+
+    void set_size(Vector2 new_size);
+    Vector2 get_size() const;
+
+    void set_scale(Vector2 new_scale);
     Vector2 get_scale() const;
+
+    void set_rotation(f32 new_rot);
+    f32 get_rotation() const;
     
+    Transform2D get_transform() const;
+    Transform2D get_global_transform() const;
+
     bool is_inside(const Vector2& pos) const;
+    Rect2D get_rect() const;
 };
 

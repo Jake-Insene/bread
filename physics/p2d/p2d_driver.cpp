@@ -244,7 +244,7 @@ void P2DDriver::_step_body(Body& body, f32 dt)
 
     body.is_on_floor = collision_result.advance.y && velocity.y < 0 ? false : body.is_on_floor;
 
-    body.target->translate(velocity);
+    body.target->translate(collision_result.advance * velocity);
 
     // Debug draw
     Shape2D shape = body.shape;
@@ -341,7 +341,8 @@ void P2DDriver::_check_collision_in_group(CollisionMaskGroup& group, Body& body,
             }
         }
 
-        collision_result = tmp_result;
+        collision_result.advance.x = collision_result.advance.x ? tmp_result.advance.x : 0;
+        collision_result.advance.y = collision_result.advance.y ? tmp_result.advance.y : 0;
     }
 }
 
@@ -372,5 +373,8 @@ void P2DDriver::_mask_group_remove(Physics2D::BodyID body_id, usize group_index)
 {
     CollisionMaskGroup& group = data.mask_groups[group_index];
     group.bodies.remove_equal(body_id);
+
+    if(group.bodies.count == 0)
+        group.active = false;
 }
 

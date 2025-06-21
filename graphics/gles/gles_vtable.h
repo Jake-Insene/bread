@@ -19,6 +19,7 @@ struct GLESVTable
     PFNGLGETINTEGERVPROC glGetIntegerv;
     PFNGLGETSTRINGPROC glGetString;
     PFNGLGETSTRINGIPROC glGetStringi;
+    PFNGLPIXELSTOREIPROC glPixelStorei;
 
     PFNGLENABLEPROC glEnable;
     PFNGLDISABLEPROC glDisable;

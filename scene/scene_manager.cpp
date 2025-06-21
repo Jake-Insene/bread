@@ -4,7 +4,7 @@
 #include "debug/debug.h"
 #include "engine/engine.h"
 #include "graphics/graphics.h"
-#include "gui/control.h"
+#include "canvas/canvas_object.h"
 #include "input/input.h"
 #include "2d/camera_2d.h"
 #include "object/object_allocator.h"
@@ -31,11 +31,11 @@ void SceneManager::initialize(mem::Allocator allocator)
     data.fps_counter = 0;
     data.fps_acum = 0;
     
-    data.gui_roots = Array<Control*>::with_size(
+    data.gui_roots = Array<CanvasObject*>::with_size(
         data.allocator, 4
     );
     
-    data.touched_focus = Array<Control*>::with_size(
+    data.touched_focus = Array<CanvasObject*>::with_size(
         data.allocator, 4
     );
 
@@ -160,33 +160,20 @@ void SceneManager::set_camera_2d(Camera2D* camera)
     data.current_camera = camera;
 }
 
-Vector2 SceneManager::_screen_make_local(const Vector2& pos)
+Vector2 SceneManager::_screen_make_local_to_canvas(const Vector2& pos)
 {
-    // converting touch position into local scene position
-    const Vector2 display_size = Vector2(data.display_target.get_size()) / 2;
+    // converting touch/mouse position into local canvas position
     const Vector2 window_size = Vector2(Engine::get_main_window().get_size());
-    const Vector2 window_size_half = window_size / 2;
+    const Vector2 display_size = Vector2(get_display_target().get_size());
 
-    const Vector2 pos_around_center = pos + Vector2(-window_size_half.x, window_size_half.y);
-    const f32 normalized_x = pos_around_center.x / window_size_half.x;
-    const f32 normalized_y = pos_around_center.y / window_size_half.y;
+    // normalized position
+    const Vector2 normalized_pos = pos / window_size;
+    const Vector2 canvas_pos = normalized_pos * display_size;
 
-    const Vector2 local_position = Vector2(
-        normalized_x * (f32)display_size.x,
-        normalized_y * (f32)display_size.y
-    );
-
-    Transform2D transform = Transform2D();
-    if (data.current_camera)
-    {
-        transform = data.current_camera->get_camera_transform();
-    }
-            
-    // Setting new position
-    return transform * local_position;
+    return canvas_pos;
 }
 
-Control* SceneManager::_find_control_in_pos(const Vector2& pos)
+CanvasObject* SceneManager::_find_canvas_in_pos(const Vector2& pos)
 {
     for(auto& c : data.gui_roots)
     {
@@ -209,9 +196,9 @@ void SceneManager::_handle_input(const InputEvent& event)
             InputEventTouch new_event = et;
             new_event = et;
             
-            new_event.position = _screen_make_local(et.position);
+            new_event.position = _screen_make_local_to_canvas(et.position);
             data.touched_focus.resize(et.pointer+1);
-            if(Control* c = _find_control_in_pos(new_event.position))
+            if(CanvasObject* c = _find_canvas_in_pos(new_event.position))
             {
                 data.touched_focus[et.pointer] = c;
                 ObjectCallRef(c, event, new_event);
@@ -236,8 +223,8 @@ void SceneManager::_handle_input(const InputEvent& event)
             InputEventMouseButton new_event = et;
             new_event = et;
 
-            new_event.position = _screen_make_local(et.position);
-            if (Control* c = _find_control_in_pos(new_event.position))
+            new_event.position = _screen_make_local_to_canvas(et.position);
+            if (CanvasObject* c = _find_canvas_in_pos(new_event.position))
             {
                 data.touched_focus[0] = c;
                 ObjectCallRef(c, event, new_event);
@@ -259,7 +246,7 @@ void SceneManager::_handle_input(const InputEvent& event)
     }
 }
 
-void SceneManager::_add_root_control(Control* c)
+void SceneManager::_add_root_canvas(CanvasObject* c)
 {
     (void)data.gui_roots.add(c);
 }

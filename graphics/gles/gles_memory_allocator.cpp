@@ -15,6 +15,9 @@ static inline usize _get_format_size(GLenum internal_format)
     case GL_RGBA:
     case GL_RGBA8:
         return 4;
+    case GL_RED:
+    case GL_R8:
+        return 1;
     default:
         DebugAssert(false, "invalid texture type");
         break;
@@ -46,6 +49,8 @@ static inline GLenum _get_texture_format(TextureFormat format)
         return GL_RGB;
     case TEXTURE_FORMAT_RGBA8:
         return GL_RGBA;
+    case TEXTURE_FORMAT_R8:
+        return GL_RED;
     default:
         DebugAssert(false, "invalid texture format");
         break;
@@ -62,6 +67,8 @@ static inline GLenum _get_texture_internal_format_for(GLenum format)
         return GL_RGB8;
     case GL_RGBA:
         return GL_RGBA8;
+    case GL_RED:
+        return GL_R8;
     default:
         DebugAssert(false, "invalid texture format");
         break;
@@ -98,7 +105,7 @@ void GLESMemoryAllocator::shutdown()
 {
     DebugInfo(
         "Graphics:\n"
-        "\tCurrent Allocated bytes: {u}\n",
+        "\tCurrent Allocated bytes: {u}",
         data.allocated_bytes
     );
 

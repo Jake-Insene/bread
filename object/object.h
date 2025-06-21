@@ -163,7 +163,7 @@ struct Object
         MARK_INTERNAL_UPDATE,
 
         MARK_2D,
-        MARK_CONTROL,
+        MARK_CANVAS,
 
         MARK_COUNT,
     };

@@ -45,6 +45,26 @@ struct GLESCommandProcessor
     };
     static constexpr usize QuadInstanceAttribCount = 3;
 
+    struct CanvasElementInstance
+    {
+        // attrib 0
+        Vector2 transform_0;
+        Vector2 transform_1;
+        // attrib 1
+        Vector2 transform_2;
+        u32 unit;
+        u32 flags;
+        // attrib 2
+        Vector2 texture_extent;
+        Vector2 dest_extent;
+        // attrib 3
+        Rect2D src_rect;
+        // attrib 4
+        Color color;
+        u32 padding[3];
+    };
+    static constexpr usize CanvasElementInstanceAttribCount = 5;
+
     struct PrimitivePoint
     {
         // attrib 0
@@ -62,23 +82,37 @@ struct GLESCommandProcessor
     
     struct SpriteBatch
     {
-        u32 vao;
-        u32 instancebo;
-        u32 program;
+        GLID vao;
+        GLID instance_buffer_object;
+        GLID program;
         
         u32 count;
         i32 texture_index;
         
-        i32 texture_units[MaxInstancesPerBatch];
+        GLID texture_units[MaxInstancesPerBatch];
         
         Slice<SpriteInstance> instances;
+    };
+
+    struct CanvasElementBatch
+    {
+        GLID vao;
+        GLID instance_buffer_object;
+        GLID program;
+
+        u32 count;
+        i32 texture_index;
+
+        GLID texture_units[MaxInstancesPerBatch];
+
+        Slice<CanvasElementInstance> instances;
     };
     
     struct QuadBatch
     {
-        u32 vao;
-        u32 instancebo;
-        u32 program;
+        GLID vao;
+        GLID instance_buffer_object;
+        GLID program;
         
         u32 count;
         
@@ -87,9 +121,9 @@ struct GLESCommandProcessor
 
     struct PrimitiveBatch
     {
-        u32 vao;
-        u32 instancebo;
-        u32 program;
+        GLID vao;
+        GLID instance_buffer_object;
+        GLID program;
 
         u32 count;
 
@@ -98,8 +132,8 @@ struct GLESCommandProcessor
     
     struct ExecutionState
     {
-        u32 last_fbo;
-        u32 current_fbo;
+        GLID last_fbo;
+        GLID current_fbo;
         ResourceID current_fb;
     };
     
@@ -107,14 +141,15 @@ struct GLESCommandProcessor
     {
         mem::Allocator allocator;
         
-        u32 global_quad_ibo;
+        GLID global_quad_ibo;
         i32 usable_texture_units;
         
         SpriteBatch sprite_batch;
+        CanvasElementBatch canvas_element_batch;
         QuadBatch quad_batch;
         PrimitiveBatch primitive_batch;
 
-        u32 scene_data_ubo;
+        GLID scene_data_ubo;
         bool scene_data_ubo_update;
     
         SceneUniform scene_data;
@@ -123,6 +158,11 @@ struct GLESCommandProcessor
     
         // Execution state
         ExecutionState state;
+
+        struct
+        {
+            u64 draw_call_count;
+        } debug;
     };
     
     static inline InternalData data;
@@ -130,11 +170,14 @@ struct GLESCommandProcessor
     static void initialize(mem::Allocator allocator);
     static void shutdown();
 
+    static void recreate_window_transform(Vector2I window_size);
+
     static void bind_program(GLID program);
     static void bind_scene_buffer();
     static void update_scene_uniform();
 
     static void end_sprite_batch();
+    static void end_canvas_element_batch();
     static void end_quad_batch();
     static void end_primitive_batch();
 

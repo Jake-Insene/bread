@@ -144,4 +144,10 @@ template<typename T, typename TStep>
     return start + (end - start) * step;
 }
 
+template<typename T>
+[[nodiscard]] constexpr T dist(T a, T b)
+{
+    return a > b ? a - b : b - a;
+}
+
 }

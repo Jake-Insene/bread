@@ -21,6 +21,8 @@ void Font::init()
 void Font::destroy()
 {
 	Resource::destroy();
+
+    data.glyphs.destroy();
 }
 
 
@@ -48,27 +50,34 @@ void Font::load_from_file(StringView file_path, i32 font_size)
     u32 row = 0;
     u32 column = padding;
 
-    constexpr u32 texture_width = 512;
-    auto pixels = allocator.alloc(texture_width * texture_width, sizeof(usize));
-
-    for (FT_ULong glyph_index = 0; glyph_index < Font::MinimumGlyphCount; glyph_index++)
+    data.glyphs.resize(MinimumGlyphCount);
+    for (FT_ULong glyph_index = 27; glyph_index < Font::MinimumGlyphCount; glyph_index++)
     {
-    }
+        Glyph& glyph = data.glyphs[glyph_index];
 
-    data.font_texture = Graphics::texture_create(
-        TextureCreateInfo
-        {
-            .type = TEXTURE_2D,
-            .format = TEXTURE_FORMAT_R8,
-            .min_filter = TEXTURE_FILTER_NEAREST,
-            .mag_filter = TEXTURE_FILTER_NEAREST,
-            .size = Vector2I(512, 512),
-            .pixels = pixels,
-        }
-    );
+        FT_Error error = FT_Load_Char(face, glyph_index, FT_LOAD_RENDER);
+        glyph.advance.x = face->glyph->advance.x >> 6;
+        glyph.advance.y = face->glyph->advance.y >> 6;
+
+        if (glyph_index == ' ') continue;
+
+        glyph.char_texture = Graphics::texture_create(
+            TextureCreateInfo
+            {
+                .type = TEXTURE_2D,
+                .format = TEXTURE_FORMAT_R8,
+                .min_filter = TEXTURE_FILTER_NEAREST,
+                .mag_filter = TEXTURE_FILTER_NEAREST,
+                .size = Vector2I(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+                .pixels = Slice(face->glyph->bitmap.buffer, face->glyph->bitmap.width * face->glyph->bitmap.rows),
+            }
+            );
+    }
 
     data.font_size = font_size;
 
-    allocator.free(pixels);
+    FT_Done_Face(face);
+    FT_Done_Library(library);
+
     allocator.free(content);
 }

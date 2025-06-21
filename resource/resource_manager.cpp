@@ -33,6 +33,7 @@ static inline void* _ft_realloc(FT_Memory, long old_size, long new_size, void* m
     if (mem != nullptr)
     {
         mem::copy(new_mem, old_mem);
+        ResourceManager::get_allocator().free(old_mem);
     }
 
     return new_mem.items;
@@ -252,6 +253,8 @@ Font* ResourceManager::load_font(StringView path, i32 font_size)
 {
     Font* new_font = create_resource<Font>();
     new_font->load_from_file(path, font_size);
+
+    data.resources.insert(path, new_font);
     return new_font;
 }
 

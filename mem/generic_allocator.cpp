@@ -31,7 +31,7 @@ namespace mem
                 header = header->next;
             }
 
-            DebugAssert(page_size_accumulator == page.bytes.len, "allocator corruption");
+            DebugAssert(page_size_accumulator == page.bytes.len, "allocator corruption detected");
             DebugInfo("Page at address {p} of size {u}, with {u} headers", page.bytes.ptr(), page.bytes.len, header_count);
 #endif
             internal_allocator.free(page.bytes);

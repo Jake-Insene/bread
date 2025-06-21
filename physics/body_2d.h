@@ -30,7 +30,7 @@ struct Body2D : Object2D
         CollisionMask collision_mask = Physics2D::COLLISION_MASK_0;
     } data;
 
-    Event<void(Body2D::*)(Body2D*)> colliding_with;
+    Event<void(Object::*)(Body2D*)> colliding_with;
     
     void init(const CreateInfo&);
     void deinit();

@@ -34,21 +34,10 @@ void TileMap::render()
 				Vector2(tile_size * Vector2(tile.position))
 			);
 
-			Graphics::add_cmd(
-				RenderCommand
-				{
-					.type = RenderCommand::DRAW_SPRITE,
-					.sprite =
-					{
-						.transform = tile_transform,
-						.texture_extent = extent,
-						.dest_extent = tile_size,
-						.src_rect = src_rect,
-						.texture = data.tile_set->texture->texture_id,
-						.color = Color(255, 255, 255, 255),
-						.flags = RenderCommand::FLAG_NONE,
-					}
-				}
+			Graphics2D::draw_texture(
+				tile_transform, extent, tile_size, src_rect, 
+				data.tile_set->texture->texture_id, Color(255, 255, 255, 255),
+				RenderCommand::FLAG_SPRITE_NONE
 			);
 		}
 	}

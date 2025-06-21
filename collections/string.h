@@ -18,6 +18,11 @@ struct [[nodiscard]] String
     
     void destroy();
     
+    [[nodiscard]] char get(usize index) const
+    {
+        return chars[index];
+    }
+
     void set(StringView new_chars);
     void resize(usize new_size);
 

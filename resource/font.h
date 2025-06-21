@@ -4,22 +4,24 @@
 #include "resource/resource_id.h"
 #include "math/rect_2d.h"
 
+struct Texture2D;
 
 struct Font : Resource
 {
 	RESOURCE(RESOURCE_FONT, .LoadFromAssets = true, .Extensions = ".ttf");
 
-	static constexpr usize MinimumGlyphCount = 256;
-	static constexpr usize DefaultFontSize = 256;
+	static constexpr usize MinimumGlyphCount = 128;
+	static constexpr usize DefaultFontSize = 32;
 
 	struct Glyph
 	{
+		ResourceID char_texture;
 		Rect2D src_rect;
+		Vector2I advance;
 	};
 
 	struct InternalData
 	{
-		ResourceID font_texture;
 		Array<Glyph> glyphs;
 		i32 font_size;
 	} data;

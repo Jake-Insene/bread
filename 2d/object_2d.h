@@ -16,10 +16,10 @@ struct Object2D : Object
     struct InternalData
     {
         Transform2D transform{};
-        Vector2 pos_cache;
+        Vector2 pos_cache = Vector2(0, 0);
         Vector2 scale_cache = Vector2(1, 1);
         // In Radians
-        f32 rot_cache{};
+        f32 rot_cache = 0.f;
     } data;
     
     void init(const CreateInfo& info);

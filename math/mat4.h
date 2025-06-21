@@ -78,7 +78,10 @@ struct [[nodiscard]] Mat4
     
     constexpr Mat4()
     {
-        ::new(this) Mat4(identity());
+        matrix[0] = Vector4(1, 0, 0, 0);
+        matrix[1] = Vector4(0, 1, 0, 0);
+        matrix[2] = Vector4(0, 0, 1, 0);
+        matrix[3] = Vector4(0, 0, 0, 1);
     }
     
     constexpr Mat4(const Vector4& _00, const Vector4& _10, const Vector4& _20, const Vector4& _30)
@@ -95,15 +98,6 @@ struct [[nodiscard]] Mat4
 		matrix[1] = m[1];
 		matrix[2] = m[2];
 		matrix[3] = m[3];
-    }
-
-    constexpr Mat4& operator=(const Mat4& m)
-    {
-        matrix[0] = m[0];
-        matrix[1] = m[1];
-        matrix[2] = m[2];
-        matrix[3] = m[3];
-        return *this;
     }
 
     constexpr Vector4& operator[](usize index)

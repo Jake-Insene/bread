@@ -1,16 +1,17 @@
 #pragma once
-#include "gui/control.h"
+#include "canvas/canvas_object.h"
 #include "resource/font.h"
 
 
-struct Label : Control
+struct Label : CanvasObject
 {
-	OBJECT(Label, Control);
+	OBJECT(Label, CanvasObject);
 
 	Font* font;
 	String text;
 
 	void init(const CreateInfo&);
+	void deinit();
 	
 	void render();
 };

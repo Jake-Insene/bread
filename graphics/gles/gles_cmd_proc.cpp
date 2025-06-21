@@ -1,5 +1,6 @@
 #include "graphics/gles/gles_cmd_proc.h"
 
+#include "engine/engine.h"
 #include "graphics/gles/gles_driver.h"
 #include "graphics/gles/gles_memory_allocator.h"
 #include "graphics/gles/gles_utility.h"
@@ -40,21 +41,21 @@ void GLESCommandProcessor::initialize(mem::Allocator allocator)
 
     data.usable_texture_units = 16;
 
-    // Sprite_batch
+    // Sprite batch
     {
         data.sprite_batch = {};
 
         gl.glGenVertexArrays(1, &data.sprite_batch.vao);
-        data.sprite_batch.instancebo = GLESMemoryAllocator::buffer_allocate_handle();
+        data.sprite_batch.instance_buffer_object = GLESMemoryAllocator::buffer_allocate_handle();
         gl.glBindVertexArray(data.sprite_batch.vao);
 
         GLESMemoryAllocator::buffer_fill_memory(
-            data.sprite_batch.instancebo, Slice<const u8>(nullptr, sizeof(SpriteInstance) * MaxInstancesPerBatch),
+            data.sprite_batch.instance_buffer_object, Slice<const u8>(nullptr, sizeof(SpriteInstance) * MaxInstancesPerBatch),
             GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW
         );
         data.sprite_batch.instances = allocator.array<SpriteInstance>(MaxInstancesPerBatch);
     
-        gl.glBindBuffer(GL_ARRAY_BUFFER, data.sprite_batch.instancebo);
+        gl.glBindBuffer(GL_ARRAY_BUFFER, data.sprite_batch.instance_buffer_object);
         for(u32 i = 0; i < SpriteInstanceAttribCount; i++)
         {
             _vertex_attrib_divisor(i, GL_FLOAT, 4, sizeof(SpriteInstance), i * sizeof(Vector4));
@@ -64,22 +65,47 @@ void GLESCommandProcessor::initialize(mem::Allocator allocator)
         
         data.sprite_batch.program = gles::compile_program("shaders/sprite.gles.glsl", {});
     }
+
+    // Canvas element batch
+    {
+        data.canvas_element_batch = {};
+
+        gl.glGenVertexArrays(1, &data.canvas_element_batch.vao);
+        data.canvas_element_batch.instance_buffer_object = GLESMemoryAllocator::buffer_allocate_handle();
+        gl.glBindVertexArray(data.canvas_element_batch.vao);
+
+        GLESMemoryAllocator::buffer_fill_memory(
+            data.canvas_element_batch.instance_buffer_object, Slice<const u8>(nullptr, sizeof(CanvasElementInstance) * MaxInstancesPerBatch),
+            GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW
+        );
+        data.canvas_element_batch.instances = allocator.array<CanvasElementInstance>(MaxInstancesPerBatch);
+
+        gl.glBindBuffer(GL_ARRAY_BUFFER, data.canvas_element_batch.instance_buffer_object);
+        for (u32 i = 0; i < CanvasElementInstanceAttribCount; i++)
+        {
+            _vertex_attrib_divisor(i, GL_FLOAT, 4, sizeof(CanvasElementInstance), i * sizeof(Vector4));
+        }
+
+        gl.glBindVertexArray(0);
+
+        data.canvas_element_batch.program = gles::compile_program("shaders/canvas.gles.glsl", {});
+    }
     
     // Quad batch
     {
         data.quad_batch = {};
 
         gl.glGenVertexArrays(1, &data.quad_batch.vao);
-        data.quad_batch.instancebo = GLESMemoryAllocator::buffer_allocate_handle();
+        data.quad_batch.instance_buffer_object = GLESMemoryAllocator::buffer_allocate_handle();
         gl.glBindVertexArray(data.quad_batch.vao);
 
         GLESMemoryAllocator::buffer_fill_memory(
-            data.quad_batch.instancebo, Slice<const u8>(nullptr, sizeof(QuadInstance) * MaxInstancesPerBatch),
+            data.quad_batch.instance_buffer_object, Slice<const u8>(nullptr, sizeof(QuadInstance) * MaxInstancesPerBatch),
             GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW
         );
         data.quad_batch.instances = data.allocator.array<QuadInstance>(MaxInstancesPerBatch);
         
-        gl.glBindBuffer(GL_ARRAY_BUFFER, data.quad_batch.instancebo);
+        gl.glBindBuffer(GL_ARRAY_BUFFER, data.quad_batch.instance_buffer_object);
         for(u32 i = 0; i < QuadInstanceAttribCount; i++)
         {
             _vertex_attrib_divisor(i, GL_FLOAT, 4, sizeof(QuadInstance), i * sizeof(Vector4));
@@ -95,17 +121,17 @@ void GLESCommandProcessor::initialize(mem::Allocator allocator)
         data.primitive_batch = {};
 
         gl.glGenVertexArrays(1, &data.primitive_batch.vao);
-        data.primitive_batch.instancebo = GLESMemoryAllocator::buffer_allocate_handle();
+        data.primitive_batch.instance_buffer_object = GLESMemoryAllocator::buffer_allocate_handle();
         gl.glBindVertexArray(data.primitive_batch.vao);
 
         GLESMemoryAllocator::buffer_fill_memory(
-            data.primitive_batch.instancebo, 
+            data.primitive_batch.instance_buffer_object, 
             Slice<const u8>(nullptr, sizeof(PrimitivePoint) * MaxPrimitivePointsPerBatch),
             GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW
         );
         data.primitive_batch.primitives = data.allocator.array<PrimitivePoint>(MaxPrimitivePointsPerBatch);
 
-        gl.glBindBuffer(GL_ARRAY_BUFFER, data.primitive_batch.instancebo);
+        gl.glBindBuffer(GL_ARRAY_BUFFER, data.primitive_batch.instance_buffer_object);
         for(u32 i = 0; i < PrimitivePointAttribCount; i++)
         {
             _vertex_attrib(i, GL_FLOAT, 4, sizeof(PrimitivePoint), i * sizeof(Vector4));
@@ -142,18 +168,29 @@ void GLESCommandProcessor::shutdown()
     // Sprite batch
     {
         GLESMemoryAllocator::buffer_deallocate_handle(
-            data.sprite_batch.instancebo, sizeof(SpriteInstance) * MaxInstancesPerBatch
+            data.sprite_batch.instance_buffer_object, sizeof(SpriteInstance) * MaxInstancesPerBatch
         );
         gl.glDeleteVertexArrays(1, &data.sprite_batch.vao);
         gl.glDeleteProgram(data.sprite_batch.program);
         
         data.allocator.free(mem::to_bytes(data.sprite_batch.instances));
     }
+
+    // Canvas element batch
+    {
+        GLESMemoryAllocator::buffer_deallocate_handle(
+            data.canvas_element_batch.instance_buffer_object, sizeof(CanvasElementInstance) * MaxInstancesPerBatch
+        );
+        gl.glDeleteVertexArrays(1, &data.canvas_element_batch.vao);
+        gl.glDeleteProgram(data.canvas_element_batch.program);
+
+        data.allocator.free(mem::to_bytes(data.canvas_element_batch.instances));
+    }
     
     // Quad batch
     {
         GLESMemoryAllocator::buffer_deallocate_handle(
-            data.quad_batch.instancebo, sizeof(QuadInstance) * MaxInstancesPerBatch
+            data.quad_batch.instance_buffer_object, sizeof(QuadInstance) * MaxInstancesPerBatch
         );
         gl.glDeleteVertexArrays(1, &data.quad_batch.vao);
         gl.glDeleteProgram(data.quad_batch.program);
@@ -164,7 +201,7 @@ void GLESCommandProcessor::shutdown()
     // Primitive batch
     {
         GLESMemoryAllocator::buffer_deallocate_handle(
-            data.primitive_batch.instancebo, sizeof(PrimitivePoint) * MaxPrimitivePointsPerBatch
+            data.primitive_batch.instance_buffer_object, sizeof(PrimitivePoint) * MaxPrimitivePointsPerBatch
         );
         gl.glDeleteVertexArrays(1, &data.primitive_batch.vao);
         gl.glDeleteProgram(data.primitive_batch.program);
@@ -173,6 +210,10 @@ void GLESCommandProcessor::shutdown()
     }
 
     GLESMemoryAllocator::buffer_deallocate_handle(data.scene_data_ubo, sizeof(SceneUniform));
+}
+
+void GLESCommandProcessor::recreate_window_transform(Vector2I window_size)
+{
 }
 
 void GLESCommandProcessor::bind_program(GLID program)
@@ -199,13 +240,18 @@ void GLESCommandProcessor::update_scene_uniform()
 
 void GLESCommandProcessor::end_sprite_batch()
 {
+#if SHOW_DEBUG_INFO
+    data.debug.draw_call_count++;
+#endif
+
     bind_program(data.sprite_batch.program);
     bind_scene_buffer();
     gl.glBindVertexArray(data.sprite_batch.vao);
     gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.global_quad_ibo);
 
     GLESMemoryAllocator::buffer_bind_and_update_memory(
-        data.sprite_batch.instancebo, 0, mem::to_const_bytes(data.sprite_batch.instances), GL_ARRAY_BUFFER
+        data.sprite_batch.instance_buffer_object, 0, 
+        mem::to_const_bytes(data.sprite_batch.instances), GL_ARRAY_BUFFER
     );
     
     for(i32 i = 0; i < GLESCommandProcessor::data.sprite_batch.texture_index; i++)
@@ -219,15 +265,46 @@ void GLESCommandProcessor::end_sprite_batch()
     data.sprite_batch.texture_index = 0;
 }
 
+void GLESCommandProcessor::end_canvas_element_batch()
+{
+#if SHOW_DEBUG_INFO
+    data.debug.draw_call_count++;
+#endif
+
+    bind_program(data.canvas_element_batch.program);
+    bind_scene_buffer();
+    gl.glBindVertexArray(data.canvas_element_batch.vao);
+    gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.global_quad_ibo);
+
+    GLESMemoryAllocator::buffer_bind_and_update_memory(
+        data.canvas_element_batch.instance_buffer_object, 0, 
+        mem::to_const_bytes(data.canvas_element_batch.instances), GL_ARRAY_BUFFER
+    );
+
+    for (i32 i = 0; i < GLESCommandProcessor::data.canvas_element_batch.texture_index; i++)
+    {
+        gl.glActiveTexture(GL_TEXTURE0 + i);
+        gl.glBindTexture(GL_TEXTURE_2D, data.canvas_element_batch.texture_units[i]);
+    }
+
+    gl.glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, nullptr, (GLsizei)data.canvas_element_batch.count);
+    data.canvas_element_batch.count = 0;
+    data.canvas_element_batch.texture_index = 0;
+}
+
 void GLESCommandProcessor::end_quad_batch()
 {
+#if SHOW_DEBUG_INFO
+    data.debug.draw_call_count++;
+#endif
+
     bind_program(data.quad_batch.program);
     bind_scene_buffer();
     gl.glBindVertexArray(data.quad_batch.vao);
     gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.global_quad_ibo);
 
     GLESMemoryAllocator::buffer_bind_and_update_memory(
-        data.quad_batch.instancebo, 0, mem::to_const_bytes(data.quad_batch.instances), 
+        data.quad_batch.instance_buffer_object, 0, mem::to_const_bytes(data.quad_batch.instances), 
         GL_ARRAY_BUFFER
     );
 
@@ -237,12 +314,16 @@ void GLESCommandProcessor::end_quad_batch()
 
 void GLESCommandProcessor::end_primitive_batch()
 {
+#if SHOW_DEBUG_INFO
+    data.debug.draw_call_count++;
+#endif
+
     bind_program(data.primitive_batch.program);
     bind_scene_buffer();
 
     gl.glBindVertexArray(data.primitive_batch.vao);
     GLESMemoryAllocator::buffer_bind_and_update_memory(
-        data.primitive_batch.instancebo, 0, mem::to_const_bytes(data.primitive_batch.primitives),
+        data.primitive_batch.instance_buffer_object, 0, mem::to_const_bytes(data.primitive_batch.primitives),
         GL_ARRAY_BUFFER
     );
 
@@ -251,8 +332,11 @@ void GLESCommandProcessor::end_primitive_batch()
 }
 
 void GLESCommandProcessor::render()
-{   
-    //Debug::info("Processing commands: %llu", data.commands.count);
+{
+#if SHOW_DEBUG_INFO
+    data.debug.draw_call_count = 0;
+#endif
+
     for(usize i = 0; i < data.commands.count; i++)
     {
         RenderCommand& cmd = data.commands[i];
@@ -261,8 +345,8 @@ void GLESCommandProcessor::render()
         case RenderCommand::BIND_RENDER_TARGET:
         {
             auto& rt = GLESMemoryAllocator::render_target_get(cmd.bind.source_id);
-            data.scene_data.screen_transform = Projection::orthographic_inv(
-                -2.f/rt.size.width, 2.f/rt.size.width, -2.f/rt.size.height, 2.f/rt.size.height,
+            data.scene_data.screen_transform = Projection::orthographic(
+                0, rt.size.width, -rt.size.height, 0,
                 1, -1
             );
             data.scene_data.screen_transform.transpose();
@@ -335,7 +419,7 @@ void GLESCommandProcessor::render()
 
             data.sprite_batch.instances[index].transform_0 = cmd.sprite.transform[0];
             data.sprite_batch.instances[index].transform_1 = cmd.sprite.transform[1];
-            data.sprite_batch.instances[index].transform_2 = cmd.quad.transform[2];
+            data.sprite_batch.instances[index].transform_2 = cmd.sprite.transform[2];
 
             data.sprite_batch.instances[index].unit = tex_unit;
             data.sprite_batch.instances[index].flags = cmd.sprite.flags;
@@ -349,6 +433,53 @@ void GLESCommandProcessor::render()
             data.sprite_batch.count++;
         }
             break;
+        case RenderCommand::DRAW_CANVAS_ELEMENT:
+        {
+            if (data.canvas_element_batch.count >= MaxInstancesPerBatch ||
+                data.canvas_element_batch.texture_index >= data.usable_texture_units)
+            {
+                DebugInfo("Canvas Element Batch full, flushing...");
+                update_scene_uniform();
+                end_canvas_element_batch();
+            }
+
+            GLID tex = GLESMemoryAllocator::texture_get_handle(cmd.canvas_element.texture);
+
+            i32 tex_unit = -1;
+            for (i32 t = 0; t < data.canvas_element_batch.texture_index; t++)
+            {
+                if (data.canvas_element_batch.texture_units[t] == i32(tex))
+                {
+                    tex_unit = t;
+                    break;
+                }
+            }
+
+            if (tex_unit == -1)
+            {
+                tex_unit = data.canvas_element_batch.texture_index;
+                data.canvas_element_batch.texture_units[data.canvas_element_batch.texture_index] = tex;
+                data.canvas_element_batch.texture_index++;
+            }
+
+            u32 index = data.canvas_element_batch.count;
+
+            data.canvas_element_batch.instances[index].transform_0 = cmd.canvas_element.transform[0];
+            data.canvas_element_batch.instances[index].transform_1 = cmd.canvas_element.transform[1];
+            data.canvas_element_batch.instances[index].transform_2 = cmd.canvas_element.transform[2];
+
+            data.canvas_element_batch.instances[index].unit = tex_unit;
+            data.canvas_element_batch.instances[index].flags = cmd.canvas_element.flags;
+
+            data.canvas_element_batch.instances[index].texture_extent = cmd.canvas_element.texture_extent;
+            data.canvas_element_batch.instances[index].dest_extent = cmd.canvas_element.dest_extent;
+
+            data.canvas_element_batch.instances[index].src_rect = cmd.canvas_element.src_rect;
+            data.canvas_element_batch.instances[index].color = cmd.canvas_element.color;
+
+            data.canvas_element_batch.count++;
+        }
+        break;
         case RenderCommand::DRAW_QUAD:
         {
             if(data.quad_batch.count >= MaxInstancesPerBatch)
@@ -415,6 +546,11 @@ void GLESCommandProcessor::render()
     if(data.sprite_batch.count > 0)
     {
         end_sprite_batch();
+    }
+
+    if (data.canvas_element_batch.count > 0)
+    {
+        end_canvas_element_batch();
     }
     
     if(data.quad_batch.count > 0)

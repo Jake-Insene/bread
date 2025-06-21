@@ -98,4 +98,47 @@ inline void draw_line(Color color, Vector2 start, Vector2 end)
         }
     );
 }
+
+inline void draw_texture(const Transform2D& transform, Vector2 texture_extent, Vector2 dest_extent, const Rect2D& src_rect, 
+    ResourceID texture_id, Color mod_color, RenderCommand::SpriteFlags flags)
+{
+    Graphics::add_cmd(
+        RenderCommand
+        {
+            .type = RenderCommand::DRAW_SPRITE,
+            .sprite =
+            {
+                .transform = transform,
+                .texture_extent = texture_extent,
+                .dest_extent = dest_extent,
+                .src_rect = src_rect,
+                .texture = texture_id,
+                .color = mod_color,
+                .flags = flags,
+            },
+        }
+        );
+}
+
+inline void draw_canvas_element(const Transform2D& transform, Vector2 texture_extent, Vector2 dest_extent, const Rect2D& src_rect,
+    ResourceID texture_id, Color mod_color, RenderCommand::CanvasFlags flags)
+{
+    Graphics::add_cmd(
+        RenderCommand
+        {
+            .type = RenderCommand::DRAW_CANVAS_ELEMENT,
+            .canvas_element =
+            {
+                .transform = transform,
+                .texture_extent = texture_extent,
+                .dest_extent = dest_extent,
+                .src_rect = src_rect,
+                .texture = texture_id,
+                .color = mod_color,
+                .flags = flags,
+            },
+        }
+    );
+}
+
 }

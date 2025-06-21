@@ -19,6 +19,8 @@
 #define PreloadEnd() }
 
 // Resource Loading
+#define PreloadTexture(path)
+
 // SpriteAnimation
 #define SpriteAnimationBegin(name) {\
     SpriteAnimation* __sprite_animation__ = ResourceManager::create_sprite_animation(name);\
@@ -63,9 +65,13 @@ struct EngineConfiguration
 {
     Vector2I WindowSize = Vector2I(Display::DefaultWidth, Display::DefaultHeight);
     Vector2I DisplayTargetSize = Vector2I(Display::DefaultWidth, Display::DefaultHeight);
-    bool VSync = true;
     Object* (*CreateMainScene)();
+    bool VSync = true;
+    bool EnableDebugConsole = false;
 };
+
+extern EngineConfiguration __configuration__;
+extern void __preload__();
 
 struct Engine
 {
@@ -100,6 +106,8 @@ struct Engine
 
     // Utility functions
     static i32 get_fps() { return data.fps; }
+
+	static EngineConfiguration& get_configuration() { return __configuration__; }
 
     static Window get_main_window() { return data.main_window; }
 

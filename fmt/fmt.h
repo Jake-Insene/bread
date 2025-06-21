@@ -222,7 +222,7 @@ template<usize Base>
 inline constexpr bool IsValidBase = IsAnyOfValue<usize, Base, 2, 10, 16>;
 
 template<usize Base, typename T>
-void __format_integer(const io::Writer& writer, T arg)
+inline void __format_integer(const io::Writer& writer, T arg)
 {
 	static_assert(IsSigned<T> || IsUnsigned<T>, "expected a integer type");
 	fmt::__fail_compile_time_on(!IsValidBase<Base>, "invalid integer base");
@@ -255,13 +255,40 @@ void __format_integer(const io::Writer& writer, T arg)
 	{
 	case 10:
 	{
-		Unsigned u = Unsigned(arg);
+		Unsigned u = arg < 0 ? Unsigned(-arg) : Unsigned(arg);
 		do
 		{
 			*--end = ('0' + u % 10);
 			u /= 10;
 			buffer_index++;
 		} while (u != 0);
+
+		if constexpr (IsSigned<T>)
+		{
+			if (arg < 0)
+			{
+				*--end = '-';
+				buffer_index++;
+			}
+		}
+	}
+		break;
+	case 16:
+	{
+		Unsigned u = arg < 0 ? Unsigned(-arg) : Unsigned(arg);
+		u32 hdigit_count = 0;
+
+		static constexpr char HexChar[16] =
+		{
+			'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
+		};
+		do
+		{
+			*--end = HexChar[u & 15];
+			u >>= 4;
+			hdigit_count++;
+			buffer_index++;
+		} while (hdigit_count < (sizeof(T) * 8) / 4);
 
 		if constexpr (IsSigned<T>)
 		{
@@ -280,6 +307,11 @@ void __format_integer(const io::Writer& writer, T arg)
 	writer.write(Slice(buffer_storage + (BufferStorageSize - buffer_index), buffer_index));
 }
 
+inline void __format_float(const io::Writer& writer, f32 arg)
+{
+	__format_integer<10, i32>(writer, i32(arg));
+}
+
 template<typename T>
 void __format_single_argument(const io::Writer& writer, T arg)
 {
@@ -288,8 +320,13 @@ void __format_single_argument(const io::Writer& writer, T arg)
 	{
 		__format_integer<10, T>(writer, arg);
 	}
-	else if constexpr (type == fmt::FormatType::Float || type == fmt::FormatType::Double)
+	else if constexpr (type == fmt::FormatType::Float)
 	{
+		__format_float(writer, arg);
+	}
+	else if constexpr (type == fmt::FormatType::Pointer)
+	{
+		__format_integer<16, usize>(writer, usize(arg));
 	}
 	else if constexpr (type == fmt::FormatType::StringView)
 	{
@@ -330,13 +367,9 @@ void fmt::format(const io::Writer& writer, fmt::FormatString<TypeIdentity<TArgs>
 	StringView view = fmtstring.view();
 
 	if constexpr (FString::WriteIntervalCount == 1)
-	{
 		writer.write(mem::to_const_bytes(view));
-	}
 	else
-	{
 		__format_argument<FString::WriteIntervalCount, TArgs...>(writer, view, fmtstring, args...);
-	}
 
 	u8 _character = '\n';
 	Slice<u8> new_line = { &_character, 1 };

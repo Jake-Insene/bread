@@ -71,6 +71,7 @@ void GLESDriver::initialize(const mem::Allocator& allocator)
     gl.glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &data.limits.max_texture_units);
     gl.glEnable(GL_BLEND);
     gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    gl.glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     _init_context();
 }
@@ -88,6 +89,8 @@ void GLESDriver::recreate()
     EGL::recreate_window_surface();
 
     Vector2I size = Engine::get_main_window().get_size();
+    GLESCommandProcessor::recreate_window_transform(size);
+
     gl.glViewport(0, 0, size.x, size.y);
     DebugInfo("Viewport: W={i} H={i}", size.x, size.y);
 }

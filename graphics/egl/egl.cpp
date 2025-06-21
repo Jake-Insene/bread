@@ -31,6 +31,7 @@ void EGL::initialize(const mem::Allocator& allocator)
     REQUIRED_LOAD(glGetIntegerv);
     REQUIRED_LOAD(glGetString);
     REQUIRED_LOAD(glGetStringi);
+    REQUIRED_LOAD(glPixelStorei);
 
     REQUIRED_LOAD(glEnable);
     REQUIRED_LOAD(glDisable);

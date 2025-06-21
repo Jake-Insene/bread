@@ -90,7 +90,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 	case WM_MOUSEMOVE:
 	{
 		Vector2 screen_space_position = Vector2(GET_X_LPARAM(lparam), -GET_Y_LPARAM(lparam));
-		Input::data.mouse_position = SceneManager::_screen_make_local(screen_space_position);
+		Input::data.mouse_position = SceneManager::_screen_make_local_to_canvas(screen_space_position);
 	}
 		break;
 	}

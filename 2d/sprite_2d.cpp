@@ -14,21 +14,13 @@ void Sprite2D::render()
     if(data.texture)
     {
         Vector2 texture_extent = Vector2(data.texture->get_size());
-        Graphics::add_cmd(
-            RenderCommand
-            {
-                .type = RenderCommand::DRAW_SPRITE,
-                .sprite =
-                {
-                    .transform = get_global_transform(),
-                    .texture_extent = texture_extent,
-                    .dest_extent = texture_extent,
-                    .src_rect = src_rect,
-                    .texture = data.texture->texture_id,
-                    .color = color,
-                    .flags = (RenderCommand::SpriteFlags)_get_render_flags(),
-                },
-            }
+        Graphics2D::draw_texture(
+            get_global_transform(),
+            texture_extent,
+            texture_extent,
+            src_rect, data.texture->texture_id,
+            color,
+            (RenderCommand::SpriteFlags)_get_render_flags()
         );
     }
 }
@@ -42,10 +34,10 @@ void Sprite2D::set_texture(Texture2D* new_texture)
 
 u32 Sprite2D::_get_render_flags()
 {
-    u32 flags = RenderCommand::FLAG_NONE;
-    flags |= centered ? RenderCommand::FLAG_NONE : RenderCommand::FLAG_TOP_LEFT;
-    flags |= flip_v ? RenderCommand::FLAG_FLIP_V : RenderCommand::FLAG_NONE;
-    flags |= flip_h ? RenderCommand::FLAG_FLIP_H : RenderCommand::FLAG_NONE;
+    u32 flags = RenderCommand::FLAG_SPRITE_NONE;
+    flags |= centered ? RenderCommand::FLAG_SPRITE_NONE : RenderCommand::FLAG_SPRITE_TOP_LEFT;
+    flags |= flip_v ? RenderCommand::FLAG_SPRITE_FLIP_V : RenderCommand::FLAG_SPRITE_NONE;
+    flags |= flip_h ? RenderCommand::FLAG_SPRITE_FLIP_H : RenderCommand::FLAG_SPRITE_NONE;
     return flags;
 }
 

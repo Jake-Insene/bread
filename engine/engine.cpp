@@ -28,10 +28,6 @@ void operator delete(void*)
     FailOn(true, "Avoid 'delete' statements!");
 }
 
-
-extern EngineConfiguration __configuration__;
-extern void __preload__();
-
 void Engine::initialize()
 {
     data.allocator = {};

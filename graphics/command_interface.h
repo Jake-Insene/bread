@@ -10,10 +10,18 @@ struct RenderCommand
 {
     enum SpriteFlags
     {
-        FLAG_NONE = 0x0,
-        FLAG_TOP_LEFT = 0x1,
-        FLAG_FLIP_V = 0x2,
-        FLAG_FLIP_H = 0x4,
+        FLAG_SPRITE_NONE = 0x0,
+        FLAG_SPRITE_TOP_LEFT = 0x1,
+        FLAG_SPRITE_FLIP_V = 0x2,
+        FLAG_SPRITE_FLIP_H = 0x4,
+    };
+
+    enum CanvasFlags
+    {
+        FLAG_CANVAS_NONE = 0x0,
+        FLAG_CANVAS_FLIP_V = 0x1,
+        FLAG_CANVAS_FLIP_H = 0x2,
+        FLAG_CANVAS_FONT_CHAR = 0x4,
     };
 
     struct BindSource
@@ -21,7 +29,7 @@ struct RenderCommand
         ResourceID source_id;
     };
 
-    struct DrawSprite
+    struct Sprite
     {
         Transform2D transform;
         // The size of the texture binded.
@@ -33,6 +41,20 @@ struct RenderCommand
         ResourceID texture;
         Color color;
         SpriteFlags flags;
+    };
+
+    struct CanvasElement
+    {
+        Transform2D transform;
+        // The size of the texture binded.
+        Vector2 texture_extent;
+        // The size of the rectangle where the texture will be draw.
+        Vector2 dest_extent;
+        // In texture.
+        Rect2D src_rect;
+        ResourceID texture;
+        Color color;
+        CanvasFlags flags;
     };
 
     struct ClearRT
@@ -63,6 +85,7 @@ struct RenderCommand
         CLEAR_RENDER_TARGET,
         
         DRAW_SPRITE,
+        DRAW_CANVAS_ELEMENT,
         DRAW_QUAD,
         DRAW_LINE,
 
@@ -72,10 +95,12 @@ struct RenderCommand
     union
     {
         BindSource bind;
-        DrawSprite sprite;
+        Sprite sprite;
+        CanvasElement canvas_element;
         ClearRT clear;
         DrawQuad quad;
         DrawLine line;
         Transform2D transform;
+        Mat4 matrix;
     };
 };

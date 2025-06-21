@@ -48,15 +48,15 @@ file(GLOB ENGINE_SRC
     os/semaphore.cpp
     os/thread.cpp
 
-    object/canvas_object.cpp
     object/object.cpp
     object/object_allocator.cpp
     object/scene_manager.cpp
     object/timer.cpp
 
-    gui/button.cpp
-    gui/control.cpp
-    gui/label.cpp
+    canvas/button.cpp
+    canvas/canvas_object.cpp
+    canvas/control.cpp
+    canvas/label.cpp
 
     2d/animated_sprite_2d.cpp
     2d/camera_2d.cpp
@@ -112,6 +112,7 @@ elseif(WIN32)
         platform/win32/win32_engine.cpp
         platform/win32/win32_file.cpp
         platform/win32/win32_main.cpp
+        platform/win32/win32_math.cpp
         platform/win32/win32_os.cpp
         platform/win32/win32_page_allocator.cpp
         platform/win32/win32_time.cpp
