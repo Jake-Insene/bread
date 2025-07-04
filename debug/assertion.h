@@ -1,6 +1,6 @@
 #pragma once
 
-#if DEBUG
+#if defined(DEBUG)
 #define DebugAssert(cond, ...) \
     if(!(cond))\
     {\
@@ -9,7 +9,7 @@
     }
 #else
 #define DebugAssert(cond, ...)
-#endif // NDEBUG
+#endif
 
 #include "debug/debug.h"
 #include "log/log.h"

@@ -13,7 +13,21 @@ struct [[nodiscard]] Shape2D
     // 1 -> Top right
     // 2 -> Bottom right
     // 3 -> Bottom left
-    Vector2 vertices[4]{};
+    Vector2 vertices[4];
+
+    static constexpr Shape2D make_box(Vector2 size)
+    {
+        return Shape2D
+        {
+            .vertices =
+            {
+                Vector2(-size.x, size.y),
+                Vector2(size.x, size.y),
+                Vector2(size.x, -size.y),
+                Vector2(-size.x, -size.y),
+            }
+        };
+    }
 
     void translate(Vector2 translation)
     {
@@ -33,10 +47,15 @@ struct [[nodiscard]] Shape2D
 
     Vector2 get_size() const
     {
-        return vertices[0].abs() * 2;
+        return (vertices[2] - vertices[0]).abs();
     }
 
     AABB get_aabb() const { return AABB{ vertices[0], vertices[2] }; }
+
+    Vector2 get_center() const
+    {
+        return vertices[0] + Vector2(get_size().x/2.f, -get_size().y/2.f);
+    }
 
     [[nodiscard]] bool intersect(const Shape2D& other) const
     {

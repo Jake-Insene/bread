@@ -39,7 +39,7 @@
 // TileSet
 #define TileSetBegin(set_name, texture_path, tile_size, ...) {\
     TileSet* __tile_set__ = ResourceManager::create_tile_set(set_name, tile_size);\
-    __tile_set__->texture = GetResource<Texture2D>(texture_path);
+    __tile_set__->set_texture(GetResource<Texture2D>(texture_path));
 
 #define TileSetEnd() }
 

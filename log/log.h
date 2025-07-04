@@ -28,7 +28,10 @@ void Log::error(const fmt::FormatString<TypeIdentity<TArgs>...> fmt, TArgs... ar
 {
     auto err = File::get_stderr();
     if (err.handle == 0) return;
-    fmt::format(err.writer(), fmt, args...);
+    fmt::format(
+        err.writer(), fmt, args...
+    );
+    err.flush(); // Required on android
 }
 
 template<typename... TArgs>
@@ -36,13 +39,19 @@ void Log::warning(const fmt::FormatString<TypeIdentity<TArgs>...> fmt, TArgs... 
 {
     auto err = File::get_stderr();
     if (err.handle == 0) return;
-    fmt::format(err.writer(), fmt, args...);
+    fmt::format(
+        err.writer(), fmt, args...
+    );
+    err.flush(); // Required on android
 }
 
 template<typename... TArgs>
 void Log::info(const fmt::FormatString<TypeIdentity<TArgs>...> fmt, TArgs... args)
 {
-    auto err = File::get_stdout();
-    if (err.handle == 0) return;
-    fmt::format(err.writer(), fmt, args...);
+    auto out = File::get_stdout();
+    if (out.handle == 0) return;
+    fmt::format(
+        out.writer(), fmt, args...
+    );
+    out.flush(); // Required on android
 }

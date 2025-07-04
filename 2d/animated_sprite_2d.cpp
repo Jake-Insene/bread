@@ -40,19 +40,22 @@ void AnimatedSprite2D::internal_update(f64 dt)
 
 void AnimatedSprite2D::render()
 {
-	if (animation && data.playing)
-	{
-		SpriteAnimation::SpriteFrame& current_frame = animation->get_frame(
-			data.current_animation.view(), data.frame
-		);
-		Vector2 extent = Vector2(current_frame.sprite->get_size());
-		Rect2D src_rect{Vector2(), extent};
-		Graphics2D::draw_texture(
-			get_global_transform(), extent, extent,
-			src_rect, current_frame.sprite->texture_id,
-			Color(255, 255, 255, 255), (RenderCommand::SpriteFlags)_get_render_flags()
-		);
-	}
+	if (animation == nullptr)
+		return;
+
+	if (data.playing == false)
+		return;
+
+	SpriteAnimation::SpriteFrame& current_frame = animation->get_frame(
+		data.current_animation.view(), data.frame
+	);
+	Vector2 extent = Vector2(current_frame.sprite->get_size());
+	Rect2D src_rect{ Vector2(), extent };
+	Graphics2D::draw_texture(
+		get_global_transform(), extent, extent,
+		src_rect, current_frame.sprite->texture_id,
+		Color(255, 255, 255, 255), (RenderCommand::SpriteFlags)_get_render_flags()
+	);
 }
 
 void AnimatedSprite2D::play(StringView anim)

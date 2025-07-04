@@ -34,7 +34,13 @@ struct SceneManager
     
         i32 fps_counter;
         i32 fps_acum;
-        
+
+        struct
+        {
+            bool requested;
+            Object* new_scene;
+        } change_scene;
+
         Array<CanvasObject*> gui_roots;
         Array<CanvasObject*> touched_focus;
         HashMap<ObjectID, QueueFreeInfo> queue_frees;
@@ -57,6 +63,8 @@ struct SceneManager
 
     static void set_camera_2d(Camera2D* camera);
     [[nodiscard]] static Camera2D* get_camera_2d() { return data.current_camera; }
+
+    static void _handle_change_scene();
 
     static Vector2 _screen_make_local_to_canvas(const Vector2& pos);
     static CanvasObject* _find_canvas_in_pos(const Vector2& pos);

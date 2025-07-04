@@ -35,6 +35,8 @@ struct Object2D : Object
     void set_rotation(f32 new_rot);
     [[nodiscard]] f32 get_rotation() const;
 
-    [[nodiscard]] Transform2D get_transform() const;
-    [[nodiscard]] Transform2D get_global_transform() const;
+    Transform2D get_transform() const;
+    Transform2D get_global_transform() const;
+
+    Vector2 get_local_mouse_position() const;
 };

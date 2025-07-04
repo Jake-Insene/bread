@@ -30,7 +30,7 @@ struct Body2D : Object2D
         CollisionMask collision_mask = Physics2D::COLLISION_MASK_0;
     } data;
 
-    Event<void(Object::*)(Body2D*)> colliding_with;
+    Event<void(Object::*)(Body2D*)> on_collide;
     
     void init(const CreateInfo&);
     void deinit();
@@ -41,7 +41,10 @@ struct Body2D : Object2D
     void set_type(Body2D::BodyType new_type);
     Body2D::BodyType get_type() const { return data.type;}
     
-    void shape_as_box(const Vector2& size);
+    void add_shape(const Shape2D& new_shape);
+    void remove_shape(usize index);
+    usize get_shape_count();
+    Shape2D get_shape(usize index);
     
     void set_velocity(const Vector2& new_velocity);
     Vector2 get_velocity() const { return data.velocity; }
@@ -63,4 +66,6 @@ struct Body2D : Object2D
 
     void set_collision_mask(CollisionMask mask);
     [[nodiscard]] CollisionMask get_collision_mask() const { return data.collision_mask; }
+
+    static void _on_body_collide(void* _this, Object2D* obj);
 };

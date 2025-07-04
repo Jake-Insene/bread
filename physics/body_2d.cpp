@@ -1,9 +1,16 @@
 #include "physics/body_2d.h"
 
 
+
 void Body2D::init(const CreateInfo&)
 {
     data.body_id = Physics2D::create_body(this);
+    Physics2D::EventOnCollide event_on_collide;
+    event_on_collide.bind(&_on_body_collide);
+
+    Physics2D::body_set_on_collide(data.body_id, 
+        this, event_on_collide
+    );
 }
 
 void Body2D::deinit()
@@ -12,18 +19,11 @@ void Body2D::deinit()
 }
 
 void Body2D::enter()
-{
-    Physics2D::body_set_residence_mask(data.body_id, data.residence_mask);
-    Physics2D::body_set_collision_mask(data.body_id, data.collision_mask);
-    Physics2D::body_set_velocity(data.body_id, data.velocity);
-    Physics2D::body_set_friction(data.body_id, data.mass);
-    Physics2D::body_set_mass(data.body_id, data.friction);
-}
+{}
 
 void Body2D::exit()
 {
 }
-
 
 void Body2D::set_type(Body2D::BodyType new_type)
 {
@@ -44,86 +44,81 @@ void Body2D::set_type(Body2D::BodyType new_type)
             DebugAssert(false, "invalid body type");
         }
 
-        if (data.body_id != Physics2D::BodyID::InvalidID)
-        {
-            Physics2D::body_set_type(data.body_id, Physics2D::BodyType(new_type));
-        }
+        Physics2D::body_set_type(data.body_id, Physics2D::BodyType(new_type));
     }
 }
 
-void Body2D::shape_as_box(const Vector2& size)
+void Body2D::add_shape(const Shape2D& new_shape)
 {
-    if (data.body_id != Physics2D::BodyID::InvalidID)
-    {
-        Physics2D::body_shape_as_box(data.body_id, size);
-    }
+    Physics2D::body_add_shape(data.body_id, new_shape);
+}
+
+void Body2D::remove_shape(usize index)
+{
+    Physics2D::body_remove_shape(data.body_id, index);
+}
+
+usize Body2D::get_shape_count()
+{
+    return Physics2D::body_get_shape_count(data.body_id);
+}
+
+Shape2D Body2D::get_shape(usize index)
+{
+    return Physics2D::body_get_shape(data.body_id, index);
 }
 
 void Body2D::set_velocity(const Vector2& new_velocity)
 {
     data.velocity = new_velocity;
-    if (data.body_id != Physics2D::BodyID::InvalidID)
-    {
-        Physics2D::body_set_velocity(data.body_id, new_velocity);
-    }
+    Physics2D::body_set_velocity(data.body_id, new_velocity);
 }
 
 void Body2D::set_mass(f32 new_mass)
 {
     data.mass = new_mass;
-    if (data.body_id != Physics2D::BodyID::InvalidID)
-    {
-        Physics2D::body_set_mass(data.body_id, new_mass);
-    }
+    Physics2D::body_set_mass(data.body_id, new_mass);
 }
 
 void Body2D::set_friction(f32 new_friction)
 {
     data.friction = new_friction;
-    if (data.body_id != Physics2D::BodyID::InvalidID)
-    {
-        Physics2D::body_set_friction(data.body_id, new_friction);
-    }
+    Physics2D::body_set_friction(data.body_id, new_friction);
 }
 
 void Body2D::apply_force(const Vector2& point, const Vector2& force) const
 {
-    if (data.body_id != Physics2D::BodyID::InvalidID)
-    {
-        Physics2D::body_apply_force(data.body_id, point, force);
-    }
+    Physics2D::body_apply_force(data.body_id, point, force);
 }
 
 void Body2D::apply_impulse(const Vector2& point, const Vector2& force) const
 {
-    if (data.body_id != Physics2D::BodyID::InvalidID)
-    {
-        Physics2D::body_apply_impulse(data.body_id, point, force);
-    }
+    Physics2D::body_apply_impulse(data.body_id, point, force);
 }
 
 void Body2D::set_fixed_rotation(bool enable) const
 {
-    if (data.body_id != Physics2D::BodyID::InvalidID)
-    {
-        Physics2D::body_set_fixed_rotation(data.body_id, enable);
-    }
+    Physics2D::body_set_fixed_rotation(data.body_id, enable);
 }
 
 void Body2D::set_residence_mask(CollisionMask mask)
 {
     data.residence_mask = mask;
-    if (data.body_id != Physics2D::BodyID::InvalidID)
-    {
-        Physics2D::body_set_residence_mask(data.body_id, mask);
-    }
+    Physics2D::body_set_residence_mask(data.body_id, mask);
 }
 
 void Body2D::set_collision_mask(CollisionMask mask)
 {
     data.collision_mask = mask;
-    if(data.body_id != Physics2D::BodyID::InvalidID)
-    {
-        Physics2D::body_set_collision_mask(data.body_id, mask);
-    }
+    Physics2D::body_set_collision_mask(data.body_id, mask);
+}
+
+void Body2D::_on_body_collide(void* _this, Object2D* obj)
+{
+    Body2D* body = (Body2D*)_this;
+
+    if (body->on_collide.has_func() == false)
+        return;
+
+    body->on_collide.call(obj->cast<Body2D>());
 }

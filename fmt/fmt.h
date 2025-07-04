@@ -225,7 +225,7 @@ template<usize Base, typename T>
 inline void __format_integer(const io::Writer& writer, T arg)
 {
 	static_assert(IsSigned<T> || IsUnsigned<T>, "expected a integer type");
-	fmt::__fail_compile_time_on(!IsValidBase<Base>, "invalid integer base");
+	static_assert(IsValidBase<Base>, "invalid integer base");
 
 	static constexpr usize BufferStorageSize = ConditionalValue<usize,
 		Base == 10 && IsAnyOf<T, i64, u64>,

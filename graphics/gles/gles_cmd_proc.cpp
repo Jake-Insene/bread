@@ -212,7 +212,7 @@ void GLESCommandProcessor::shutdown()
     GLESMemoryAllocator::buffer_deallocate_handle(data.scene_data_ubo, sizeof(SceneUniform));
 }
 
-void GLESCommandProcessor::recreate_window_transform(Vector2I window_size)
+void GLESCommandProcessor::recreate_window_transform(Vector2I)
 {
 }
 
@@ -391,24 +391,23 @@ void GLESCommandProcessor::render()
             if (data.sprite_batch.count >= MaxInstancesPerBatch ||
                 data.sprite_batch.texture_index >= data.usable_texture_units)
             {
-                DebugInfo("Sprite Batch full, flushing...");
                 update_scene_uniform();
                 end_sprite_batch();
             }
 
             GLID tex = GLESMemoryAllocator::texture_get_handle(cmd.sprite.texture);
 
-            i32 tex_unit = -1;
+            GLID tex_unit = GLID(-1);
             for (i32 t = 0; t < data.sprite_batch.texture_index; t++)
             {
-                if (data.sprite_batch.texture_units[t] == i32(tex))
+                if (data.sprite_batch.texture_units[t] == tex)
                 {
                     tex_unit = t;
                     break;
                 }
             }
 
-            if (tex_unit == -1)
+            if (tex_unit == GLID(-1))
             {
                 tex_unit = data.sprite_batch.texture_index;
                 data.sprite_batch.texture_units[data.sprite_batch.texture_index] = tex;
@@ -438,24 +437,23 @@ void GLESCommandProcessor::render()
             if (data.canvas_element_batch.count >= MaxInstancesPerBatch ||
                 data.canvas_element_batch.texture_index >= data.usable_texture_units)
             {
-                DebugInfo("Canvas Element Batch full, flushing...");
                 update_scene_uniform();
                 end_canvas_element_batch();
             }
 
             GLID tex = GLESMemoryAllocator::texture_get_handle(cmd.canvas_element.texture);
 
-            i32 tex_unit = -1;
+            GLID tex_unit = GLID(-1);
             for (i32 t = 0; t < data.canvas_element_batch.texture_index; t++)
             {
-                if (data.canvas_element_batch.texture_units[t] == i32(tex))
+                if (data.canvas_element_batch.texture_units[t] == tex)
                 {
                     tex_unit = t;
                     break;
                 }
             }
 
-            if (tex_unit == -1)
+            if (tex_unit == GLID(-1))
             {
                 tex_unit = data.canvas_element_batch.texture_index;
                 data.canvas_element_batch.texture_units[data.canvas_element_batch.texture_index] = tex;
@@ -484,7 +482,6 @@ void GLESCommandProcessor::render()
         {
             if(data.quad_batch.count >= MaxInstancesPerBatch)
             {
-                DebugInfo("Quad Batch full, flushing...");
                 update_scene_uniform();
                 end_quad_batch();
             }
@@ -505,7 +502,6 @@ void GLESCommandProcessor::render()
         {
             if(data.primitive_batch.count >= MaxPrimitivePointsPerBatch)
             {
-                DebugInfo("Primitive Batch full, flushing...");
                 update_scene_uniform();
                 end_primitive_batch();
             }
@@ -526,13 +522,12 @@ void GLESCommandProcessor::render()
         case RenderCommand::SET_SCENE_TRANSFORM:
         {
             const Vector2 translation = cmd.transform[2] * -1;
+            const Vector2 scale = cmd.transform.get_scale();
 
-            data.scene_data.scene_transform = Mat4(
-                Vector4(1, 0, 0, 0),
-                Vector4(0, 1, 0, 0),
-                Vector4(0, 0, 1, 0),
-                Vector4(translation, 0, 1)
-            );
+            data.scene_data.scene_transform = 
+                Mat4::translation(Vector3(translation.x, translation.y, 0))
+                * Mat4::scaling(Vector3(scale.x, scale.y, 1));
+            data.scene_data.scene_transform.transpose();
 
             data.scene_data_ubo_update = true;
         }

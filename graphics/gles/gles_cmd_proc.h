@@ -14,7 +14,7 @@ struct GLESCommandProcessor
         Vector2 transform_1;
         // attrib 1
         Vector2 transform_2;
-        u32 unit;
+        GLID unit;
         u32 flags;
         // attrib 2
         Vector2 texture_extent;
@@ -52,7 +52,7 @@ struct GLESCommandProcessor
         Vector2 transform_1;
         // attrib 1
         Vector2 transform_2;
-        u32 unit;
+        GLID unit;
         u32 flags;
         // attrib 2
         Vector2 texture_extent;

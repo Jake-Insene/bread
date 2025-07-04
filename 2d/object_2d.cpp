@@ -1,5 +1,9 @@
 #include "2d/object_2d.h"
 
+#include "input/input.h"
+#include "scene/scene_manager.h"
+#include "2d/camera_2d.h"
+
 
 void Object2D::_bind_vtable(VTable&)
 {}
@@ -68,3 +72,16 @@ Transform2D Object2D::get_global_transform() const
     return data.transform;
 }
 
+Vector2 Object2D::get_local_mouse_position() const
+{
+    Camera2D* cam = SceneManager::get_camera_2d();
+    const Vector2 screen_pos = Input::get_mouse_position();
+    Vector2 local_pos = screen_pos;
+
+    if (cam)
+    {
+        local_pos = cam->get_camera_transform() * local_pos;
+    }
+
+    return local_pos;
+}

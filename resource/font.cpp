@@ -46,16 +46,12 @@ void Font::load_from_file(StringView file_path, i32 font_size)
     FT_New_Memory_Face(library, content.ptr(), content.len, 0, &face);
     FT_Set_Pixel_Sizes(face, font_size, font_size);
 
-    u32 padding = 2;
-    u32 row = 0;
-    u32 column = padding;
-
     data.glyphs.resize(MinimumGlyphCount);
     for (FT_ULong glyph_index = 27; glyph_index < Font::MinimumGlyphCount; glyph_index++)
     {
         Glyph& glyph = data.glyphs[glyph_index];
 
-        FT_Error error = FT_Load_Char(face, glyph_index, FT_LOAD_RENDER);
+        FT_Load_Char(face, glyph_index, FT_LOAD_RENDER);
         glyph.advance.x = face->glyph->advance.x >> 6;
         glyph.advance.y = face->glyph->advance.y >> 6;
 

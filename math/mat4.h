@@ -92,14 +92,6 @@ struct [[nodiscard]] Mat4
         matrix[3] = _30;
     }
 
-    constexpr Mat4(const Mat4& m)
-    {
-		matrix[0] = m[0];
-		matrix[1] = m[1];
-		matrix[2] = m[2];
-		matrix[3] = m[3];
-    }
-
     constexpr Vector4& operator[](usize index)
     {
         DebugAssert(index < 4, "index can only be 0, 1, 2 or 3");

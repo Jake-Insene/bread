@@ -61,103 +61,122 @@ void SceneManager::shutdown()
 void SceneManager::change_scene(Object* new_scene)
 {
     DebugAssert(new_scene != nullptr, "new scene can't be null");
-    if(data.current_scene)
+    DebugAssert(data.change_scene.requested == false, "a change scene was already requested");
+
+    if (data.current_scene == nullptr)
     {
-        ObjectCallRef(data.current_scene, exit);
-        DestroyObject(data.current_scene);
+        data.current_scene = new_scene;
+        ObjectCallRef(data.current_scene, enter);
+        return;
     }
-    
-    data.current_scene = new_scene;
-    ObjectCallRef(data.current_scene, enter);
+
+    data.change_scene.requested = true;
+    data.change_scene.new_scene = new_scene;
 }
 
 void SceneManager::step()
 {
-    if(data.current_scene)
+    if (data.current_scene == nullptr)
+        return;
+
+    _handle_change_scene();
+
+    f64 current = Time::get_time();
+    data.delta_time = current - data.last_time;
+    data.last_time = current;
+
+    data.time_acum += data.delta_time;
+    if (data.time_acum >= 1.0)
     {
-        f64 current = Time::get_time();
-        data.delta_time = current - data.last_time;
-        data.last_time = current;
-        
-        data.time_acum += data.delta_time;
-        if(data.time_acum >= 1.0)
-        {
-            data.fps_counter = data.fps_acum;
-            Engine::data.fps = data.fps_counter;
-            Log::info("FPS: {i}, Avg Frame Time: {d}", data.fps_counter, data.delta_time);
-            
-            data.fps_acum = 0;
-            data.time_acum = 0;
-        }
-        
-        data.current_scene->handle_internal_update(data.delta_time);
-        data.current_scene->handle_update(data.delta_time);
-        
-        Physics2D::step(data.delta_time);
+        data.fps_counter = data.fps_acum;
+        Engine::data.fps = data.fps_counter;
+        Log::info("FPS: {i}, Avg Frame Time: {d}", data.fps_counter, data.delta_time);
 
-        Graphics::add_cmd(
-            RenderCommand
-            {
-                .type = RenderCommand::BIND_RENDER_TARGET,
-                .bind = 
-                {
-                    .source_id = data.display_target.render_target_id,
-                },
-            }
-        );
-
-        Graphics::add_cmd(
-            RenderCommand
-            {
-                .type = RenderCommand::CLEAR_RENDER_TARGET,
-                .clear =
-                {
-                    .rid = data.display_target.render_target_id,
-                    .color = data.background_color,
-                },
-            }
-        );
-
-        if(data.current_camera)
-        {
-            Graphics::add_cmd(
-                RenderCommand
-                {
-                    .type = RenderCommand::SET_SCENE_TRANSFORM,
-                    .transform = data.current_camera->get_camera_transform()
-                }
-            );
-        }
-        else
-        {
-            Graphics::add_cmd(
-                RenderCommand
-                {
-                    .type = RenderCommand::SET_SCENE_TRANSFORM,
-                    .transform = Transform2D()
-                }
-            );
-        }
-
-        data.current_scene->handle_render();
-        
-        Graphics::render();
-        Graphics::present();
-        
-        data.fps_acum++;
-
-        for (auto& it : data.queue_frees)
-        {
-            it.second.parent->remove_child(it.second.child);
-        }
-
-        data.queue_frees.clear();
+        data.fps_acum = 0;
+        data.time_acum = 0;
     }
+
+    data.current_scene->handle_internal_update(data.delta_time);
+    data.current_scene->handle_update(data.delta_time);
+
+    Physics2D::step(data.delta_time);
+
+    Graphics::add_cmd(
+        RenderCommand
+        {
+            .type = RenderCommand::BIND_RENDER_TARGET,
+            .bind =
+            {
+                .source_id = data.display_target.render_target_id,
+            },
+        }
+        );
+
+    Graphics::add_cmd(
+        RenderCommand
+        {
+            .type = RenderCommand::CLEAR_RENDER_TARGET,
+            .clear =
+            {
+                .rid = data.display_target.render_target_id,
+                .color = data.background_color,
+            },
+        }
+        );
+
+    if (data.current_camera)
+    {
+        Graphics::add_cmd(
+            RenderCommand
+            {
+                .type = RenderCommand::SET_SCENE_TRANSFORM,
+                .transform = data.current_camera->get_camera_transform()
+            }
+        );
+    }
+    else
+    {
+        Graphics::add_cmd(
+            RenderCommand
+            {
+                .type = RenderCommand::SET_SCENE_TRANSFORM,
+                .transform = Transform2D()
+            }
+        );
+    }
+
+    data.current_scene->handle_render();
+
+    Graphics::render();
+    Graphics::present();
+
+    data.fps_acum++;
+
+    for (auto& it : data.queue_frees)
+    {
+        it.second.parent->remove_child(it.second.child);
+    }
+
+    data.queue_frees.clear();
 }
 
 void SceneManager::set_camera_2d(Camera2D* camera)
 {
     data.current_camera = camera;
+}
+
+void SceneManager::_handle_change_scene()
+{
+    if (data.change_scene.requested == false)
+        return;
+
+    data.change_scene.requested = false;
+    ObjectCallRef(data.current_scene, exit);
+    DestroyObject(data.current_scene);
+
+    data.current_scene = data.change_scene.new_scene;
+    data.change_scene.new_scene = nullptr;
+    ObjectCallRef(data.current_scene, enter);
 }
 
 Vector2 SceneManager::_screen_make_local_to_canvas(const Vector2& pos)

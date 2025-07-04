@@ -51,6 +51,8 @@ struct File
     void put(u8 value);
     void read(Slice<u8> bytes);
 
+    void flush();
+
     template<usize N, typename... TArgs>
     void print(const char(&fmt_str)[N], TArgs... args);
 

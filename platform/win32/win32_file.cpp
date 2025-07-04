@@ -3,6 +3,7 @@
 #include "mem/allocator.h"
 #include "platform/platform_header.h"
 
+
 Slice<u8> File::read_all(mem::Allocator& allocator, StringView path)
 {
     char tmp[256] = {};
@@ -98,13 +99,13 @@ void File::destroy()
 	if (handle == 0) 
 		return;
 
-	CloseHandle((HANDLE)handle);
+	CloseHandle(HANDLE(handle));
 }
 
 void File::write(const Slice<const u8> bytes)
 {
 	DebugAssert(handle != 0, "invalid file handler");
-	WriteFile((HANDLE)handle, bytes.ptr(), (DWORD)bytes.len, 0, 0);
+	(void)WriteFile(HANDLE(handle), bytes.ptr(), (DWORD)bytes.len, 0, 0);
 }
 
 void File::put(u8 value)
@@ -115,6 +116,12 @@ void File::put(u8 value)
 void File::read(Slice<u8> bytes)
 {
 	DebugAssert(handle != 0, "invalid file handler");
-	ReadFile((HANDLE)handle, bytes.ptr(), (DWORD)bytes.len, 0, 0);
+	(void)ReadFile(HANDLE(handle), bytes.ptr(), (DWORD)bytes.len, 0, 0);
 }
 
+
+void File::flush()
+{
+	DebugAssert(handle != 0, "invalid file handler");
+	(void)FlushFileBuffers(HANDLE(handle));
+}

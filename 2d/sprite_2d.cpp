@@ -4,25 +4,25 @@
 #include "resource/resource_manager.h"
 
 
-void Sprite2D::init(const CreateInfo&)
+void Sprite2D::enter()
 {
     mark(MARK_RENDER);
 }
 
 void Sprite2D::render()
 {
-    if(data.texture)
-    {
-        Vector2 texture_extent = Vector2(data.texture->get_size());
-        Graphics2D::draw_texture(
-            get_global_transform(),
-            texture_extent,
-            texture_extent,
-            src_rect, data.texture->texture_id,
-            color,
-            (RenderCommand::SpriteFlags)_get_render_flags()
-        );
-    }
+    if (data.texture == nullptr)
+        return;
+    
+    Vector2 texture_extent = Vector2(data.texture->get_size());
+    Graphics2D::draw_texture(
+        get_global_transform(),
+        texture_extent,
+        texture_extent,
+        src_rect, data.texture->texture_id,
+        color,
+        (RenderCommand::SpriteFlags)_get_render_flags()
+    );
 }
 
 void Sprite2D::set_texture(Texture2D* new_texture)

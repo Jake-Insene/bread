@@ -13,20 +13,20 @@ void Timer::internal_update(f64 delta)
 
     if(data.acumulator >= duration)
     {
+        unmark(MARK_INTERNAL_UPDATE);
+
         if(timeout.has_func())
             timeout.call();
      
         if(data.loop)
             data.acumulator = 0;
-        else
-            unmark(MARK_INTERNAL_UPDATE);
     }
 }
 
 
 void Timer::start()
 {
-    if(!data.loop)
+    if(data.loop == false)
     {
         mark(MARK_INTERNAL_UPDATE);
     }
@@ -40,13 +40,13 @@ void Timer::stop()
 
 void Timer::set_loop(bool enable)
 {
-    if (data.loop != enable)
-    {
-        data.loop = enable;
+    if (data.loop == enable)
+        return;
 
-        if (enable)
-            mark(MARK_INTERNAL_UPDATE);
-        else
-            unmark(MARK_INTERNAL_UPDATE);
-    }
+    data.loop = enable;
+
+    if (enable)
+        mark(MARK_INTERNAL_UPDATE);
+    else
+        unmark(MARK_INTERNAL_UPDATE);
 }

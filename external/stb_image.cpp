@@ -42,7 +42,6 @@ static void _free(void* ptr)
 #define STBI_NO_LINEAR
 #define STBI_NO_HDR
 #define STBI_ASSERT(x) DebugAssert(x, "stb_image assertion fail")
-#define abs math::abs
 
 #include <memory>
 #define _lrotl(x, y) (((x) << (y)) | ((x) >> (-(y) & 31)))

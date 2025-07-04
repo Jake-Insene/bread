@@ -1,6 +1,6 @@
 #include "platform/android/android_egl.h"
 
-#include "core/array.h"
+#include "collections/array.h"
 #include "platform/android/android_display.h"
 #include "platform/android/android_engine.h"
 #include "scene/scene_manager.h"

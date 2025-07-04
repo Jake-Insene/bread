@@ -1,8 +1,8 @@
 #include "debug/debug.h"
 #include "scene/scene_manager.h"
 #include "platform/android/android_engine.h"
-
 #include "platform/android/android_mapped_keycodes.h"
+
 
 struct SaveState
 {
@@ -26,7 +26,7 @@ static int32_t engine_handle_input(android_app*, AInputEvent* event)
             i32 action_pointer = AMotionEvent_getAction(event);
             i32 action = action_pointer & AMOTION_EVENT_ACTION_MASK;
             usize pointer_count = AMotionEvent_getPointerCount(event);
-            for (size_t p = 0; p < pointer_count; p++)
+            for (usize p = 0; p < pointer_count; p++)
             {
                 InputEventTouch e = {};
 
@@ -44,7 +44,7 @@ static int32_t engine_handle_input(android_app*, AInputEvent* event)
 
                 Engine::handle_input(e);
 
-                Debug::info("action pointer: %08X, action: %d, pointer: %d", action_pointer, action, p);
+                DebugInfo("action pointer: {i}, action: {i}, pointer: {u}", action_pointer, action, p);
             }
         }
     }
@@ -61,16 +61,12 @@ static int32_t engine_handle_input(android_app*, AInputEvent* event)
     return 0;
 }
 
-static void engine_handle_cmd(android_app* app, int32_t cmd)
+static void engine_handle_cmd(android_app*, int32_t cmd)
 {
     switch (cmd) {
     case APP_CMD_SAVE_STATE:
         Log::info("Saving state...");
         //save_state.last_scene = SceneManager::current_scene->klass;
-
-        app->savedState = malloc(sizeof(SaveState));
-        *((SaveState*)app->savedState) = save_state;
-        app->savedStateSize = sizeof(SaveState);
         break;
     case APP_CMD_INIT_WINDOW:
         // The window is being shown, get it ready.
@@ -101,11 +97,26 @@ void android_main(android_app* app)
     AndroidEngine::data.asset_manager = app->activity->assetManager;
     app->onAppCmd = engine_handle_cmd;
     app->onInputEvent = engine_handle_input;
-    
-    Debug::info("Internal data path: %s", app->activity->internalDataPath);
-    Debug::info("External data path: %s", app->activity->externalDataPath);
-    Debug::info("Obb path: %s", app->activity->obbPath);
-    
+    AConfiguration_setOrientation(app->config, ACONFIGURATION_ORIENTATION_LAND);
+
+    StringView internal_data_path = StringView(
+            app->activity->internalDataPath,
+            __string_len(app->activity->internalDataPath)
+    );
+    DebugInfo("Internal data path: {v}", internal_data_path);
+
+    StringView external_data_path = StringView(
+            app->activity->externalDataPath,
+            __string_len(app->activity->externalDataPath)
+    );
+    DebugInfo("External data path: {v}", external_data_path);
+
+    StringView obb_path = StringView(
+            app->activity->obbPath,
+            __string_len(app->activity->obbPath)
+    );
+    DebugInfo("Obb path: {v}", obb_path);
+
     AndroidEngine::initialize();
 
     while (!app->destroyRequested) {

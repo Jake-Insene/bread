@@ -17,5 +17,25 @@ void Physics2D::initialize(const mem::Allocator& allocator, Physics2D::DriverTyp
     }
 
     vtable.initialize(allocator);
+
+    data.properties = StringMap<PropertyValue>::with_size(data.allocator, 4);
+    data.properties.insert("/debug_draw", Property::Bool(false));
+}
+
+void Physics2D::shutdown()
+{
+    vtable.shutdown();
+
+    data.properties.destroy();
+}
+
+void Physics2D::set_property(StringView property_name, PropertyValue value)
+{
+    data.properties.insert(property_name, value);
+}
+
+PropertyValue Physics2D::get_property(StringView property_name)
+{
+    return data.properties.get(property_name);
 }
 

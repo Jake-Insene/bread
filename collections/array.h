@@ -164,4 +164,6 @@ struct [[nodiscard]] Array
     }
     
     Slice<T> slice() { return Slice(items.items, count); }
+    Slice<T> slice() const { return Slice(items.items, count); }
+    Slice<T> get_slice(usize start, usize num) const { return Slice(items.items + start, num); }
 };

@@ -40,10 +40,16 @@ struct [[nodiscard]] Rect2DT
 
     [[nodiscard]] constexpr bool is_colliding(const Rect2DT& r)
     {
-        return position.x < r.position.x + r.size.width &&
-               position.x + size.width > r.position.x &&
-               position.y < r.position.y - r.size.height &&
-               position.y - size.height <= r.position.y;
+        const Vector2T<T> min = position;
+        const Vector2T<T> max = position + Vector2T(size.x, -size.y);
+
+        const Vector2T<T> min_r = r.position;
+        const Vector2T<T> max_r = r.position + Vector2T(r.size.x, -r.size.y);
+
+        return min.x < max_r.x &&
+            max.x > min_r.x &&
+            min.y > max_r.y &&
+            max.y < min_r.x;
     }
 
 };

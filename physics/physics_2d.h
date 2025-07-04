@@ -1,10 +1,15 @@
 #pragma once
 #include "core/header.h"
+#include "collections/event.h"
+#include "collections/property.h"
+#include "collections/string_map.h"
 #include "mem/allocator.h"
-#include "math/vec2.h"
+#include "physics/shape_2d.h"
 
 
-struct Body2D;
+struct Object;
+struct Object2D;
+
 
 struct Physics2D
 {
@@ -48,15 +53,11 @@ struct Physics2D
         COLLISION_MASK_15 = Bit(15),
 
         MAX_COLLISION_MASKS = 16,
+        DEFAULT_COLLISION_MASK = COLLISION_MASK_0,
     };
 
     using CollisionMask = u32;
-
-    enum Physics2DSetting
-    {
-        NONE = 0,
-        DEBUG_DRAW,
-    };
+    using EventOnCollide = Event<void(*)(void*, Object2D*)>;
 
     struct VTable
     {
@@ -65,10 +66,14 @@ struct Physics2D
 
         VTFunc(void, step, f32);
 
-        VTFunc(BodyID, create_body, Body2D*);
+        VTFunc(BodyID, create_body, Object2D*);
         VTFunc(void, destroy_body, BodyID);
 
-        VTFunc(void, body_shape_as_box, BodyID, const Vector2&);
+        VTFunc(void, body_add_shape, BodyID, const Shape2D&);
+        VTFunc(void, body_remove_shape, BodyID, usize);
+        VTFunc(usize, body_get_shape_count, BodyID);
+        VTFunc(Shape2D, body_get_shape, BodyID, usize);
+
         VTFunc(void, body_set_type, BodyID, BodyType);
         VTFunc(void, body_set_velocity, BodyID, const Vector2&);
         VTFunc(Vector2, body_get_velocity, BodyID);
@@ -84,25 +89,32 @@ struct Physics2D
         VTFunc(CollisionMask, body_get_residence_mask, BodyID);
         VTFunc(void, body_set_collision_mask, BodyID, CollisionMask);
         VTFunc(CollisionMask, body_get_collision_mask, BodyID);
+        VTFunc(void, body_set_on_collide, BodyID, void*, EventOnCollide);
     };
 
     struct InternalData
     {
         mem::Allocator allocator;
+
+        StringMap<PropertyValue> properties;
     };
 
     static inline VTable vtable;
     static inline InternalData data{};
 
     static void initialize(const mem::Allocator& allocator, DriverType driver);
-    VTFuncDefS(shutdown);
+    static void shutdown();
     
     VTFuncDefArg1S(step, f32);
     
-    VTFuncDefArg1RetS(BodyID, create_body, Body2D*);
+    VTFuncDefArg1RetS(BodyID, create_body, Object2D*);
     VTFuncDefArg1S(destroy_body, BodyID);
 
-    VTFuncDefArg2S(body_shape_as_box, BodyID, const Vector2&);
+    VTFuncDefArg2S(body_add_shape, BodyID, const Shape2D&);
+    VTFuncDefArg2S(body_remove_shape, BodyID, usize);
+    VTFuncDefArg1RetS(usize, body_get_shape_count, BodyID);
+    VTFuncDefArg2RetS(Shape2D, body_get_shape, BodyID, usize);
+
     VTFuncDefArg2S(body_set_type, BodyID, BodyType);
     VTFuncDefArg2S(body_set_velocity, BodyID, const Vector2&);
     VTFuncDefArg1RetS(Vector2, body_get_velocity, BodyID);
@@ -118,4 +130,10 @@ struct Physics2D
     VTFuncDefArg1RetS(CollisionMask, body_get_residence_mask, BodyID);
     VTFuncDefArg2S(body_set_collision_mask, BodyID, CollisionMask);
     VTFuncDefArg1RetS(CollisionMask, body_get_collision_mask, BodyID);
+    VTFuncDefArg3S(body_set_on_collide, BodyID, void*, EventOnCollide);
+
+    // Properties
+
+    static void set_property(StringView property_name, PropertyValue value);
+    static PropertyValue get_property(StringView property_name);
 };

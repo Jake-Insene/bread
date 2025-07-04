@@ -126,7 +126,7 @@ void ResourceManager::shutdown()
 }
 
 Resource* ResourceManager::load_resource(ResourceType type,
-    ResourceTypeSpecification spec, StringView path)
+    ResourceTypeSpecification, StringView path)
 {
     switch (type)
     {
@@ -284,6 +284,6 @@ TileSet* ResourceManager::create_tile_set(StringView name, Vector2I tile_size)
     TileSet* tile_set = create_resource<TileSet>();
     data.resources.insert(name, tile_set);
     tile_set->path.set("local");
-    tile_set->tile_size = tile_size;
+    tile_set->set_tile_size(tile_size);
     return tile_set;
 }

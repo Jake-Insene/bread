@@ -2,12 +2,14 @@ project("bread")
 
 set(BREAD_BUILD_DEFINITIONS "")
 
+set(BREAD_DEBUG_DEFINITIONS "-DDEBUG -DSHOW_DEBUG_INFO -DENABLE_DEBUG_OPTIONS")
+
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DDEBUG -DSHOW_DEBUG_INFO")
+    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} ${BREAD_DEBUG_DEFINITIONS})
 elseif(${CMAKE_BUILD_TYPE} STREQUAL "Release")
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DRELEASE")
 elseif(${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
-    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DDEBUG -DSHOW_DEBUG_INFO")
+    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} ${BREAD_DEBUG_DEFINITIONS})
 endif()
 
 # Dependencies
@@ -97,6 +99,7 @@ if(ANDROID)
         platform/android/android_file.cpp
         platform/android/android_log.cpp
         platform/android/android_main.cpp
+        platform/android/android_math.cpp
         platform/android/android_os.cpp
         platform/android/android_page_allocator.cpp
         platform/android/android_time.cpp
