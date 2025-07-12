@@ -14,12 +14,10 @@ void Texture::destroy()
     Resource::destroy();
 }
 
-
 Vector2I Texture::get_size() const
 {
     return Graphics::texture_get_size(texture_id);
 }
-
 
 void Texture2D::init()
 {

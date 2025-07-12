@@ -90,7 +90,7 @@ void SceneManager::step()
     {
         data.fps_counter = data.fps_acum;
         Engine::data.fps = data.fps_counter;
-        Log::info("FPS: {i}, Avg Frame Time: {d}", data.fps_counter, data.delta_time);
+        Log::info("FPS: {}, Avg Frame Time: {}", data.fps_counter, data.delta_time);
 
         data.fps_acum = 0;
         data.time_acum = 0;

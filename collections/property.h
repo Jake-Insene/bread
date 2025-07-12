@@ -74,6 +74,27 @@ struct [[nodiscard]] PropertyValue
 
 		return T();
 	}
+
+	template<typename T>
+	constexpr void set(T new_value)
+	{
+		if constexpr (IsSame<T, bool>)
+		{
+			storage.b = new_value;
+		}
+		else if constexpr (IsSigned<T> && IsInteger<T>)
+		{
+			storage.i = new_value;
+		}
+		else if constexpr (IsUnsigned<T> && IsInteger<T>)
+		{
+			storage.u = new_value;
+		}
+		else if constexpr (IsFloatingPoint<T>)
+		{
+			storage.f = new_value;
+		}
+	}
 };
 
 struct Property

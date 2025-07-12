@@ -9,17 +9,16 @@ struct [[nodiscard]] Array
 {
     static constexpr usize DefaultCapacity = 4;
     
-    mem::Allocator allocator{};
-    Slice<T> items{};
-    usize count{};
+    mem::Allocator allocator;
+    Slice<T> items;
+    usize count;
     
     static Array with_allocator(const mem::Allocator& allocator)
     {
-        auto items = allocator.array<T>(DefaultCapacity);
         return Array
         {
             .allocator = allocator,
-            .items = items,
+            .items = allocator.array<T>(DefaultCapacity),
             .count = 0,
         };
     }
@@ -70,9 +69,11 @@ struct [[nodiscard]] Array
     [[nodiscard]] constexpr T* begin() { return items.items; }
     [[nodiscard]] constexpr const T* begin() const { return items.items; }
     [[nodiscard]] constexpr T* end() { return items.items + count; }
-    [[nodiscard]]constexpr const T* end() const { return items.items + count; }
+    [[nodiscard]] constexpr const T* end() const { return items.items + count; }
     
     // funcs
+
+    [[nodiscard]] bool is_empty() const { return count > 0; }
     
     void ensure_capacity(const usize required_capacity)
     {

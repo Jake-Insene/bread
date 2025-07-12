@@ -44,7 +44,7 @@ bool Image::load(StringView path)
     }
     else
     {
-        Fatal("invalid channel count {i}", channels);
+        Fatal("invalid channel count {}", channels);
     }
     
     pixels.len = size.width * size.height * channels;

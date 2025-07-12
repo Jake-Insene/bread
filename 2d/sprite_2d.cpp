@@ -28,6 +28,8 @@ void Sprite2D::render()
 void Sprite2D::set_texture(Texture2D* new_texture)
 {
     data.texture = new_texture;
+    if (data.texture == nullptr)
+        return;
 
     src_rect.size = Vector2(new_texture->get_size());
 }

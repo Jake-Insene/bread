@@ -542,11 +542,6 @@ void GLESCommandProcessor::render()
     {
         end_sprite_batch();
     }
-
-    if (data.canvas_element_batch.count > 0)
-    {
-        end_canvas_element_batch();
-    }
     
     if(data.quad_batch.count > 0)
     {
@@ -556,6 +551,11 @@ void GLESCommandProcessor::render()
     if(data.primitive_batch.count > 0)
     {
         end_primitive_batch();
+    }
+
+    if (data.canvas_element_batch.count > 0)
+    {
+        end_canvas_element_batch();
     }
   
     data.commands.clear();

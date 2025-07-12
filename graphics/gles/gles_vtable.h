@@ -12,7 +12,7 @@ inline void* (*platform_get_proc)(const char* name) = nullptr;
 
 #define REQUIRED_LOAD(name) \
     gl.name = (decltype(gl.name))platform_get_proc(#name); \
-    FailOn(gl.name == nullptr, "Couldn't load the function {v}", StringView(#name));
+    FailOn(gl.name == nullptr, "Couldn't load the function {}", StringView(#name));
 
 struct GLESVTable
         {

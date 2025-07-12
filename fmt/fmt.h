@@ -1,68 +1,9 @@
 #pragma once
+#include "fmt/fmt_types.h"
 
-struct StringView;
-struct String;
 
 namespace fmt
 {
-
-enum class FormatType
-{
-	Unknown = 0,
-	Signed,
-	Unsigned,
-	Float,
-	Double,
-	Pointer,
-	String,
-	StringView,
-	CChars,
-};
-
-template<typename T>
-struct FormatArgument
-{
-	FormatType type;
-};
-
-
-template<typename T>
-inline constexpr FormatType __GetFormatType = ConditionalValue<
-	FormatType,
-	IsSigned<T>,
-	FormatType::Signed,
-
-	ConditionalValue<FormatType,
-		IsUnsigned<T>,
-		FormatType::Unsigned,
-
-	ConditionalValue<FormatType,
-		IsAnyOf<T, f32>,
-		FormatType::Float,
-
-	ConditionalValue < FormatType,
-		IsAnyOf<T, f64, long double>,
-		FormatType::Double,
-	
-	ConditionalValue<FormatType,
-		IsPointer<T> && !IsAnyOf<T, const char*, char*>,
-		FormatType::Pointer,
-				
-	ConditionalValue<FormatType,
-		IsAnyOf<T, StringView>,
-		FormatType::StringView,
-
-	ConditionalValue<FormatType,
-		IsAnyOf<T, String>,
-		FormatType::String,
-	
-	ConditionalValue<FormatType,
-		IsAnyOf<T, const char*, char*>,
-		FormatType::CChars,
-
-		FormatType::Unknown
->>>>>>>>;
-
 
 void __undef_function(...);
 
@@ -116,44 +57,11 @@ struct FormatString
 			if (chars[i] == '{')
 			{
 				fmt::__fail_compile_time_on(
-					i + 1 == len || type_index >= ArgumentCount || chars[i + 1] == '}',
+					i + 1 == len || type_index >= ArgumentCount || chars[i + 1] != '}',
 					"invalid string format"
 				);
 
 				char t = chars[i + 1];
-
-				switch (t)
-				{
-				case 'i': // Signed integer.
-					fmt::__fail_compile_time_on(ArgumentTypes[type_index] != FormatType::Signed, "typing inconsistency");
-					break;
-				case 'u': // Unsigned integer.
-					fmt::__fail_compile_time_on(ArgumentTypes[type_index] != FormatType::Unsigned, "typing inconsistency");
-					break;
-				case 'f': // Float
-					fmt::__fail_compile_time_on(ArgumentTypes[type_index] != FormatType::Float, "typing inconsistency");
-					break;
-				case 'd': // Double
-					fmt::__fail_compile_time_on(ArgumentTypes[type_index] != FormatType::Double, "typing inconsistency");
-					break;
-				case 'p': // Pointer
-					fmt::__fail_compile_time_on(ArgumentTypes[type_index] != FormatType::Pointer, "typing inconsistency");
-					break;
-				case 's': // String
-					fmt::__fail_compile_time_on(ArgumentTypes[type_index] != FormatType::String, "typing inconsistency");
-					break;
-				case 'v': // StringView
-					fmt::__fail_compile_time_on(ArgumentTypes[type_index] != FormatType::StringView, "typing inconsistency");
-					break;
-				case 'C': // CChars
-					fmt::__fail_compile_time_on(ArgumentTypes[type_index] != FormatType::CChars, "typing inconsistency");
-					break;
-				default:
-					fmt::__fail_compile_time_on(true, "unknown type format '{'");
-					break;
-				}
-
-				fmt::__fail_compile_time_on(i + 2 == len || chars[i + 2] != '}', "invalid string format");
 
 				i += 2;
 				type_index++;
@@ -180,7 +88,7 @@ struct FormatString
 			if (chars[i] == '{')
 			{
 				intervals_l[interval_index] = { start, i - start };
-				i += 3;
+				i += 2;
 
 				start = i;
 				interval_index++;
@@ -209,14 +117,16 @@ void format(const io::Writer& writer, FormatString<TypeIdentity<TArgs>...> fmt, 
 
 
 #include "collections/string_view.h"
+#include "io/writer.h"
+
+namespace fmt
+{
 
 template<typename... TArgs>
-StringView fmt::FormatString<TArgs...>::view() const
+StringView FormatString<TArgs...>::view() const
 {
 	return StringView(chars, len);
 }
-
-#include "io/writer.h"
 
 template<usize Base>
 inline constexpr bool IsValidBase = IsAnyOfValue<usize, Base, 2, 10, 16>;
@@ -242,9 +152,9 @@ inline void __format_integer(const io::Writer& writer, T arg)
 		ConditionalValue<usize,
 		Base == 10 && IsAnyOf<T, i8, u8>,
 		4U,
-		
+
 		sizeof(T) * 8
-	>>>>;
+		>>>>;
 
 	using Unsigned = MakeUnsigned<T>;
 	u8 buffer_storage[BufferStorageSize] = {};
@@ -272,11 +182,11 @@ inline void __format_integer(const io::Writer& writer, T arg)
 			}
 		}
 	}
-		break;
+	break;
 	case 16:
 	{
 		Unsigned u = arg < 0 ? Unsigned(-arg) : Unsigned(arg);
-		u32 hdigit_count = 0;
+		u32 hex_digit_count = 0;
 
 		static constexpr char HexChar[16] =
 		{
@@ -284,11 +194,11 @@ inline void __format_integer(const io::Writer& writer, T arg)
 		};
 		do
 		{
-			*--end = HexChar[u & 15];
+			*--end = HexChar[u & 0xF];
 			u >>= 4;
-			hdigit_count++;
+			hex_digit_count++;
 			buffer_index++;
-		} while (hdigit_count < (sizeof(T) * 8) / 4);
+		} while (hex_digit_count < (sizeof(T) * 8) / 4);
 
 		if constexpr (IsSigned<T>)
 		{
@@ -299,7 +209,7 @@ inline void __format_integer(const io::Writer& writer, T arg)
 			}
 		}
 	}
-		break;
+	break;
 	default:
 		break;
 	}
@@ -309,7 +219,7 @@ inline void __format_integer(const io::Writer& writer, T arg)
 
 inline void __format_float(const io::Writer& writer, f32 arg)
 {
-	__format_integer<10, i32>(writer, i32(arg));
+	__format_integer<10, i64>(writer, i64(arg));
 }
 
 template<typename T>
@@ -321,6 +231,10 @@ void __format_single_argument(const io::Writer& writer, T arg)
 		__format_integer<10, T>(writer, arg);
 	}
 	else if constexpr (type == fmt::FormatType::Float)
+	{
+		__format_float(writer, arg);
+	}
+	else if constexpr (type == fmt::FormatType::Double)
 	{
 		__format_float(writer, arg);
 	}
@@ -361,9 +275,9 @@ void __format_argument(const io::Writer& writer, const StringView view, fmt::For
 }
 
 template<typename... TArgs>
-void fmt::format(const io::Writer& writer, fmt::FormatString<TypeIdentity<TArgs>...> fmtstring, TArgs... args)
+void format(const io::Writer& writer, FormatString<TypeIdentity<TArgs>...> fmtstring, TArgs... args)
 {
-	using FString = fmt::FormatString<TypeIdentity<TArgs>...>;
+	using FString = FormatString<TypeIdentity<TArgs>...>;
 	StringView view = fmtstring.view();
 
 	if constexpr (FString::WriteIntervalCount == 1)
@@ -376,4 +290,5 @@ void fmt::format(const io::Writer& writer, fmt::FormatString<TypeIdentity<TArgs>
 	writer.write(new_line);
 }
 
+}
 

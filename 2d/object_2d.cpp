@@ -74,14 +74,16 @@ Transform2D Object2D::get_global_transform() const
 
 Vector2 Object2D::get_local_mouse_position() const
 {
-    Camera2D* cam = SceneManager::get_camera_2d();
+    const Camera2D* cam = SceneManager::get_camera_2d();
+    const Vector2 display_size = Vector2(SceneManager::get_display_target().get_size());
     const Vector2 screen_pos = Input::get_mouse_position();
-    Vector2 local_pos = screen_pos;
+    Vector2 local_pos = screen_pos - Vector2(display_size.x, -display_size.y) * 0.5f;
 
     if (cam)
     {
-        local_pos = cam->get_camera_transform() * local_pos;
+        local_pos = cam->get_global_transform() * local_pos;
     }
 
     return local_pos;
 }
+

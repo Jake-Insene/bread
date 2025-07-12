@@ -6,6 +6,7 @@
 namespace math::impl
 {
 
+// I don't know how this works.
 template<typename T>
 constexpr T atan2_approx(T x, T y)
 {

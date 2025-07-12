@@ -5,6 +5,7 @@
 namespace math::impl
 {
 
+// I don't know how this works.
 template<typename T>
 T cos_approx(T r)
 {

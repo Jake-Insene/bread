@@ -70,9 +70,9 @@ namespace gles
 
         Slice<u8> program_content = File::read_all(GLESDriver::get_allocator(), program_path);
         
-        StringView vsstring = {};
-        StringView fsstring = {};
-        parse_program(mem::from_bytes<char>(program_content), &vsstring, &fsstring);
+        StringView vs_string = {};
+        StringView fs_string = {};
+        parse_program(mem::from_bytes<char>(program_content), &vs_string, &fs_string);
         
         const char* sources[] =
         { 
@@ -93,8 +93,8 @@ namespace gles
         i32 status = GL_TRUE;
         char log[512] = {};
         
-        sources[source_count-1] = (const char*)vsstring.ptr();
-        lengths[source_count-1] = (GLint)vsstring.len;
+        sources[source_count-1] = (const char*)vs_string.ptr();
+        lengths[source_count-1] = (GLint)vs_string.len;
         
         u32 vs = gl.glCreateShader(GL_VERTEX_SHADER);
         gl.glShaderSource(vs, source_count, sources, lengths);
@@ -107,11 +107,11 @@ namespace gles
             gl.glGetShaderInfoLog(vs, 512, &len, log);
             StringView log_view{ log, (usize)len };
 
-            Fatal("Error compiling the vertex shader: '{v}':\n{v}", program_path, log_view);
+            Fatal("Error compiling the vertex shader: '{}':\n{}", program_path, log_view);
         }
         
-        sources[source_count-1] = (const char*)fsstring.ptr();
-        lengths[source_count-1] = (GLint)fsstring.len;
+        sources[source_count-1] = (const char*)fs_string.ptr();
+        lengths[source_count-1] = (GLint)fs_string.len;
         
         u32 fs = gl.glCreateShader(GL_FRAGMENT_SHADER);
         gl.glShaderSource(fs, source_count, sources, lengths);
@@ -124,7 +124,7 @@ namespace gles
             gl.glGetShaderInfoLog(fs, 512, &len, log);
             StringView log_view{ log, (usize)len };
 
-            Fatal("Error compiling the fragment shader: '{v}':\n{v}", program_path, log_view);
+            Fatal("Error compiling the fragment shader: '{}':\n{}", program_path, log_view);
         }
         
         u32 program = gl.glCreateProgram();
@@ -139,7 +139,7 @@ namespace gles
             gl.glGetProgramInfoLog(program, 512, &len, log);
             StringView log_view{ log, (usize)len };
 
-            Fatal("Error linking the shader program: '{v}':\n{v}", program_path, log_view);
+            Fatal("Error linking the shader program: '{}':\n{}", program_path, log_view);
         }
         
         gl.glDeleteShader(vs);

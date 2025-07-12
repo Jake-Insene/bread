@@ -57,7 +57,7 @@ file(GLOB ENGINE_SRC
 
     canvas/button.cpp
     canvas/canvas_object.cpp
-    canvas/control.cpp
+    canvas/canvas_sprite.cpp
     canvas/label.cpp
 
     2d/animated_sprite_2d.cpp

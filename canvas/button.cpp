@@ -28,7 +28,7 @@ void Button::render()
 
     Vector2 texture_extent = Vector2(current_texture->get_size());
     Graphics2D::draw_canvas_element(
-        get_transform(), texture_extent, get_size(),
+        get_global_transform(), texture_extent, get_size(),
         Rect2D(Vector2(), texture_extent), current_texture->texture_id,
         Color(255, 255, 255, 255), RenderCommand::FLAG_CANVAS_NONE
     );

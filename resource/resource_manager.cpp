@@ -186,7 +186,7 @@ Image* ResourceManager::load_image(StringView path)
         Image tmp_image{};
         if (!tmp_image.load(path))
         {
-            Fatal("Couldn't load the image '{v}'", path);
+            Fatal("Couldn't load the image '{}'", path);
         }
 
         image = create_resource<Image>();
@@ -214,7 +214,7 @@ Texture2D* ResourceManager::load_texture_2d(StringView path, const TextureLoadIn
         
         if(!image->load(path))
         {
-            Fatal("Couldn't load the image '{v}'", path);
+            Fatal("Couldn't load the image '{}'", path);
         }
     }
     
@@ -225,7 +225,7 @@ Texture2D* ResourceManager::load_texture_2d(StringView path, const TextureLoadIn
     }
     else
     {
-        DebugInfo("Loading the texture '{v}'...", path);
+        DebugInfo("Loading the texture '{}'...", path);
         tex = create_resource<Texture2D>();
         tex->path.set(path);
         
@@ -242,7 +242,7 @@ Texture2D* ResourceManager::load_texture_2d(StringView path, const TextureLoadIn
         Graphics::texture_set_image(tex->texture_id, image);
 
         data.cached_images.insert(image, tex);
-        DebugInfo("'{v}' was loaded correctly.", path);
+        DebugInfo("'{}' was loaded correctly.", path);
     }
     
     return tex;

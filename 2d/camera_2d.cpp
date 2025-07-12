@@ -31,22 +31,27 @@ void Camera2D::set_enable(bool _enable)
 
 Transform2D Camera2D::get_camera_transform()
 {
-    Transform2D camera_transform = get_global_transform();
-    f64 dt = SceneManager::get_delta_time();
+    const Transform2D camera_transform = get_global_transform();
+    const Vector2 camera_position = camera_transform.get_position();
+    const Vector2 camera_scale = camera_transform.get_scale();
+    const f64 dt = SceneManager::get_delta_time();
 
     if (data.position_mode == PositionMode::POSITION_CENTERED)
     {
-        Vector2 display_size = Vector2(SceneManager::get_display_target().get_size());
-        Vector2 centered_pos = camera_transform.get_position() - Vector2(display_size.x, -display_size.y) * 0.5;
-        data.old_pos = Vector2::lerp(data.old_pos, centered_pos, speed * dt);
+        const Vector2 display_size = Vector2(SceneManager::get_display_target().get_size());
+        Vector2 centered_pos = camera_position * camera_scale;
+        centered_pos -= (Vector2(display_size.x, -display_size.y) * 0.5);
+        
+        data.old_pos.x = math::lerp(data.old_pos.x, centered_pos.x, speed * dt);
+        data.old_pos.y = math::lerp(data.old_pos.y, centered_pos.y, speed * dt);
     }
     else
     {
-        data.old_pos = Vector2::lerp(data.old_pos, camera_transform.get_position(), speed * dt);
+        data.old_pos = Vector2::lerp(data.old_pos, camera_position, speed * dt);
     }
 
     Transform2D transform;
+    transform.set_scale(camera_scale);
     transform.translate(data.old_pos);
-    transform.set_scale(camera_transform.get_scale());
     return transform;
 }

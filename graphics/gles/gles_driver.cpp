@@ -19,13 +19,13 @@ static inline void debug_callback(
     switch(severity)
     {
     case GL_DEBUG_SEVERITY_LOW:
-        Log::info("GLInfo: {v}\n", msg);
+        Log::info("GLInfo: {}\n", msg);
         break;
     case GL_DEBUG_SEVERITY_MEDIUM:
-        Log::warning("GLWarn: {v}\n", msg);
+        Log::warning("GLWarn: {}\n", msg);
         break;
     case GL_DEBUG_SEVERITY_HIGH:
-        Log::error("GLError: {v}\n", msg);
+        Log::error("GLError: {}\n", msg);
         break;
     default:
         break;
@@ -61,7 +61,7 @@ Graphics::VTable GLESDriver::get_vtable()
 
 void GLESDriver::initialize(const mem::Allocator& allocator)
 {
-    DebugInfo("Initializing renderer...");
+    GLESDebugInfo("Initializing renderer...");
     data.allocator = allocator;
 
     GLESMemoryAllocator::initialize(allocator);
@@ -78,7 +78,7 @@ void GLESDriver::initialize(const mem::Allocator& allocator)
 
 void GLESDriver::shutdown()
 {
-    DebugInfo("Shutting down renderer...");
+    GLESDebugInfo("Shutting down renderer...");
     GLESCommandProcessor::shutdown();
     GLESMemoryAllocator::shutdown();
     EGL::shutdown();
@@ -92,7 +92,7 @@ void GLESDriver::recreate()
     GLESCommandProcessor::recreate_window_transform(size);
 
     gl.glViewport(0, 0, size.x, size.y);
-    DebugInfo("Viewport: W={i} H={i}", size.x, size.y);
+    GLESDebugInfo("Viewport: W={} H={}", size.x, size.y);
 }
 
 void GLESDriver::destroy()
@@ -149,16 +149,16 @@ void GLESDriver::_init_context()
     for (auto name : opengl_info)
     {
         const char* info = (const char*)gl.glGetString(name);
-        DebugInfo("OpenGL Info: {C}", info);
+        GLESDebugInfo("OpenGL Info: {}", info);
     }
 
     GLint num_extensions = 0;
     gl.glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
-    DebugInfo("OpenGL Extensions: {i}", num_extensions);
+    GLESDebugInfo("OpenGL Extensions: {}", num_extensions);
     for (GLint i = 0; i < num_extensions; i++)
     {
         const char* extension = (const char*)gl.glGetStringi(GL_EXTENSIONS, i);
-        DebugInfo("{C}", extension);
+        GLESDebugInfo("{}", extension);
     }
 
 #if DEBUG
@@ -171,8 +171,8 @@ void GLESDriver::_init_context()
     }
 #endif
 
-    DebugInfo("Texture Units: {i}", data.limits.max_texture_units);
-    DebugInfo("Viewport: W={i} H={i}", size.x, size.y);
+    GLESDebugInfo("Texture Units: {}", data.limits.max_texture_units);
+    GLESDebugInfo("Viewport: W={} H={}", size.x, size.y);
 #endif
     gl.glViewport(0, 0, size.x, size.y );
 

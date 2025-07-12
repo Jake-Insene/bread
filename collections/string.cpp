@@ -74,6 +74,12 @@ void String::resize(usize new_size)
     }
 }
 
+void String::add(StringView str)
+{
+    resize(count + str.len);
+    mem::copy(chars.add(count), str);
+}
+
 bool String::equals(StringView str) const
 {
     return StringView(chars.ptr(), count).equals(str);
@@ -89,8 +95,46 @@ StringView String::view()
     return StringView{chars.ptr(), count};
 }
 
-void String::add(StringView str)
+void String::_set_from_signed(i64 integer)
 {
-    resize(count + str.len);
-    mem::copy(chars.add(count), str);
+    // Enough for signed 64 bits numbers
+    static constexpr usize BufferSize = 21;
+    u8 buffer_storage[BufferSize] = {};
+    auto end = buffer_storage + BufferSize;
+    usize buffer_index = 0;
+
+    u64 u = integer < 0 ? u64(-integer) : u64(integer);
+    do
+    {
+        *--end = ('0' + u % 10);
+        u /= 10;
+        buffer_index++;
+    } while (u != 0);
+
+    if (integer < 0)
+    {
+        *--end = '-';
+        buffer_index++;
+    }
+
+    set(StringView((char*)buffer_storage + (BufferSize - buffer_index), buffer_index));
+}
+
+void String::_set_from_unsigned(u64 integer)
+{
+    // Enough for unsigned 64 bits numbers
+    static constexpr usize BufferSize = 21;
+    u8 buffer_storage[BufferSize] = {};
+    auto end = buffer_storage + BufferSize;
+    usize buffer_index = 0;
+
+    u64 u = integer < 0 ? u64(-integer) : u64(integer);
+    do
+    {
+        *--end = ('0' + u % 10);
+        u /= 10;
+        buffer_index++;
+    } while (u != 0);
+ 
+    set(StringView((char*)buffer_storage, buffer_index));
 }

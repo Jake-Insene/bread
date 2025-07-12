@@ -98,11 +98,11 @@ struct [[nodiscard]] HashMap
 		explicit operator bool() const { return entry != nullptr; }
     };
     
-    mem::Allocator allocator{};
-    Slice<MapEntry*> entries{};
-    usize count = 0;
-    MapEntry* first = nullptr;
-    MapEntry* last = nullptr;
+    mem::Allocator allocator;
+    Slice<MapEntry*> entries;
+    usize count;
+    MapEntry* first;
+    MapEntry* last;
     
     static HashMap<K, V> with_allocator(const mem::Allocator& allocator)
     {

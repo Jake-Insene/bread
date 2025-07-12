@@ -29,7 +29,7 @@ void Label::render()
 		const Font::Glyph& glyph = font->data.glyphs[character];
 		const Vector2 advance = Vector2(glyph.advance) * scale;
 
-		if (character == ' ')
+		if (character == ' ' || character == '\0')
 		{
 			transform.translate(Vector2(advance.x, 0));
 			continue;

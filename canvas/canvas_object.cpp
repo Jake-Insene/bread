@@ -14,11 +14,12 @@ void CanvasObject::init(const CreateInfo&)
 {
     mark(MARK_RENDER);
     mark(MARK_HANDLE_EVENT);
+    mark(MARK_CANVAS);
 }
 
 void CanvasObject::enter()
 {
-    if (get_parent() && !get_parent()->has_mark(MARK_CANVAS))
+    //if (get_parent() && !get_parent()->has_mark(MARK_CANVAS))
     {
         SceneManager::_add_root_canvas(this);
     }

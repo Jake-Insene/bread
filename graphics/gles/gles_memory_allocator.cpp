@@ -103,9 +103,9 @@ void GLESMemoryAllocator::initialize(const mem::Allocator& allocator)
 
 void GLESMemoryAllocator::shutdown()
 {
-    DebugInfo(
+    GLESDebugInfo(
         "Graphics:\n"
-        "\tCurrent Allocated bytes: {u}",
+        "\tCurrent Allocated bytes: {}",
         data.allocated_bytes
     );
 
