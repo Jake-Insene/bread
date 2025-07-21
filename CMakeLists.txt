@@ -1,7 +1,7 @@
 project("bread")
 
 set(BREAD_BUILD_DEFINITIONS "")
-
+set(BREAD_ENGINE_ASSET_DIRS "${CMAKE_SOURCE_DIR}/assets")
 set(BREAD_DEBUG_DEFINITIONS "-DDEBUG -DSHOW_DEBUG_INFO -DENABLE_DEBUG_OPTIONS")
 
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
@@ -59,6 +59,7 @@ file(GLOB ENGINE_SRC
     canvas/canvas_object.cpp
     canvas/canvas_sprite.cpp
     canvas/label.cpp
+    canvas/progress_bar.cpp
 
     2d/animated_sprite_2d.cpp
     2d/camera_2d.cpp
