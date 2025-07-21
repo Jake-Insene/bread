@@ -1,5 +1,4 @@
 #pragma  once
-
 #include "platform/platform_header.h"
 
 
@@ -15,7 +14,7 @@ inline void* (*platform_get_proc)(const char* name) = nullptr;
     FailOn(gl.name == nullptr, "Couldn't load the function {}", StringView(#name));
 
 struct GLESVTable
-        {
+{
     PFNGLGETINTEGERVPROC glGetIntegerv;
     PFNGLGETSTRINGPROC glGetString;
     PFNGLGETSTRINGIPROC glGetStringi;

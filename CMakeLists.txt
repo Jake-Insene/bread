@@ -1,7 +1,6 @@
 project("bread")
 
 set(BREAD_BUILD_DEFINITIONS "")
-set(BREAD_ENGINE_ASSET_DIRS "${CMAKE_SOURCE_DIR}/assets")
 set(BREAD_DEBUG_DEFINITIONS "-DDEBUG -DSHOW_DEBUG_INFO -DENABLE_DEBUG_OPTIONS")
 
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
@@ -23,87 +22,87 @@ file(GLOB EXTERNAL_SRC
 )
 
 file(GLOB ENGINE_SRC
-    collections/string.cpp
+    src/collections/string.cpp
     
-    debug/debug.cpp
+    src/debug/debug.cpp
     
-    display/display.cpp
-    display/window.cpp
+    src/display/display.cpp
+    src/display/window.cpp
     
-    engine/engine.cpp
+    src/engine/engine.cpp
 
-    fs/file.cpp
+    src/fs/file.cpp
     
-    graphics/egl/egl.cpp
-    graphics/graphics.cpp
-    graphics/render_target.cpp
+    src/graphics/egl/egl.cpp
+    src/graphics/graphics.cpp
+    src/graphics/render_target.cpp
 
-    input/input.cpp
+    src/input/input.cpp
 
-    log/log.cpp
+    src/log/log.cpp
     
-    mem/utils.cpp
-    mem/generic_allocator.cpp
+    src/mem/utils.cpp
+    src/mem/generic_allocator.cpp
 
-    os/mutex.cpp
-    os/os.cpp
-    os/semaphore.cpp
-    os/thread.cpp
+    src/os/mutex.cpp
+    src/os/os.cpp
+    src/os/semaphore.cpp
+    src/os/thread.cpp
 
-    object/object.cpp
-    object/object_allocator.cpp
-    object/scene_manager.cpp
-    object/timer.cpp
+    src/object/object.cpp
+    src/object/object_allocator.cpp
+    src/object/scene_manager.cpp
+    src/object/timer.cpp
 
-    canvas/button.cpp
-    canvas/canvas_object.cpp
-    canvas/canvas_sprite.cpp
-    canvas/label.cpp
-    canvas/progress_bar.cpp
+    src/canvas/button.cpp
+    src/canvas/canvas_object.cpp
+    src/canvas/canvas_sprite.cpp
+    src/canvas/label.cpp
+    src/canvas/progress_bar.cpp
 
-    2d/animated_sprite_2d.cpp
-    2d/camera_2d.cpp
-    2d/object_2d.cpp
-    2d/sprite_2d.cpp
-    2d/tile_map.cpp
+    src/2d/animated_sprite_2d.cpp
+    src/2d/camera_2d.cpp
+    src/2d/object_2d.cpp
+    src/2d/sprite_2d.cpp
+    src/2d/tile_map.cpp
 
-    physics/body_2d.cpp
-    physics/physics_2d.cpp
+    src/physics/body_2d.cpp
+    src/physics/physics_2d.cpp
 
     # Default 2d physics driver
-    physics/p2d/p2d_driver.cpp
+    src/physics/p2d/p2d_driver.cpp
 
-    resource/font.cpp
-    resource/image.cpp
-    resource/resource.cpp
-    resource/resource_manager.cpp
-    resource/sprite_animation.cpp
-    resource/texture.cpp
-    resource/tile_set.cpp
+    src/resource/font.cpp
+    src/resource/image.cpp
+    src/resource/resource.cpp
+    src/resource/resource_manager.cpp
+    src/resource/sprite_animation.cpp
+    src/resource/texture.cpp
+    src/resource/tile_set.cpp
 
-    scene/scene_manager.cpp
+    src/scene/scene_manager.cpp
 )
 
 file(GLOB GLES_RENDERER_SRC
-    graphics/gles/gles_cmd_proc.cpp
-    graphics/gles/gles_driver.cpp
-    graphics/gles/gles_memory_allocator.cpp
-    graphics/gles/gles_utility.cpp
+    src/graphics/gles/gles_cmd_proc.cpp
+    src/graphics/gles/gles_driver.cpp
+    src/graphics/gles/gles_memory_allocator.cpp
+    src/graphics/gles/gles_utility.cpp
 )
 
 set(PLATFORM_LIBRARIES "")
 if(ANDROID)
     file(GLOB PLATFORM_SRC
-        platform/android/android_display.cpp
-        platform/android/android_egl.cpp
-        platform/android/android_engine.cpp
-        platform/android/android_file.cpp
-        platform/android/android_log.cpp
-        platform/android/android_main.cpp
-        platform/android/android_math.cpp
-        platform/android/android_os.cpp
-        platform/android/android_page_allocator.cpp
-        platform/android/android_time.cpp
+        src/platform/android/android_display.cpp
+        src/platform/android/android_egl.cpp
+        src/platform/android/android_engine.cpp
+        src/platform/android/android_file.cpp
+        src/platform/android/android_log.cpp
+        src/platform/android/android_main.cpp
+        src/platform/android/android_math.cpp
+        src/platform/android/android_os.cpp
+        src/platform/android/android_page_allocator.cpp
+        src/platform/android/android_time.cpp
 
         ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c
     )
@@ -111,15 +110,15 @@ if(ANDROID)
     set(PLATFORM_LIBRARIES GLESv3 EGL android log)
 elseif(WIN32)
     file(GLOB PLATFORM_SRC
-        platform/win32/win32_display.cpp
-        platform/win32/win32_egl.cpp
-        platform/win32/win32_engine.cpp
-        platform/win32/win32_file.cpp
-        platform/win32/win32_main.cpp
-        platform/win32/win32_math.cpp
-        platform/win32/win32_os.cpp
-        platform/win32/win32_page_allocator.cpp
-        platform/win32/win32_time.cpp
+        src/platform/win32/win32_display.cpp
+        src/platform/win32/win32_egl.cpp
+        src/platform/win32/win32_engine.cpp
+        src/platform/win32/win32_file.cpp
+        src/platform/win32/win32_main.cpp
+        src/platform/win32/win32_math.cpp
+        src/platform/win32/win32_os.cpp
+        src/platform/win32/win32_page_allocator.cpp
+        src/platform/win32/win32_time.cpp
     )
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DENGINE_WIN32")
     set(PLATFORM_LIBRARIES opengl32)
@@ -143,9 +142,9 @@ target_compile_definitions("bread" PUBLIC ${BREAD_BUILD_DEFINITIONS})
 target_include_directories(
     "bread"
     PRIVATE
+    "src"
     "."
     "external/freetype/include"
-    "external/box2d/include"
     ${ANDROID_NDK}/sources/android/native_app_glue
 )
 
