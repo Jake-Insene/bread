@@ -1,4 +1,4 @@
 [submodule "external/freetype"]
 	path = external/freetype
 	url = https://gitlab.freedesktop.org/freetype/freetype.git
-	branch = main
+	branch = master
