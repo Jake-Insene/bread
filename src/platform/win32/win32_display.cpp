@@ -8,7 +8,7 @@
 
 static inline Win32Display::WindowData& _get_window_data(Display::WindowID id)
 {
-    return Win32Display::data.windows.get(id);
+	return Win32Display::data.windows.get(id);
 }
 
 static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -27,12 +27,12 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 	case WM_MBUTTONDOWN:
 	case WM_MBUTTONUP:
 	{
-		MouseButton button = 
+		MouseButton button =
 			(msg == WM_LBUTTONDOWN || msg == WM_LBUTTONUP) ? MOUSE_BUTTON_LEFT
 			: (msg == WM_RBUTTONDOWN || msg == WM_RBUTTONUP) ? MOUSE_BUTTON_RIGHT
 			: MOUSE_BUTTON_MIDDLE;
 
-		Input::data.mouse_buttons[button] = 
+		Input::data.mouse_buttons[button] =
 			msg == WM_LBUTTONDOWN
 			|| msg == WM_RBUTTONDOWN
 			|| msg == WM_MBUTTONDOWN;
@@ -64,15 +64,28 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		if (wparam == VK_SHIFT || wparam == VK_CONTROL || wparam == VK_MENU)
 		{
 			UINT real_vk = MapVirtualKeyEx(scan_code, MAPVK_VSC_TO_VK_EX, GetKeyboardLayout(0));
-			Input::data.keys[real_vk] = msg == WM_KEYDOWN;
+			Input::data.keys[real_vk] =
+				msg == WM_KEYDOWN ? KeyState::Pressed
+				: KeyState::Released;
 		}
 
-		Input::data.keys[wparam] = msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN;
+		Input::data.keys[wparam]
+			= (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN) ? KeyState::Pressed
+			: KeyState::Released;
 
 		InputEventKey event{};
-		event.pressed = Input::data.keys[wparam];
+		event.pressed = Input::data.keys[wparam] == KeyState::Pressed;
 		event.key = (Key)wparam;
-		
+
+		if (Input::data.keys[wparam] == KeyState::Pressed)
+		{
+			DebugInfo("Key was pressed {}", (char)scan_code);
+		}
+		else
+		{
+			DebugInfo("Key was unpressed {}", (char)scan_code);
+		}
+
 		Engine::handle_input(event);
 	}
 	break;
@@ -92,7 +105,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		Vector2 screen_space_position = Vector2(GET_X_LPARAM(lparam), -GET_Y_LPARAM(lparam));
 		Input::data.mouse_position = SceneManager::_screen_make_local_to_canvas(screen_space_position);
 	}
-		break;
+	break;
 	}
 
 	return DefWindowProcA(handle, msg, wparam, lparam);
@@ -100,18 +113,18 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 
 void Display::initialize(const mem::Allocator& allocator)
 {
-    Win32Display::data.allocator = allocator;
-    Win32Display::data.windows = QueueArray<Win32Display::WindowData, Display::WindowID>::with_size(allocator, 4);
+	Win32Display::data.allocator = allocator;
+	Win32Display::data.windows = QueueArray<Win32Display::WindowData, Display::WindowID>::with_size(allocator, 4);
 
-    WNDCLASSEXA wc = {};
-    wc.cbSize = sizeof(wc);
-    wc.lpfnWndProc = _default_window_proc;
-    wc.lpszClassName = Win32Display::WindowClassName;
-    wc.hIcon = LoadIconA(0, IDI_APPLICATION);
-    wc.hCursor = LoadCursorA(0, IDC_ARROW);
-    wc.hIconSm = LoadIconA(0, IDI_APPLICATION);
+	WNDCLASSEXA wc = {};
+	wc.cbSize = sizeof(wc);
+	wc.lpfnWndProc = _default_window_proc;
+	wc.lpszClassName = Win32Display::WindowClassName;
+	wc.hIcon = LoadIconA(0, IDI_APPLICATION);
+	wc.hCursor = LoadCursorA(0, IDC_ARROW);
+	wc.hIconSm = LoadIconA(0, IDI_APPLICATION);
 
-    RegisterClassExA(&wc);
+	RegisterClassExA(&wc);
 
 	GetClientRect(GetDesktopWindow(), &Win32Display::data.fullscreen_rect);
 }
@@ -123,27 +136,27 @@ void Display::shutdown()
 
 Display::WindowID Display::window_create()
 {
-    Display::WindowID new_id = Win32Display::data.windows.add(Win32Display::WindowData());
+	Display::WindowID new_id = Win32Display::data.windows.add(Win32Display::WindowData());
 	Win32Display::WindowData& new_window = _get_window_data(new_id);
 
-    RECT window_rect = {};
-    window_rect.right = Display::DefaultWidth;
-    window_rect.bottom = Display::DefaultHeight;
+	RECT window_rect = {};
+	window_rect.right = Display::DefaultWidth;
+	window_rect.bottom = Display::DefaultHeight;
 
-    AdjustWindowRectExForDpi(&window_rect, WS_OVERLAPPEDWINDOW, false, WS_EX_OVERLAPPEDWINDOW, GetDpiForSystem());
+	AdjustWindowRectExForDpi(&window_rect, WS_OVERLAPPEDWINDOW, false, WS_EX_OVERLAPPEDWINDOW, GetDpiForSystem());
 
-    new_window.window_rect = window_rect;
-    new_window.handle = CreateWindowExA(
-        WS_EX_OVERLAPPEDWINDOW, Win32Display::WindowClassName, Display::DefaultTitle, WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, window_rect.right - window_rect.left, window_rect.bottom - window_rect.top,
-        0, 0, GetModuleHandleA(nullptr), 0
-    );
+	new_window.window_rect = window_rect;
+	new_window.handle = CreateWindowExA(
+		WS_EX_OVERLAPPEDWINDOW, Win32Display::WindowClassName, Display::DefaultTitle, WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT, CW_USEDEFAULT, window_rect.right - window_rect.left, window_rect.bottom - window_rect.top,
+		0, 0, GetModuleHandleA(nullptr), 0
+	);
 
 	SetWindowLongPtrA(new_window.handle, GWLP_USERDATA, (LONG_PTR)new_id);
 
-    ShowWindow(new_window.handle, SW_SHOW);
+	ShowWindow(new_window.handle, SW_SHOW);
 
-    return new_id;
+	return new_id;
 }
 
 Vector2I Display::window_get_size(Display::WindowID wid)
@@ -152,7 +165,7 @@ Vector2I Display::window_get_size(Display::WindowID wid)
 	RECT rect;
 	GetClientRect(window_data.handle, &rect);
 
-    return Vector2I(
+	return Vector2I(
 		rect.right - rect.left,
 		rect.bottom - rect.top
 	);

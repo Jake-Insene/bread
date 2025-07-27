@@ -4,8 +4,14 @@
 
 bool Input::is_key_down(Key k)
 {
+	return data.keys[(int)k] == KeyState::Pressed;
+}
+
+KeyState Input::get_key_state(Key k)
+{
 	return data.keys[(int)k];
 }
+
 
 bool Input::is_mouse_button_pressed(MouseButton button)
 {

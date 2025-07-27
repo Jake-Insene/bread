@@ -92,7 +92,7 @@ enum MouseButton
 struct InputEvent
 {
     InputEventType type;
-    
+
     template<typename T>
     const T& get() const
     {
@@ -127,16 +127,24 @@ struct InputEventMouseButton : InputEvent
 };
 
 
+enum class KeyState
+{
+    Released,
+    Pressed,
+};
+
 struct Input
 {
     struct InternalData
     {
-		bool keys[256];
+        KeyState keys[256];
         bool mouse_buttons[3];
         Vector2 mouse_position;
     };
 
     static inline InternalData data{};
+
+    static KeyState get_key_state(Key k);
 
     static bool is_key_down(Key k);
 

@@ -15,9 +15,10 @@ static void* _realloc(void* ptr, usize old_size, usize new_size)
     }
     
     Slice<u8> new_mem = ResourceManager::get_allocator().alloc(new_size, alignof(usize));
-    if(new_mem.ptr() && ptr != nullptr && old_size != 0)
+    if (new_mem.ptr() && ptr != nullptr && old_size != 0)
     {
-        mem::copy(old_mem, new_mem);
+        mem::copy(new_mem, old_mem);
+        ResourceManager::get_allocator().free(old_mem);
     }
     
     return new_mem.ptr();
