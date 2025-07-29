@@ -14,8 +14,6 @@ void Button::_bind_vtable(VTable& vtable)
 void Button::init(const CreateInfo&)
 {
     normal_texture = GetResource<Texture2D>("white.png");
-    pressed_texture = GetResource<Texture2D>("white.png");
-    hover_texture = GetResource<Texture2D>("white.png");
     
     data.current_state = STATE_NORMAL;
 }
@@ -23,6 +21,9 @@ void Button::init(const CreateInfo&)
 void Button::render()
 {
     Texture* current_texture = get_current_texture();
+    if (current_texture == nullptr && normal_texture != nullptr)
+        current_texture = normal_texture;
+
     if (current_texture == nullptr)
         return;
 

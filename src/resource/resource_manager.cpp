@@ -146,7 +146,7 @@ Resource* ResourceManager::load_resource(ResourceType type,
         );
         break;
     case RESOURCE_FONT:
-        return load_font(path, Font::DefaultFontSize);
+        return load_font(path);
     case RESOURCE_SPRITE_ANIMATION:
     case RESOURCE_TILE_SET:
     {
@@ -249,10 +249,15 @@ Texture2D* ResourceManager::load_texture_2d(StringView path, const TextureLoadIn
 }
 
 
-Font* ResourceManager::load_font(StringView path, i32 font_size)
+Font* ResourceManager::load_font(StringView path)
 {
+    if (data.resources.has(path))
+    {
+        return (Font*)data.resources.get(path);
+    }
+
     Font* new_font = create_resource<Font>();
-    new_font->load_from_file(path, font_size);
+    new_font->load_from_file(path);
 
     data.resources.insert(path, new_font);
     return new_font;

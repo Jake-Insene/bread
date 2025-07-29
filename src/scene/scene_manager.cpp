@@ -158,6 +158,17 @@ void SceneManager::step()
     }
 
     data.queue_frees.clear();
+
+    for (i32 i = 0; i < data.gui_roots.count; i++)
+    {
+        CanvasObject* groot = data.gui_roots[i];
+
+        if (groot && groot->has_mark(Object::MARK_QUEUE_FREE))
+        {
+            data.gui_roots.remove(i);
+            i--;
+        }
+    }
 }
 
 void SceneManager::set_camera_2d(Camera2D* camera)

@@ -21,12 +21,14 @@ void Label::render()
 	Transform2D transform = get_global_transform();
 	const Vector2 scale = transform.get_scale();
 	const Vector2 begin_pos = transform.get_position();
-	const Vector2 font_size = Vector2(font->get_font_size());
+	const Vector2 font_size = Vector2(get_font_size());
+
+	const Font::FontTheme& font_theme = font->get_font_theme(get_font_size());
 	
 	for (usize i = 0; i < text.count; i++)
 	{
 		char character = text.get(i);
-		const Font::Glyph& glyph = font->data.glyphs[character];
+		const Font::Glyph& glyph = font_theme.glyphs[character];
 		const Vector2 advance = Vector2(glyph.advance) * scale;
 
 		if (character == ' ' || character == '\0')
@@ -54,4 +56,10 @@ void Label::render()
 	}
 }
 
+void Label::set_font_size(i32 new_font_size)
+{
+	if (data.font_size = new_font_size)
+		return;
 
+	data.font_size = new_font_size;
+}

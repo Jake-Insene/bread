@@ -72,6 +72,10 @@ void Object::remove_child(Object* child)
 
 void Object::queue_free()
 {
+    if (has_mark(MARK_QUEUE_FREE))
+        return;
+
+    mark(MARK_QUEUE_FREE);
     SceneManager::_queue_free(get_parent(), this);
 }
 

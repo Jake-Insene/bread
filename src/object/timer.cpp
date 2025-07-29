@@ -17,13 +17,13 @@ void Timer::internal_update(f64 delta)
 
     if(data.acumulator >= duration)
     {
-        unmark(MARK_INTERNAL_UPDATE);
-
         if(timeout.has_func())
             timeout.call();
      
         if(data.loop)
             data.acumulator = 0;
+        else
+            unmark(MARK_INTERNAL_UPDATE);
     }
 }
 

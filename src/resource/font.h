@@ -4,7 +4,9 @@
 #include "resource/resource_id.h"
 #include "math/rect_2d.h"
 
+
 struct Texture2D;
+
 
 struct Font : Resource
 {
@@ -20,19 +22,23 @@ struct Font : Resource
 		Vector2I advance;
 	};
 
-	struct InternalData
+	struct FontTheme
 	{
 		Array<Glyph> glyphs;
 		i32 font_size;
+	};
+
+	struct InternalData
+	{
+		Array<FontTheme> themes;
 	} data;
 
 	void init();
 	void destroy();
 
-	void load_from_file(StringView file_path, i32 font_size);
+	void load_from_file(StringView file_path);
 
-	void set_font_size(i32 new_size);
-	[[nodiscard]] i32 get_font_size() const { return data.font_size; }
+	[[nodiscard]] const FontTheme& get_font_theme(i32 font_size);
 
-
+	const FontTheme& _theme_with_size(i32 font_size);
 };

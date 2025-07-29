@@ -1,6 +1,47 @@
 #include "collections/string.h"
 
 
+struct _BuffString
+{
+    // Enough for signed 64 bits numbers
+    static constexpr usize BufferSize = 21;
+    u8 buffer[BufferSize];
+    usize buffer_index;
+
+    constexpr u8* end() { return buffer + BufferSize; }
+    constexpr StringView get_view() const
+    {
+        return StringView(
+            (char*)buffer + (BufferSize - buffer_index), 
+            buffer_index
+        );
+    }
+};
+
+template<typename T>
+static constexpr void _integer_to_buff(_BuffString& buff, T integer)
+{
+    auto end = buff.end();
+
+    u64 u = integer < 0 ? u64(-integer) : u64(integer);
+    do
+    {
+        *--end = ('0' + u % 10);
+        u /= 10;
+        buff.buffer_index++;
+    } while (u != 0);
+
+    if constexpr (IsSigned<T>)
+    {
+        if (integer < 0)
+        {
+            *--end = '-';
+            buff.buffer_index++;
+        }
+    }
+}
+
+
 String String::with_allocator(mem::Allocator allocator)
 {
     return String
@@ -52,7 +93,10 @@ void String::set(StringView new_chars)
 void String::resize(usize new_size)
 {
     if (chars.len >= new_size)
+    {
+        count = new_size;
         return;
+    }
 
     if (!chars.ptr())
     {
@@ -76,8 +120,9 @@ void String::resize(usize new_size)
 
 void String::add(StringView str)
 {
+    usize old_count = count;
     resize(count + str.len);
-    mem::copy(chars.add(count), str);
+    mem::copy(chars.add(old_count), str);
 }
 
 bool String::equals(StringView str) const
@@ -95,46 +140,30 @@ StringView String::view()
     return StringView{chars.ptr(), count};
 }
 
+void String::_add_from_signed(i64 integer)
+{
+    _BuffString fmt_str = {};
+    _integer_to_buff(fmt_str, integer);
+    add(fmt_str.get_view());
+}
+
+void String::_add_from_unsigned(u64 integer)
+{
+    _BuffString fmt_str = {};
+    _integer_to_buff(fmt_str, integer);
+    add(fmt_str.get_view());
+}
+
 void String::_set_from_signed(i64 integer)
 {
-    // Enough for signed 64 bits numbers
-    static constexpr usize BufferSize = 21;
-    u8 buffer_storage[BufferSize] = {};
-    auto end = buffer_storage + BufferSize;
-    usize buffer_index = 0;
-
-    u64 u = integer < 0 ? u64(-integer) : u64(integer);
-    do
-    {
-        *--end = ('0' + u % 10);
-        u /= 10;
-        buffer_index++;
-    } while (u != 0);
-
-    if (integer < 0)
-    {
-        *--end = '-';
-        buffer_index++;
-    }
-
-    set(StringView((char*)buffer_storage + (BufferSize - buffer_index), buffer_index));
+    _BuffString fmt_str = {};
+    _integer_to_buff(fmt_str, integer);
+    set(fmt_str.get_view());
 }
 
 void String::_set_from_unsigned(u64 integer)
 {
-    // Enough for unsigned 64 bits numbers
-    static constexpr usize BufferSize = 21;
-    u8 buffer_storage[BufferSize] = {};
-    auto end = buffer_storage + BufferSize;
-    usize buffer_index = 0;
-
-    u64 u = integer < 0 ? u64(-integer) : u64(integer);
-    do
-    {
-        *--end = ('0' + u % 10);
-        u /= 10;
-        buffer_index++;
-    } while (u != 0);
- 
-    set(StringView((char*)buffer_storage, buffer_index));
+    _BuffString fmt_str = {};
+    _integer_to_buff(fmt_str, integer);
+    set(fmt_str.get_view());
 }

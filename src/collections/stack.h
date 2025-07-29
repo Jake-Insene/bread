@@ -7,6 +7,8 @@
 template<typename T>
 struct [[nodiscard]] Stack
 {
+	static constexpr usize DefaultCapacity = 4;
+
 	mem::Allocator allocator;
 	Slice<T> items;
 	usize sp;
@@ -16,7 +18,7 @@ struct [[nodiscard]] Stack
 		return Stack
 		{
 			.allocator = allocator,
-			.items = {},
+			.items = allocator.array<T>(DefaultCapacity),
 			.sp = 0,
 		};
 	}

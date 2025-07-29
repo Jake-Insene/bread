@@ -31,9 +31,23 @@ struct [[nodiscard]] String
 
     // Conversion
     template<typename T>
+    void add_from_integer(T integer)
+    {
+        static_assert(IsInteger<T>, "an integer type was expected");
+        if constexpr (IsSigned<T>)
+        {
+            _add_from_signed(integer);
+        }
+        else
+        {
+            _add_from_unsigned(integer);
+        }
+    }
+
+    template<typename T>
     void set_from_integer(T integer)
     {
-        static_assert(IsInteger<T> == true, "an integer type was expected");
+        static_assert(IsInteger<T>, "an integer type was expected");
         if constexpr (IsSigned<T>)
         {
             _set_from_signed(integer);
@@ -48,6 +62,9 @@ struct [[nodiscard]] String
     [[nodiscard]] bool ends_with(StringView str) const;
     
     StringView view();
+
+    void _add_from_signed(i64 integer);
+    void _add_from_unsigned(u64 integer);
 
     void _set_from_signed(i64 integer);
     void _set_from_unsigned(u64 integer);

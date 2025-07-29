@@ -165,6 +165,8 @@ struct Object
         MARK_2D,
         MARK_CANVAS,
 
+        MARK_QUEUE_FREE,
+
         MARK_COUNT,
     };
 
@@ -211,6 +213,7 @@ struct Object
 
     void add_child(Object* obj);
     void remove_child(Object* obj);
+    [[nodiscard]] usize get_child_count() const { return data.childs.count; }
 
     void queue_free();
     
