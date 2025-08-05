@@ -22,8 +22,8 @@ Physics2D::VTable P2DDriver::get_vtable()
         .body_add_shape = &P2DDriver::body_add_shape,
         .body_remove_shape = &P2DDriver::body_remove_shape,
         .body_get_shape_count = &P2DDriver::body_get_shape_count,
-        .body_get_shape = &P2DDriver::body_get_shape,
         .body_set_shape = &P2DDriver::body_set_shape,
+        .body_get_shape = &P2DDriver::body_get_shape,
 
         .body_set_type = &P2DDriver::body_set_type,
         .body_set_velocity = &P2DDriver::body_set_velocity,
