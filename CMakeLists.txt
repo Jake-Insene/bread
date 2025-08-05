@@ -66,6 +66,7 @@ file(GLOB ENGINE_SRC
     src/2d/sprite_2d.cpp
     src/2d/tile_map.cpp
 
+    src/physics/area_2d.cpp
     src/physics/body_2d.cpp
     src/physics/physics_2d.cpp
 

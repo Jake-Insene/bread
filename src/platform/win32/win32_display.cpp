@@ -77,15 +77,6 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		event.pressed = Input::data.keys[wparam] == KeyState::Pressed;
 		event.key = (Key)wparam;
 
-		if (Input::data.keys[wparam] == KeyState::Pressed)
-		{
-			DebugInfo("Key was pressed {}", (char)scan_code);
-		}
-		else
-		{
-			DebugInfo("Key was unpressed {}", (char)scan_code);
-		}
-
 		Engine::handle_input(event);
 	}
 	break;

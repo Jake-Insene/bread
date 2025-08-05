@@ -8,9 +8,7 @@ void Body2D::init(const CreateInfo&)
     Physics2D::EventOnCollide event_on_collide;
     event_on_collide.bind(&_on_body_collide);
 
-    Physics2D::body_set_on_collide(data.body_id, 
-        this, event_on_collide
-    );
+    Physics2D::body_set_on_collide(data.body_id, this, event_on_collide);
 }
 
 void Body2D::deinit()
@@ -61,6 +59,11 @@ void Body2D::remove_shape(usize index)
 usize Body2D::get_shape_count()
 {
     return Physics2D::body_get_shape_count(data.body_id);
+}
+
+void Body2D::set_shape(usize index, const Shape2D& shape)
+{
+    Physics2D::body_set_shape(data.body_id, index, shape);
 }
 
 Shape2D Body2D::get_shape(usize index)

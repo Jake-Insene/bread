@@ -26,8 +26,8 @@ struct Body2D : Object2D
 
         bool grounded = false;
 
-        CollisionMask residence_mask = Physics2D::COLLISION_MASK_0;
-        CollisionMask collision_mask = Physics2D::COLLISION_MASK_0;
+        CollisionMask residence_mask = Physics2D::DEFAULT_COLLISION_MASK;
+        CollisionMask collision_mask = Physics2D::DEFAULT_COLLISION_MASK;
     } data;
 
     Event<void(Object::*)(Body2D*)> on_collide;
@@ -44,6 +44,7 @@ struct Body2D : Object2D
     void add_shape(const Shape2D& new_shape);
     void remove_shape(usize index);
     usize get_shape_count();
+    void set_shape(usize index, const Shape2D& shape);
     Shape2D get_shape(usize index);
     
     void set_velocity(const Vector2& new_velocity);

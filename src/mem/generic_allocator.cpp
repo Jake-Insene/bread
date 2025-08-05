@@ -190,7 +190,9 @@ namespace mem
             }
         }
 
-        Page& new_page = allocate_new_page(aligned_size + sizeof(Header));
+        Page& new_page = allocate_new_page(next_page_size + aligned_size + sizeof(Header));
+        next_page_size += DefaultNextPageSize;
+
         u8* base = new_page.bytes.ptr();
         u8* aligned_mem = (u8*)mem::align_up<usize>(usize(base) + sizeof(Header), alignment);
 

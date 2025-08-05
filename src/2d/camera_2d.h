@@ -27,6 +27,7 @@ struct Camera2D : Object2D
     f32 speed = 1;
 
     void init(const CreateInfo& info);
+
     void enter();
     void exit();
 

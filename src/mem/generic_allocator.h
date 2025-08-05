@@ -9,6 +9,7 @@ namespace mem
         static constexpr u16 MaxPageCount = u16(-1);
         static constexpr usize DefaultPageListSize = 128;
         static constexpr usize DirectPageAllocationSize = 32 * 1024; // 256 KB
+        static constexpr usize DefaultNextPageSize = 1024 * 8;
 
         enum HeaderTags
         {
@@ -37,6 +38,7 @@ namespace mem
         PageAllocator internal_allocator;
         Slice<Page> allocated_pages;
         usize page_count = 0;
+        usize next_page_size = DefaultNextPageSize;
 
         void destroy();
 

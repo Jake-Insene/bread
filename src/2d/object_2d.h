@@ -27,6 +27,7 @@ struct Object2D : Object
     // 2D utility
     void set_position(Vector2 new_pos);
     Vector2 get_position() const;
+
     void translate(Vector2 t);
     
     void set_scale(Vector2 new_scale);
