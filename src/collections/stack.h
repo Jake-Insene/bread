@@ -87,10 +87,10 @@ struct [[nodiscard]] Stack
 	{
 		DebugAssert(sp > 0, "stack is empty!");
 
-		const T& item = items[0];
+		const T item = items[sp - 1];
 		if (sp > 1)
 		{
-			mem::copy(items, items.add(sp - 1));
+			items[sp - 1] = T();
 		}
 
 		sp--;

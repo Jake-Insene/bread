@@ -3,9 +3,9 @@
 #include "resource_manager.h"
 
 
-void Resource::init(ResourceType rtype)
+void Resource::init(ResourceType resource_type)
 {
-    type = rtype;
+    type = resource_type;
     path = String::with_allocator(ResourceManager::get_allocator());
 }
 

@@ -48,7 +48,7 @@ namespace mem
         Page& page = allocated_pages[page_count++];
         page.bytes = internal_allocator.alloc(size, OS::get_page_size());
         page.first_header = nullptr;
-        DebugInfo("Page allocated at {} with size {}", page.bytes.ptr(), page.bytes.len);
+        DebugInfo("[Mem]: Page requested at address {} with size {}", page.bytes.ptr(), page.bytes.len);
         return page;
     }
 
@@ -240,17 +240,13 @@ namespace mem
         Header* header = get_header(ptr);
         DebugAssert(header->tags & Allocated, "the given block is already free.");
 
-        if(header->len >= new_size)
-        {
-#if DEBUG
-            check_integrity();
-#endif
-            return true;
-        }
-
 #if DEBUG
         check_integrity();
 #endif
+
+        if(header->len >= new_size)
+            return true;
+
         return false;
     }
         
@@ -258,7 +254,7 @@ namespace mem
     {
         DebugAssert(ptr.ptr() != nullptr, "invalid pointer");
         Header* header = get_header(ptr);
-        DebugAssert(ptr.ptr() && (header->tags & Allocated), "the given block is already free.");
+        DebugAssert(header->tags & Allocated, "the given block is already free.");
 
         header->tags = None;
 

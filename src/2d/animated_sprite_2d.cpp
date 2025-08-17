@@ -18,24 +18,24 @@ void AnimatedSprite2D::internal_update(f64 dt)
 {
 	data.remain -= dt;
 
-	if (data.remain < 0)
+	if (data.remain > 0)
+		return;
+
+	data.frame += 1;
+	if (data.frame >= animation->get_frame_count(data.current_animation.view()))
 	{
-		data.frame += 1;
-		if (data.frame >= animation->get_frame_count(data.current_animation.view()))
+		data.frame = 0;
+
+		SpriteAnimation::Animation& anim = animation->get_animation(data.current_animation.view());
+		if (anim.loop == false)
 		{
-			data.frame = 0;
-
-			SpriteAnimation::Animation& anim = animation->get_animation(data.current_animation.view());
-			if (!anim.loop)
-			{
-				data.playing = false;
-				unmark(MARK_INTERNAL_UPDATE);
-			}
+			data.playing = false;
+			unmark(MARK_INTERNAL_UPDATE);
 		}
-
-		SpriteAnimation::SpriteFrame& frame = animation->get_frame(data.current_animation.view(), data.frame);
-		data.remain = frame.duration;
 	}
+
+	SpriteAnimation::SpriteFrame& frame = animation->get_frame(data.current_animation.view(), data.frame);
+	data.remain = frame.duration;
 }
 
 void AnimatedSprite2D::render()
@@ -62,6 +62,12 @@ void AnimatedSprite2D::play(StringView anim)
 {
 	if (!animation || !animation->has_animation(anim))
 		return;
+
+	if (data.current_animation.equals(anim))
+	{
+		if (data.playing)
+			return;
+	}
 
 	data.playing = true;
 	data.frame = 0;

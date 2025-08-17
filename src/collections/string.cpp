@@ -116,6 +116,8 @@ void String::resize(usize new_size)
         chars.len = new_size;
         allocator.construct_array(chars.add(count));
     }
+
+    count = new_size;
 }
 
 void String::add(StringView str)

@@ -1,4 +1,5 @@
 #pragma once
+#include "collections/job_queue.h"
 #include "display/window.h"
 #include "resource/texture.h"
 #include "mem/generic_allocator.h"
@@ -75,6 +76,8 @@ extern void __preload__();
 
 struct Engine
 {
+    static constexpr usize DefaultMainQueueSize = 16;
+
     struct VTable
     {
     };
@@ -82,6 +85,7 @@ struct Engine
     struct InternalData
     {
         mem::GenericAllocator allocator;
+        JobQueue main_queue;
         
         Window main_window;
 
@@ -112,4 +116,10 @@ struct Engine
     static Window get_main_window() { return data.main_window; }
 
     static void set_vsync(bool vsync);
+
+    template<typename Fn> 
+    static void add_main_job(Fn fn)
+    {
+        data.main_queue.add_job(fn);
+    }
 };

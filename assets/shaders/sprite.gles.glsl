@@ -29,6 +29,7 @@ layout(location = 3) out vec4 color;
 #define FLAG_TOP_LEFT 0x1U
 #define FLAG_FLIP_V 0x2U
 #define FLAG_FLIP_H 0x4U
+#define FLAG_FONT 0x8U
 
 layout(std140, binding = 0) uniform SceneUniform
 {
@@ -62,15 +63,13 @@ void main()
         vertice = vec2(0.5, 0.5);
     }
 
-    vertice += vec2(
-        float(flags & FLAG_TOP_LEFT) * 0.5, 
-        float(flags & FLAG_TOP_LEFT) * -0.5
-    );
+    vertice.x += float(flags & FLAG_TOP_LEFT) * 0.5;
+    vertice.y += float(flags & FLAG_TOP_LEFT) * -0.5;
+
     vec4 out_pos = vec4(vertice * dest_extent, 0, 1);
 
     // UV
     // 0 -> 0, 0
-
     // 1 -> 1, 0
     // 2 -> 1, 1
     // 3 -> 0, 1
@@ -91,15 +90,8 @@ void main()
         out_uv = size / texture_extent;
     }
 
-    if(bool(flags & FLAG_FLIP_H))
-    {
-        out_uv.x = 1.0 - out_uv.x;
-    }
-    
-    if(bool(flags & FLAG_FLIP_V))
-    {
-        out_uv.y = 1.0 - out_uv.y;
-    }
+    out_uv.x = mix(out_uv.x, 1.0 - out_uv.x, float(bool(flags & FLAG_FLIP_H)));
+    out_uv.y = mix(out_uv.y, 1.0 - out_uv.y, float(bool(flags & FLAG_FLIP_V)));
     
     mat2 rot = transpose(mat2(transform_0, transform_1));
     out_pos.xy = rot * out_pos.xy;
@@ -141,6 +133,7 @@ layout(location = 0) out vec4 frag_color;
 #define FLAG_TOP_LEFT 0x1U
 #define FLAG_FLIP_V 0x2U
 #define FLAG_FLIP_H 0x4U
+#define FLAG_FONT 0x8U
 
 layout(binding = 0) uniform sampler2D texture0;
 layout(binding = 1) uniform sampler2D texture1;
@@ -164,52 +157,68 @@ void main()
     switch(int(texture_slot))
     {
     case 0:
-        frag_color = texture(texture0, uv);
+        if(bool(flags & FLAG_FONT)) { frag_color = vec4(texture(texture0, uv).r); }
+        else { frag_color = texture(texture0, uv); }
         break;
     case 1:
-        frag_color = texture(texture1, uv);
+        if(bool(flags & FLAG_FONT)) { frag_color = vec4(texture(texture1, uv).r); }
+        else { frag_color = texture(texture1, uv); }
         break;
     case 2:
-        frag_color = texture(texture2, uv);
+        if(bool(flags & FLAG_FONT)) { frag_color = vec4(texture(texture2, uv).r); }
+        else { frag_color = texture(texture2, uv); }
         break;
     case 3:
-        frag_color = texture(texture3, uv);
+        if(bool(flags & FLAG_FONT)) { frag_color = vec4(texture(texture3, uv).r); }
+        else { frag_color = texture(texture3, uv); }
         break;
     case 4:
-        frag_color = texture(texture4, uv);
+        if(bool(flags & FLAG_FONT)) { frag_color = vec4(texture(texture4, uv).r); }
+        else { frag_color = texture(texture4, uv); }
         break;
     case 5:
-        frag_color = texture(texture5, uv);
+        if(bool(flags & FLAG_FONT)) { frag_color = vec4(texture(texture5, uv).r); }
+        else { frag_color = texture(texture5, uv); }
         break;
     case 6:
-        frag_color = texture(texture6, uv);
+        if(bool(flags & FLAG_FONT)) { frag_color = vec4(texture(texture6, uv).r); }
+        else { frag_color = texture(texture6, uv); }
         break;
     case 7:
-        frag_color = texture(texture7, uv);
+        if(bool(flags & FLAG_FONT)) { frag_color = vec4(texture(texture7, uv).r); }
+        else { frag_color = texture(texture7, uv); }
         break;
     case 8:
-        frag_color = texture(texture8, uv);
+        if(bool(flags & FLAG_FONT)) { frag_color = vec4(texture(texture8, uv).r); }
+        else { frag_color = texture(texture8, uv); }
         break;
     case 9:
-        frag_color = texture(texture9, uv);
+        if(bool(flags & FLAG_FONT)) { frag_color = vec4(texture(texture9, uv).r); }
+        else { frag_color = texture(texture9, uv); }
         break;
     case 10:
-        frag_color = texture(texture10, uv);
+        if(bool(flags & FLAG_FONT)) { frag_color = vec4(texture(texture10, uv).r); }
+        else { frag_color = texture(texture10, uv); }
         break;
     case 11:
-        frag_color = texture(texture11, uv);
+        if(bool(flags & FLAG_FONT)) { frag_color = vec4(texture(texture11, uv).r); }
+        else { frag_color = texture(texture11, uv); }
         break;
     case 12:
-        frag_color = texture(texture12, uv);
+        if(bool(flags & FLAG_FONT)) { frag_color = vec4(texture(texture12, uv).r); }
+        else { frag_color = texture(texture12, uv); }
         break;
     case 13:
-        frag_color = texture(texture13, uv);
+        if(bool(flags & FLAG_FONT)) { frag_color = vec4(texture(texture13, uv).r); }
+        else { frag_color = texture(texture13, uv); }
         break;
     case 14:
-        frag_color = texture(texture14, uv);
+        if(bool(flags & FLAG_FONT)) { frag_color = vec4(texture(texture14, uv).r); }
+        else { frag_color = texture(texture14, uv); }
         break;
     case 15:
-        frag_color = texture(texture15, uv);
+        if(bool(flags & FLAG_FONT)) { frag_color = vec4(texture(texture15, uv).r); }
+        else { frag_color = texture(texture15, uv); }
         break;
     }
 

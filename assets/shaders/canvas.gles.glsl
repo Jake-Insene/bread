@@ -96,15 +96,8 @@ void main()
         out_uv = vec2(uv1.x, uv1.y);
     }
 
-    if(bool(flags & FLAG_FLIP_H))
-    {
-        out_uv.x = 1.0 - out_uv.x;
-    }
-    
-    if(bool(flags & FLAG_FLIP_V))
-    {
-        out_uv.y = 1.0 - out_uv.y;
-    }
+    out_uv.x = mix(out_uv.x, 1.0 - out_uv.x, float(bool(flags & FLAG_FLIP_H)));
+    out_uv.y = mix(out_uv.y, 1.0 - out_uv.y, float(bool(flags & FLAG_FLIP_V)));
     
     mat2 rot = transpose(mat2(transform_0, transform_1));
     out_pos.xy = rot * out_pos.xy;

@@ -1,5 +1,6 @@
 #include "engine/engine.h"
 
+#include "audio/audio.h"
 #include "display/display.h"
 #include "graphics/graphics.h"
 #include "graphics/egl/egl.h"
@@ -31,27 +32,36 @@ void operator delete(void*)
 void Engine::initialize()
 {
     data.allocator = {};
+
+    data.main_queue = JobQueue::create_with_size(data.allocator.allocator(), DefaultMainQueueSize);
     data.fps = 60;
     data.recreate_requested = false;
 
     auto allocator = data.allocator.allocator();
+
+    // Going to the assets folder, crash is intended
+    FailOn(OS::set_current_directory("assets") == false, "assets directory not found")
+
+    Time::initialize();
     OS::initialize();
 
     ObjectAllocator::initialize();
-    ResourceManager::initialize(allocator);
 
     Display::initialize(allocator);
 
     // Allocating main window
     data.main_window = Window(Display::window_create());
 
+    Audio::initialize(allocator, Audio::DEFAULT_DRIVER);
     Physics2D::initialize(allocator, Physics2D::DEFAULT_DRIVER);
     Graphics::initialize(allocator, Graphics::DEFAULT_DRIVER);
+
+    ResourceManager::initialize(allocator);
+    SceneManager::initialize(allocator);
 
     // default resources
     data.white_texture = GetResource<Texture2D>("white.png");
 
-    SceneManager::initialize(allocator);
 
     Engine::get_main_window().set_size(__configuration__.WindowSize);
     SceneManager::get_display_target().set_size(__configuration__.DisplayTargetSize);
@@ -66,13 +76,19 @@ void Engine::initialize()
 void Engine::shutdown()
 {
     SceneManager::shutdown();
+    ResourceManager::shutdown();
+
     Graphics::shutdown();
     Physics2D::shutdown();
+    Audio::shutdown();
+
     Display::shutdown();
-    ResourceManager::shutdown();
     ObjectAllocator::shutdown();
 
     OS::shutdown();
+    Time::shutdown();
+
+    data.main_queue.destroy();
     data.allocator.destroy();
 }
 
@@ -88,23 +104,24 @@ void Engine::destroy()
 
 void Engine::step()
 {
-    if (data.recreate_requested)
-    {
-        data.recreate_requested = false;
-        Engine::recreate_window();
-    }
-
     SceneManager::step();
+    data.main_queue.run();
 }
 
 void Engine::handle_input(const InputEvent& event)
 {
-    SceneManager::_handle_input(event);
+    SceneManager::scene_handle_input(event);
 }
 
 void Engine::request_recreate_window()
 {
     data.recreate_requested = true;
+    data.main_queue.add_job([]() 
+        {
+            data.recreate_requested = false;
+            Engine::recreate_window();
+        }
+    );
 }
 
 void Engine::set_vsync(bool vsync)

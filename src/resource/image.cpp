@@ -20,9 +20,15 @@ void Image::destroy()
     }
 }
 
-bool Image::load(StringView path)
+bool Image::load(StringView file_path)
 {
-    Slice<u8> buffer = File::read_all(ResourceManager::get_allocator(), path);
+    if (File::exists(file_path) == false)
+    {
+        Fatal("Couldn't load the image '{}'", file_path);
+        return false;
+    }
+
+    Slice<u8> buffer = File::read_all(ResourceManager::get_allocator(), file_path);
     
     i32 channels = 0;
     pixels.items = (u8*)stbi_load_from_memory(

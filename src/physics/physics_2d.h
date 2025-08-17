@@ -108,6 +108,9 @@ struct Physics2D
 
         VTFunc(void, area_set_on_body_enter, AreaID, void*, EventOnBodyEnter);
         VTFunc(void, area_set_on_body_exit, AreaID, void*, EventOnBodyExit);
+
+        // Internal
+        VTFunc(void, property_change, StringView, PropertyValue);
     };
 
     struct InternalData
@@ -166,6 +169,6 @@ struct Physics2D
 
     // Properties
 
-    static void set_property(StringView property_name, PropertyValue value);
+    static void set_property(StringView property_name, PropertyValue new_value);
     static PropertyValue get_property(StringView property_name);
 };

@@ -1,13 +1,35 @@
 #include "platform/win32/win32_os.h"
 
 
+static inline void _mutex_lock(SRWLOCK* srw)
+{
+    AcquireSRWLockExclusive(srw);
+}
+
+static inline bool _mutex_try_lock(SRWLOCK* srw)
+{
+    return TryAcquireSRWLockExclusive(srw);
+}
+
+static inline void _mutex_unlock(SRWLOCK* srw)
+{
+    ReleaseSRWLockExclusive(srw);
+}
+
+
 static inline UINT _thread_handler(void* thread_data)
 {
     Win32OS::ThreadData* data = (Win32OS::ThreadData*)thread_data;
 
+    _mutex_lock(&data->thread_srw);
     data->state = Win32OS::THREAD_STATE_RUNNING;
+    _mutex_unlock(&data->thread_srw);
+
     data->fn(data->arg);
+
+    _mutex_lock(&data->thread_srw);
     data->state = Win32OS::THREAD_STATE_TERMINATED;
+    _mutex_unlock(&data->thread_srw);
 
     ExitThread(0);
     return 0;
@@ -103,21 +125,21 @@ void OS::mutex_lock(MutexID mid)
 {
     DebugAssert(mid != MutexID::InvalidID && mid < Win32OS::MaxMutexCount, "invalid thread id");
     Win32OS::MutexData& mutex_data = Win32OS::mutex_data_get(mid);
-    AcquireSRWLockExclusive(&mutex_data.srw);
+    _mutex_lock(&mutex_data.srw);
 }
 
 bool OS::mutex_try_lock(MutexID mid)
 {
     DebugAssert(mid != MutexID::InvalidID && mid < Win32OS::MaxMutexCount, "invalid thread id");
     Win32OS::MutexData& mutex_data = Win32OS::mutex_data_get(mid);
-    return TryAcquireSRWLockExclusive(&mutex_data.srw);
+    return _mutex_try_lock(&mutex_data.srw);
 }
 
 void OS::mutex_unlock(MutexID mid)
 {
     DebugAssert(mid != MutexID::InvalidID && mid < Win32OS::MaxMutexCount, "invalid thread id");
     Win32OS::MutexData& mutex_data = Win32OS::mutex_data_get(mid);
-    ReleaseSRWLockExclusive(&mutex_data.srw);
+    _mutex_unlock(&mutex_data.srw);
 }
 
 bool OS::set_current_directory(StringView dir)

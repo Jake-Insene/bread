@@ -2,6 +2,7 @@
 
 #include "core/time.h"
 #include "debug/debug.h"
+#include "debug/profiler.h"
 #include "engine/engine.h"
 #include "graphics/graphics.h"
 #include "canvas/canvas_object.h"
@@ -31,7 +32,7 @@ void SceneManager::initialize(mem::Allocator allocator)
     data.fps_counter = 0;
     data.fps_acum = 0;
     
-    data.gui_roots = Array<CanvasObject*>::with_size(
+    data.root_canvas = Array<CanvasObject*>::with_size(
         data.allocator, 4
     );
     
@@ -54,8 +55,10 @@ void SceneManager::shutdown()
     }
 
     data.touched_focus.destroy();
-    data.gui_roots.destroy();
+    data.root_canvas.destroy();
     data.queue_frees.destroy();
+
+    data.display_target.destroy();
 }
 
 void SceneManager::change_scene(Object* new_scene)
@@ -90,16 +93,39 @@ void SceneManager::step()
     {
         data.fps_counter = data.fps_acum;
         Engine::data.fps = data.fps_counter;
-        Log::info("FPS: {}, Avg Frame Time: {}", data.fps_counter, data.delta_time);
+        Log::info(
+            "FPS: {}, Avg Frame Time: {}, IntUp: {}, Up: {}, Phy2D: {}, Ren: {}\n"
+            "DriRen: {}, DriPresent: {}", 
+            data.fps_counter, data.delta_time, data.debug_time.internal_update_time,
+            data.debug_time.update_time, data.debug_time.physics_2d_time, 
+            data.debug_time.render_time, data.debug_time.driver_render_time,
+            data.debug_time.driver_present_time
+        );
 
         data.fps_acum = 0;
         data.time_acum = 0;
     }
 
-    data.current_scene->handle_internal_update(data.delta_time);
-    data.current_scene->handle_update(data.delta_time);
+    {
+        PROFILE_SCOPE(
+            data.debug_time.internal_update_time = duration;
+        );
+        data.current_scene->handle_internal_update(data.delta_time);
+    }
 
-    Physics2D::step(data.delta_time);
+    {
+        PROFILE_SCOPE(
+            data.debug_time.update_time = duration;
+        );
+        data.current_scene->handle_update(data.delta_time);
+    }
+
+    {
+        PROFILE_SCOPE(
+            data.debug_time.physics_2d_time = duration;
+        );
+        Physics2D::step(data.delta_time);
+    }
 
     Graphics::add_cmd(
         RenderCommand
@@ -110,7 +136,7 @@ void SceneManager::step()
                 .source_id = data.display_target.render_target_id,
             },
         }
-        );
+    );
 
     Graphics::add_cmd(
         RenderCommand
@@ -122,58 +148,133 @@ void SceneManager::step()
                 .color = data.background_color,
             },
         }
-        );
+    );
 
+    Transform2D camera_transform = Transform2D();
     if (data.current_camera)
+        camera_transform = data.current_camera->get_camera_transform();
+    
+    Graphics::add_cmd(
+        RenderCommand
+        {
+            .type = RenderCommand::SET_SCENE_TRANSFORM,
+            .transform = camera_transform,
+        }
+    );
+
     {
-        Graphics::add_cmd(
-            RenderCommand
-            {
-                .type = RenderCommand::SET_SCENE_TRANSFORM,
-                .transform = data.current_camera->get_camera_transform()
-            }
+        PROFILE_SCOPE(
+            data.debug_time.render_time = duration;
         );
-    }
-    else
-    {
-        Graphics::add_cmd(
-            RenderCommand
-            {
-                .type = RenderCommand::SET_SCENE_TRANSFORM,
-                .transform = Transform2D()
-            }
-        );
+        data.current_scene->handle_render();
     }
 
-    data.current_scene->handle_render();
+    {
+        PROFILE_SCOPE(
+            data.debug_time.driver_render_time = duration;
+        );
+        Graphics::render();
+    }
 
-    Graphics::render();
-    Graphics::present();
+    {
+        PROFILE_SCOPE(
+            data.debug_time.driver_present_time = duration;
+        );
+        Graphics::present();
+    }
 
     data.fps_acum++;
-
     for (auto& it : data.queue_frees)
     {
         it.second.parent->remove_child(it.second.child);
     }
 
     data.queue_frees.clear();
-
-    for (i32 i = 0; i < data.gui_roots.count; i++)
-    {
-        CanvasObject* groot = data.gui_roots[i];
-
-        if (groot && groot->has_mark(Object::MARK_QUEUE_FREE))
-        {
-            data.gui_roots.remove(i);
-            i--;
-        }
-    }
+    _try_clear_root_canvas();
 }
 
 void SceneManager::set_camera_2d(Camera2D* camera)
 {
     data.current_camera = camera;
+}
+
+void SceneManager::scene_handle_input(const InputEvent& event)
+{
+    if (data.current_scene == nullptr)
+        return;
+
+    if (!data.current_scene->has_mark(Object::MARK_HANDLE_EVENT))
+        return;
+
+    if (event.type == INPUT_EVENT_TOUCH)
+    {
+        auto& et = event.get<InputEventTouch>();
+        InputEventTouch new_event = et;
+        new_event = et;
+
+        new_event.position = _screen_make_local_to_canvas(et.position);
+        data.touched_focus.resize(et.pointer + 1);
+        if (CanvasObject* c = _find_canvas_in_pos(new_event.position))
+        {
+            data.touched_focus[et.pointer] = c;
+            ObjectCallRef(c, event, new_event);
+        }
+        else
+        {
+            c = data.touched_focus[et.pointer];
+            if (c)
+            {
+                // point_is_in will be always false
+                new_event.pressed = false;
+                ObjectCallRef(c, event, new_event);
+            }
+            data.touched_focus[et.pointer] = nullptr;
+        }
+
+        ObjectCallRef(data.current_scene, event, new_event);
+    }
+    else if (event.type == INPUT_EVENT_MOUSE_BUTTON)
+    {
+        auto& et = event.get<InputEventMouseButton>();
+        InputEventMouseButton new_event = et;
+        new_event = et;
+
+        new_event.position = _screen_make_local_to_canvas(et.position);
+        if (CanvasObject* c = _find_canvas_in_pos(new_event.position))
+        {
+            data.touched_focus[0] = c;
+            ObjectCallRef(c, event, new_event);
+        }
+        else
+        {
+            c = data.touched_focus[0];
+            if (c)
+            {
+                // point_is_in will be always false
+                new_event.pressed = false;
+                ObjectCallRef(c, event, new_event);
+            }
+            data.touched_focus[0] = nullptr;
+        }
+
+        ObjectCallRef(data.current_scene, event, new_event);
+    }
+
+    data.current_scene->handle_event(event);
+}
+
+void SceneManager::_try_clear_root_canvas()
+{
+    for (i32 i = 0; i < data.root_canvas.count; i++)
+    {
+        CanvasObject* gui_root = data.root_canvas[i];
+
+        if (gui_root == nullptr || !gui_root->has_mark(Object::MARK_QUEUE_FREE))
+            continue;
+
+        data.root_canvas.remove(i);
+        i--;
+    }
 }
 
 void SceneManager::_handle_change_scene()
@@ -205,7 +306,7 @@ Vector2 SceneManager::_screen_make_local_to_canvas(const Vector2& pos)
 
 CanvasObject* SceneManager::_find_canvas_in_pos(const Vector2& pos)
 {
-    for(auto& c : data.gui_roots)
+    for(auto& c : data.root_canvas)
     {
         if(ObjectCallRef(c, is_inside, pos))
         {
@@ -216,69 +317,9 @@ CanvasObject* SceneManager::_find_canvas_in_pos(const Vector2& pos)
     return nullptr;
 }
 
-void SceneManager::_handle_input(const InputEvent& event)
-{
-    if(data.current_scene && data.current_scene->has_mark(Object::MARK_HANDLE_EVENT))
-    {
-        if(event.type == INPUT_EVENT_TOUCH)
-        {
-            auto& et = event.get<InputEventTouch>();
-            InputEventTouch new_event = et;
-            new_event = et;
-            
-            new_event.position = _screen_make_local_to_canvas(et.position);
-            data.touched_focus.resize(et.pointer+1);
-            if(CanvasObject* c = _find_canvas_in_pos(new_event.position))
-            {
-                data.touched_focus[et.pointer] = c;
-                ObjectCallRef(c, event, new_event);
-            }
-            else
-            {
-                c = data.touched_focus[et.pointer];
-                if(c)
-                {
-                    // point_is_in will be always false
-                    new_event.pressed = false;
-                    ObjectCallRef(c, event, new_event);
-                }
-                data.touched_focus[et.pointer] = nullptr;
-            }
-            
-            ObjectCallRef(data.current_scene, event, new_event);
-        }
-        else if (event.type == INPUT_EVENT_MOUSE_BUTTON)
-        {
-            auto& et = event.get<InputEventMouseButton>();
-            InputEventMouseButton new_event = et;
-            new_event = et;
-
-            new_event.position = _screen_make_local_to_canvas(et.position);
-            if (CanvasObject* c = _find_canvas_in_pos(new_event.position))
-            {
-                data.touched_focus[0] = c;
-                ObjectCallRef(c, event, new_event);
-            }
-            else
-            {
-                c = data.touched_focus[0];
-                if (c)
-                {
-                    // point_is_in will be always false
-                    new_event.pressed = false;
-                    ObjectCallRef(c, event, new_event);
-                }
-                data.touched_focus[0] = nullptr;
-            }
-
-            ObjectCallRef(data.current_scene, event, new_event);
-        }
-    }
-}
-
 void SceneManager::_add_root_canvas(CanvasObject* c)
 {
-    (void)data.gui_roots.add(c);
+    (void)data.root_canvas.add(c);
 }
 
 void SceneManager::_queue_free(Object* parent, Object* child)
@@ -292,3 +333,4 @@ void SceneManager::_queue_free(Object* parent, Object* child)
         DestroyObject(child);
     }
 }
+

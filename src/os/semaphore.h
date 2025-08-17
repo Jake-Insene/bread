@@ -1,10 +1,11 @@
 #pragma once
+#include "math/values.h"
 #include "os/mutex.h"
 
 
 struct [[nodiscard]] Semaphore
 {
-    static constexpr usize MaxValue = 0xFFFF'FFFF;
+    static constexpr usize MaxValue = math::MaxValue<usize>;
 
     usize value;
     Mutex mutex;

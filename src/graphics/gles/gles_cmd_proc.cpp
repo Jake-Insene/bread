@@ -251,7 +251,8 @@ void GLESCommandProcessor::end_sprite_batch()
 
     GLESMemoryAllocator::buffer_bind_and_update_memory(
         data.sprite_batch.instance_buffer_object, 0, 
-        mem::to_const_bytes(data.sprite_batch.instances), GL_ARRAY_BUFFER
+        mem::to_const_bytes(data.sprite_batch.instances), GL_ARRAY_BUFFER,
+        GLESMemoryAllocator::UMHWriteOnly
     );
     
     for(i32 i = 0; i < GLESCommandProcessor::data.sprite_batch.texture_index; i++)
@@ -278,7 +279,8 @@ void GLESCommandProcessor::end_canvas_element_batch()
 
     GLESMemoryAllocator::buffer_bind_and_update_memory(
         data.canvas_element_batch.instance_buffer_object, 0, 
-        mem::to_const_bytes(data.canvas_element_batch.instances), GL_ARRAY_BUFFER
+        mem::to_const_bytes(data.canvas_element_batch.instances), GL_ARRAY_BUFFER,
+        GLESMemoryAllocator::UMHWriteOnly
     );
 
     for (i32 i = 0; i < GLESCommandProcessor::data.canvas_element_batch.texture_index; i++)
@@ -304,8 +306,9 @@ void GLESCommandProcessor::end_quad_batch()
     gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.global_quad_ibo);
 
     GLESMemoryAllocator::buffer_bind_and_update_memory(
-        data.quad_batch.instance_buffer_object, 0, mem::to_const_bytes(data.quad_batch.instances), 
-        GL_ARRAY_BUFFER
+        data.quad_batch.instance_buffer_object, 0,
+        mem::to_const_bytes(data.quad_batch.instances), GL_ARRAY_BUFFER,
+        GLESMemoryAllocator::UMHWriteOnly
     );
 
     gl.glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, nullptr, (GLsizei)data.quad_batch.count);
@@ -323,8 +326,9 @@ void GLESCommandProcessor::end_primitive_batch()
 
     gl.glBindVertexArray(data.primitive_batch.vao);
     GLESMemoryAllocator::buffer_bind_and_update_memory(
-        data.primitive_batch.instance_buffer_object, 0, mem::to_const_bytes(data.primitive_batch.primitives),
-        GL_ARRAY_BUFFER
+        data.primitive_batch.instance_buffer_object, 0,
+        mem::to_const_bytes(data.primitive_batch.primitives), GL_ARRAY_BUFFER,
+        GLESMemoryAllocator::UMHWriteOnly
     );
 
     gl.glDrawArrays(GL_LINES, 0, (GLsizei)data.primitive_batch.count);
@@ -557,7 +561,7 @@ void GLESCommandProcessor::render()
     {
         end_canvas_element_batch();
     }
-  
+
     data.commands.clear();
 }
 

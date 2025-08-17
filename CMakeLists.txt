@@ -18,10 +18,27 @@ add_subdirectory(external/freetype)
 # External sources
 file(GLOB EXTERNAL_SRC
     # stb
+    external/dr_wav.cpp
     external/stb_image.cpp
 )
 
 file(GLOB ENGINE_SRC
+    src/audio/audio.cpp
+
+    src/canvas/button.cpp
+    src/canvas/canvas_object.cpp
+    src/canvas/canvas_sprite.cpp
+    src/canvas/label.cpp
+    src/canvas/progress_bar.cpp
+
+    src/2d/animated_sprite_2d.cpp
+    src/2d/camera_2d.cpp
+    src/2d/object_2d.cpp
+    src/2d/sprite_2d.cpp
+    src/2d/text_2d.cpp
+    src/2d/tile_map.cpp
+
+    src/collections/job_queue.cpp
     src/collections/string.cpp
     
     src/debug/debug.cpp
@@ -49,22 +66,11 @@ file(GLOB ENGINE_SRC
     src/os/semaphore.cpp
     src/os/thread.cpp
 
+    src/object/audio_player.cpp
     src/object/object.cpp
     src/object/object_allocator.cpp
     src/object/scene_manager.cpp
     src/object/timer.cpp
-
-    src/canvas/button.cpp
-    src/canvas/canvas_object.cpp
-    src/canvas/canvas_sprite.cpp
-    src/canvas/label.cpp
-    src/canvas/progress_bar.cpp
-
-    src/2d/animated_sprite_2d.cpp
-    src/2d/camera_2d.cpp
-    src/2d/object_2d.cpp
-    src/2d/sprite_2d.cpp
-    src/2d/tile_map.cpp
 
     src/physics/area_2d.cpp
     src/physics/body_2d.cpp
@@ -77,6 +83,7 @@ file(GLOB ENGINE_SRC
     src/resource/image.cpp
     src/resource/resource.cpp
     src/resource/resource_manager.cpp
+    src/resource/sound.cpp
     src/resource/sprite_animation.cpp
     src/resource/texture.cpp
     src/resource/tile_set.cpp
@@ -111,6 +118,8 @@ if(ANDROID)
     set(PLATFORM_LIBRARIES GLESv3 EGL android log)
 elseif(WIN32)
     file(GLOB PLATFORM_SRC
+        src/audio/xaudio2/xaudio2_driver.cpp
+
         src/platform/win32/win32_display.cpp
         src/platform/win32/win32_egl.cpp
         src/platform/win32/win32_engine.cpp
@@ -122,7 +131,7 @@ elseif(WIN32)
         src/platform/win32/win32_time.cpp
     )
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DENGINE_WIN32")
-    set(PLATFORM_LIBRARIES opengl32)
+    set(PLATFORM_LIBRARIES opengl32 xaudio2)
 endif()
 
 set(SOURCE_FILES

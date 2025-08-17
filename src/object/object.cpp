@@ -10,9 +10,9 @@ void Object::_bind_vtable(VTable&)
 
 void Object::handle_internal_update(f64 dt)
 {
-    for(auto it : data.childs)
+    for (usize i = 0; i < data.childs.count; i++)
     {
-        it.second->handle_internal_update(dt);
+        data.childs[i]->handle_internal_update(dt);
     }
     
     if(has_mark(MARK_INTERNAL_UPDATE))
@@ -23,9 +23,9 @@ void Object::handle_internal_update(f64 dt)
 
 void Object::handle_update(f64 dt)
 {
-    for(auto it : data.childs)
+    for (usize i = 0; i < data.childs.count; i++)
     {
-        it.second->handle_update(dt);
+        data.childs[i]->handle_update(dt);
     }
     
     if(has_mark(MARK_UPDATE))
@@ -36,14 +36,27 @@ void Object::handle_update(f64 dt)
 
 void Object::handle_render()
 {
-    for(auto it : data.childs)
+    for (usize i = 0; i < data.childs.count; i++)
     {
-        it.second->handle_render();
+        data.childs[i]->handle_render();
     }
     
     if(has_mark(MARK_RENDER))
     {
         ObjectCall(render);
+    }
+}
+
+void Object::handle_event(const InputEvent& e)
+{
+    for (usize i = 0; i < data.childs.count; i++)
+    {
+        data.childs[i]->handle_event(e);
+    }
+
+    if (has_mark(MARK_HANDLE_EVENT))
+    {
+        ObjectCall(event, e);
     }
 }
 
@@ -54,10 +67,10 @@ void Object::set_group(u64 group_bit, bool value)
 
 void Object::add_child(Object *obj)
 {
-    Object* child = data.childs.insert(obj->id, obj);
+    Object* child = data.childs.add(obj);
     child->data.parent = this;
-    
-    if(has_mark(MARK_IN_SCENE))
+
+    if (has_mark(MARK_IN_SCENE))
     {
         ObjectCallRef(child, enter);
     }
@@ -65,7 +78,7 @@ void Object::add_child(Object *obj)
 
 void Object::remove_child(Object* child)
 {
-    data.childs.remove(child->id);
+    data.childs.remove_equal(child);
     ObjectCallRef(child, exit);
     DestroyObject(child);
 }
@@ -84,7 +97,7 @@ void Object::init(const CreateInfo& info)
     allocator = info.allocator;
     data.name = String::with_allocator(allocator);
     data.parent = nullptr;
-    data.childs = HashMap<ObjectID, Object*>::with_allocator(allocator);
+    data.childs = Array<Object*>::with_allocator(allocator);
     
     data.marks.clear();
 }
@@ -93,9 +106,9 @@ void Object::deinit()
 {
     data.name.destroy();
     
-    for(auto& it : data.childs)
+    for(auto& child : data.childs)
     {
-        DestroyObject(it.second);
+        DestroyObject(child);
     }
 
     data.childs.destroy();
@@ -107,18 +120,18 @@ void Object::enter()
     // and add_child only when the parent is already into the scene.
     mark(MARK_IN_SCENE);
 
-    for(auto& it: data.childs)
+    for(auto& child : data.childs)
     {
-        ObjectCallRef(it.second, enter);
+        ObjectCallRef(child, enter);
     }
 }
 
 void Object::exit()
 {
     data.marks.clear();
-    for(auto it : data.childs)
+    for(auto child : data.childs)
     {
-        ObjectCallRef(it.second, exit);
+        ObjectCallRef(child, exit);
     }
 }
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "collections/array.h"
+#include "graphics/graphics.h"
 #include "resource/resource.h"
 #include "resource/resource_id.h"
 #include "math/rect_2d.h"
@@ -17,7 +18,7 @@ struct Font : Resource
 
 	struct Glyph
 	{
-		ResourceID char_texture;
+		Graphics::TextureID char_texture;
 		Rect2D src_rect;
 		Vector2I advance;
 	};

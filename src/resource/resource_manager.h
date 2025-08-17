@@ -6,8 +6,11 @@
 #include "resource/font.h"
 #include "resource/image.h"
 #include "resource/texture.h"
+#include "resource/sound.h"
 #include "resource/sprite_animation.h"
 #include "resource/tile_set.h"
+
+#define RMDebugInfo(...) DebugInfo("[ResourceManager]: " __VA_ARGS__)
 
 
 struct ResourceManager
@@ -27,15 +30,6 @@ struct ResourceManager
     static inline InternalData data;
 
     [[nodiscard]] static mem::Allocator& get_allocator() { return data.allocator; }
-    
-    template<typename T>
-    [[nodiscard]] static T* create_resource()
-    {
-        static_assert(!IsSame<T, Resource>, "Resource is not allowed");
-        T* resource = get_allocator().object<T>();
-        resource->init();
-        return resource;
-    }
 
     static void initialize(mem::Allocator& allocator);
     static void shutdown();
@@ -45,12 +39,23 @@ struct ResourceManager
 
     [[nodiscard]] bool place_resource(StringView path, Resource* resource);
 
-    [[nodiscard]] static Image* load_image(StringView path);
-    [[nodiscard]] static Texture2D* load_texture_2d(StringView path, const TextureLoadInfo& load_info);
-    [[nodiscard]] static Font* load_font(StringView path);
-
     [[nodiscard]] static SpriteAnimation* create_sprite_animation(StringView name);
     [[nodiscard]] static TileSet* create_tile_set(StringView name, Vector2I tile_size);
+    
+    // Implementation
+    template<typename T>
+    [[nodiscard]] static T* _create_resource()
+    {
+        static_assert(!IsSame<T, Resource>, "Resource is not allowed");
+        T* resource = get_allocator().object<T>();
+        resource->init();
+        return resource;
+    }
+
+    [[nodiscard]] static Image* _load_image(StringView path);
+    [[nodiscard]] static Texture2D* _load_texture_2d(StringView path, const TextureLoadInfo& load_info);
+    [[nodiscard]] static Sound* _load_sound(StringView path);
+    [[nodiscard]] static Font* _load_font(StringView path);
 };
 
 // Try to load the resource of the given type, can return nullptr

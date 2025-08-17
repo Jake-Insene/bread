@@ -79,7 +79,7 @@ void TileMap::set_tile_set(TileSet* new_tile_set)
 	}
 
 	void* ptr_id = (void*)id.id;
-	DebugInfo("TileMap: Creating {} shapes for tile map {}", shape_count, ptr_id);
+	DebugInfo("TileMap({}): Creating {} shapes", ptr_id, shape_count);
 }
 
 

@@ -12,17 +12,19 @@ struct Label : CanvasObject
 	// resolve some namespace problems.
 	struct InternalData
 	{
-		Texture2D* texture;
 		i32 font_size = Font::DefaultFontSize;
+		Font* font;
 	} data;
 
-	Font* font;
 	String text;
 
 	void init(const CreateInfo&);
 	void deinit();
 	
 	void render();
+
+	void set_font(Font* new_font) { data.font = new_font; }
+	[[nodiscard]] Font* get_font() { return data.font; }
 
 	void set_font_size(i32 new_font_size);
 	[[nodiscard]] i32 get_font_size() const { return data.font_size; }

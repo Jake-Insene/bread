@@ -147,6 +147,7 @@ struct Input
     static KeyState get_key_state(Key k);
 
     static bool is_key_down(Key k);
+    static bool is_key_just_down(Key k);
 
     static bool is_mouse_button_pressed(MouseButton button);
     static bool is_mouse_button_just_pressed(MouseButton button);

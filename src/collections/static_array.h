@@ -9,7 +9,7 @@ struct [[nodiscard]] StaticArray
     T items[N];
     usize count;
 
-    static StaticArray with_count(usize item_count)
+    static constexpr StaticArray with_count(usize item_count)
     {
         return StaticArray
         {
@@ -17,7 +17,7 @@ struct [[nodiscard]] StaticArray
         };
     }
 
-    static StaticArray from_items(Slice<T> items)
+    static constexpr StaticArray from_items(Slice<T> items)
     {
 		DebugAssert(N >= items.len, "Static Array size is too small for the provided items");
         StaticArray array =
@@ -49,14 +49,14 @@ struct [[nodiscard]] StaticArray
 
     // funcs
 
-    [[nodiscard]] T& add(const T& item)
+    [[nodiscard]] constexpr T& add(const T& item)
     {
         DebugAssert(count < N, "StaticArray is full, cannot add more items");
         items[count] = item;
         return items[count++];
     }
 
-    void add_slice(Slice<T> new_items)
+    constexpr void add_slice(Slice<T> new_items)
     {
 		DebugAssert(count + new_items.len <= N, "StaticArray is full, cannot add more items");
         usize _count = count;
@@ -65,14 +65,14 @@ struct [[nodiscard]] StaticArray
         count += new_items.len;
     }
 
-    void replace(Slice<T> new_items)
+    constexpr void replace(Slice<T> new_items)
     {
 		DebugAssert(new_items.len <= N, "StaticArray is too small for the provided items");
         Slice<T> dest = Slice(items, N);
         mem::copy(dest, new_items);
     }
 
-    void remove(usize index)
+    constexpr void remove(usize index)
     {
         DebugAssert(index < count && count != 0, "index out of range");
         if (count == 1)
@@ -88,7 +88,7 @@ struct [[nodiscard]] StaticArray
         }
     }
 
-    void remove_equal(const T& item)
+    constexpr void remove_equal(const T& item)
     {
         for (usize i = 0; i < count; i++)
         {
@@ -100,10 +100,10 @@ struct [[nodiscard]] StaticArray
         }
     }
 
-    void clear()
+    constexpr void clear()
     {
         count = 0;
     }
 
-    Slice<T> slice() { return Slice(items.items, count); }
+    constexpr Slice<T> slice() { return Slice(items.items, count); }
 };

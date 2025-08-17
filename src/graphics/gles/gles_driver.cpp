@@ -49,11 +49,14 @@ Graphics::VTable GLESDriver::get_vtable()
         
         .add_cmd = &GLESDriver::add_cmd,
         
-        .texture_create = &GLESMemoryAllocator::allocate_texture_from_info,
+        .create_texture = &GLESMemoryAllocator::allocate_texture_from_info,
+        .destroy_texture = &GLESMemoryAllocator::texture_free,
+        .create_render_target = &GLESMemoryAllocator::allocate_render_target_from_info,
+        .destroy_render_target = &GLESMemoryAllocator::render_target_free,
+        
         .texture_set_image = &GLESMemoryAllocator::texture_set_image,
         .texture_get_size = &GLESMemoryAllocator::texture_get_size,
         
-        .render_target_create = &GLESMemoryAllocator::allocate_render_target_from_info,
         .render_target_get_size = &GLESMemoryAllocator::render_target_get_size,
         .render_target_set_size = &GLESMemoryAllocator::render_target_set_size,
     };
@@ -162,7 +165,7 @@ void GLESDriver::_init_context()
     }
 
 #if DEBUG
-    if(EGL::data.gles32)
+    if(gl.glDebugMessageCallback && gl.glDebugMessageControl)
     {
         gl.glEnable(GL_DEBUG_OUTPUT);
         gl.glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // Immediate debug messages

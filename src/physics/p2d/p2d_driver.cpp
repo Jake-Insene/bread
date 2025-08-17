@@ -53,6 +53,8 @@ Physics2D::VTable P2DDriver::get_vtable()
 
         .area_set_on_body_enter = &P2DDriver::area_set_on_body_enter,
         .area_set_on_body_exit = &P2DDriver::area_set_on_body_exit,
+
+        .property_change = &P2DDriver::property_change,
     };
 }
 
@@ -74,6 +76,9 @@ void P2DDriver::initialize(const mem::Allocator& allocator)
     data.current_areas = QueueArray<Area, Physics2D::AreaID>::with_size(data.allocator, 4);
 
     data.collision_callbacks_map = HashMap<CollisionID, CollisionCallback>::with_size(data.allocator, 4);
+
+    data.tile_size = Physics2D::get_property("/tile_size").get<i32>();
+	data.world_tiles = HashMap<PhysicsTileID, PhysicsTile>::with_size(data.allocator, InitialWorldTiles);
 }
 
 void P2DDriver::shutdown()
@@ -87,7 +92,8 @@ void P2DDriver::shutdown()
 
     data.current_bodies.destroy();
     data.current_areas.destroy();
-    data.collision_callbacks_map.destroy();
+    data.collision_callbacks_map.destroy(); 
+    data.world_tiles.destroy();
 }
 
 void P2DDriver::step(f32 dt)
@@ -133,18 +139,16 @@ void P2DDriver::step(f32 dt)
 Physics2D::BodyID P2DDriver::create_body(Object2D* object)
 {
     Physics2D::BodyID id = data.current_bodies.add(Body());
-    Body& b = data.current_bodies.get(id);
+    Body& new_body = data.current_bodies.get(id);
 
-    b.target = object;
-    b.self = id;
-    b.residence_mask = Physics2D::CollisionMask(Physics2D::DEFAULT_COLLISION_MASK);
+    new_body.target = object;
+    new_body.self = id;
+    new_body.residence_mask = Physics2D::CollisionMask(Physics2D::DEFAULT_COLLISION_MASK);
     _mask_group_add(id, 0);
 
-    b.collision_mask = Physics2D::CollisionMask(Physics2D::DEFAULT_COLLISION_MASK);
+    new_body.collision_mask = Physics2D::CollisionMask(Physics2D::DEFAULT_COLLISION_MASK);
 
-    b.shapes = Array<Shape2D>::with_size(get_allocator(), 1);
-    Vector2 position = object->get_position();
-    b.last_updated_pos = position;
+    new_body.shapes = Array<Shape2D>::with_size(get_allocator(), 1);
 
     return id;
 }
@@ -162,15 +166,15 @@ void P2DDriver::destroy_body(Physics2D::BodyID body_id)
 Physics2D::AreaID P2DDriver::create_area(Object2D* object)
 {
     Physics2D::AreaID id = data.current_areas.add(Area());
-    Area& area = data.current_areas.get(id);
+    Area& new_area = data.current_areas.get(id);
 
-    area.target = object;
-    area.self = id;
-    area.residence_mask = Physics2D::CollisionMask(Physics2D::DEFAULT_COLLISION_MASK);
+    new_area.target = object;
+    new_area.self = id;
+    new_area.residence_mask = Physics2D::CollisionMask(Physics2D::DEFAULT_COLLISION_MASK);
     _active_area(id);
 
-    area.shapes = Array<Shape2D>::with_size(get_allocator(), 1);
-    area.bodies_inside = HashMap<Physics2D::BodyID, Area::BodyInArea>::with_size(get_allocator(), 4);
+    new_area.shapes = Array<Shape2D>::with_size(get_allocator(), 1);
+    new_area.bodies_inside = HashMap<Physics2D::BodyID, Area::BodyInArea>::with_size(get_allocator(), 4);
     return id;
 }
 
@@ -386,6 +390,14 @@ void P2DDriver::area_set_on_body_exit(Physics2D::AreaID area_id, void* _this, Ph
     area.on_body_exit = on_body_exit;
 }
 
+void P2DDriver::property_change(StringView property_name, PropertyValue new_value)
+{
+    if (property_name.equals("/tile_size"))
+    {
+
+    }
+}
+
 void P2DDriver::_handle_debug_draw_body(Body& body)
 {
 #if defined(ENABLE_DEBUG_OPTIONS)
@@ -505,18 +517,18 @@ void P2DDriver::_check_collision_on_body(Body& body, const Shape2D& body_shape, 
             Shape2D real_shape = body_shape;
             real_shape.translate(body_position);
 
-            AABB aabb = real_shape.get_aabb();
-            AABB aabbj = other_shape.get_aabb();
+            //AABB aabb = real_shape.get_aabb();
+            //AABB aabbj = other_shape.get_aabb();
 
-            // It doesn't make sense to check if velocity.y == 0 here 
-            if (velocity.x > 0) // Rightwards collision
-            {
-                velocity.x = aabbj.min.x - aabb.max.x;
-            }
-            else if (velocity.x < 0) // Leftwards collision
-            {
-                velocity.x = aabbj.max.x - aabb.min.x;
-            }
+            //// It doesn't make sense to check if velocity.y == 0 here 
+            //if (velocity.x > 0) // Rightwards collision
+            //{
+            //    velocity.x = aabbj.min.x - aabb.max.x;
+            //}
+            //else if (velocity.x < 0) // Leftwards collision
+            //{
+            //    velocity.x = aabbj.max.x - aabb.min.x;
+            //}
         }
 
         test_shape.translate(Vector2(-velocity.x, velocity.y));
@@ -529,21 +541,21 @@ void P2DDriver::_check_collision_on_body(Body& body, const Shape2D& body_shape, 
             Shape2D real_shape = body_shape;
             real_shape.translate(body_position);
 
-            AABB aabb = real_shape.get_aabb();
-            AABB aabbj = other_shape.get_aabb();
+            //AABB aabb = real_shape.get_aabb();
+            //AABB aabbj = other_shape.get_aabb();
 
-            // It doesn't make sense to check if velocity.y == 0 here
-            if (tmp_result.advance.x)
-            {
-                if (velocity.y > 0) // Upwards collision
-                {
-                    velocity.y = aabbj.max.y - aabb.min.y;
-                }
-                else if (velocity.y < 0) // Downwards collision
-                {
-                    velocity.y = aabbj.min.y - aabb.max.y;
-                }
-            }
+            //// It doesn't make sense to check if velocity.y == 0 here
+            //if (tmp_result.advance.x)
+            //{
+            //    if (velocity.y > 0) // Upwards collision
+            //    {
+            //        velocity.y = aabbj.max.y - aabb.min.y;
+            //    }
+            //    else if (velocity.y < 0) // Downwards collision
+            //    {
+            //        velocity.y = aabbj.min.y - aabb.max.y;
+            //    }
+            //}
         }
 
         if ((tmp_result.advance.x == 0 || tmp_result.advance.y == 0)

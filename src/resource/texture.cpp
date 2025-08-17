@@ -12,6 +12,7 @@ void Texture::init()
 void Texture::destroy()
 {
     Resource::destroy();
+    Graphics::destroy_texture(texture_id);
 }
 
 Vector2I Texture::get_size() const

@@ -14,6 +14,7 @@ struct RenderCommand
         FLAG_SPRITE_TOP_LEFT = 0x1,
         FLAG_SPRITE_FLIP_V = 0x2,
         FLAG_SPRITE_FLIP_H = 0x4,
+        FLAG_SPRITE_FONT_CHAR = 0x8,
     };
 
     enum CanvasFlags

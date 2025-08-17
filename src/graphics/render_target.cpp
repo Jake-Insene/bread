@@ -6,7 +6,7 @@ RenderTarget RenderTarget::create(Vector2I size)
 {
     return RenderTarget
     {
-        .render_target_id = Graphics::render_target_create(
+        .render_target_id = Graphics::create_render_target(
             RenderTargetCreateInfo
             {
                 .format = TEXTURE_FORMAT_RGBA8,
@@ -15,6 +15,11 @@ RenderTarget RenderTarget::create(Vector2I size)
             }
         ),
     };
+}
+
+void RenderTarget::destroy()
+{
+    Graphics::destroy_render_target(render_target_id);
 }
 
 Vector2I RenderTarget::get_size() const

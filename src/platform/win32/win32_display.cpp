@@ -74,6 +74,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 			: KeyState::Released;
 
 		InputEventKey event{};
+		event.type = InputEventType::INPUT_EVENT_KEY;
 		event.pressed = Input::data.keys[wparam] == KeyState::Pressed;
 		event.key = (Key)wparam;
 

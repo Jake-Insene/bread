@@ -28,71 +28,74 @@ void EGL::initialize(const mem::Allocator& allocator)
     vtable = get_vtable();
     vtable.initialize(allocator);
 
-    REQUIRED_LOAD(glGetIntegerv);
-    REQUIRED_LOAD(glGetString);
-    REQUIRED_LOAD(glGetStringi);
-    REQUIRED_LOAD(glPixelStorei);
+    EGL_REQUIRED_LOAD(glGetIntegerv);
+    EGL_REQUIRED_LOAD(glGetString);
+    EGL_REQUIRED_LOAD(glGetStringi);
+    EGL_REQUIRED_LOAD(glPixelStorei);
 
-    REQUIRED_LOAD(glEnable);
-    REQUIRED_LOAD(glDisable);
-    REQUIRED_LOAD(glBlendFunc);
-    REQUIRED_LOAD(glViewport);
+    EGL_REQUIRED_LOAD(glEnable);
+    EGL_REQUIRED_LOAD(glDisable);
+    EGL_REQUIRED_LOAD(glBlendFunc);
+    EGL_REQUIRED_LOAD(glViewport);
 
     // Debug only
-    REQUIRED_LOAD(glDebugMessageCallback);
-    REQUIRED_LOAD(glDebugMessageControl);
+    EGL_NOT_REQUIRED_LOAD(glDebugMessageCallback);
+    EGL_NOT_REQUIRED_LOAD(glDebugMessageControl);
 
-    REQUIRED_LOAD(glCreateShader);
-    REQUIRED_LOAD(glDeleteShader);
-    REQUIRED_LOAD(glShaderSource);
-    REQUIRED_LOAD(glCompileShader);
-    REQUIRED_LOAD(glGetShaderiv);
-    REQUIRED_LOAD(glGetShaderInfoLog);
+    EGL_REQUIRED_LOAD(glCreateShader);
+    EGL_REQUIRED_LOAD(glDeleteShader);
+    EGL_REQUIRED_LOAD(glShaderSource);
+    EGL_REQUIRED_LOAD(glCompileShader);
+    EGL_REQUIRED_LOAD(glGetShaderiv);
+    EGL_REQUIRED_LOAD(glGetShaderInfoLog);
 
-    REQUIRED_LOAD(glCreateProgram);
-    REQUIRED_LOAD(glDeleteProgram);
-    REQUIRED_LOAD(glAttachShader);
-    REQUIRED_LOAD(glLinkProgram);
-    REQUIRED_LOAD(glGetProgramiv);
-    REQUIRED_LOAD(glGetProgramInfoLog);
+    EGL_REQUIRED_LOAD(glCreateProgram);
+    EGL_REQUIRED_LOAD(glDeleteProgram);
+    EGL_REQUIRED_LOAD(glAttachShader);
+    EGL_REQUIRED_LOAD(glLinkProgram);
+    EGL_REQUIRED_LOAD(glGetProgramiv);
+    EGL_REQUIRED_LOAD(glGetProgramInfoLog);
 
-    REQUIRED_LOAD(glUseProgram);
+    EGL_REQUIRED_LOAD(glUseProgram);
 
-    REQUIRED_LOAD(glGenBuffers);
-    REQUIRED_LOAD(glDeleteBuffers);
-    REQUIRED_LOAD(glBindBuffer);
-    REQUIRED_LOAD(glBufferData);
-    REQUIRED_LOAD(glBufferSubData);
-    REQUIRED_LOAD(glBindBufferBase);
+    EGL_REQUIRED_LOAD(glGenBuffers);
+    EGL_REQUIRED_LOAD(glDeleteBuffers);
+    EGL_REQUIRED_LOAD(glBindBuffer);
+    EGL_REQUIRED_LOAD(glBufferData);
+    EGL_REQUIRED_LOAD(glBufferSubData);
+    EGL_REQUIRED_LOAD(glBindBufferBase);
+    EGL_REQUIRED_LOAD(glMapBufferRange);
+    EGL_REQUIRED_LOAD(glUnmapBuffer);
 
-    REQUIRED_LOAD(glGenVertexArrays);
-    REQUIRED_LOAD(glDeleteVertexArrays);
-    REQUIRED_LOAD(glBindVertexArray);
-    REQUIRED_LOAD(glVertexAttribPointer);
-    REQUIRED_LOAD(glEnableVertexAttribArray);
-    REQUIRED_LOAD(glVertexAttribDivisor);
+    EGL_REQUIRED_LOAD(glGenVertexArrays);
+    EGL_REQUIRED_LOAD(glDeleteVertexArrays);
+    EGL_REQUIRED_LOAD(glBindVertexArray);
+    EGL_REQUIRED_LOAD(glVertexAttribPointer);
+    EGL_REQUIRED_LOAD(glEnableVertexAttribArray);
+    EGL_REQUIRED_LOAD(glVertexAttribDivisor);
 
-    REQUIRED_LOAD(glGenTextures);
-    REQUIRED_LOAD(glDeleteTextures);
-    REQUIRED_LOAD(glBindTexture);
-    REQUIRED_LOAD(glTexParameteri);
-    REQUIRED_LOAD(glTexImage2D);
-    REQUIRED_LOAD(glTexStorage2D);
+    EGL_REQUIRED_LOAD(glGenTextures);
+    EGL_REQUIRED_LOAD(glDeleteTextures);
+    EGL_REQUIRED_LOAD(glBindTexture);
+    EGL_REQUIRED_LOAD(glTexParameteri);
+    EGL_REQUIRED_LOAD(glTexImage2D);
+    EGL_REQUIRED_LOAD(glTexStorage2D);
 
-    REQUIRED_LOAD(glGenFramebuffers);
-    REQUIRED_LOAD(glDeleteFramebuffers);
-    REQUIRED_LOAD(glBindFramebuffer);
-    REQUIRED_LOAD(glFramebufferTexture2D);
-    REQUIRED_LOAD(glBlitFramebuffer);
+    EGL_REQUIRED_LOAD(glGenFramebuffers);
+    EGL_REQUIRED_LOAD(glDeleteFramebuffers);
+    EGL_REQUIRED_LOAD(glBindFramebuffer);
+    EGL_REQUIRED_LOAD(glFramebufferTexture2D);
+    EGL_REQUIRED_LOAD(glBlitFramebuffer);
 
-    REQUIRED_LOAD(glClearColor);
-    REQUIRED_LOAD(glClear);
+    EGL_REQUIRED_LOAD(glClearColor);
+    EGL_REQUIRED_LOAD(glClear);
 
-    REQUIRED_LOAD(glActiveTexture);
+    EGL_REQUIRED_LOAD(glActiveTexture);
 
-    REQUIRED_LOAD(glDrawArrays);
-    REQUIRED_LOAD(glDrawElementsInstanced);
+    EGL_REQUIRED_LOAD(glDrawArrays);
+    EGL_REQUIRED_LOAD(glDrawArraysInstanced);
+    EGL_REQUIRED_LOAD(glDrawElementsInstanced);
 
-    REQUIRED_LOAD(glLineWidth);
+    EGL_REQUIRED_LOAD(glLineWidth);
 }
 

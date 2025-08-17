@@ -8,7 +8,49 @@
 #include FT_SYSTEM_H
 #include FT_MODULE_H
 
-extern FT_MemoryRec_ ft_memory_rec;
+
+static inline void* _ft_alloc(FT_Memory, long size);
+static inline void* _ft_realloc(FT_Memory, long old_size, long new_size, void* mem);
+static inline void _ft_free(FT_Memory, void* mem);
+
+static FT_MemoryRec_ ft_memory_rec =
+{
+    .user = nullptr,
+    .alloc = _ft_alloc,
+    .free = _ft_free,
+    .realloc = _ft_realloc,
+};
+
+static inline void* _ft_alloc(FT_Memory, long size)
+{
+    return ResourceManager::get_allocator().alloc(size, 16).items;
+}
+
+static inline void* _ft_realloc(FT_Memory, long old_size, long new_size, void* mem)
+{
+    Slice<u8> old_mem = Slice((u8*)mem, old_size);
+    if (ResourceManager::get_allocator().realloc(old_mem, new_size, 16))
+    {
+        return mem;
+    }
+
+    Slice<u8> new_mem = ResourceManager::get_allocator().alloc(new_size, 16);
+    if (mem != nullptr)
+    {
+        mem::copy(new_mem, old_mem);
+        ResourceManager::get_allocator().free(old_mem);
+    }
+
+    return new_mem.items;
+}
+
+static inline void _ft_free(FT_Memory, void* mem)
+{
+    if (mem == &ft_memory_rec)
+        return;
+
+    ResourceManager::get_allocator().free(Slice((u8*)mem, 1));
+}
 
 
 static void _load_glyph(FT_Face face, Array<Font::Glyph>& glyphs)
@@ -23,7 +65,7 @@ static void _load_glyph(FT_Face face, Array<Font::Glyph>& glyphs)
 
         if (glyph_index == ' ') continue;
 
-        glyph.char_texture = Graphics::texture_create(
+        glyph.char_texture = Graphics::create_texture(
             TextureCreateInfo
             {
                 .type = TEXTURE_2D,
@@ -52,6 +94,14 @@ void Font::destroy()
     
     for (auto& theme : data.themes)
     {
+        for (auto& glyph : theme.glyphs)
+        {
+            if (glyph.char_texture == InvalidResource)
+                continue;
+
+            Graphics::destroy_texture(glyph.char_texture);
+        }
+
         theme.glyphs.destroy();
     }
 

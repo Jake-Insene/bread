@@ -1,6 +1,9 @@
 #pragma once
 #include "fmt/fmt_types.h"
 
+#include <cstdio>
+
+struct StringView;
 
 namespace fmt
 {
@@ -117,6 +120,7 @@ void format(const io::Writer& writer, FormatString<TypeIdentity<TArgs>...> fmt, 
 
 
 #include "collections/string_view.h"
+#include "mem/utils.h"
 #include "io/writer.h"
 
 namespace fmt
@@ -219,7 +223,16 @@ inline void __format_integer(const io::Writer& writer, T arg)
 
 inline void __format_float(const io::Writer& writer, f32 arg)
 {
-	__format_integer<10, i64>(writer, i64(arg));
+	char buffer[256]{};
+	usize len = (usize)std::snprintf(buffer, 256, "%f", arg);
+	writer.write(Slice((u8*)buffer, len));
+}
+
+inline void __format_double(const io::Writer& writer, f64 arg)
+{
+	char buffer[256]{};
+	usize len = (usize)std::snprintf(buffer, 256, "%f", arg);
+	writer.write(Slice((u8*)buffer, len));
 }
 
 template<typename T>
@@ -236,7 +249,7 @@ void __format_single_argument(const io::Writer& writer, T arg)
 	}
 	else if constexpr (type == fmt::FormatType::Double)
 	{
-		__format_float(writer, arg);
+		__format_double(writer, arg);
 	}
 	else if constexpr (type == fmt::FormatType::Pointer)
 	{

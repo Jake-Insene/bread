@@ -18,6 +18,9 @@ struct Graphics
         DEFAULT_DRIVER = GLES,
     };
 
+    using TextureID = ID<u32>;
+    using RenderTargetID = ID<u32>;
+
     struct VTable
     {
         VTFunc(void, initialize, const mem::Allocator&);
@@ -31,13 +34,16 @@ struct Graphics
         
         VTFunc(void, add_cmd, const RenderCommand&);
         
-        VTFunc(ResourceID, texture_create, const TextureCreateInfo&);
-        VTFunc(void, texture_set_image, ResourceID, Image*);
-        VTFunc(Vector2I, texture_get_size, ResourceID);
+        VTFunc(TextureID, create_texture, const TextureCreateInfo&);
+        VTFunc(void, destroy_texture, TextureID);
+        VTFunc(RenderTargetID, create_render_target, const RenderTargetCreateInfo&);
+        VTFunc(void, destroy_render_target, RenderTargetID);
+
+        VTFunc(void, texture_set_image, TextureID, Image*);
+        VTFunc(Vector2I, texture_get_size, TextureID);
         
-        VTFunc(ResourceID, render_target_create, const RenderTargetCreateInfo&);
-        VTFunc(Vector2I, render_target_get_size, ResourceID);
-        VTFunc(void, render_target_set_size, ResourceID, const Vector2I&);
+        VTFunc(Vector2I, render_target_get_size, RenderTargetID);
+        VTFunc(void, render_target_set_size, RenderTargetID, const Vector2I&);
     };
     
     static inline VTable vtable;
@@ -53,15 +59,18 @@ struct Graphics
     
     VTFuncDefArg1S(add_cmd, const RenderCommand&);
     
+    VTFuncDefArg1RetS(TextureID, create_texture, const TextureCreateInfo&);
+    VTFuncDefArg1S(destroy_texture, TextureID);
+    VTFuncDefArg1RetS(RenderTargetID, create_render_target, const RenderTargetCreateInfo&);
+    VTFuncDefArg1S(destroy_render_target, RenderTargetID);
+
     // Texture
-    VTFuncDefArg1RetS(ResourceID, texture_create, const TextureCreateInfo&);
-    VTFuncDefArg2S(texture_set_image, ResourceID, Image*);
-    VTFuncDefArg1RetS(Vector2I, texture_get_size, ResourceID);
+    VTFuncDefArg2S(texture_set_image, TextureID, Image*);
+    VTFuncDefArg1RetS(Vector2I, texture_get_size, TextureID);
     
     // Render Target
-    VTFuncDefArg1RetS(ResourceID, render_target_create, const RenderTargetCreateInfo&);
-    VTFuncDefArg1RetS(Vector2I, render_target_get_size, ResourceID);
-    VTFuncDefArg2S(render_target_set_size, ResourceID, const Vector2I&);
+    VTFuncDefArg1RetS(Vector2I, render_target_get_size, RenderTargetID);
+    VTFuncDefArg2S(render_target_set_size, RenderTargetID, const Vector2I&);
 };
 
 namespace Graphics2D

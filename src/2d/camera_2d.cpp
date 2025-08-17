@@ -42,12 +42,13 @@ Transform2D Camera2D::get_camera_transform()
         Vector2 centered_pos = camera_position * camera_scale;
         centered_pos -= (Vector2(display_size.x, -display_size.y) * 0.5);
         
-        data.old_pos.x = math::lerp(data.old_pos.x, centered_pos.x, speed * dt);
-        data.old_pos.y = math::lerp(data.old_pos.y, centered_pos.y, speed * dt);
+        data.old_pos.x = math::lerp(data.old_pos.x, centered_pos.x, camera_speed.x * dt);
+        data.old_pos.y = math::lerp(data.old_pos.y, centered_pos.y, camera_speed.y * dt);
     }
     else
     {
-        data.old_pos = Vector2::lerp(data.old_pos, camera_position, speed * dt);
+        data.old_pos.x = math::lerp(data.old_pos.x, camera_position.x, camera_speed.x * dt);
+        data.old_pos.y = math::lerp(data.old_pos.y, camera_position.y, camera_speed.y * dt);
     }
 
     Transform2D transform;

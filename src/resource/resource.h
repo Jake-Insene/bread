@@ -19,6 +19,7 @@ enum ResourceType
     
     RESOURCE_TEXTURE,
     RESOURCE_TEXTURE_2D,
+    RESOURCE_SOUND,
     RESOURCE_FONT,
     RESOURCE_SPRITE_ANIMATION,
     RESOURCE_TILE_SET,
@@ -31,6 +32,6 @@ struct Resource
     ResourceType type;
     String path;
     
-    void init(ResourceType rtype);
+    void init(ResourceType resource_type);
     void destroy();
 };

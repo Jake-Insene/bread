@@ -115,7 +115,7 @@ struct [[nodiscard]] StringMap
         return StringMap<T>
         {
             .allocator = allocator,
-            .entries = mem::from_bytes<MapEntry*>(allocator.alloc(sizeof(MapEntry*) * size, alignof(MapEntry))),
+            .entries = allocator.array<MapEntry*>(size),
             .count = 0,
             .first = nullptr,
             .last = nullptr,

@@ -12,6 +12,12 @@ struct CollisionID
     Physics2D::BodyID id2;
 };
 
+struct PhysicsTileID
+{
+    i32 x;
+    i32 y;
+};
+
 template<>
 struct HashOfType<CollisionID>
 {
@@ -26,8 +32,24 @@ struct HashOfType<CollisionID>
     }
 };
 
+template<>
+struct HashOfType<PhysicsTileID>
+{
+    [[nodiscard]] static constexpr u64 hashfunc(const PhysicsTileID& k)
+    {
+        return k.x | (u64(k.y) << 32);
+    }
+
+    [[nodiscard]] static constexpr bool compare(const PhysicsTileID& k1, const PhysicsTileID& k2)
+    {
+        return k1.x == k2.x && k1.y == k2.y;
+    }
+};
+
 struct P2DDriver
 {
+    static constexpr usize InitialWorldTiles = 64;
+
     struct CollisionCallback
     {
         bool two_ways;
@@ -45,7 +67,6 @@ struct P2DDriver
         void* _this;
         Physics2D::EventOnCollide on_collide;
 
-        Vector2 last_updated_pos;
         Array<Shape2D> shapes;
         Physics2D::BodyType type;
         Vector2 velocity;
@@ -89,6 +110,12 @@ struct P2DDriver
         Vector2 advance;
     };
 
+    struct PhysicsTile
+    {
+        PhysicsTileID id;
+        Array<Physics2D::BodyID> bodies_inside;
+    };
+
     struct InternalData
     {
         mem::Allocator allocator;
@@ -102,6 +129,9 @@ struct P2DDriver
         QueueArray<Area, Physics2D::AreaID> current_areas;
 
         HashMap<CollisionID, CollisionCallback> collision_callbacks_map;
+
+        i32 tile_size;
+        HashMap<PhysicsTileID, PhysicsTile> world_tiles;
     };
 
     static inline InternalData data;
@@ -171,7 +201,10 @@ struct P2DDriver
     static void area_set_on_body_enter(Physics2D::AreaID area_id, void* _this, Physics2D::EventOnBodyEnter on_body_enter);
     static void area_set_on_body_exit(Physics2D::AreaID area_id, void* _this, Physics2D::EventOnBodyExit on_body_exit);
 
-    // Internal
+    // Property
+    static void property_change(StringView property_name, PropertyValue new_value);
+
+    // P2D Internal
 
     // Body routines
     static void _handle_debug_draw_body(Body& body);

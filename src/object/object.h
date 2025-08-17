@@ -1,4 +1,5 @@
 #pragma once
+#include "collections/array.h"
 #include "collections/bits.h"
 #include "collections/event.h"
 #include "collections/hash_map.h"
@@ -117,20 +118,20 @@ struct Object
     {
         mem::Allocator allocator;
     };
-    
+
     struct VTable
     {
         Event<void(*)(Object*)> construct;
 
         Event<void(Object::*)(const CreateInfo&), false> init;
         Event<void(Object::*)(), false> deinit;
-        
+
         Event<void(Object::*)(), false> enter;
         Event<void(Object::*)(f64), false> internal_update;
         Event<void(Object::*)(f64), false> update;
         Event<void(Object::*)(), false> render;
         Event<void(Object::*)(), false> exit;
-        
+
         Event<void(Object::*)(const InputEvent&), false> event;
     };
 
@@ -140,20 +141,20 @@ struct Object
         usize class_size;
         VTable& vtable;
     };
-    
+
     static void* _get_bind_vtable() { return reinterpret_cast<void*>(&Object::_bind_vtable); }
-    
+
     static void _try_bind_vtable(VTable& vtable)
     {
         return _bind_vtable(vtable);
     }
 
     static void _bind_vtable(VTable& vtable);
-    
+
     ObjectID id;
     const Class* klass{};
     mem::Allocator allocator{};
-    
+
     enum
     {
         MARK_UPDATE,
@@ -175,7 +176,7 @@ struct Object
         MARK_DISABLE = 0,
         MARK_ENABLE = 1,
     };
-    
+
     // As everything in a struct is public we need to hide data
     // that should not be modified/access directly, this also
     // resolve some namespace problems.
@@ -183,16 +184,17 @@ struct Object
     {
         String name{}; // necessary?
         Object* parent = nullptr;
-        HashMap<ObjectID, Object*> childs{};
+        Array<Object*> childs;
 
         BitField<MARK_COUNT> marks{};
         BitField<64> bit_groups;
     } data;
-    
+
     // Internal, you should not use them
     void handle_internal_update(f64 dt);
     void handle_update(f64 dt);
     void handle_render();
+    void handle_event(const InputEvent& e);
 
     // Query info
     [[nodiscard]] bool has_mark(u64 mark) const { return data.marks.is_set(mark); }
@@ -202,18 +204,19 @@ struct Object
 
     [[nodiscard]] bool has_group(u64 group_bit) const { return data.bit_groups.is_set(group_bit); }
     void set_group(u64 group_bit, bool value);
-    
+
     // Object std functions
 
     template<typename T>
     [[nodiscard]] T* cast() const { return (T*)this; }
-    
+
     // Can be null on root scene
     [[nodiscard]] Object* get_parent() const { return data.parent; }
 
     void add_child(Object* obj);
     void remove_child(Object* obj);
     [[nodiscard]] usize get_child_count() const { return data.childs.count; }
+    Object* get_child(usize index) { return data.childs[index]; }
 
     void queue_free();
     

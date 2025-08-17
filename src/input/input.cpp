@@ -4,12 +4,20 @@
 
 bool Input::is_key_down(Key k)
 {
-	return data.keys[(int)k] == KeyState::Pressed;
+	return data.keys[(i32)k] == KeyState::Pressed;
+}
+
+bool Input::is_key_just_down(Key k)
+{
+	bool is_down = data.keys[(i32)k] == KeyState::Pressed;
+
+	data.keys[(i32)k] = KeyState::Released;
+	return is_down;
 }
 
 KeyState Input::get_key_state(Key k)
 {
-	return data.keys[(int)k];
+	return data.keys[(i32)k];
 }
 
 

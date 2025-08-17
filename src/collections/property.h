@@ -101,9 +101,25 @@ struct Property
 {
 	struct Bool : PropertyValue
 	{
-		explicit constexpr Bool(bool v)
+		explicit constexpr Bool(bool value)
 		{
-			storage.b = v;
+			storage.b = value;
+		}
+	};
+
+	struct Integer : PropertyValue
+	{
+		template<typename T>
+		explicit constexpr Integer(T value)
+		{
+			if constexpr (IsSigned<T>)
+			{
+				storage.i = value;
+			}
+			else
+			{
+				storage.u = value;
+			}
 		}
 	};
 };

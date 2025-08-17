@@ -9,58 +9,10 @@
 #include <external/stb_image.h>
 
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_SYSTEM_H
-#include FT_MODULE_H
-
-FT_MemoryRec_ ft_memory_rec;
-
-static inline void* _ft_alloc(FT_Memory, long size)
-{
-    return ResourceManager::get_allocator().alloc(size, 16).items;
-}
-
-static inline void* _ft_realloc(FT_Memory, long old_size, long new_size, void* mem)
-{
-    Slice<u8> old_mem = Slice((u8*)mem, old_size);
-    if (ResourceManager::get_allocator().realloc(old_mem, new_size, 16))
-    {
-        return mem;
-    }
-
-    Slice<u8> new_mem = ResourceManager::get_allocator().alloc(new_size, 16);
-    if (mem != nullptr)
-    {
-        mem::copy(new_mem, old_mem);
-        ResourceManager::get_allocator().free(old_mem);
-    }
-
-    return new_mem.items;
-}
-
-static inline void _ft_free(FT_Memory, void* mem)
-{
-    if (mem == &ft_memory_rec)
-        return;
-
-    ResourceManager::get_allocator().free(Slice((u8*)mem, 1));
-}
-
 void ResourceManager::initialize(mem::Allocator& allocator)
 {
     data.allocator = allocator;
 
-    ft_memory_rec =
-    {
-        .user = nullptr,
-        .alloc = _ft_alloc,
-        .free = _ft_free,
-        .realloc = _ft_realloc,
-    };
-
-    FailOn(OS::set_current_directory("assets") == false, "assets directory not found")
-    
     stbi_set_flip_vertically_on_load(true);
     data.resources = StringMap<Resource*>::with_size(
         data.allocator, 4
@@ -81,6 +33,12 @@ void ResourceManager::shutdown()
         {
             Image* image = (Image*)it.second;
             image->destroy();
+        }
+            break;
+        case RESOURCE_SOUND:
+        {
+            Sound* sound = (Sound*)it.second;
+            sound->destroy();
         }
             break;
         case RESOURCE_FONT:
@@ -131,11 +89,11 @@ Resource* ResourceManager::load_resource(ResourceType type,
     switch (type)
     {
     case RESOURCE_IMAGE:
-        return load_image(path);
+        return _load_image(path);
     case RESOURCE_TEXTURE:
         break;
     case RESOURCE_TEXTURE_2D:
-        return load_texture_2d(
+        return _load_texture_2d(
             path,
             TextureLoadInfo
             {
@@ -145,8 +103,11 @@ Resource* ResourceManager::load_resource(ResourceType type,
             }
         );
         break;
+    case RESOURCE_SOUND:
+        return _load_sound(path);
+        break;
     case RESOURCE_FONT:
-        return load_font(path);
+        return _load_font(path);
     case RESOURCE_SPRITE_ANIMATION:
     case RESOURCE_TILE_SET:
     {
@@ -174,7 +135,7 @@ bool ResourceManager::place_resource(StringView path, Resource* resource)
     return true;
 }
 
-Image* ResourceManager::load_image(StringView path)
+Image* ResourceManager::_load_image(StringView path)
 {
     Image* image = nullptr;
     if (data.resources.has(path))
@@ -185,11 +146,9 @@ Image* ResourceManager::load_image(StringView path)
     {
         Image tmp_image{};
         if (!tmp_image.load(path))
-        {
-            Fatal("Couldn't load the image '{}'", path);
-        }
+            return nullptr;
 
-        image = create_resource<Image>();
+        image = _create_resource<Image>();
         *image = tmp_image;
         image->path.set(path);
         data.resources.insert(path, (Resource*)image);
@@ -199,7 +158,7 @@ Image* ResourceManager::load_image(StringView path)
 }
 
 
-Texture2D* ResourceManager::load_texture_2d(StringView path, const TextureLoadInfo& load_info)
+Texture2D* ResourceManager::_load_texture_2d(StringView path, const TextureLoadInfo& load_info)
 {
     Image* image = nullptr;
     if(data.resources.has(path))
@@ -208,14 +167,12 @@ Texture2D* ResourceManager::load_texture_2d(StringView path, const TextureLoadIn
     }
     else
     {
-        image = create_resource<Image>();
+        image = _create_resource<Image>();
         image->path.set(path);
         data.resources.insert(path, (Resource*)image);
         
-        if(!image->load(path))
-        {
-            Fatal("Couldn't load the image '{}'", path);
-        }
+        if (!image->load(path))
+            return nullptr;
     }
     
     Texture2D* tex = nullptr;
@@ -225,8 +182,8 @@ Texture2D* ResourceManager::load_texture_2d(StringView path, const TextureLoadIn
     }
     else
     {
-        DebugInfo("Loading the texture '{}'...", path);
-        tex = create_resource<Texture2D>();
+        RMDebugInfo("Loading the texture '{}'...", path);
+        tex = _create_resource<Texture2D>();
         tex->path.set(path);
         
         TextureCreateInfo create_info =
@@ -238,25 +195,38 @@ Texture2D* ResourceManager::load_texture_2d(StringView path, const TextureLoadIn
             .size = image->size,
             .pixels = image->pixels,
         };
-        tex->texture_id = Graphics::texture_create(create_info);
+        tex->texture_id = Graphics::create_texture(create_info);
         Graphics::texture_set_image(tex->texture_id, image);
 
         data.cached_images.insert(image, tex);
-        DebugInfo("'{}' was loaded correctly.", path);
+        RMDebugInfo("'{}' was loaded correctly.", path);
     }
     
     return tex;
 }
 
+Sound* ResourceManager::_load_sound(StringView path)
+{
+    if (data.resources.has(path))
+    {
+        return (Sound*)data.resources.get(path);
+    }
 
-Font* ResourceManager::load_font(StringView path)
+    Sound* new_font = _create_resource<Sound>();
+    new_font->load(path);
+
+    data.resources.insert(path, new_font);
+    return new_font;
+}
+
+Font* ResourceManager::_load_font(StringView path)
 {
     if (data.resources.has(path))
     {
         return (Font*)data.resources.get(path);
     }
 
-    Font* new_font = create_resource<Font>();
+    Font* new_font = _create_resource<Font>();
     new_font->load_from_file(path);
 
     data.resources.insert(path, new_font);
@@ -271,7 +241,7 @@ SpriteAnimation* ResourceManager::create_sprite_animation(StringView name)
         return nullptr;
     }
 
-    SpriteAnimation* sprite_animation = create_resource<SpriteAnimation>();
+    SpriteAnimation* sprite_animation = _create_resource<SpriteAnimation>();
     data.resources.insert(name, sprite_animation);
 
     sprite_animation->path.set("local");
@@ -286,7 +256,7 @@ TileSet* ResourceManager::create_tile_set(StringView name, Vector2I tile_size)
         return nullptr;
     }
 
-    TileSet* tile_set = create_resource<TileSet>();
+    TileSet* tile_set = _create_resource<TileSet>();
     data.resources.insert(name, tile_set);
     tile_set->path.set("local");
     tile_set->set_tile_size(tile_size);

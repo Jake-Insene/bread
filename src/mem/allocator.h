@@ -67,7 +67,8 @@ inline void mem::Allocator::free(Slice<u8> ptr) const
 template<typename T>
 Slice<T> mem::Allocator::array(usize count) const
 {
-    Slice<T> array = mem::from_bytes<T>(alloc(sizeof(T) * count, alignof(T)));
+    static constexpr usize Alignment = ConditionalValue<usize, alignof(T) == 1, 8, alignof(T)>;
+    Slice<T> array = mem::from_bytes<T>(alloc(sizeof(T) * count, Alignment));
     construct_array(array);
     return array;
 }

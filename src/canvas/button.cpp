@@ -67,9 +67,10 @@ void Button::event(const InputEvent& e)
 
 bool Button::is_inside(const Vector2& pos) const
 {
+    Transform2D global_transform = get_global_transform();
     return Rect2D(
-            get_position(),
-            get_size() * get_scale()
+            global_transform.get_position(),
+            get_size() * global_transform.get_scale()
     ).point_is_in(pos);
 }
 

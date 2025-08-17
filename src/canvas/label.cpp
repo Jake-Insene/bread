@@ -15,7 +15,7 @@ void Label::deinit()
 
 void Label::render()
 {
-	if (!font || !text.count)
+	if (!data.font || !text.count)
 		return;
 
 	Transform2D transform = get_global_transform();
@@ -23,7 +23,7 @@ void Label::render()
 	const Vector2 begin_pos = transform.get_position();
 	const Vector2 font_size = Vector2(get_font_size());
 
-	const Font::FontTheme& font_theme = font->get_font_theme(get_font_size());
+	const Font::FontTheme& font_theme = data.font->get_font_theme(get_font_size());
 	
 	for (usize i = 0; i < text.count; i++)
 	{

@@ -22,7 +22,7 @@ struct Image : Resource
     void init();
     void destroy();
     
-    [[nodiscard]] bool load(StringView path);
+    [[nodiscard]] bool load(StringView file_path);
     void unload();
 };
 

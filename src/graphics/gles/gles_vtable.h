@@ -9,9 +9,12 @@ inline EGLAPI __eglMustCastToProperFunctionPointerType (*platform_get_proc)(cons
 inline void* (*platform_get_proc)(const char* name) = nullptr;
 #endif 
 
-#define REQUIRED_LOAD(name) \
+#define EGL_REQUIRED_LOAD(name) \
     gl.name = (decltype(gl.name))platform_get_proc(#name); \
     FailOn(gl.name == nullptr, "Couldn't load the function {}", StringView(#name));
+
+#define EGL_NOT_REQUIRED_LOAD(name) \
+    gl.name = (decltype(gl.name))platform_get_proc(#name);
 
 struct GLESVTable
 {
@@ -50,6 +53,8 @@ struct GLESVTable
     PFNGLBUFFERDATAPROC glBufferData;
     PFNGLBUFFERSUBDATAPROC glBufferSubData;
     PFNGLBINDBUFFERBASEPROC glBindBufferBase;
+    PFNGLMAPBUFFERRANGEPROC glMapBufferRange;
+    PFNGLUNMAPBUFFERPROC glUnmapBuffer;
 
     PFNGLGENVERTEXARRAYSPROC glGenVertexArrays;
     PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays;
@@ -77,6 +82,7 @@ struct GLESVTable
     PFNGLACTIVETEXTUREPROC glActiveTexture;
 
     PFNGLDRAWARRAYSPROC glDrawArrays;
+    PFNGLDRAWARRAYSINSTANCEDPROC glDrawArraysInstanced;
     PFNGLDRAWELEMENTSINSTANCEDPROC glDrawElementsInstanced;
 
     PFNGLLINEWIDTHPROC glLineWidth;

@@ -11,6 +11,17 @@
             </ArrayItems>
         </Expand>
     </Type>
+	<Type Name="Stack&lt;*&gt;">
+		<DisplayString>{{ count={sp} }}</DisplayString>
+		<Expand>
+			<Item Name="[count]" ExcludeView="simple">sp</Item>
+			<Item Name="[capacity]" ExcludeView="simple">items.len</Item>
+			<ArrayItems>
+				<Size>sp</Size>
+				<ValuePointer>items.items</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
 	
     <Type Name="Slice&lt;*&gt;">
         <DisplayString>{{ len={len} }}</DisplayString>

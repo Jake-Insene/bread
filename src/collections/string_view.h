@@ -44,6 +44,8 @@ struct [[nodiscard]] StringView : Slice<const char>
 
 [[nodiscard]] constexpr bool StringView::equals(StringView str) const
 {
+    if (items == nullptr || len == 0)
+        return false;
     return mem::compare(Slice(items, str.len), str);
 }
     

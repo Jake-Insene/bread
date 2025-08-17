@@ -24,6 +24,8 @@ struct Win32OS : OS
 
         HANDLE handle;
         ThreadState state;
+
+        SRWLOCK thread_srw;
     };
 
     struct MutexData

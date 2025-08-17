@@ -15,5 +15,3 @@
 #undef max
 #undef min
 
-
-

@@ -24,7 +24,7 @@ struct Camera2D : Object2D
         PositionMode position_mode = POSITION_CENTERED;
     } data;
     
-    f32 speed = 1;
+    Vector2 camera_speed = Vector2(1);
 
     void init(const CreateInfo& info);
 
