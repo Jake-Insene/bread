@@ -54,7 +54,7 @@ void Object::handle_event(const InputEvent& e)
         data.childs[i]->handle_event(e);
     }
 
-    if (has_mark(MARK_HANDLE_EVENT))
+    if (has_mark(MARK_EVENT))
     {
         ObjectCall(event, e);
     }
@@ -62,7 +62,10 @@ void Object::handle_event(const InputEvent& e)
 
 void Object::set_group(u64 group_bit, bool value)
 {
-    data.bit_groups.set(group_bit, value);
+    if (value)
+        data.bit_groups.set(group_bit);
+    else
+        data.bit_groups.unset(group_bit);
 }
 
 void Object::add_child(Object *obj)
@@ -116,8 +119,8 @@ void Object::deinit()
 
 void Object::enter()
 {
-    // This function is only called in SceneManager when you change the scene
-    // and add_child only when the parent is already into the scene.
+    // This function is only called in SceneManager when you use change_scene(),
+    // and add_child() when the parent is already into the scene.
     mark(MARK_IN_SCENE);
 
     for(auto& child : data.childs)

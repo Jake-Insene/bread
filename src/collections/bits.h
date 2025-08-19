@@ -7,12 +7,13 @@ struct [[nodiscard]] BitField
 {
     usize data[(bits >> 6) + 1];
     
-    constexpr void set(const usize index, const bool v)
+    constexpr void set(const usize index)
     {
         DebugAssert(index < bits, "invalid bit field");
-        usize b = usize(v) << (index & 0x3F);
+        usize b = 1ULL << (index & 0x3F);
         data[(index / 64)] |= b;
     }
+
     constexpr void unset(const usize index)
     {
         DebugAssert(index < bits, "invalid bit field");

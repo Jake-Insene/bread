@@ -3,7 +3,6 @@
 
 void Timer::init(const CreateInfo&)
 {
-    mark(MARK_INTERNAL_UPDATE);
 }
 
 void Timer::enter()
@@ -30,16 +29,14 @@ void Timer::internal_update(f64 delta)
 
 void Timer::start()
 {
-    if(data.loop == false)
-    {
-        mark(MARK_INTERNAL_UPDATE);
-    }
+    mark(MARK_INTERNAL_UPDATE);
     data.acumulator = 0;
 }
 
 void Timer::stop()
 {
     unmark(MARK_INTERNAL_UPDATE);
+    data.acumulator = 0;
 }
 
 void Timer::set_loop(bool enable)

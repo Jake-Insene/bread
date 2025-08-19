@@ -34,6 +34,7 @@ Transform2D Camera2D::get_camera_transform()
     const Transform2D camera_transform = get_global_transform();
     const Vector2 camera_position = camera_transform.get_position();
     const Vector2 camera_scale = camera_transform.get_scale();
+    const f32 camera_rot = camera_transform.get_rotation();
     const f64 dt = SceneManager::get_delta_time();
 
     if (data.position_mode == PositionMode::POSITION_CENTERED)
@@ -54,5 +55,6 @@ Transform2D Camera2D::get_camera_transform()
     Transform2D transform;
     transform.set_scale(camera_scale);
     transform.translate(data.old_pos);
+    transform.set_rotation(camera_rot);
     return transform;
 }

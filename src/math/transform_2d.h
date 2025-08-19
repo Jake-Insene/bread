@@ -96,20 +96,30 @@ struct [[nodiscard]] Transform2D
         const Vector2 scale = get_scale();
         const f32 c = math::cos(rads);
         const f32 s = math::sin(rads);
-        rows[0][0] = c;
-        rows[0][1] = -s;
-        rows[1][0] = s;
-        rows[1][1] = c;
+        rows[0] = Vector2(c, -s);
+        rows[1] = Vector2(s, c);
         set_scale(scale);
     }
 
     [[nodiscard]] constexpr f32 get_rotation() const
     {
-        return math::atan2(rows[0].y, rows[0].x);
+        return math::atan2(rows[1].x, rows[0].x);
     }
 
     [[nodiscard]] constexpr f32 determinant() const
     {
         return rows[0].x * rows[1].y - rows[0].y * rows[1].x;
+    }
+
+    constexpr Vector2 get_column(usize n)
+    {
+        if (n == 0)
+        {
+            return Vector2(rows[0].x, rows[1].x);
+        }
+        else
+        {
+            return Vector2(rows[0].y, rows[1].y);
+        }
     }
 };

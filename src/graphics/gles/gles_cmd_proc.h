@@ -134,7 +134,7 @@ struct GLESCommandProcessor
     {
         GLID last_fbo;
         GLID current_fbo;
-        ResourceID current_fb;
+        Graphics::RenderTargetID current_fb;
     };
     
     struct InternalData
@@ -183,8 +183,8 @@ struct GLESCommandProcessor
 
     static void render();
     
-    [[nodiscard]] static u32 get_current_fbo() { return data.state.current_fbo; }
-    static void set_current_fbo(u32 new_object) { data.state.current_fbo = new_object; }
-    [[nodiscard]] static ResourceID get_current_fb() { return data.state.current_fb; }
-    static void set_current_fb(ResourceID new_object) { data.state.current_fb = new_object; }
+    [[nodiscard]] static GLID get_current_fbo() { return data.state.current_fbo; }
+    static void set_current_fbo(GLID new_object) { data.state.current_fbo = new_object; }
+    [[nodiscard]] static Graphics::RenderTargetID get_current_fb() { return data.state.current_fb; }
+    static void set_current_fb(Graphics::RenderTargetID new_object) { data.state.current_fb = new_object; }
 };

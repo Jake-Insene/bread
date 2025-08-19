@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/doc.h"
 #include "core/id.h"
 #include "core/macros.h"
 #include "core/templates.h"

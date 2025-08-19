@@ -14,11 +14,21 @@ void AudioPlayer::enter()
 
 void AudioPlayer::internal_update(f64 delta)
 {
+    if (get_sound() == nullptr)
+        return;
+
+    if (data.loop == false)
+        return;
+ 
+    Audio::source_voice_keep_playing(get_sound()->get_source_voice());
 }
 
 
 void AudioPlayer::play()
 {
+    if (get_sound() == nullptr)
+        return;
+
     Audio::source_voice_play(get_sound()->get_source_voice());
     data.playing = true;
 }
@@ -34,4 +44,16 @@ void AudioPlayer::set_loop(bool enable)
         return;
 
     data.loop = enable;
+}
+
+void AudioPlayer::set_volume(f32 new_volume)
+{
+    if (data.sound == nullptr)
+        return;
+
+    if (data.volume_cache == new_volume)
+        return;
+
+    Audio::source_voice_set_volume(get_sound()->get_source_voice(), new_volume);
+    data.volume_cache = new_volume;
 }

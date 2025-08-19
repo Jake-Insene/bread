@@ -13,8 +13,12 @@ Audio::VTable XAudio2Driver::get_vtable()
 
 		.create_source_voice = &XAudio2Driver::create_source_voice,
 		.destroy_source_voice = &XAudio2Driver::destroy_source_voice,
+
+		.source_voice_set_volume = &XAudio2Driver::source_voice_set_volume,
+		.source_voice_get_volume = &XAudio2Driver::source_voice_get_volume,
 		
 		.source_voice_play = &XAudio2Driver::source_voice_play,
+		.source_voice_keep_playing = &XAudio2Driver::source_voice_keep_playing,
 	};
 }
 
@@ -38,6 +42,7 @@ void XAudio2Driver::initialize(const mem::Allocator& allocator)
 		data.xaudio->CreateMasteringVoice(&data.master_voice),
 		"Couldn't create the master voice"
 	);
+	data.xaudio->StartEngine();
 }
 
 void XAudio2Driver::shutdown()
@@ -61,11 +66,12 @@ Audio::SourceVoiceID XAudio2Driver::create_source_voice(const AudioSourceVoiceCr
 		.cbSize = 0,
 	};
 
-
 	Audio::SourceVoiceID sv_id = data.source_voices.add(SourceVoice());
 	SourceVoice& sv = _get_source_voice(sv_id);
+	sv.wfx = wfx;
 
-	data.xaudio->CreateSourceVoice(&sv.sv_xaudio, &wfx);
+	sv.callback = get_allocator().object<VoiceCallback>();
+	data.xaudio->CreateSourceVoice(&sv.sv_xaudio, &wfx, 0, XAUDIO2_DEFAULT_FREQ_RATIO, sv.callback);
 	DebugAssert(sv.sv_xaudio != nullptr, "Couldn't create a source voice");
 
 	sv.buffer = get_allocator().array<u8>(create_info.buffer.len);
@@ -78,9 +84,25 @@ void XAudio2Driver::destroy_source_voice(Audio::SourceVoiceID sv_id)
 {
 	SourceVoice& sv = _get_source_voice(sv_id);
 	sv.sv_xaudio->DestroyVoice();
+	get_allocator().free(Slice((u8*)sv.callback, 1));
 	get_allocator().free(sv.buffer);
 
 	data.source_voices.remove(sv_id);
+}
+
+void XAudio2Driver::source_voice_set_volume(Audio::SourceVoiceID sv_id, f32 volume)
+{
+	SourceVoice& sv = _get_source_voice(sv_id);
+	sv.sv_xaudio->SetVolume(volume);
+}
+
+f32 XAudio2Driver::source_voice_get_volume(Audio::SourceVoiceID sv_id)
+{
+	SourceVoice& sv = _get_source_voice(sv_id);
+
+	f32 volume;
+	sv.sv_xaudio->GetVolume(&volume);
+	return volume;
 }
 
 void XAudio2Driver::source_voice_play(Audio::SourceVoiceID sv_id)
@@ -97,5 +119,23 @@ void XAudio2Driver::source_voice_play(Audio::SourceVoiceID sv_id)
 
 	sv.sv_xaudio->SubmitSourceBuffer(&buffer);
 	sv.sv_xaudio->Start(0);
+}
+
+void XAudio2Driver::source_voice_keep_playing(Audio::SourceVoiceID sv_id)
+{
+	SourceVoice& sv = _get_source_voice(sv_id);
+
+	if (sv.callback->state == VOICE_STATE_STREAM_END)
+	{
+		XAUDIO2_BUFFER buffer =
+		{
+			.Flags = XAUDIO2_END_OF_STREAM,
+			.AudioBytes = (UINT32)sv.buffer.len,
+			.pAudioData = sv.buffer.ptr(),
+		};
+
+		sv.sv_xaudio->SubmitSourceBuffer(&buffer);
+		sv.callback->state = VOICE_STATE_UNKNOWN;
+	}
 }
 

@@ -111,8 +111,15 @@ void GLESDriver::render()
 void GLESDriver::present()
 {
     Vector2I size = Engine::get_main_window().get_size();
-    auto& rt = GLESMemoryAllocator::render_target_get(GLESCommandProcessor::get_current_fb());
+    Graphics::RenderTargetID rt_id = GLESCommandProcessor::get_current_fb();
+    
+    if (rt_id == InvalidResource)
+    {
+        EGL::present();
+        return;
+    }
 
+    auto& rt = GLESMemoryAllocator::render_target_get(GLESCommandProcessor::get_current_fb());
     if (GLESCommandProcessor::data.state.current_fbo != 0)
     {
         gl.glBindFramebuffer(GL_FRAMEBUFFER, 0);

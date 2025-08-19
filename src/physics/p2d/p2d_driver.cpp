@@ -606,6 +606,9 @@ void P2DDriver::_check_body_in_area(const Vector2& area_position, Area& area, Bo
 
     for (auto area_shape : area.shapes)
     {
+        if (area_shape.get_size() == Vector2())
+            continue;
+
         // area_shape is not a reference, modify it is safe.
         area_shape.translate(area_position);
         _check_body_in_shape(area_shape, area, body, body_position);

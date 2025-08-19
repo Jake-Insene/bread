@@ -13,7 +13,7 @@ void CanvasObject::_bind_vtable(CanvasObject::VTable& vtable)
 void CanvasObject::init(const CreateInfo&)
 {
     mark(MARK_RENDER);
-    mark(MARK_HANDLE_EVENT);
+    mark(MARK_EVENT);
     mark(MARK_CANVAS);
 }
 

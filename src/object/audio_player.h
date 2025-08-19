@@ -14,6 +14,7 @@ struct AudioPlayer : Object
     {
         Sound* sound;
 
+        f32 volume_cache;
         bool playing;
         bool loop;
     } data;
@@ -31,4 +32,7 @@ struct AudioPlayer : Object
 
     void set_loop(bool enable);
     [[nodiscard]] bool get_loop() const { return data.loop; }
+
+    void set_volume(f32 new_volume);
+    [[nodiscard]] f32 get_volume()const { return data.volume_cache; }
 };

@@ -78,8 +78,8 @@ void TileMap::set_tile_set(TileSet* new_tile_set)
 		Physics2D::body_add_shape(data.body_id, tile_shape);
 	}
 
-	void* ptr_id = (void*)id.id;
-	DebugInfo("TileMap({}): Creating {} shapes", ptr_id, shape_count);
+	usize ptr_id = (usize)id.id;
+	DebugInfo("TileMap({}): Creating {} shapes", (void*)ptr_id, shape_count);
 }
 
 

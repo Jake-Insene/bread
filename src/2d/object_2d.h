@@ -4,11 +4,13 @@
 #include "math/transform_2d.h"
 
 
+/*
+* Represent a object in a 2D world.
+* It is affected by 2D cameras.
+*/
 struct Object2D : Object
 {
     OBJECT(Object2D, Object);
-
-    static void _bind_vtable(VTable& vtable);
 
     // As everything in a struct is public we need to hide data
     // that should not be modified/access directly, this also
@@ -25,6 +27,7 @@ struct Object2D : Object
     void init(const CreateInfo& info);
     
     // 2D utility
+
     void set_position(Vector2 new_pos);
     Vector2 get_position() const;
 

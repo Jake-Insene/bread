@@ -184,6 +184,7 @@ void SceneManager::step()
     }
 
     data.fps_acum++;
+
     for (auto& it : data.queue_frees)
     {
         it.second.parent->remove_child(it.second.child);
@@ -203,7 +204,7 @@ void SceneManager::scene_handle_input(const InputEvent& event)
     if (data.current_scene == nullptr)
         return;
 
-    if (!data.current_scene->has_mark(Object::MARK_HANDLE_EVENT))
+    if (!data.current_scene->has_mark(Object::MARK_EVENT))
         return;
 
     if (event.type == INPUT_EVENT_TOUCH)

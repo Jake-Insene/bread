@@ -2,6 +2,7 @@
 #include "core/templates.h"
 #include "core/macros.h"
 
+#include "math/funcs/abs.h"
 #include "math/funcs/sin.h"
 #include "math/funcs/cos.h"
 #include "math/funcs/tan.h"
@@ -9,6 +10,12 @@
 
 namespace math
 {
+
+template<typename T>
+[[nodiscard]] constexpr T dist(T a, T b)
+{
+    return abs(b - a);
+}
 
 template<typename T>
 [[nodiscard]] constexpr T log2(T n)
@@ -60,13 +67,16 @@ template<typename T>
 {
     static_assert(IsFloatingPoint<T>, "expected floating point type");
     // TODO: Improve this
-    if (n == T(0)) return n;
+    if (n == T(0))
+        return n;
 
     const T tolerance = T(1e-10);
     T x = n;
+
     while (true)
     {
         const T root = T(0.5) * (x + (n / x));
+        
         if (abs(root - x) < tolerance)
             return root;
 
@@ -81,7 +91,7 @@ template<typename T>
         IsArithmetic<T>,
         "expected arithmetic type"
         );
-    return (PI<T> *degrees) / 180;
+    return (PI<T> / 180) * degrees;
 }
 
 template<typename T>
@@ -91,14 +101,13 @@ template<typename T>
         IsArithmetic<T>,
         "expected arithmetic type"
         );
-    return (rads * 180) / PI<T>;
+    return (180 / PI<T>) * rads;
 
 }
 
 template<typename T>
 [[nodiscard]] constexpr T cos(T r)
 {
-
     return impl::cos_approx<T>(r);
 }
 
@@ -115,9 +124,9 @@ template<typename T>
 }
 
 template<typename T>
-[[nodiscard]] constexpr T atan2(T x, T y)
+[[nodiscard]] constexpr T atan2(T y, T x)
 {
-    return impl::atan2_approx<T>(x, y);
+    return impl::atan2_approx<T>(y, x);
 }
 
 template<typename T>
@@ -135,7 +144,7 @@ template<typename T>
 template<typename T>
 [[nodiscard]] constexpr T sign(T v)
 {
-    return v >= 0 ? 1 : -1;
+    return v > 0 ? 1 : v < 0 ? -1 : 0;
 }
 
 template<typename T, typename TStep>
@@ -144,10 +153,11 @@ template<typename T, typename TStep>
     return start + (end - start) * step;
 }
 
-template<typename T>
-[[nodiscard]] constexpr T dist(T a, T b)
+template<typename T, typename TStep>
+[[nodiscard]] constexpr T move_to(const T start, const T end, TStep step)
 {
-    return a > b ? a - b : b - a;
+    return dist<T>(start, end) <= step ? end : start + sign(end - start) * step;
 }
+
 
 }

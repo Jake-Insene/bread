@@ -7,10 +7,9 @@ layout(location = 2) in vec4 instance_2;
 layout(location = 3) in vec4 instance_3;
 layout(location = 4) in vec4 instance_4;
 
-#define transform_0 instance_0.xy
-#define transform_1 instance_0.zw
+#define transform mat2(instance_0.xy, instance_0.zw)
 
-#define transform_2 instance_1.xy
+#define transform_translation instance_1.xy
 #define texture_input_slot floatBitsToUint(instance_1.z)
 #define input_flags floatBitsToUint(instance_1.w)
 
@@ -74,34 +73,26 @@ void main()
     vec2 position = src_rect.xy;
     vec2 size = src_rect.zw;
 
-    vec2 p0 = position;
-    vec2 p1 = position + size;
-
-    vec2 uv0 = p0 / texture_extent;
-    vec2 uv1 = p1 / texture_extent;
-
-    // index == 3
-    vec2 out_uv = vec2(uv0.x, uv1.y);
-
+    vec2 out_uv = vec2(position.x, size.y) / texture_extent;
     if(index == 0)
     {
-        out_uv = vec2(uv0.x, uv0.y);
+        out_uv = position / texture_extent;
     }
     else if(index == 1)
     {
-        out_uv = vec2(uv1.x, uv0.y);
+        out_uv = vec2(size.x, position.y) / texture_extent;
     }
     else if(index == 2)
     {
-        out_uv = vec2(uv1.x, uv1.y);
+        out_uv = size / texture_extent;
     }
 
     out_uv.x = mix(out_uv.x, 1.0 - out_uv.x, float(bool(flags & FLAG_FLIP_H)));
     out_uv.y = mix(out_uv.y, 1.0 - out_uv.y, float(bool(flags & FLAG_FLIP_V)));
     
-    mat2 rot = transpose(mat2(transform_0, transform_1));
-    out_pos.xy = rot * out_pos.xy;
-    out_pos.xy += transform_2;
+    mat2 matrix_transform = transform;
+    out_pos.xy = matrix_transform * out_pos.xy;
+    out_pos.xy += transform_translation;
     
     out_pos = screen_transform * out_pos;
 

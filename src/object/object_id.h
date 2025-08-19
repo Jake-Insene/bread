@@ -1,29 +1,28 @@
 #pragma once
 #include "core/types.h"
 
+
 // Layout
-// 0-31 block slot
-// 32-39 block index
-// 40-47 chunk index
-// 48-63 unused
-
-
+// 63-48 unused
+// 47-40 chunk index
+// 39-32 block index
+// 31-0 block slot
 struct ObjectID
 {
-    using ID = u64;
+    using InternalID = u64;
     
-    static constexpr ID InvalidID = ID(-1);
+    static constexpr InternalID InvalidID = InternalID(-1);
     
-    ID id;
+    InternalID id;
     
     constexpr ObjectID()
         : id(InvalidID) {}
-    constexpr ObjectID(ID slot, ID block, ID chunk)
+    constexpr ObjectID(InternalID slot, InternalID block, InternalID chunk)
         : id(slot | (block<<32) | (chunk<<40)) {}
     
     [[nodiscard]] bool constexpr operator==(ObjectID o) const { return id == o.id; }
     
-    [[nodiscard]] constexpr operator ID() const { return id; }
+    [[nodiscard]] constexpr operator InternalID() const { return id; }
     
     [[nodiscard]] constexpr u32 slot() const { return id & 0xFFFF'FFFF; }
     [[nodiscard]] constexpr u8 block() const { return (id >> 32) & 0xFF; }

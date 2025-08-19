@@ -49,7 +49,7 @@
         }\
     }
 
-#define OBJECT(name, base)\
+#define OBJECT(name, base, ...)\
     static void* _get_bind_vtable()\
     {\
         return reinterpret_cast<void*>(&name::_bind_vtable);\
@@ -98,7 +98,7 @@
     OBJECT_FUNCV_ARG1(name, base, event, const InputEvent&)\
     
     
-// Dont use VTableCall because it reference the member vtable that
+// Don't use VTableCall because it reference the member vtable that
 // is not in an object.
 #define ObjectCall(name, ...) \
     static_cast<RemoveConstPointer<decltype(this)>::VTable&>(klass->vtable).name.call(this __VA_OPT__(,) __VA_ARGS__)
@@ -109,9 +109,13 @@
 
 #define DefineVTable(base) struct VTable : base::VTable
 
-
+struct Object;
 struct InputEvent;
 
+/*
+* The minimum entity that can be placed in a scene, can safely instanced in a scene.
+* A scene is just a object instanced without a parent.
+*/
 struct Object
 {
     struct CreateInfo
@@ -151,17 +155,19 @@ struct Object
 
     static void _bind_vtable(VTable& vtable);
 
+    // Non-static fields
+
     ObjectID id;
     const Class* klass{};
     mem::Allocator allocator{};
 
     enum
     {
+        MARK_INTERNAL_UPDATE,
         MARK_UPDATE,
         MARK_RENDER,
-        MARK_HANDLE_EVENT,
+        MARK_EVENT,
         MARK_IN_SCENE,
-        MARK_INTERNAL_UPDATE,
 
         MARK_2D,
         MARK_CANVAS,
@@ -169,12 +175,6 @@ struct Object
         MARK_QUEUE_FREE,
 
         MARK_COUNT,
-    };
-
-    enum
-    {
-        MARK_DISABLE = 0,
-        MARK_ENABLE = 1,
     };
 
     // As everything in a struct is public we need to hide data
@@ -197,13 +197,21 @@ struct Object
     void handle_event(const InputEvent& e);
 
     // Query info
+    void set_mark(u64 mark, bool value)
+    { 
+        if (value)
+            data.marks.set(mark);
+        else
+            data.marks.unset(mark);
+    }
+
     [[nodiscard]] bool has_mark(u64 mark) const { return data.marks.is_set(mark); }
-    void set_mark(u64 mark, bool value) { data.marks.set(mark, value); }
-    void mark(u64 mark) { data.marks.set(mark, MARK_ENABLE); }
+
+    void mark(u64 mark) { data.marks.set(mark); }
     void unmark(u64 mark) { data.marks.unset(mark); }
 
-    [[nodiscard]] bool has_group(u64 group_bit) const { return data.bit_groups.is_set(group_bit); }
     void set_group(u64 group_bit, bool value);
+    [[nodiscard]] bool has_group(u64 group_bit) const { return data.bit_groups.is_set(group_bit); }
 
     // Object std functions
 
@@ -253,14 +261,61 @@ struct Object
 #undef OBJECT_DEFAULT
 #undef OBJECT_FDEFAULT_ARG1
     
-    void init(const CreateInfo& info);
-    void deinit();
+    /*
+    * Called after the object is allocated.
+    * 
+    * @param info Contains information about the object creation.
+    */
+    void init(const CreateInfo& info) Function(FunctionPropagate);
 
-    void enter();
-    void internal_update(f64) {}
+    /*
+    * Called before the object is deallocated.
+    */
+    void deinit() Function(FunctionPropagate);
+
+    /*
+    * Called after the object is instanced in the main scene.
+    */
+    void enter() Function(FunctionPropagate);
+
+    /*
+    * Called every frame like update(f64).
+    * 
+    * Used to create inherit behavior.
+    * 
+    * Mark: MARK_INTERNAL_UPDATE
+    * @param dt The elapsed time since the last frame.
+    */
+    void internal_update(f64 dt) Function(FunctionPropagate) {}
+
+    /*
+    * Called every frame. Used to create object behavior.
+    * 
+    * Mark: MARK_UPDATE
+    * @param dt The elapsed time since the last frame
+    */
     void update(f64) {}
+
+    /*
+    * Called every frame to request draw commands.
+    * 
+    * Mark: MARK_RENDER
+    */
     void render() {}
-    void exit();
+
+    /*
+    * Called after the object exit from the scene.
+    */
+    void exit() Function(FunctionPropagate);
     
-    void event(const InputEvent& event);
+    /*
+    * Called when the application receives input from a input device.
+    * 
+    * See InputEventType.
+    * 
+    * @param event Contains information about the input that triggers the call.
+    * 
+    * @Function(PropagateToChildren)
+    */
+    void event(const InputEvent& event) Function(FunctionPropagate);
 };

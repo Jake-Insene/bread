@@ -5,7 +5,10 @@
 #include "math/color.h"
 
 
-// Used currently in UI stuff, 2D objects are in a 2d world not a canvas.
+/*
+* Represent a object in a canvas, useful for UI.
+* It is not affected by 2D objects or 2D cameras.
+*/
 struct CanvasObject : Object
 {
     OBJECT(CanvasObject, Object);
@@ -50,7 +53,12 @@ struct CanvasObject : Object
     Transform2D get_transform() const;
     Transform2D get_global_transform() const;
 
+    /*
+    * Return true is the given position is inside of the CanvasObject.
+    * @param pos A world position vector.
+    */
     bool is_inside(const Vector2& pos) const;
+
     Rect2D get_rect() const;
 };
 

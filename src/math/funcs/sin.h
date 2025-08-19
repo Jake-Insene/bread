@@ -7,15 +7,31 @@ namespace math::impl
 
 // I don't know how this works.
 template<typename T>
-T sin_approx(T r)
+constexpr T sin_approx(T r)
 {
     static_assert(
         IsArithmetic<T>,
         "expected arithmetic type"
     );
-    // Simple Taylor approximation for small angles
+
     T r2 = r * r;
-    return r - (r2 * r) / T(6.0) + (r2 * r2 * r) / T(120.0);
+    T term = r;
+    T result = term;
+
+    term *= -r2 / (2.0 * 3.0);     // -x^3 / 3!
+    result += term;
+    term *= -r2 / (4.0 * 5.0);     // +x^5 / 5!
+    result += term;
+    term *= -r2 / (6.0 * 7.0);     // -x^7 / 7!
+    result += term;
+    term *= -r2 / (8.0 * 9.0);     // +x^9 / 9!
+    result += term;
+    term *= -r2 / (10.0 * 11.0);   // -x^11 / 11!
+    result += term;
+    term *= -r2 / (12.0 * 13.0);   // +x^13 / 13!
+    result += term;
+
+    return result;
 }
 
 }

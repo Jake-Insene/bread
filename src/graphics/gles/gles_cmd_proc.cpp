@@ -357,20 +357,20 @@ void GLESCommandProcessor::render()
 
             data.scene_data_ubo_update = true;
            
-            if(data.state.current_fbo != rt.framebuffer)
+            if(get_current_fbo() != rt.framebuffer)
             {
-                data.state.current_fb = cmd.bind.source_id;
+                set_current_fb(cmd.bind.source_id);
                 gl.glBindFramebuffer(GL_FRAMEBUFFER, rt.framebuffer);
                 gl.glViewport(0, 0, rt.size.width, rt.size.height);
                 
                 data.state.last_fbo = data.state.current_fbo;
-                data.state.current_fbo = rt.framebuffer;
+                set_current_fbo(rt.framebuffer);
             }
         }
             break;
         case RenderCommand::CLEAR_RENDER_TARGET:
         {
-            if(data.state.current_fb != cmd.clear.rid)
+            if(get_current_fb() != cmd.clear.rid)
             {
                 auto& rt = GLESMemoryAllocator::render_target_get(cmd.clear.rid);
                 gl.glBindFramebuffer(GL_FRAMEBUFFER, rt.framebuffer);
@@ -384,9 +384,9 @@ void GLESCommandProcessor::render()
             );
             gl.glClear(GL_COLOR_BUFFER_BIT);
             
-            if(data.state.current_fb != cmd.clear.rid)
+            if(get_current_fb() != cmd.clear.rid)
             {
-                gl.glBindFramebuffer(GL_FRAMEBUFFER, data.state.current_fbo);
+                gl.glBindFramebuffer(GL_FRAMEBUFFER, get_current_fbo());
             }
         }
             break;
@@ -420,8 +420,8 @@ void GLESCommandProcessor::render()
 
             u32 index = data.sprite_batch.count;
 
-            data.sprite_batch.instances[index].transform_0 = cmd.sprite.transform[0];
-            data.sprite_batch.instances[index].transform_1 = cmd.sprite.transform[1];
+            data.sprite_batch.instances[index].transform_0 = cmd.sprite.transform.get_column(0);
+            data.sprite_batch.instances[index].transform_1 = cmd.sprite.transform.get_column(1);
             data.sprite_batch.instances[index].transform_2 = cmd.sprite.transform[2];
 
             data.sprite_batch.instances[index].unit = tex_unit;
@@ -466,8 +466,8 @@ void GLESCommandProcessor::render()
 
             u32 index = data.canvas_element_batch.count;
 
-            data.canvas_element_batch.instances[index].transform_0 = cmd.canvas_element.transform[0];
-            data.canvas_element_batch.instances[index].transform_1 = cmd.canvas_element.transform[1];
+            data.canvas_element_batch.instances[index].transform_0 = cmd.canvas_element.transform.get_column(0);
+            data.canvas_element_batch.instances[index].transform_1 = cmd.canvas_element.transform.get_column(1);
             data.canvas_element_batch.instances[index].transform_2 = cmd.canvas_element.transform[2];
 
             data.canvas_element_batch.instances[index].unit = tex_unit;
@@ -530,7 +530,8 @@ void GLESCommandProcessor::render()
 
             data.scene_data.scene_transform = 
                 Mat4::translation(Vector3(translation.x, translation.y, 0))
-                * Mat4::scaling(Vector3(scale.x, scale.y, 1));
+                * Mat4::scaling(Vector3(scale.x, scale.y, 1)) 
+                * Mat4::rotation_z(math::degrees(cmd.transform.get_rotation()));
             data.scene_data.scene_transform.transpose();
 
             data.scene_data_ubo_update = true;
