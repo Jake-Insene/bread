@@ -55,8 +55,8 @@
 #define TileSetTileEnd() }; __tile_set__->add_tiles(tiles); }
 
 
-#define DefineTile(position, data_index, ...) TileSet::Tile(position, data_index),
-#define DefineTileData(texture_position, ...) TileSet::TileData(texture_position),
+#define TileSetTile(position, data_index, has_shape, ...) TileSet::Tile(position, data_index, has_shape),
+#define TileSetTileData(texture_position, ...) TileSet::TileData(texture_position),
 
 
 struct Object;

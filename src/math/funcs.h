@@ -90,7 +90,7 @@ template<typename T>
     static_assert(
         IsArithmetic<T>,
         "expected arithmetic type"
-        );
+    );
     return (PI<T> / 180) * degrees;
 }
 
@@ -159,5 +159,19 @@ template<typename T, typename TStep>
     return dist<T>(start, end) <= step ? end : start + sign(end - start) * step;
 }
 
+template<typename T>
+[[nodiscard]] constexpr i64 floor(T value)
+{
+    using Integer = i64;
+    
+    static_assert(
+        IsArithmetic<T>,
+        "expected arithmetic type"
+    );
+
+
+    const Integer i = static_cast<T>(value);
+    return (value < 0 && value != static_cast<T>(i)) ? (i - 1) : i;
+}
 
 }

@@ -239,7 +239,14 @@ template<typename T>
 void __format_single_argument(const io::Writer& writer, T arg)
 {
 	static constexpr fmt::FormatType type = fmt::__GetFormatType<T>;
-	if constexpr (type == fmt::FormatType::Signed || type == fmt::FormatType::Unsigned)
+	if constexpr (type == fmt::FormatType::Bool)
+	{
+		if (arg)
+			writer.write(mem::to_const_bytes(StringView("true")));
+		else 
+			writer.write(mem::to_const_bytes(StringView("false")));
+	}
+	else if constexpr (type == fmt::FormatType::Signed || type == fmt::FormatType::Unsigned)
 	{
 		__format_integer<10, T>(writer, arg);
 	}

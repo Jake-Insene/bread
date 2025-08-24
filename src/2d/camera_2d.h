@@ -9,6 +9,7 @@ struct Camera2D : Object2D
 
     enum PositionMode
     {
+        POSITION_TOP_LEFT,
         POSITION_CENTERED,
     };
 
@@ -21,10 +22,11 @@ struct Camera2D : Object2D
         Vector2 old_pos = Vector2(0);
         f32 old_rot = 0;
 
-        PositionMode position_mode = POSITION_CENTERED;
+        PositionMode position_mode = POSITION_TOP_LEFT;
     } data;
     
     Vector2 camera_speed = Vector2(1);
+    bool smooth_position;
 
     void init(const CreateInfo& info);
 

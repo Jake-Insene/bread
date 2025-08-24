@@ -37,19 +37,39 @@ Transform2D Camera2D::get_camera_transform()
     const f32 camera_rot = camera_transform.get_rotation();
     const f64 dt = SceneManager::get_delta_time();
 
-    if (data.position_mode == PositionMode::POSITION_CENTERED)
+    switch (get_position_mode())
+    {
+    case POSITION_TOP_LEFT:
+    {
+        if (smooth_position)
+        {
+            data.old_pos.x = math::move_to(data.old_pos.x, camera_position.x, camera_speed.x * dt);
+            data.old_pos.y = math::move_to(data.old_pos.y, camera_position.y, camera_speed.y * dt);
+        }
+        else
+        {
+            data.old_pos = camera_position;
+        }
+    }
+        break;
+    case POSITION_CENTERED:
     {
         const Vector2 display_size = Vector2(SceneManager::get_display_target().get_size());
         Vector2 centered_pos = camera_position * camera_scale;
         centered_pos -= (Vector2(display_size.x, -display_size.y) * 0.5);
-        
-        data.old_pos.x = math::lerp(data.old_pos.x, centered_pos.x, camera_speed.x * dt);
-        data.old_pos.y = math::lerp(data.old_pos.y, centered_pos.y, camera_speed.y * dt);
+
+        if (smooth_position)
+        {
+            data.old_pos.x = math::move_to(data.old_pos.x, centered_pos.x, camera_speed.x * dt);
+            data.old_pos.y = math::move_to(data.old_pos.y, centered_pos.y, camera_speed.y * dt);
+        }
+        else
+        {
+            data.old_pos = centered_pos;
+        }
     }
-    else
-    {
-        data.old_pos.x = math::lerp(data.old_pos.x, camera_position.x, camera_speed.x * dt);
-        data.old_pos.y = math::lerp(data.old_pos.y, camera_position.y, camera_speed.y * dt);
+        break;
+            
     }
 
     Transform2D transform;

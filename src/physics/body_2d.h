@@ -18,11 +18,12 @@ struct Body2D : Object2D
     struct InternalData
     {
         Physics2D::BodyID body_id = Physics2D::BodyID::InvalidID;
-        BodyType type = BodyType::DYNAMIC;
+        BodyType type = BodyType::UNKNOWN;
         
         Vector2 velocity{0, 0};
         f32 mass = 1;
         f32 friction = 1;
+        f32 air_friction = 1;
 
         bool grounded = false;
 
@@ -55,6 +56,9 @@ struct Body2D : Object2D
 
     void set_friction(f32 new_friction);
     [[nodiscard]] f32 get_friction() const { return data.friction; }
+
+    void set_air_friction(f32 new_air_friction);
+    [[nodiscard]] f32 get_air_friction() const { return data.air_friction; }
 
     void apply_force(const Vector2& point, const Vector2& force) const;
     void apply_impulse(const Vector2& point, const Vector2& force) const;

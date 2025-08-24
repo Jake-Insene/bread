@@ -25,25 +25,14 @@ void Body2D::exit()
 
 void Body2D::set_type(Body2D::BodyType new_type)
 {
-    if (data.type != new_type)
-    {
-        data.type = new_type;
-        switch (new_type)
-        {
-        case BodyType::STATIC:
-            set_mass(0);
-            break;
-        case BodyType::DYNAMIC:
-        case BodyType::KINEMATIC:
-            set_mass(data.mass >= 0 ? data.mass : 1);
-            set_velocity(Vector2(1, 1));
-            break;
-        default:
-            DebugAssert(false, "invalid body type");
-        }
+    if (data.type == new_type)
+        return;
 
-        Physics2D::body_set_type(data.body_id, Physics2D::BodyType(new_type));
-    }
+    data.type = new_type;
+    Physics2D::body_set_type(data.body_id, Physics2D::BodyType(new_type));
+    data.mass = Physics2D::body_get_mass(data.body_id);
+    data.friction = Physics2D::body_get_friction(data.body_id);
+    data.air_friction = Physics2D::body_get_air_friction(data.body_id);
 }
 
 void Body2D::add_shape(const Shape2D& new_shape)
@@ -87,6 +76,12 @@ void Body2D::set_friction(f32 new_friction)
 {
     data.friction = new_friction;
     Physics2D::body_set_friction(data.body_id, new_friction);
+}
+
+void Body2D::set_air_friction(f32 new_air_friction)
+{
+    data.air_friction = new_air_friction;
+    Physics2D::body_set_air_friction(data.body_id, new_air_friction);
 }
 
 void Body2D::apply_force(const Vector2& point, const Vector2& force) const

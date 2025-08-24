@@ -70,8 +70,12 @@ struct P2DDriver
         Array<Shape2D> shapes;
         Physics2D::BodyType type;
         Vector2 velocity;
+        Vector2 force;
+        Vector2 velocity_input;
+        
         f32 mass;
         f32 friction;
+        f32 air_friction;
 
         bool fixed_rotation;
         bool is_on_floor;
@@ -177,6 +181,8 @@ struct P2DDriver
     static f32 body_get_mass(Physics2D::BodyID body_id);
     static void body_set_friction(Physics2D::BodyID body_id, f32 new_friction);
     static f32 body_get_friction(Physics2D::BodyID body_id);
+    static void body_set_air_friction(Physics2D::BodyID body_id, f32 new_friction);
+    static f32 body_get_air_friction(Physics2D::BodyID body_id);
     static void body_apply_force(Physics2D::BodyID body_id, const Vector2& point, const Vector2& force);
     static void body_apply_impulse(Physics2D::BodyID body_id, const Vector2& point, const Vector2& force);
     static void body_set_fixed_rotation(Physics2D::BodyID body_id, bool enable);
@@ -212,8 +218,8 @@ struct P2DDriver
 
     static void _step_body(Body& body, f32 dt);
     static void _check_collision_in_group(CollisionMaskGroup& group, Body& body,
-        Vector2& velocity, CollisionResult& collision_result);
-    static void _check_collision_on_body(Body& body, const Shape2D& body_shape, Body& other_body, Vector2& velocity,
+        Vector2& displacement, CollisionResult& collision_result);
+    static void _check_collision_on_body(Body& body, const Shape2D& body_shape, Body& other_body, Vector2& displacement,
         CollisionResult& collision_result);
 
     // Area routines

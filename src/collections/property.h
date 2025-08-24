@@ -1,6 +1,7 @@
 #pragma once
 #include "core/header.h"
 #include "core/templates.h"
+#include "math/vec2.h"
 
 
 enum class PropertyType
@@ -10,6 +11,7 @@ enum class PropertyType
 	Int,
 	UInt,
 	Float,
+	Vector2,
 	Pointer,
 };
 
@@ -32,11 +34,15 @@ inline constexpr PropertyType __GetPropertyType = ConditionalValue<
 	PropertyType::Float,
 
 	ConditionalValue<PropertyType,
+	IsSame<T, Vector2>,
+	PropertyType::Vector2,
+
+	ConditionalValue<PropertyType,
 	IsPointer,
 	PropertyType::Pointer,
 
 	PropertyType::Unknown
->>>>>;
+>>>>>>;
 
 
 union [[nodiscard]] PropertyStorage
@@ -46,6 +52,10 @@ union [[nodiscard]] PropertyStorage
 	u64 u;
 	double f;
 	void* p;
+	Vector2 v;
+
+	constexpr PropertyStorage() {}
+	constexpr ~PropertyStorage() {}
 };
 
 struct [[nodiscard]] PropertyValue
@@ -71,6 +81,10 @@ struct [[nodiscard]] PropertyValue
 		{
 			return storage.f;
 		}
+		else if constexpr (IsSame<T, Vector2>)
+		{
+			return storage.v;
+		}
 
 		return T();
 	}
@@ -93,6 +107,10 @@ struct [[nodiscard]] PropertyValue
 		else if constexpr (IsFloatingPoint<T>)
 		{
 			storage.f = new_value;
+		}
+		else if constexpr (IsSame<T, Vector2>)
+		{
+			storage.v = new_value;
 		}
 	}
 };
@@ -120,6 +138,22 @@ struct Property
 			{
 				storage.u = value;
 			}
+		}
+	};
+
+	struct Float : PropertyValue
+	{
+		explicit constexpr Float(f32 value)
+		{
+			storage.f = value;
+		}
+	};
+
+	struct Vector2 : PropertyValue
+	{
+		explicit constexpr Vector2(f32 x, f32 y)
+		{
+			storage.v = ::Vector2(x, y);
 		}
 	};
 };

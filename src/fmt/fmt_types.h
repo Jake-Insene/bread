@@ -11,6 +11,7 @@ namespace fmt
 enum class FormatType
 {
 	Unknown = 0,
+	Bool,
 	Signed,
 	Unsigned,
 	Float,
@@ -29,7 +30,12 @@ struct FormatArgument
 
 
 template<typename T>
-inline constexpr FormatType __GetFormatType = ConditionalValue <
+inline constexpr FormatType __GetFormatType = ConditionalValue<
+	FormatType,
+	IsSame<T, bool>,
+	FormatType::Bool,
+	
+	ConditionalValue<
 	FormatType,
 	IsSigned<T>,
 	FormatType::Signed,
@@ -63,6 +69,6 @@ inline constexpr FormatType __GetFormatType = ConditionalValue <
 	FormatType::CChars,
 
 	FormatType::Unknown
-	>>>>>>>>;
+	>>>>>>>>>;
 
 }
