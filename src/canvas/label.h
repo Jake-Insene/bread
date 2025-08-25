@@ -14,6 +14,8 @@ struct Label : CanvasObject
 	{
 		i32 font_size = Font::DefaultFontSize;
 		Font* font;
+
+		Color color = Color(255, 255, 255, 255);
 	} data;
 
 	String text;
@@ -28,4 +30,7 @@ struct Label : CanvasObject
 
 	void set_font_size(i32 new_font_size);
 	[[nodiscard]] i32 get_font_size() const { return data.font_size; }
+
+	void set_color(Color new_color) { data.color = new_color; }
+	[[nodiscard]] Color get_color() const { return data.color; }
 };

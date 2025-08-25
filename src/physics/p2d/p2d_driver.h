@@ -70,8 +70,8 @@ struct P2DDriver
         Array<Shape2D> shapes;
         Physics2D::BodyType type;
         Vector2 velocity;
-        Vector2 force;
         Vector2 velocity_input;
+        Vector2 force;
         
         f32 mass;
         f32 friction;

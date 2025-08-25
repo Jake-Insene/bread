@@ -169,9 +169,21 @@ template<typename T>
         "expected arithmetic type"
     );
 
-
     const Integer i = static_cast<T>(value);
     return (value < 0 && value != static_cast<T>(i)) ? (i - 1) : i;
+}
+
+template<typename T>
+[[nodiscard]] constexpr T clamp(T value, T min, T max)
+{
+    static_assert(
+        IsArithmetic<T>,
+        "expected arithmetic type"
+    );
+
+    return value < min ? min 
+        : value > max ? max
+        : value;
 }
 
 }

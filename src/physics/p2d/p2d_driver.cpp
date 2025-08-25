@@ -477,13 +477,25 @@ void P2DDriver::_step_body(Body& body, f32 dt)
 
     if (body.is_on_floor)
     {
-        // Ground friction applies only horizontally
-        body.velocity.x = math::move_to(body.velocity.x, 0.0f, body.friction * dt);
+        // For now cancel the input velocity on x
+        if (body.velocity_input.x == 0.f)
+        {
+            body.velocity.x = 0.f;
+        }
+        else
+        {
+            body.velocity.x = math::move_to(body.velocity.x, 0.f, body.friction * dt);
+        }
 
-        if (body.velocity.y > 0.0f)
-            body.velocity.y = 0.0f;              // stop bouncing up
-        else if (body.velocity.y < -5.0f)
-            body.velocity.y = data.gravity.y * dt;             // small downward bias to "stick"
+        if (body.velocity.y > 0.f)
+        {
+            // stop bouncing up
+            body.velocity.y = 0.f;
+        }
+        else if (body.velocity.y < 0.f)
+        {
+            body.velocity.y = data.gravity.y * dt;
+        }
     }
     else
     {
@@ -491,13 +503,17 @@ void P2DDriver::_step_body(Body& body, f32 dt)
         body.velocity.y = math::move_to(body.velocity.y, 0.0f, body.air_friction * dt);
     }
 
+    if ((body.velocity_input.x > 0.f && body.velocity.x > body.force.x)
+        || (body.force.x < 0.f && body.velocity.x < body.force.x))
+    {
+        body.velocity.x = body.force.x;
+    }
+
     if (math::abs(body.velocity.x) < 0.01f)
         body.velocity.x = 0.0f;
     if (math::abs(body.velocity.y) < 0.01f)
         body.velocity.y = 0.0f;
     
-    DebugInfo("{}, {}", body.velocity.x, body.velocity.y);
-
     Vector2 displacement = body.velocity * dt;
     body.force = Vector2();
 

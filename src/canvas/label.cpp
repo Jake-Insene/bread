@@ -48,7 +48,7 @@ void Label::render()
 		Graphics2D::draw_canvas_element(
 			transform, extent, extent,
 			Rect2D(Vector2(), extent), id,
-			Color(255, 255, 255, 255), 
+			get_color(),
 			RenderCommand::CanvasFlags(RenderCommand::FLAG_CANVAS_FLIP_V | RenderCommand::FLAG_CANVAS_FONT_CHAR)
 		);
 
