@@ -230,11 +230,13 @@ void P2DDriver::body_set_type(Physics2D::BodyID body_id, Physics2D::BodyType new
         body.mass = 0;
         body.velocity_input = Vector2();
         break;
+    case Physics2D::KINEMATIC:
+        body.mass = 0;
+        break;
     case Physics2D::DYNAMIC:
         body.mass = body.mass > 0 ? body.mass : 1;
         break;
-    case Physics2D::KINEMATIC:
-        body.mass = body.mass > 0 ? body.mass : 1;
+    default:
         break;
     }
 }
@@ -468,54 +470,83 @@ void P2DDriver::_step_body(Body& body, f32 dt)
     if (body.shapes.count == 0 || body.type == Physics2D::STATIC)
         return;
 
-    if (!body.is_on_floor)
-        body.force += data.gravity * body.mass;
-    body.force += body.velocity_input;
-    
-    const Vector2 acceleration = body.force / body.mass;
-    body.velocity += acceleration * dt;
-
-    if (body.is_on_floor)
+    switch (body.type)
     {
-        // For now cancel the input velocity on x
-        if (body.velocity_input.x == 0.f)
+    case Physics2D::STATIC:
+        return;
+    case Physics2D::KINEMATIC:
+    {
+        body.force += body.velocity_input;
+        const Vector2 acceleration = body.force;
+        body.velocity += acceleration * dt;
+
+        body.velocity.x = math::move_to(body.velocity.x, 0.f, body.friction * dt);
+        body.velocity.y = math::move_to(body.velocity.y, 0.f, body.friction * dt);
+
+        if (math::abs(body.velocity.x) < 0.01f)
+            body.velocity.x = 0.0f;
+        if (math::abs(body.velocity.y) < 0.01f)
+            body.velocity.y = 0.0f;
+     
+        body.force = Vector2();
+    }
+        break;
+    case Physics2D::DYNAMIC:
+    {
+        if (!body.is_on_floor)
+            body.force += data.gravity * body.mass;
+        body.force += body.velocity_input;
+
+        const Vector2 acceleration = body.force / body.mass;
+        body.velocity += acceleration * dt;
+
+        if (body.is_on_floor)
         {
-            body.velocity.x = 0.f;
+            // For now cancel the input velocity on x
+            if (body.velocity_input.x == 0.f)
+            {
+                body.velocity.x = 0.f;
+            }
+            else
+            {
+                body.velocity.x = math::move_to(body.velocity.x, 0.f, body.friction * dt);
+            }
+
+            if (body.velocity.y > 0.f)
+            {
+                // stop bouncing up
+                body.velocity.y = 0.f;
+            }
+            else if (body.velocity.y < 0.f)
+            {
+                body.velocity.y = data.gravity.y * dt;
+            }
         }
         else
         {
-            body.velocity.x = math::move_to(body.velocity.x, 0.f, body.friction * dt);
+            body.velocity.x = math::move_to(body.velocity.x, 0.0f, body.air_friction * dt);
+            body.velocity.y = math::move_to(body.velocity.y, 0.0f, body.air_friction * dt);
         }
 
-        if (body.velocity.y > 0.f)
+        if ((body.velocity_input.x > 0.f && body.velocity.x > body.force.x)
+            || (body.force.x < 0.f && body.velocity.x < body.force.x))
         {
-            // stop bouncing up
-            body.velocity.y = 0.f;
+            body.velocity.x = body.force.x;
         }
-        else if (body.velocity.y < 0.f)
-        {
-            body.velocity.y = data.gravity.y * dt;
-        }
-    }
-    else
-    {
-        body.velocity.x = math::move_to(body.velocity.x, 0.0f, body.air_friction * dt);
-        body.velocity.y = math::move_to(body.velocity.y, 0.0f, body.air_friction * dt);
-    }
 
-    if ((body.velocity_input.x > 0.f && body.velocity.x > body.force.x)
-        || (body.force.x < 0.f && body.velocity.x < body.force.x))
-    {
-        body.velocity.x = body.force.x;
-    }
+        if (math::abs(body.velocity.x) < 0.01f)
+            body.velocity.x = 0.0f;
+        if (math::abs(body.velocity.y) < 0.01f)
+            body.velocity.y = 0.0f;
 
-    if (math::abs(body.velocity.x) < 0.01f)
-        body.velocity.x = 0.0f;
-    if (math::abs(body.velocity.y) < 0.01f)
-        body.velocity.y = 0.0f;
+        body.force = Vector2();
+    }
+        break;
+    default:
+        return;
+    }
     
     Vector2 displacement = body.velocity * dt;
-    body.force = Vector2();
 
     // Handle collisions
     CollisionResult collision_result =

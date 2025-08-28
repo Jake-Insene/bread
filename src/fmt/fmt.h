@@ -64,8 +64,6 @@ struct FormatString
 					"invalid string format"
 				);
 
-				char t = chars[i + 1];
-
 				i += 2;
 				type_index++;
 			}

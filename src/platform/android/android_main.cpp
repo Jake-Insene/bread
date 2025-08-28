@@ -44,7 +44,7 @@ static int32_t engine_handle_input(android_app*, AInputEvent* event)
 
                 Engine::handle_input(e);
 
-                DebugInfo("action pointer: {i}, action: {i}, pointer: {u}", action_pointer, action, p);
+                DebugInfo("action pointer: {}, action: {}, pointer: {}", action_pointer, action, p);
             }
         }
     }
@@ -53,7 +53,14 @@ static int32_t engine_handle_input(android_app*, AInputEvent* event)
     {
         i32 action = AKeyEvent_getAction(event);
         i32 keycode = AKeyEvent_getKeyCode(event);
-        Input::data.keys[(i32)MappedKeycodes[keycode]] = action == AKEY_EVENT_ACTION_DOWN;
+        if(action == AKEY_EVENT_ACTION_DOWN)
+        {
+            Input::data.keys[(i32)MappedKeycodes[keycode]] = KeyState::Pressed;
+        }
+        else
+        {
+            Input::data.keys[(i32)MappedKeycodes[keycode]] = KeyState::Released;
+        }
     }
     default:
         break;
@@ -103,19 +110,19 @@ void android_main(android_app* app)
             app->activity->internalDataPath,
             __string_len(app->activity->internalDataPath)
     );
-    DebugInfo("Internal data path: {v}", internal_data_path);
+    DebugInfo("Internal data path: {}", internal_data_path);
 
     StringView external_data_path = StringView(
             app->activity->externalDataPath,
             __string_len(app->activity->externalDataPath)
     );
-    DebugInfo("External data path: {v}", external_data_path);
+    DebugInfo("External data path: {}", external_data_path);
 
     StringView obb_path = StringView(
             app->activity->obbPath,
             __string_len(app->activity->obbPath)
     );
-    DebugInfo("Obb path: {v}", obb_path);
+    DebugInfo("Obb path: {}", obb_path);
 
     AndroidEngine::initialize();
 

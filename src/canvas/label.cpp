@@ -58,7 +58,7 @@ void Label::render()
 
 void Label::set_font_size(i32 new_font_size)
 {
-	if (data.font_size = new_font_size)
+	if (data.font_size == new_font_size)
 		return;
 
 	data.font_size = new_font_size;

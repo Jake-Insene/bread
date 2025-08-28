@@ -12,12 +12,12 @@ void AudioPlayer::enter()
 {
 }
 
-void AudioPlayer::internal_update(f64 delta)
+void AudioPlayer::internal_update(f64)
 {
     if (get_sound() == nullptr)
         return;
 
-    if (data.loop == false)
+    if (data.loop)
         return;
  
     Audio::source_voice_keep_playing(get_sound()->get_source_voice());

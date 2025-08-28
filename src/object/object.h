@@ -286,7 +286,7 @@ struct Object
     * Mark: MARK_INTERNAL_UPDATE
     * @param dt The elapsed time since the last frame.
     */
-    void internal_update(f64 dt) Function(FunctionPropagate) {}
+    void internal_update(f64) Function(FunctionPropagate) {}
 
     /*
     * Called every frame. Used to create object behavior.

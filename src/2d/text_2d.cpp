@@ -63,7 +63,7 @@ void Text2D::render()
 
 void Text2D::set_font_size(i32 new_font_size)
 {
-	if (data.font_size = new_font_size)
+	if (data.font_size == new_font_size)
 		return;
 
 	data.font_size = new_font_size;

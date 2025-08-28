@@ -38,7 +38,7 @@ inline constexpr PropertyType __GetPropertyType = ConditionalValue<
 	PropertyType::Vector2,
 
 	ConditionalValue<PropertyType,
-	IsPointer,
+	IsPointer<T>,
 	PropertyType::Pointer,
 
 	PropertyType::Unknown

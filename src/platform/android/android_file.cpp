@@ -55,6 +55,22 @@ File File::open(StringView path, OpenMode)
     return File{ .handle = 0 };
 }
 
+bool File::exists(StringView file_path)
+{
+    char tmp[256] = {};
+    Slice<char> tmp_slice = Slice(tmp);
+    mem::copy(tmp_slice, file_path);
+
+    AAsset* asset = AAssetManager_open(AndroidEngine::data.asset_manager, tmp, AASSET_MODE_UNKNOWN);
+
+    if(asset)
+    {
+        AAsset_close(asset);
+        return true;
+    }
+
+    return false;
+}
 
 void File::destroy()
 {

@@ -2,6 +2,13 @@
 
 #include "platform/platform_header.h"
 
+
+void Time::initialize()
+{}
+
+void Time::shutdown()
+{}
+
 f64 Time::get_time()
 {
     struct timespec ts;

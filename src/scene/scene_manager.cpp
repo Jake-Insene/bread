@@ -266,7 +266,7 @@ void SceneManager::scene_handle_input(const InputEvent& event)
 
 void SceneManager::_try_clear_root_canvas()
 {
-    for (i32 i = 0; i < data.root_canvas.count; i++)
+    for (usize i = 0; i < data.root_canvas.count; i++)
     {
         CanvasObject* gui_root = data.root_canvas[i];
 
