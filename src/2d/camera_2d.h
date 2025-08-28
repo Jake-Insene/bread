@@ -25,7 +25,7 @@ struct Camera2D : Object2D
         PositionMode position_mode = POSITION_TOP_LEFT;
     } data;
     
-    Vector2 camera_speed = Vector2(1);
+    Vector2 camera_speed = Vector2(1, 1);
     bool smooth_position;
 
     void init(const CreateInfo& info);

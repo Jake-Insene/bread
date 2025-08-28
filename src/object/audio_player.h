@@ -16,7 +16,7 @@ struct AudioPlayer : Object
 
         f32 volume_cache;
         bool playing;
-        bool loop;
+        bool loop = false;
     } data;
 
     void init(const CreateInfo&);

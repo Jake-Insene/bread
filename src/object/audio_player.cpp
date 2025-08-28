@@ -17,7 +17,7 @@ void AudioPlayer::internal_update(f64)
     if (get_sound() == nullptr)
         return;
 
-    if (data.loop)
+    if (data.loop == false)
         return;
  
     Audio::source_voice_keep_playing(get_sound()->get_source_voice());

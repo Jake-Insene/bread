@@ -43,8 +43,8 @@ Transform2D Camera2D::get_camera_transform()
     {
         if (smooth_position)
         {
-            data.old_pos.x = math::move_to(data.old_pos.x, camera_position.x, camera_speed.x * dt);
-            data.old_pos.y = math::move_to(data.old_pos.y, camera_position.y, camera_speed.y * dt);
+            data.old_pos.x = math::lerp(data.old_pos.x, camera_position.x, camera_speed.x * dt);
+            data.old_pos.y = math::lerp(data.old_pos.y, camera_position.y, camera_speed.y * dt);
         }
         else
         {
@@ -60,8 +60,8 @@ Transform2D Camera2D::get_camera_transform()
 
         if (smooth_position)
         {
-            data.old_pos.x = math::move_to(data.old_pos.x, centered_pos.x, camera_speed.x * dt);
-            data.old_pos.y = math::move_to(data.old_pos.y, centered_pos.y, camera_speed.y * dt);
+            data.old_pos.x = math::lerp(data.old_pos.x, centered_pos.x, camera_speed.x * dt);
+            data.old_pos.y = math::lerp(data.old_pos.y, centered_pos.y, camera_speed.y * dt);
         }
         else
         {

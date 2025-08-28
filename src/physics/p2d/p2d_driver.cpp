@@ -476,18 +476,7 @@ void P2DDriver::_step_body(Body& body, f32 dt)
         return;
     case Physics2D::KINEMATIC:
     {
-        body.force += body.velocity_input;
-        const Vector2 acceleration = body.force;
-        body.velocity += acceleration * dt;
-
-        body.velocity.x = math::move_to(body.velocity.x, 0.f, body.friction * dt);
-        body.velocity.y = math::move_to(body.velocity.y, 0.f, body.friction * dt);
-
-        if (math::abs(body.velocity.x) < 0.01f)
-            body.velocity.x = 0.0f;
-        if (math::abs(body.velocity.y) < 0.01f)
-            body.velocity.y = 0.0f;
-     
+        body.velocity = body.velocity_input;
         body.force = Vector2();
     }
         break;
