@@ -24,7 +24,8 @@ static inline void _vertex_attrib(GLint index, GLenum type, GLsizei component_co
 }
 
 // Global quad index buffer
-static constexpr const u8 indices[] = {
+static constexpr const u8 indices[] =
+{
     0, 1, 2, 2, 3, 0
 };
 
@@ -564,5 +565,6 @@ void GLESCommandProcessor::render()
     }
 
     data.commands.clear();
+    data.state.frame_index ^= 1;
 }
 

@@ -135,6 +135,7 @@ struct GLESCommandProcessor
         GLID last_fbo;
         GLID current_fbo;
         Graphics::RenderTargetID current_fb;
+        i32 frame_index;
     };
     
     struct InternalData

@@ -23,12 +23,16 @@ struct ProgressBar : CanvasObject
         f32 min_value = DefaultMin;
         f32 max_value = DefaultMax;
         f32 value;
+        f32 current_value;
     } data;
 
-    Color color{ 255, 255, 255, 255 };
+    Color bg_color{ 255, 255, 255, 255 };
+    Color fill_color{ 255, 255, 255, 255 };
+    f32 update_speed = 1;
 
     void init(const CreateInfo&);
 
+    void internal_update(f64 dt);
     void render();
 
     void set_background_texture(Texture2D* new_bg_texture);
@@ -44,5 +48,7 @@ struct ProgressBar : CanvasObject
     [[nodiscard]] f32 get_max() const { return data.max_value; }
 
     void set_value(f32 new_value);
-    [[nodiscard]] f32 get_value() const { return data.value; }
+    [[nodiscard]] f32 get_value() const { return data.current_value; }
+
+    void set_value_immediate(f32 new_value);
 };

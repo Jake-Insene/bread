@@ -538,9 +538,15 @@ void P2DDriver::_step_body(Body& body, f32 dt)
     Vector2 displacement = body.velocity * dt;
 
     // Handle collisions
-    CollisionResult collision_result =
+    CollisionInput input =
     {
-        .advance = Vector2(1),
+        .displacement = displacement,
+    };
+
+    CollisionResult result =
+    {
+        .displacement = displacement,
+        .collision_axis = Vector2(1),
     };
 
     body.is_on_floor = false;
@@ -553,15 +559,15 @@ void P2DDriver::_step_body(Body& body, f32 dt)
             continue;
 
         CollisionMaskGroup& group = data.mask_groups[i];
-        _check_collision_in_group(group, body, displacement, collision_result);
+        _check_collision_in_group(group, body, input, result);
     }
 
-    body.velocity = body.velocity * collision_result.advance;
-    body.target->translate(collision_result.advance * displacement);
+    body.velocity = body.velocity * result.collision_axis;
+    body.target->translate(result.displacement * result.collision_axis);
 }
 
 void P2DDriver::_check_collision_in_group(CollisionMaskGroup& group, Body& body, 
-    Vector2& displacement, CollisionResult& collision_result)
+    const CollisionInput& input, CollisionResult& result)
 {
     for (auto& bodyjd : group.bodies)
     {
@@ -570,51 +576,53 @@ void P2DDriver::_check_collision_in_group(CollisionMaskGroup& group, Body& body,
             continue;
         }
 
-        CollisionResult tmp_result =
-        {
-            .advance = Vector2(1),
-        };
-
         Body& bodyj = _get_body(bodyjd);
         for (auto& shape : body.shapes)
         {
-            _check_collision_on_body(body, shape, bodyj, displacement, tmp_result);
-
-            collision_result.advance.x = collision_result.advance.x ? tmp_result.advance.x : 0;
-            collision_result.advance.y = collision_result.advance.y ? tmp_result.advance.y : 0;
+            _check_collision_on_body(body, shape, bodyj, input, result);
         }
     }
 }
 
 void P2DDriver::_check_collision_on_body(Body& body, const Shape2D& body_shape, Body& other_body, 
-    Vector2& displacement, CollisionResult& collision_result)
+    const CollisionInput& input, CollisionResult& result)
 {
     const Vector2 body_position = body.target->get_global_transform().get_position();
     const Vector2 bodyj_position = other_body.target->get_global_transform().get_position();
 
+    CollisionResult tmp_result =
+    {
+        .displacement = result.displacement,
+        .collision_axis = Vector2(1),
+    };
+
+    bool collided = false;
+
 	// We don't want to modify the original shape, so we copy it.
     for (auto other_shape : other_body.shapes)
     {
-        CollisionResult tmp_result =
-        {
-            .advance = Vector2(1),
-        };
-
         Shape2D test_shape = body_shape;
         other_shape.translate(bodyj_position);
 
-        test_shape.translate(body_position + Vector2(displacement.x, 0));
+        test_shape.translate(body_position + Vector2(input.displacement.x, 0));
         if (test_shape.intersect(other_shape))
         {
             // X correction
-            tmp_result.advance.x = 0;
+            tmp_result.collision_axis.x = 0;
+            tmp_result.displacement.x = 0;
+            collided = true;
+            
+            result.displacement.x = 0;
         }
 
-        test_shape.translate(Vector2(-displacement.x, displacement.y));
+        test_shape.translate(Vector2(-input.displacement.x, input.displacement.y));
         if (test_shape.intersect(other_shape))
         {
             // Y correction
-            body.is_on_floor = displacement.y < 0;
+            tmp_result.collision_axis.y = 0;
+            collided = true;
+
+            body.is_on_floor = input.displacement.y < 0;
 
             Shape2D real_shape = body_shape;
             real_shape.translate(body_position);
@@ -622,18 +630,17 @@ void P2DDriver::_check_collision_on_body(Body& body, const Shape2D& body_shape, 
             AABB aabb = real_shape.get_aabb();
             AABB aabbj = other_shape.get_aabb();
 
-            if (displacement.y > 0) // Upwards collision
+            if (input.displacement.y > 0) // Upwards collision
             {
-                displacement.y = aabbj.max.y - aabb.min.y;
+                result.displacement.y = aabbj.max.y - aabb.min.y;
             }
-            else if (displacement.y < 0) // Downwards collision
+            else if (input.displacement.y < 0) // Downwards collision
             {
-                displacement.y = aabbj.min.y - aabb.max.y;
+                result.displacement.y = aabbj.min.y - aabb.max.y;
             }
         }
 
-        if ((tmp_result.advance.x == 0 || tmp_result.advance.y == 0)
-            && body.on_collide.has_func())
+        if (collided && body.on_collide.has_func())
         {
             data.collision_callbacks_map.insert(
                 CollisionID(body.self, other_body.self),
@@ -645,8 +652,10 @@ void P2DDriver::_check_collision_on_body(Body& body, const Shape2D& body_shape, 
             );
         }
 
-        collision_result.advance.x = collision_result.advance.x ? tmp_result.advance.x : 0;
-        collision_result.advance.y = collision_result.advance.y ? tmp_result.advance.y : 0;
+        result.collision_axis.x = result.collision_axis.x ? 
+            tmp_result.collision_axis.x : 0;
+        result.collision_axis.y = result.collision_axis.y ?
+            tmp_result.collision_axis.y : 0;
     }
 }
 

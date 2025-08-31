@@ -109,9 +109,17 @@ struct P2DDriver
         Array<Physics2D::BodyID> bodies;
     };
 
+    struct CollisionInput
+    {
+        Vector2 displacement;
+    };
+
     struct CollisionResult
     {
-        Vector2 advance;
+        Vector2 displacement;
+        // 0 -> Collision
+        // 1 -> No Collision
+        Vector2 collision_axis;
     };
 
     struct PhysicsTile
@@ -218,9 +226,9 @@ struct P2DDriver
 
     static void _step_body(Body& body, f32 dt);
     static void _check_collision_in_group(CollisionMaskGroup& group, Body& body,
-        Vector2& displacement, CollisionResult& collision_result);
-    static void _check_collision_on_body(Body& body, const Shape2D& body_shape, Body& other_body, Vector2& displacement,
-        CollisionResult& collision_result);
+        const CollisionInput& input, CollisionResult& result);
+    static void _check_collision_on_body(Body& body, const Shape2D& body_shape, Body& other_body,
+        const CollisionInput& input, CollisionResult& result);
 
     // Area routines
     static void _check_body_in_areas(Body& body);
