@@ -57,21 +57,28 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 	case WM_KEYDOWN:
 	case WM_KEYUP:
 	{
+		u16 repeat_count = lparam & 0xFFFF;
 		u8 scan_code = (lparam >> 16) & 0xFF;
+
+		if (Input::data.keys[wparam] == KeyState::RequestNewState
+			&& (msg == WM_SYSKEYDOWN || msg == WM_KEYDOWN))
+		{
+			break;
+		}
 
 		// Extended key
 		// Shift, Ctr, Alt
+		KeyState new_key_state = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN) ?
+			KeyState::Pressed : KeyState::Released;
+
+		UINT real_vk = wparam;
 		if (wparam == VK_SHIFT || wparam == VK_CONTROL || wparam == VK_MENU)
 		{
-			UINT real_vk = MapVirtualKeyEx(scan_code, MAPVK_VSC_TO_VK_EX, GetKeyboardLayout(0));
-			Input::data.keys[real_vk] =
-				msg == WM_KEYDOWN ? KeyState::Pressed
-				: KeyState::Released;
+			UINT real_vk = MapVirtualKeyExA(scan_code, MAPVK_VSC_TO_VK_EX, GetKeyboardLayout(0));
 		}
 
-		Input::data.keys[wparam]
-			= (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN) ? KeyState::Pressed
-			: KeyState::Released;
+		Input::data.keys[real_vk] = new_key_state;
+		Input::data.keys[wparam] = new_key_state;
 
 		InputEventKey event{};
 		event.type = InputEventType::INPUT_EVENT_KEY;

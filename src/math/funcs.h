@@ -12,6 +12,33 @@ namespace math
 {
 
 template<typename T>
+[[nodiscard]] constexpr i64 floor(T value)
+{
+    using Integer = i64;
+
+    static_assert(
+        IsArithmetic<T>,
+        "expected arithmetic type"
+        );
+
+    const Integer i = static_cast<T>(value);
+    return (value < 0 && value != static_cast<T>(i)) ? (i - 1) : i;
+}
+
+template<typename T>
+[[nodiscard]] constexpr T clamp(T value, T min, T max)
+{
+    static_assert(
+        IsArithmetic<T>,
+        "expected arithmetic type"
+        );
+
+    return value < min ? min
+        : value > max ? max
+        : value;
+}
+
+template<typename T>
 [[nodiscard]] constexpr T dist(T a, T b)
 {
     return abs(b - a);
@@ -23,7 +50,7 @@ template<typename T>
     static_assert(
         IsArithmetic<T>,
         "expected arithmetic type"
-        );
+    );
 
     if constexpr (IsInteger<T>)
     {
@@ -37,6 +64,13 @@ template<typename T>
     else
     {
         // type is floating point;
+        T result = 0;
+        i64 n_convert = i64(math::floor(n));
+        while (n_convert >>= 1)
+        {
+            result++;
+        }
+        return result;
     }
 }
 
@@ -129,16 +163,30 @@ template<typename T>
     return impl::atan2_approx<T>(y, x);
 }
 
-template<typename T>
-[[nodiscard]] constexpr T max(T a, T b)
+template<typename T, typename... TArgs>
+[[nodiscard]] constexpr T min(T a, TArgs... args)
 {
-    return a > b ? a : b;
+    if constexpr (sizeof...(args) == 0)
+    {
+        return a;
+    }
+    else
+    {
+        return a < min<T>(args...) ? a : min<T>(args...);
+    }
 }
 
-template<typename T>
-[[nodiscard]] constexpr T min(T a, T b)
+template<typename T, typename... TArgs>
+[[nodiscard]] constexpr T max(T a, TArgs... args)
 {
-    return a < b ? a : b;
+    if constexpr (sizeof...(args) == 0)
+    {
+        return a;
+    }
+    else
+    {
+        return a > max<T>(args...) ? a : max<T>(args...);
+    }
 }
 
 template<typename T>
@@ -159,31 +207,5 @@ template<typename T, typename TStep>
     return dist<T>(start, end) <= step ? end : start + sign(end - start) * step;
 }
 
-template<typename T>
-[[nodiscard]] constexpr i64 floor(T value)
-{
-    using Integer = i64;
-    
-    static_assert(
-        IsArithmetic<T>,
-        "expected arithmetic type"
-    );
-
-    const Integer i = static_cast<T>(value);
-    return (value < 0 && value != static_cast<T>(i)) ? (i - 1) : i;
-}
-
-template<typename T>
-[[nodiscard]] constexpr T clamp(T value, T min, T max)
-{
-    static_assert(
-        IsArithmetic<T>,
-        "expected arithmetic type"
-    );
-
-    return value < min ? min 
-        : value > max ? max
-        : value;
-}
 
 }

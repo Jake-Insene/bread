@@ -129,8 +129,10 @@ struct InputEventMouseButton : InputEvent
 
 enum class KeyState
 {
-    Released,
+    Released = 0,
     Pressed,
+
+    RequestNewState,
 };
 
 struct Input
