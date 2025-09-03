@@ -71,11 +71,11 @@ struct [[nodiscard]] PropertyValue
 		}
 		else if constexpr (IsSigned<T> && IsInteger<T>)
 		{
-			return storage.i;
+			return T(storage.i);
 		}
 		else if constexpr (IsUnsigned<T> && IsInteger<T>)
 		{
-			return storage.u;
+			return T(storage.u);
 		}
 		else if constexpr (IsFloatingPoint<T>)
 		{

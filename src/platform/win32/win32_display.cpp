@@ -3,6 +3,7 @@
 #include "engine/engine.h"
 #include "graphics/graphics.h"
 #include "input/input.h"
+#include "math/values.h"
 #include "scene/scene_manager.h"
 
 
@@ -13,7 +14,7 @@ static inline Win32Display::WindowData& _get_window_data(Display::WindowID id)
 
 static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-	WindowID window_id = (Display::WindowID)GetWindowLongPtrA(handle, GWLP_USERDATA);
+	WindowID window_id = GetWindowLongPtrA(handle, GWLP_USERDATA) & math::MaxValue<Display::WindowID>;
 
 	switch (msg)
 	{
@@ -71,7 +72,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		KeyState new_key_state = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN) ?
 			KeyState::Pressed : KeyState::Released;
 
-		UINT real_vk = wparam;
+		UINT real_vk = wparam & math::MaxValue<UINT>;
 		if (wparam == VK_SHIFT || wparam == VK_CONTROL || wparam == VK_MENU)
 		{
 			UINT real_vk = MapVirtualKeyExA(scan_code, MAPVK_VSC_TO_VK_EX, GetKeyboardLayout(0));
@@ -101,7 +102,9 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 	break;
 	case WM_MOUSEMOVE:
 	{
-		Vector2 screen_space_position = Vector2(GET_X_LPARAM(lparam), -GET_Y_LPARAM(lparam));
+		Vector2 screen_space_position = Vector2(
+			f32(GET_X_LPARAM(lparam)), -f32(GET_Y_LPARAM(lparam))
+		);
 		Input::data.mouse_position = SceneManager::_screen_make_local_to_canvas(screen_space_position);
 	}
 	break;

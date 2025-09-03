@@ -63,7 +63,7 @@ void Sound::load(StringView file_path)
 
     Slice<u8> content = File::read_all(allocator, file_path);
 
-    drwav wav;
+    drwav wav = {};
     drwav_init_memory(&wav, content.ptr(), content.len, &alloc_callbacks);
 
     const size_t total_samples = (size_t)wav.totalPCMFrameCount * wav.channels;

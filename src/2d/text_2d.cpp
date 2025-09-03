@@ -23,7 +23,7 @@ void Text2D::render()
 	Transform2D transform = get_global_transform();
 	const Vector2 scale = transform.get_scale();
 	const Vector2 begin_pos = transform.get_position();
-	const Vector2 font_size = Vector2(get_font_size());
+	const Vector2 font_size = Vector2(f32(get_font_size()));
 
 	const Font::FontTheme& font_theme = data.font->get_font_theme(get_font_size());
 
@@ -57,7 +57,9 @@ void Text2D::render()
 			)
 		);
 
-		transform.translate(Vector2(glyph.advance.x, 0));
+		transform.translate(
+			Vector2(f32(glyph.advance.x), 0)
+		);
 	}
 }
 

@@ -14,9 +14,9 @@ void AnimatedSprite2D::deinit()
 	data.current_animation.destroy();
 }
 
-void AnimatedSprite2D::internal_update(f64 dt)
+void AnimatedSprite2D::internal_update(f32 dt)
 {
-	data.remain -= dt;
+	data.remain -= f32(dt);
 
 	if (data.remain > 0)
 		return;

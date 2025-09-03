@@ -7,7 +7,20 @@
 template<typename T, typename SlotID = u32>
 struct [[nodiscard]] QueueArray
 {
-    static constexpr SlotID InvalidSlot = SlotID(0xEEFFEEFF'EEFFEEFF);
+    static constexpr SlotID _get_invalid_slot_value()
+    {
+        if constexpr (IsSame<SlotID, u64>)
+        {
+            return 0xEEFFEEFF'EEFFEEFFULL;
+        }
+        else
+        {
+            return 0xEEFFEEFFU;
+        }
+    }
+
+    static constexpr SlotID InvalidSlot = _get_invalid_slot_value();
+    static constexpr SlotID SlotBitmask = SlotID(~0);
 
     static_assert(
         sizeof(T) >= sizeof(SlotID),
@@ -65,7 +78,7 @@ struct [[nodiscard]] QueueArray
 
         (void)array.add(item);
         count++;
-        return SlotID(array.count - 1);
+        return SlotID((array.count - 1) & SlotBitmask);
     }
 
     void remove(const SlotID slot)

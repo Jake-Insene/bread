@@ -36,7 +36,7 @@ u64 random_u64()
 i64 random_signed(i64 min_value, i64 max_value)
 {
 	u64 range = u64(max_value) - u64(min_value) + 1;
-	u64 threshold = -range % range;
+	u64 threshold = (~range) % range;
 
 	u64 r;
 	do

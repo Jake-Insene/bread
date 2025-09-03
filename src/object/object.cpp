@@ -8,7 +8,7 @@
 void Object::_bind_vtable(VTable&)
 {}
 
-void Object::handle_internal_update(f64 dt)
+void Object::handle_internal_update(f32 dt)
 {
     for (usize i = 0; i < data.childs.count; i++)
     {
@@ -21,7 +21,7 @@ void Object::handle_internal_update(f64 dt)
     }
 }
 
-void Object::handle_update(f64 dt)
+void Object::handle_update(f32 dt)
 {
     for (usize i = 0; i < data.childs.count; i++)
     {

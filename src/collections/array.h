@@ -9,9 +9,9 @@ struct [[nodiscard]] Array
 {
     static constexpr usize DefaultCapacity = 4;
     
-    mem::Allocator allocator;
-    Slice<T> items;
-    usize count;
+    mem::Allocator allocator = {};
+    Slice<T> items = {};
+    usize count = 0;
     
     static Array with_allocator(const mem::Allocator& allocator)
     {

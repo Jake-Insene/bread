@@ -30,5 +30,5 @@ struct SpriteAnimation : Resource
 	[[nodiscard]] Animation& get_animation(StringView anim_name) { return animations.get(anim_name); }
 
 	[[nodiscard]] SpriteFrame& get_frame(StringView anim_name, i32 index);
-	[[nodiscard]] i32 get_frame_count(StringView anim_name);
+	[[nodiscard]] usize get_frame_count(StringView anim_name);
 };

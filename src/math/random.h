@@ -42,7 +42,7 @@ template<typename T>
 	UT range = UT(UT(max_value) - UT(min_value)) + 1;
 
 	// rejection threshold to avoid modulo bias
-	u64 threshold = -range % range;
+	u64 threshold = (~range) % range;
 
 	u64 r;
 	do

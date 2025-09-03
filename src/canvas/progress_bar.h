@@ -32,7 +32,7 @@ struct ProgressBar : CanvasObject
 
     void init(const CreateInfo&);
 
-    void internal_update(f64 dt);
+    void internal_update(f32 dt);
     void render();
 
     void set_background_texture(Texture2D* new_bg_texture);

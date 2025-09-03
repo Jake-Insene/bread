@@ -1,7 +1,6 @@
 #include "resource/resource_manager.h"
 
 #include "debug/debug.h"
-#include "freetype/fttypes.h"
 #include "fs/file.h"
 #include "graphics/graphics.h"
 #include "os/os.h"

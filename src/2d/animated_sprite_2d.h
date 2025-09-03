@@ -27,7 +27,7 @@ struct AnimatedSprite2D : Object2D
 	void init(const CreateInfo&);
     void deinit();
 
-    void internal_update(f64 dt);
+    void internal_update(f32 dt);
 	void render();
 
     void play(StringView anim);

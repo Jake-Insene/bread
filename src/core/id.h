@@ -12,5 +12,6 @@ struct [[nodiscard]] ID
     constexpr ID(T _id) : id(_id) {}
     
     [[nodiscard]] constexpr operator T() const { return id; }
+    [[nodiscard]] constexpr operator T&() { return id; }
 };
 

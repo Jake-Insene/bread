@@ -9,13 +9,13 @@ template<typename T>
 inline constexpr T MinValue = 0;
 
 template<>
-inline constexpr i8 MinValue<i8> = 0x80;
+inline constexpr i8 MinValue<i8> = 0x80 - 1;
 template<>
-inline constexpr i16 MinValue<i16> = 0x8000;
+inline constexpr i16 MinValue<i16> = 0x8000 - 1;
 template<>
-inline constexpr i32 MinValue<i32> = 0x8000'0000;
+inline constexpr i32 MinValue<i32> = 0x8000'0000 - 1;
 template<>
-inline constexpr i64 MinValue<i64> = 0x80000000'00000000;
+inline constexpr i64 MinValue<i64> = 0x80000000'00000000 - 1;
 
 template<typename T>
 inline constexpr T MaxValue = T(-1);

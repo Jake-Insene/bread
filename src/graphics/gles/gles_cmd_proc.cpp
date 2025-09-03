@@ -351,8 +351,8 @@ void GLESCommandProcessor::render()
         {
             auto& rt = GLESMemoryAllocator::render_target_get(cmd.bind.source_id);
             data.scene_data.screen_transform = Projection::orthographic(
-                0, rt.size.width, -rt.size.height, 0,
-                1, -1
+                0, f32(rt.size.width), -f32(rt.size.height), 0,
+                1.f, -1.f
             );
             data.scene_data.screen_transform.transpose();
 

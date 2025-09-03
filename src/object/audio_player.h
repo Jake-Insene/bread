@@ -22,7 +22,7 @@ struct AudioPlayer : Object
     void init(const CreateInfo&);
 
     void enter();
-    void internal_update(f64 dt);
+    void internal_update(f32 dt);
 
     void play();
     void stop();

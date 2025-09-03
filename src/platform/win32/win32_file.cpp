@@ -20,7 +20,7 @@ Slice<u8> File::read_all(mem::Allocator& allocator, StringView path)
 
 	usize length = GetFileSize(file, nullptr);
     Slice<u8> bytes = allocator.alloc(length, sizeof(usize));
-	(void)ReadFile(file, bytes.ptr(), length, nullptr, nullptr);
+	(void)ReadFile(file, bytes.ptr(), DWORD(length), nullptr, nullptr);
 
 	CloseHandle(file);
 

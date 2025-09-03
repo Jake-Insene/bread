@@ -1,25 +1,56 @@
 project("bread")
 
-set(BREAD_BUILD_DEFINITIONS "")
+# Configuration variables
+set(BREAD_BUILD_DEFINITIONS "BREAD" "_HAS_EXCEPTIONS=0")
+set(BREAD_COMPILE_OPTIONS "")
+set(BREAD_LINK_OPTIONS "")
+set(BREAD_EXE_LINK_OPTIONS "")
+
 set(BREAD_DEBUG_DEFINITIONS "-DDEBUG -DSHOW_DEBUG_INFO -DENABLE_DEBUG_OPTIONS")
+set(CMAKE_MSVC_RUNTIME_CHECKS OFF)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+if(MSVC)
+    foreach(flag_var
+        CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG
+        CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_RELWITHDEBINFO
+        CMAKE_CXX_FLAGS_MINSIZEREL
+    )
+        string(REPLACE "/RTC1" "" ${flag_var} "${${flag_var}}")
+        string(REPLACE "/RTCsu" "" ${flag_var} "${${flag_var}}")
+        string(REPLACE "/EHsc" "" ${flag_var} "${${flag_var}}")
+        set(${flag_var} "${${flag_var}}" CACHE STRING "" FORCE)
+        message(${flag_var})
+    endforeach()
+
+    set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} "/W3" "/we4701" "/we4703" "/Oi" "/Zl" "/GS-" "/GR-" "/EHs-" "/EHc-" "/Zc:threadSafeInit-")
+    set(BREAD_LINK_OPTIONS ${BREAD_LINK_OPTIONS} "/NODEFAULTLIBS")
+    set(BREAD_EXE_LINK_OPTIONS ${BREAD_EXE_LINK_OPTIONS} "/NODEFAULTLIBS" "/ENTRY:WinMain")
+else()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
+    set(CMAKE_CXX_FLAGS
+        "${CMAKE_CXX_FLAGS} -fno-rtti -fno-exceptions -Wall -Wextra"
+    )
+endif()
 
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} ${BREAD_DEBUG_DEFINITIONS})
+    set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} "/MTd")
 elseif(${CMAKE_BUILD_TYPE} STREQUAL "Release")
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DRELEASE")
+    set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} "/MT")
 elseif(${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} ${BREAD_DEBUG_DEFINITIONS})
+    set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} "/MT")
 endif()
 
+set(BREAD_MSVC_RUNTIME_LIBRARY ${BREAD_MSVC_RUNTIME_LIBRARY})
+
 # Dependencies
-add_subdirectory(external/freetype)
-
-
 # External sources
 file(GLOB EXTERNAL_SRC
     # stb
-    external/dr_wav.cpp
-    external/stb_image.cpp
+    external/external.cpp
 )
 
 file(GLOB ENGINE_SRC
@@ -148,6 +179,8 @@ add_library(
 )
 
 target_compile_definitions("bread" PUBLIC ${BREAD_BUILD_DEFINITIONS})
+target_compile_options("bread" PUBLIC ${BREAD_COMPILE_OPTIONS})
+target_link_options("bread" PUBLIC ${BREAD_LINK_OPTIONS})
 
 target_include_directories(
     "bread"
@@ -161,5 +194,9 @@ target_include_directories(
 target_link_libraries(
     "bread"
     ${PLATFORM_LIBRARIES}
-    freetype
 )
+
+set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} PARENT_SCOPE)
+set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} PARENT_SCOPE)
+set(BREAD_LINK_OPTIONS ${BREAD_LINK_OPTIONS} PARENT_SCOPE)
+set(BREAD_EXE_LINK_OPTIONS ${BREAD_EXE_LINK_OPTIONS} PARENT_SCOPE)

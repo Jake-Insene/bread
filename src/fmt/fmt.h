@@ -163,11 +163,16 @@ inline void __format_integer(const io::Writer& writer, T arg)
 	auto end = buffer_storage + BufferStorageSize;
 	usize buffer_index = 0;
 
+	Unsigned u = Unsigned(arg);
+	if constexpr (IsSigned<T>)
+	{
+		u = arg < 0 ? Unsigned(-arg) : u;
+	}
+
 	switch (Base)
 	{
 	case 10:
 	{
-		Unsigned u = arg < 0 ? Unsigned(-arg) : Unsigned(arg);
 		do
 		{
 			*--end = ('0' + u % 10);
@@ -187,7 +192,6 @@ inline void __format_integer(const io::Writer& writer, T arg)
 	break;
 	case 16:
 	{
-		Unsigned u = arg < 0 ? Unsigned(-arg) : Unsigned(arg);
 		u32 hex_digit_count = 0;
 
 		static constexpr char HexChar[16] =
@@ -221,16 +225,12 @@ inline void __format_integer(const io::Writer& writer, T arg)
 
 inline void __format_float(const io::Writer& writer, f32 arg)
 {
-	char buffer[256]{};
-	usize len = (usize)std::snprintf(buffer, 256, "%f", arg);
-	writer.write(Slice((u8*)buffer, len));
+	__format_integer<10>(writer, i64(arg));
 }
 
 inline void __format_double(const io::Writer& writer, f64 arg)
 {
-	char buffer[256]{};
-	usize len = (usize)std::snprintf(buffer, 256, "%f", arg);
-	writer.write(Slice((u8*)buffer, len));
+	__format_integer<10>(writer, i64(arg));
 }
 
 template<typename T>

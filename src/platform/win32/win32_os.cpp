@@ -153,7 +153,7 @@ bool OS::set_current_directory(StringView dir)
 
 OS::ThreadID Win32OS::thread_data_allocate()
 {
-    usize id = 1;
+    OS::ThreadID id = 1;
 
     for (; id < Win32OS::MaxThreadCount; id++)
     {
@@ -163,7 +163,7 @@ OS::ThreadID Win32OS::thread_data_allocate()
         }
     }
 
-    return ThreadID(id);
+    return ThreadID::InvalidID;
 }
 
 Win32OS::ThreadData& Win32OS::thread_data_get(ThreadID tid)
@@ -174,7 +174,7 @@ Win32OS::ThreadData& Win32OS::thread_data_get(ThreadID tid)
 
 OS::MutexID Win32OS::mutex_data_allocate()
 {
-    usize id = 0;
+    OS::MutexID id = 0;
 
     for (; id < MaxMutexCount; id++)
     {
@@ -185,7 +185,7 @@ OS::MutexID Win32OS::mutex_data_allocate()
         }
     }
 
-    return MutexID(id);
+    return MutexID::InvalidID;
 }
 
 Win32OS::MutexData& Win32OS::mutex_data_get(MutexID mid)

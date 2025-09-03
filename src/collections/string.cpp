@@ -23,7 +23,12 @@ static constexpr void _integer_to_buff(_BuffString& buff, T integer)
 {
     auto end = buff.end();
 
-    u64 u = integer < 0 ? u64(-integer) : u64(integer);
+    u64 u = u64(integer);
+    if constexpr (IsSigned<T>)
+    {
+        u = integer < 0 ? u64(-integer) : u;
+    }
+
     do
     {
         *--end = ('0' + u % 10);

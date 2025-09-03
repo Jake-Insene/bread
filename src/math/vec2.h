@@ -64,7 +64,7 @@ union [[nodiscard]] Vector2T
     constexpr explicit Vector2T(const T v) : x(v), y(v) {}
     
     template<typename T2>
-    constexpr explicit Vector2T(const Vector2T<T2>& v) : x(T2(v.x)), y(T2(v.y)) {}
+    constexpr explicit Vector2T(const Vector2T<T2>& v) : x(T(v.x)), y(T(v.y)) {}
 
     [[nodiscard]] constexpr T& operator[](const usize index)
     {

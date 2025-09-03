@@ -10,9 +10,9 @@ void Timer::enter()
     data.acumulator = 0;
 }
 
-void Timer::internal_update(f64 delta)
+void Timer::internal_update(f32 dt)
 {
-    data.acumulator += delta;
+    data.acumulator += dt;
 
     if(data.acumulator >= duration)
     {

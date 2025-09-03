@@ -34,7 +34,7 @@ bool Image::load(StringView file_path)
     pixels.items = (u8*)stbi_load_from_memory(
         buffer.ptr(), (int)buffer.len, &size.width, &size.height, &channels, 0
     );
-    
+
     if(pixels.null())
     {
         return false;

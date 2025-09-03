@@ -6,13 +6,13 @@ namespace math::impl
 
 // I don't know how this works.
 template<typename T>
-T tan_approx(T r)
+T tan_approx(T x)
 {
     static_assert(
         IsArithmetic<T>,
         "expected arithmetic type"
     );
-    return sin_approx(r);
+    return sin_approx(x);
 }
 
 }

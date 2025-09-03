@@ -3,67 +3,23 @@
 #include "graphics/graphics.h"
 #include "resource/resource_manager.h"
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_SYSTEM_H
-#include FT_MODULE_H
+#include <external/stb_truetype.h>
 
-
-static inline void* _ft_alloc(FT_Memory, long size);
-static inline void* _ft_realloc(FT_Memory, long old_size, long new_size, void* mem);
-static inline void _ft_free(FT_Memory, void* mem);
-
-static FT_MemoryRec_ ft_memory_rec =
+static void _load_theme(stbtt_fontinfo* font, Font::FontTheme& theme)
 {
-    .user = nullptr,
-    .alloc = _ft_alloc,
-    .free = _ft_free,
-    .realloc = _ft_realloc,
-};
-
-static inline void* _ft_alloc(FT_Memory, long size)
-{
-    return ResourceManager::get_allocator().alloc(size, 16).items;
-}
-
-static inline void* _ft_realloc(FT_Memory, long old_size, long new_size, void* mem)
-{
-    Slice<u8> old_mem = Slice((u8*)mem, old_size);
-    if (ResourceManager::get_allocator().realloc(old_mem, new_size, 16))
+    for (u32 glyph_index = 27; glyph_index < Font::MinimumGlyphCount; glyph_index++)
     {
-        return mem;
-    }
+        Font::Glyph& glyph = theme.glyphs[glyph_index];
+        if (glyph_index == ' ')
+            continue;
 
-    Slice<u8> new_mem = ResourceManager::get_allocator().alloc(new_size, 16);
-    if (mem != nullptr)
-    {
-        mem::copy(new_mem, old_mem);
-        ResourceManager::get_allocator().free(old_mem);
-    }
+        i32 width;
+        i32 height;
+        void* bitmap = stbtt_GetCodepointBitmap(
+            font, 0.f, stbtt_ScaleForPixelHeight(font, f32(theme.font_size)), (int)glyph_index, &width, &height, 0, 0
+        );
 
-    return new_mem.items;
-}
-
-static inline void _ft_free(FT_Memory, void* mem)
-{
-    if (mem == &ft_memory_rec)
-        return;
-
-    ResourceManager::get_allocator().free(Slice((u8*)mem, 1));
-}
-
-
-static void _load_glyph(FT_Face face, Array<Font::Glyph>& glyphs)
-{
-    for (FT_ULong glyph_index = 27; glyph_index < Font::MinimumGlyphCount; glyph_index++)
-    {
-        Font::Glyph& glyph = glyphs[glyph_index];
-
-        FT_Load_Char(face, glyph_index, FT_LOAD_RENDER);
-        glyph.advance.x = face->glyph->advance.x >> 6;
-        glyph.advance.y = face->glyph->advance.y >> 6;
-
-        if (glyph_index == ' ') continue;
+        auto pixels = Slice((u8*)bitmap, width * height);
 
         glyph.char_texture = Graphics::create_texture(
             TextureCreateInfo
@@ -72,10 +28,14 @@ static void _load_glyph(FT_Face face, Array<Font::Glyph>& glyphs)
                 .format = TEXTURE_FORMAT_R8,
                 .min_filter = TEXTURE_FILTER_NEAREST,
                 .mag_filter = TEXTURE_FILTER_NEAREST,
-                .size = Vector2I(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-                .pixels = Slice(face->glyph->bitmap.buffer, face->glyph->bitmap.width * face->glyph->bitmap.rows),
+                .size = Vector2I(width, height),
+                .pixels = pixels,
             }
         );
+        
+        glyph.advance.x = width;
+        glyph.advance.y = height;
+        stbtt_FreeBitmap((u8*)bitmap, nullptr);
     }
 }
 
@@ -122,24 +82,16 @@ void Font::load_from_file(StringView file_path)
 
     Slice<u8> content = File::read_all(allocator, file_path);
 
-    FT_Library library;
-    FT_New_Library(&ft_memory_rec, &library);
-    FT_Add_Default_Modules(library);
-
-    FT_Face face;
-    FT_New_Memory_Face(library, content.ptr(), content.len, 0, &face);
-    FT_Set_Pixel_Sizes(face, DefaultFontSize, DefaultFontSize);
+    stbtt_fontinfo font;
+    stbtt_InitFont(&font, content.ptr(), stbtt_GetFontOffsetForIndex(content.ptr(), 0));
 
     FontTheme& default_theme = data.themes.add(FontTheme());
     default_theme.glyphs = Array<Glyph>::with_allocator(allocator);
     default_theme.font_size = DefaultFontSize;
 
     default_theme.glyphs.resize(MinimumGlyphCount);
-    _load_glyph(face, default_theme.glyphs);
-
-    FT_Done_Face(face);
-    FT_Done_Library(library);
-
+    _load_theme(&font, default_theme);
+    
     allocator.free(content);
 }
 
@@ -159,23 +111,15 @@ const Font::FontTheme& Font::_theme_with_size(i32 font_size)
     auto allocator = ResourceManager::get_allocator();
     Slice<u8> content = File::read_all(allocator, path.view());
 
-    FT_Library library;
-    FT_New_Library(&ft_memory_rec, &library);
-    FT_Add_Default_Modules(library);
-
-    FT_Face face;
-    FT_New_Memory_Face(library, content.ptr(), content.len, 0, &face);
-    FT_Set_Pixel_Sizes(face, font_size, font_size);
+    stbtt_fontinfo font;
+    stbtt_InitFont(&font, content.ptr(), stbtt_GetFontOffsetForIndex(content.ptr(), 0));
 
     FontTheme& new_theme = data.themes.add(FontTheme());
     new_theme.glyphs = Array<Glyph>::with_allocator(allocator);
     new_theme.font_size = font_size;
 
     new_theme.glyphs.resize(MinimumGlyphCount);
-    _load_glyph(face, new_theme.glyphs);
-
-    FT_Done_Face(face);
-    FT_Done_Library(library);
+    _load_theme(&font, new_theme);
 
     allocator.free(content);
 

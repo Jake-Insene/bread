@@ -35,7 +35,7 @@ Transform2D Camera2D::get_camera_transform()
     const Vector2 camera_position = camera_transform.get_position();
     const Vector2 camera_scale = camera_transform.get_scale();
     const f32 camera_rot = camera_transform.get_rotation();
-    const f64 dt = SceneManager::get_delta_time();
+    const f32 dt = SceneManager::get_delta_time();
 
     switch (get_position_mode())
     {

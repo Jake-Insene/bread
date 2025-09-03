@@ -93,7 +93,7 @@
     OBJECT_FUNCV_ARG1(name, base, init, const CreateInfo&)\
     OBJECT_RFUNCV(name, base, deinit)\
     OBJECT_FUNCV(name, base, enter)\
-    OBJECT_FUNCV_ARG1(name, base, internal_update, f64)\
+    OBJECT_FUNCV_ARG1(name, base, internal_update, f32)\
     OBJECT_FUNCV(name, base, exit)\
     OBJECT_FUNCV_ARG1(name, base, event, const InputEvent&)\
     
@@ -101,10 +101,10 @@
 // Don't use VTableCall because it reference the member vtable that
 // is not in an object.
 #define ObjectCall(name, ...) \
-    static_cast<RemoveConstPointer<decltype(this)>::VTable&>(klass->vtable).name.call(this __VA_OPT__(,) __VA_ARGS__)
+    static_cast<RemoveConstPointer<decltype(this)>::VTable&>(klass->vtable).name.call(this, __VA_ARGS__)
 
 #define ObjectCallRef(ref, name, ...) \
-    static_cast<RemoveConstPointer<decltype(ref)>::VTable&>(ref->klass->vtable).name.call(ref __VA_OPT__(,) __VA_ARGS__)
+    static_cast<RemoveConstPointer<decltype(ref)>::VTable&>(ref->klass->vtable).name.call(ref, __VA_ARGS__)
 
 
 #define DefineVTable(base) struct VTable : base::VTable
@@ -131,8 +131,8 @@ struct Object
         Event<void(Object::*)(), false> deinit;
 
         Event<void(Object::*)(), false> enter;
-        Event<void(Object::*)(f64), false> internal_update;
-        Event<void(Object::*)(f64), false> update;
+        Event<void(Object::*)(f32), false> internal_update;
+        Event<void(Object::*)(f32), false> update;
         Event<void(Object::*)(), false> render;
         Event<void(Object::*)(), false> exit;
 
@@ -191,8 +191,8 @@ struct Object
     } data;
 
     // Internal, you should not use them
-    void handle_internal_update(f64 dt);
-    void handle_update(f64 dt);
+    void handle_internal_update(f32 dt);
+    void handle_update(f32 dt);
     void handle_render();
     void handle_event(const InputEvent& e);
 
@@ -254,7 +254,7 @@ struct Object
     OBJECT_FDEFAULT_ARG1(init, const CreateInfo&);
     OBJECT_FDEFAULT(deinit);
     OBJECT_FDEFAULT(enter);
-    OBJECT_FDEFAULT_ARG1(internal_update, f64);
+    OBJECT_FDEFAULT_ARG1(internal_update, f32);
     OBJECT_FDEFAULT(exit);
     OBJECT_FDEFAULT_ARG1(event, const InputEvent&);
     
@@ -286,7 +286,7 @@ struct Object
     * Mark: MARK_INTERNAL_UPDATE
     * @param dt The elapsed time since the last frame.
     */
-    void internal_update(f64) Function(FunctionPropagate) {}
+    void internal_update(f32) Function(FunctionPropagate) {}
 
     /*
     * Called every frame. Used to create object behavior.
@@ -294,7 +294,7 @@ struct Object
     * Mark: MARK_UPDATE
     * @param dt The elapsed time since the last frame
     */
-    void update(f64) {}
+    void update(f32) {}
 
     /*
     * Called every frame to request draw commands.

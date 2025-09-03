@@ -12,7 +12,7 @@ void AudioPlayer::enter()
 {
 }
 
-void AudioPlayer::internal_update(f64)
+void AudioPlayer::internal_update(f32)
 {
     if (get_sound() == nullptr)
         return;

@@ -38,9 +38,9 @@ SpriteAnimation::SpriteFrame& SpriteAnimation::get_frame(StringView anim_name, i
 	return anim.frames[index];
 }
 
-i32 SpriteAnimation::get_frame_count(StringView anim_name)
+usize SpriteAnimation::get_frame_count(StringView anim_name)
 {
 	DebugAssert(animations.has(anim_name), "the animation doesn't exists");
-	Animation& anim = animations.get(anim_name);
-	return anim.frames.count;
+	Animation& animation = animations.get(anim_name);
+	return animation.frames.count;
 }

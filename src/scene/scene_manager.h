@@ -38,9 +38,9 @@ struct SceneManager
             f64 driver_present_time;
         } debug_time;
 
-        f64 last_time;
-        f64 time_acum;
-        f64 delta_time;
+        f32 last_time;
+        f32 time_acum;
+        f32 delta_time;
     
         i32 fps_counter;
         i32 fps_acum;
@@ -58,7 +58,7 @@ struct SceneManager
     
     static inline InternalData data;
     
-    static f64 get_delta_time() { return data.delta_time; }
+    static f32 get_delta_time() { return data.delta_time; }
     static RenderTarget get_display_target() { return data.display_target; }
     
     static void initialize(mem::Allocator allocator);
