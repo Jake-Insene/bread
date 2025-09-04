@@ -85,7 +85,7 @@ struct [[nodiscard]] PropertyValue
 		{
 			return storage.v;
 		}
-
+	
 		return T();
 	}
 

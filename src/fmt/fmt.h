@@ -277,6 +277,7 @@ void __format_argument(const io::Writer& writer, const StringView view, fmt::For
 
 	if constexpr (IntervalRemain == 1)
 	{
+		Unused<TArgs...>(args...);
 		const auto interval_range = fmtstring.intervals[FString::WriteIntervalCount - 1];
 		const StringView interval = StringView(view.ptr() + interval_range.start, interval_range.len);
 		writer.write(mem::to_const_bytes(interval));

@@ -6,7 +6,7 @@ namespace math
 {
 
 template<typename T>
-inline constexpr T MinValue = 0;
+static constexpr T MinValue = 0;
 
 template<>
 inline constexpr i8 MinValue<i8> = 0x80 - 1;
@@ -18,7 +18,7 @@ template<>
 inline constexpr i64 MinValue<i64> = 0x80000000'00000000 - 1;
 
 template<typename T>
-inline constexpr T MaxValue = T(-1);
+static constexpr T MaxValue = T(~0);
 
 template<>
 inline constexpr i8 MaxValue<i8> = 0x7F;

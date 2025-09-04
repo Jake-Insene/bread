@@ -58,7 +58,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 	case WM_KEYDOWN:
 	case WM_KEYUP:
 	{
-		u16 repeat_count = lparam & 0xFFFF;
+		//u16 repeat_count = lparam & 0xFFFF;
 		u8 scan_code = (lparam >> 16) & 0xFF;
 
 		if (Input::data.keys[wparam] == KeyState::RequestNewState
@@ -72,21 +72,31 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		KeyState new_key_state = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN) ?
 			KeyState::Pressed : KeyState::Released;
 
-		UINT real_vk = wparam & math::MaxValue<UINT>;
+		UINT real_vk = wparam & 0xFFFU;
 		if (wparam == VK_SHIFT || wparam == VK_CONTROL || wparam == VK_MENU)
 		{
-			UINT real_vk = MapVirtualKeyExA(scan_code, MAPVK_VSC_TO_VK_EX, GetKeyboardLayout(0));
+			real_vk = MapVirtualKeyExA(scan_code, MAPVK_VSC_TO_VK_EX, GetKeyboardLayout(0));
 		}
 
 		Input::data.keys[real_vk] = new_key_state;
 		Input::data.keys[wparam] = new_key_state;
 
-		InputEventKey event{};
+		InputEventKey event = {};
 		event.type = InputEventType::INPUT_EVENT_KEY;
 		event.pressed = Input::data.keys[wparam] == KeyState::Pressed;
 		event.key = (Key)wparam;
 
 		Engine::handle_input(event);
+
+		switch (new_key_state)
+		{
+		case KeyState::Released:
+			Log::info("Released {}", char(wparam));
+			break;
+		case KeyState::Pressed:
+			Log::info("Pressed {}", char(wparam));
+			break;
+		}
 	}
 	break;
 	case WM_SIZE:

@@ -20,7 +20,7 @@ struct [[nodiscard]] QueueArray
     }
 
     static constexpr SlotID InvalidSlot = _get_invalid_slot_value();
-    static constexpr SlotID SlotBitmask = SlotID(~0);
+    static constexpr SlotID SlotBitmask = SlotID(~0U);
 
     static_assert(
         sizeof(T) >= sizeof(SlotID),

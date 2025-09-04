@@ -9,18 +9,18 @@ bool Input::is_key_down(Key k)
 
 bool Input::is_key_just_down(Key k)
 {
-	bool is_down = data.keys[(i32)k] == KeyState::Pressed;
+	bool is_down = data.keys[i32(k)] == KeyState::Pressed;
 
 	if (is_down)
 	{
-		data.keys[(i32)k] = KeyState::RequestNewState;
+		data.keys[i32(k)] = KeyState::RequestNewState;
 	}
 	return is_down;
 }
 
 KeyState Input::get_key_state(Key k)
 {
-	return data.keys[(i32)k];
+	return data.keys[i32(k)];
 }
 
 bool Input::is_mouse_button_pressed(MouseButton button)

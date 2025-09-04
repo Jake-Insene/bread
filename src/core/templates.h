@@ -202,6 +202,9 @@ template<typename T>
 using TypeIdentity = TypeIdentityT<T>::Type;
 
 template<typename... TArgs>
+constexpr void Unused(TArgs...) {}
+
+template<typename... TArgs>
 constexpr usize GetArgumentCount()
 {
     return sizeof...(TArgs);
@@ -212,6 +215,7 @@ constexpr auto GetArgument(T first, TArgs... args)
 {
     if constexpr (N == 0)
     {
+        Unused(args...);
         return TypeIdentity<T>(first);
     }
     else
@@ -231,5 +235,4 @@ template<typename T>
 {
     return arg;
 }
-
 

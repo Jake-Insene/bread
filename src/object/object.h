@@ -279,7 +279,7 @@ struct Object
     void enter() Function(FunctionPropagate);
 
     /*
-    * Called every frame like update(f64).
+    * Called every frame like update(f32).
     * 
     * Used to create inherit behavior.
     * 

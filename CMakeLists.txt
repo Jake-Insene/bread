@@ -20,10 +20,15 @@ if(MSVC)
         string(REPLACE "/RTCsu" "" ${flag_var} "${${flag_var}}")
         string(REPLACE "/EHsc" "" ${flag_var} "${${flag_var}}")
         set(${flag_var} "${${flag_var}}" CACHE STRING "" FORCE)
-        message(${flag_var})
     endforeach()
 
-    set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} "/W3" "/we4701" "/we4703" "/Oi" "/Zl" "/GS-" "/GR-" "/EHs-" "/EHc-" "/Zc:threadSafeInit-")
+    set(
+        BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} 
+        "/W3"  "/Oi" "/Zl" "/GS-" "/GR-" "/EHs-" "/EHc-" "/Zc:threadSafeInit-"
+        # Some warnings needs to be treated as error because we eliminated the compiler runtime,
+        # so now is more easy to create errors.
+        "/we4701" "/we4700" "/we4101" "/we4703" "/we4189"
+    )
     set(BREAD_LINK_OPTIONS ${BREAD_LINK_OPTIONS} "/NODEFAULTLIBS")
     set(BREAD_EXE_LINK_OPTIONS ${BREAD_EXE_LINK_OPTIONS} "/NODEFAULTLIBS" "/ENTRY:WinMain")
 else()
