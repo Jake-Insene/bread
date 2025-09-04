@@ -304,7 +304,7 @@ struct Object
     void render() {}
 
     /*
-    * Called after the object exit from the scene.
+    * Called after the object exit from the main scene.
     */
     void exit() Function(FunctionPropagate);
     

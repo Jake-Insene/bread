@@ -38,6 +38,8 @@ Physics2D::VTable P2DDriver::get_vtable()
         .body_apply_impulse = &P2DDriver::body_apply_impulse,
         .body_set_fixed_rotation = &P2DDriver::body_set_fixed_rotation,
         .body_is_on_floor = &P2DDriver::body_is_on_floor,
+        .body_is_on_ceil = &P2DDriver::body_is_on_ceil,
+        
         .body_set_residence_mask = &P2DDriver::body_set_residence_mask,
         .body_get_residence_mask = &P2DDriver::body_get_residence_mask,
         .body_set_collision_mask = &P2DDriver::body_set_collision_mask,
@@ -309,6 +311,12 @@ bool P2DDriver::body_is_on_floor(Physics2D::BodyID body_id)
     return body.is_on_floor;
 }
 
+bool P2DDriver::body_is_on_ceil(Physics2D::BodyID body_id)
+{
+    const Body& body = _get_body(body_id);
+    return body.is_on_ceil;
+}
+
 void P2DDriver::body_set_residence_mask(Physics2D::BodyID body_id, Physics2D::CollisionMask mask)
 {
     Body& body = _get_body(body_id);
@@ -550,6 +558,7 @@ void P2DDriver::_step_body(Body& body, f32 dt)
     };
 
     body.is_on_floor = false;
+    body.is_on_ceil = false;
     for (usize i = 0; i < Physics2D::MAX_COLLISION_MASKS; i++)
     {
         if (data.mask_groups[i].active == false)
@@ -619,10 +628,11 @@ void P2DDriver::_check_collision_on_body(Body& body, const Shape2D& body_shape, 
         if (test_shape.intersect(other_shape))
         {
             // Y correction
-            tmp_result.collision_axis.y = 0;
+            //tmp_result.collision_axis.y = 0;
             collided = true;
 
             body.is_on_floor = input.displacement.y < 0;
+            body.is_on_ceil = input.displacement.y > 0;
 
             Shape2D real_shape = body_shape;
             real_shape.translate(body_position);

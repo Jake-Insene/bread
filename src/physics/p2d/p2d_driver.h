@@ -79,6 +79,7 @@ struct P2DDriver
 
         bool fixed_rotation;
         bool is_on_floor;
+        bool is_on_ceil;
     };
 
     struct [[nodiscard]] Area
@@ -195,6 +196,7 @@ struct P2DDriver
     static void body_apply_impulse(Physics2D::BodyID body_id, const Vector2& point, const Vector2& force);
     static void body_set_fixed_rotation(Physics2D::BodyID body_id, bool enable);
     static bool body_is_on_floor(Physics2D::BodyID body_id);
+    static bool body_is_on_ceil(Physics2D::BodyID body_id);
 
     static void body_set_residence_mask(Physics2D::BodyID body_id, Physics2D::CollisionMask mask);
     static Physics2D::CollisionMask body_get_residence_mask(Physics2D::BodyID body_id);

@@ -65,6 +65,7 @@ struct Body2D : Object2D
     void set_fixed_rotation(bool enable) const;
 
     [[nodiscard]] bool is_on_floor() const { return Physics2D::body_is_on_floor(data.body_id); }
+    [[nodiscard]] bool is_on_ceil() const { return Physics2D::body_is_on_ceil(data.body_id); }
 
     void set_residence_mask(CollisionMask mask);
     [[nodiscard]] CollisionMask get_residence_mask() const { return data.residence_mask; }

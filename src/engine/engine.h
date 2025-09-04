@@ -93,6 +93,7 @@ struct Engine
 
         i32 fps;
         bool recreate_requested;
+        bool vsync_cache;
     };
 
     static inline InternalData data;
@@ -116,6 +117,7 @@ struct Engine
     static Window get_main_window() { return data.main_window; }
 
     static void set_vsync(bool vsync);
+    static bool get_vsync() { return data.vsync_cache; }
 
     template<typename Fn> 
     static void add_main_job(Fn fn)

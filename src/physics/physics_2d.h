@@ -93,6 +93,7 @@ struct Physics2D
         VTFunc(void, body_apply_impulse, BodyID, const Vector2&, const Vector2&);
         VTFunc(void, body_set_fixed_rotation, BodyID, bool);
         VTFunc(bool, body_is_on_floor, BodyID);
+        VTFunc(bool, body_is_on_ceil, BodyID);
         VTFunc(void, body_set_residence_mask, BodyID, CollisionMask);
         VTFunc(CollisionMask, body_get_residence_mask, BodyID);
         VTFunc(void, body_set_collision_mask, BodyID, CollisionMask);
@@ -154,6 +155,7 @@ struct Physics2D
     VTFuncDefArg3S(body_apply_impulse, BodyID, const Vector2&, const Vector2&);
     VTFuncDefArg2S(body_set_fixed_rotation, BodyID, bool);
     VTFuncDefArg1RetS(bool, body_is_on_floor, BodyID);
+    VTFuncDefArg1RetS(bool, body_is_on_ceil, BodyID);
     VTFuncDefArg2S(body_set_residence_mask, BodyID, CollisionMask);
     VTFuncDefArg1RetS(CollisionMask, body_get_residence_mask, BodyID);
     VTFuncDefArg2S(body_set_collision_mask, BodyID, CollisionMask);

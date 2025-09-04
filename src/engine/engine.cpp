@@ -126,6 +126,10 @@ void Engine::request_recreate_window()
 
 void Engine::set_vsync(bool vsync)
 {
+    if (data.vsync_cache == vsync)
+        return;
+
+    data.vsync_cache = vsync;
     EGL::set_vsync(vsync);
 }
 

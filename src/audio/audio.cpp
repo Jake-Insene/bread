@@ -20,5 +20,4 @@ void Audio::initialize(const mem::Allocator& allocator, DriverType driver)
 	}
 
 	vtable.initialize(allocator);
-
 }
