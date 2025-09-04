@@ -87,16 +87,6 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		event.key = (Key)wparam;
 
 		Engine::handle_input(event);
-
-		switch (new_key_state)
-		{
-		case KeyState::Released:
-			Log::info("Released {}", char(wparam));
-			break;
-		case KeyState::Pressed:
-			Log::info("Pressed {}", char(wparam));
-			break;
-		}
 	}
 	break;
 	case WM_SIZE:
