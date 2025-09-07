@@ -64,7 +64,7 @@ void GLESCommandProcessor::initialize(mem::Allocator allocator)
 
         gl.glBindVertexArray(0);
         
-        data.sprite_batch.program = gles::compile_program("shaders/sprite.gles.glsl", {});
+        data.sprite_batch.program = gles::compile_program("shaders/batch.gles.glsl", "#define SPRITE");
     }
 
     // Canvas element batch
@@ -89,7 +89,7 @@ void GLESCommandProcessor::initialize(mem::Allocator allocator)
 
         gl.glBindVertexArray(0);
 
-        data.canvas_element_batch.program = gles::compile_program("shaders/canvas.gles.glsl", {});
+        data.canvas_element_batch.program = gles::compile_program("shaders/batch.gles.glsl", "#define CANVAS_ELEMENT");
     }
     
     // Quad batch
@@ -114,7 +114,7 @@ void GLESCommandProcessor::initialize(mem::Allocator allocator)
 
         gl.glBindVertexArray(0);
         
-        data.quad_batch.program = gles::compile_program("shaders/primitive.gles.glsl", "#define QUAD");
+        data.quad_batch.program = gles::compile_program("shaders/batch.gles.glsl", "#define QUAD");
     }
 
     // Primitive batch
@@ -140,7 +140,33 @@ void GLESCommandProcessor::initialize(mem::Allocator allocator)
 
         gl.glBindVertexArray(0);
 
-        data.primitive_batch.program = gles::compile_program("shaders/primitive.gles.glsl", "#define PRIMITIVE");
+        data.primitive_batch.program = gles::compile_program("shaders/batch.gles.glsl", "#define PRIMITIVE");
+    }
+
+    // Primitive circle batch
+    {
+        data.primitive_circle_batch = {};
+
+        gl.glGenVertexArrays(1, &data.primitive_circle_batch.vao);
+        data.primitive_circle_batch.instance_buffer_object = GLESMemoryAllocator::buffer_allocate_handle();
+        gl.glBindVertexArray(data.primitive_circle_batch.vao);
+
+        GLESMemoryAllocator::buffer_fill_memory(
+            data.primitive_circle_batch.instance_buffer_object,
+            Slice<const u8>(nullptr, sizeof(PrimitiveCircle) * MaxPrimitiveCirclesPerBatch),
+            GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW
+        );
+        data.primitive_circle_batch.primitives = data.allocator.array<PrimitiveCircle>(MaxPrimitiveCirclesPerBatch);
+
+        gl.glBindBuffer(GL_ARRAY_BUFFER, data.primitive_circle_batch.instance_buffer_object);
+        for (u32 i = 0; i < PrimitiveCircleAttribCount; i++)
+        {
+            _vertex_attrib_divisor(i, GL_FLOAT, 4, sizeof(PrimitiveCircle), i * sizeof(Vector4));
+        }
+
+        gl.glBindVertexArray(0);
+
+        data.primitive_circle_batch.program = gles::compile_program("shaders/batch.gles.glsl", "#define CIRCLE");
     }
 
     data.scene_data_ubo = GLESMemoryAllocator::buffer_allocate_handle();
@@ -154,9 +180,7 @@ void GLESCommandProcessor::initialize(mem::Allocator allocator)
     
     data.state =
     {
-        .last_fbo = 0,
-        .current_fbo = 0,
-        .current_fb = {},
+        .frame_index = 0,
     };
 }
 
@@ -199,7 +223,7 @@ void GLESCommandProcessor::shutdown()
         data.allocator.free(mem::to_bytes(data.quad_batch.instances));
     }
 
-    // Primitive batch
+    // Primitive point batch
     {
         GLESMemoryAllocator::buffer_deallocate_handle(
             data.primitive_batch.instance_buffer_object, sizeof(PrimitivePoint) * MaxPrimitivePointsPerBatch
@@ -210,11 +234,18 @@ void GLESCommandProcessor::shutdown()
         data.allocator.free(mem::to_bytes(data.primitive_batch.primitives));
     }
 
-    GLESMemoryAllocator::buffer_deallocate_handle(data.scene_data_ubo, sizeof(SceneUniform));
-}
+    // Primitive circle batch
+    {
+        GLESMemoryAllocator::buffer_deallocate_handle(
+            data.primitive_circle_batch.instance_buffer_object, sizeof(PrimitiveCircle) * MaxPrimitiveCirclesPerBatch
+        );
+        gl.glDeleteVertexArrays(1, &data.primitive_circle_batch.vao);
+        gl.glDeleteProgram(data.primitive_circle_batch.program);
 
-void GLESCommandProcessor::recreate_window_transform(Vector2I)
-{
+        data.allocator.free(mem::to_bytes(data.primitive_circle_batch.primitives));
+    }
+
+    GLESMemoryAllocator::buffer_deallocate_handle(data.scene_data_ubo, sizeof(SceneUniform));
 }
 
 void GLESCommandProcessor::bind_program(GLID program)
@@ -247,12 +278,12 @@ void GLESCommandProcessor::end_sprite_batch()
 
     bind_program(data.sprite_batch.program);
     bind_scene_buffer();
+    
     gl.glBindVertexArray(data.sprite_batch.vao);
     gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.global_quad_ibo);
-
     GLESMemoryAllocator::buffer_bind_and_update_memory(
         data.sprite_batch.instance_buffer_object, 0, 
-        mem::to_const_bytes(data.sprite_batch.instances), GL_ARRAY_BUFFER,
+        mem::to_const_bytes(data.sprite_batch.instances.slice(data.sprite_batch.count)), GL_ARRAY_BUFFER,
         GLESMemoryAllocator::UMHWriteOnly
     );
     
@@ -275,12 +306,12 @@ void GLESCommandProcessor::end_canvas_element_batch()
 
     bind_program(data.canvas_element_batch.program);
     bind_scene_buffer();
+
     gl.glBindVertexArray(data.canvas_element_batch.vao);
     gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.global_quad_ibo);
-
     GLESMemoryAllocator::buffer_bind_and_update_memory(
         data.canvas_element_batch.instance_buffer_object, 0, 
-        mem::to_const_bytes(data.canvas_element_batch.instances), GL_ARRAY_BUFFER,
+        mem::to_const_bytes(data.canvas_element_batch.instances.slice(data.canvas_element_batch.count)), GL_ARRAY_BUFFER,
         GLESMemoryAllocator::UMHWriteOnly
     );
 
@@ -303,12 +334,12 @@ void GLESCommandProcessor::end_quad_batch()
 
     bind_program(data.quad_batch.program);
     bind_scene_buffer();
+    
     gl.glBindVertexArray(data.quad_batch.vao);
     gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.global_quad_ibo);
-
     GLESMemoryAllocator::buffer_bind_and_update_memory(
         data.quad_batch.instance_buffer_object, 0,
-        mem::to_const_bytes(data.quad_batch.instances), GL_ARRAY_BUFFER,
+        mem::to_const_bytes(data.quad_batch.instances.slice(data.quad_batch.count)), GL_ARRAY_BUFFER,
         GLESMemoryAllocator::UMHWriteOnly
     );
 
@@ -328,7 +359,7 @@ void GLESCommandProcessor::end_primitive_batch()
     gl.glBindVertexArray(data.primitive_batch.vao);
     GLESMemoryAllocator::buffer_bind_and_update_memory(
         data.primitive_batch.instance_buffer_object, 0,
-        mem::to_const_bytes(data.primitive_batch.primitives), GL_ARRAY_BUFFER,
+        mem::to_const_bytes(data.primitive_batch.primitives.slice(data.primitive_batch.count)), GL_ARRAY_BUFFER,
         GLESMemoryAllocator::UMHWriteOnly
     );
 
@@ -336,61 +367,66 @@ void GLESCommandProcessor::end_primitive_batch()
     data.primitive_batch.count = 0;
 }
 
-void GLESCommandProcessor::render()
+void GLESCommandProcessor::end_primitive_circle_batch()
+{
+#if SHOW_DEBUG_INFO
+    data.debug.draw_call_count++;
+#endif
+
+    bind_program(data.primitive_circle_batch.program);
+    bind_scene_buffer();
+
+    gl.glBindVertexArray(data.primitive_circle_batch.vao);
+    gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.global_quad_ibo);
+    GLESMemoryAllocator::buffer_bind_and_update_memory(
+        data.primitive_circle_batch.instance_buffer_object, 0,
+        mem::to_const_bytes(data.primitive_circle_batch.primitives.slice(data.primitive_circle_batch.count)), GL_ARRAY_BUFFER,
+        GLESMemoryAllocator::UMHWriteOnly
+    );
+
+    gl.glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, nullptr, (GLsizei)data.primitive_circle_batch.count);
+    data.primitive_circle_batch.count = 0;
+}
+
+void GLESCommandProcessor::render(Graphics::RenderTargetID rt_id, const Graphics::RenderInfo& ri)
 {
 #if SHOW_DEBUG_INFO
     data.debug.draw_call_count = 0;
 #endif
 
+    Vector2 size = Vector2();
+    if (rt_id != InvalidResource)
+    {
+        auto& rt = GLESMemoryAllocator::render_target_get(rt_id);
+        size = Vector2(rt.size);
+        gl.glBindFramebuffer(GL_FRAMEBUFFER, rt.framebuffer);
+        gl.glViewport(0, 0, rt.size.width, rt.size.height);
+    }
+    else
+    {
+        size = Vector2(Engine::get_main_window().get_size());
+    }
+
+    data.scene_data.screen_transform = Projection::orthographic(
+        0, f32(size.width), -f32(size.height), 0,
+        1.f, -1.f
+    );
+    data.scene_data.screen_transform.transpose();
+    data.scene_data_ubo_update = true;
+
+    gl.glClearColor(
+        (f32)ri.clear_color.r / 255.f,
+        (f32)ri.clear_color.g / 255.f,
+        (f32)ri.clear_color.b / 255.f,
+        (f32)ri.clear_color.a / 255.f
+    );
+    gl.glClear(GL_COLOR_BUFFER_BIT);
+
     for(usize i = 0; i < data.commands.count; i++)
     {
-        RenderCommand& cmd = data.commands[i];
+        const RenderCommand& cmd = data.commands[i];
         switch(cmd.type)
         {
-        case RenderCommand::BIND_RENDER_TARGET:
-        {
-            auto& rt = GLESMemoryAllocator::render_target_get(cmd.bind.source_id);
-            data.scene_data.screen_transform = Projection::orthographic(
-                0, f32(rt.size.width), -f32(rt.size.height), 0,
-                1.f, -1.f
-            );
-            data.scene_data.screen_transform.transpose();
-
-            data.scene_data_ubo_update = true;
-           
-            if(get_current_fbo() != rt.framebuffer)
-            {
-                set_current_fb(cmd.bind.source_id);
-                gl.glBindFramebuffer(GL_FRAMEBUFFER, rt.framebuffer);
-                gl.glViewport(0, 0, rt.size.width, rt.size.height);
-                
-                data.state.last_fbo = data.state.current_fbo;
-                set_current_fbo(rt.framebuffer);
-            }
-        }
-            break;
-        case RenderCommand::CLEAR_RENDER_TARGET:
-        {
-            if(get_current_fb() != cmd.clear.rid)
-            {
-                auto& rt = GLESMemoryAllocator::render_target_get(cmd.clear.rid);
-                gl.glBindFramebuffer(GL_FRAMEBUFFER, rt.framebuffer);
-            }
-
-            gl.glClearColor(
-                (f32)cmd.clear.color.r / 255.f,
-                (f32)cmd.clear.color.g / 255.f,
-                (f32)cmd.clear.color.b / 255.f,
-                (f32)cmd.clear.color.a / 255.f
-            );
-            gl.glClear(GL_COLOR_BUFFER_BIT);
-            
-            if(get_current_fb() != cmd.clear.rid)
-            {
-                gl.glBindFramebuffer(GL_FRAMEBUFFER, get_current_fbo());
-            }
-        }
-            break;
         case RenderCommand::DRAW_SPRITE:
         {
             if (data.sprite_batch.count >= MaxInstancesPerBatch ||
@@ -428,7 +464,9 @@ void GLESCommandProcessor::render()
             data.sprite_batch.instances[index].unit = tex_unit;
             data.sprite_batch.instances[index].flags = cmd.sprite.flags;
             
-            data.sprite_batch.instances[index].texture_extent = cmd.sprite.texture_extent;
+            data.sprite_batch.instances[index].texture_extent = Vector2(
+                GLESMemoryAllocator::texture_get_size(cmd.sprite.texture)
+            );
             data.sprite_batch.instances[index].dest_extent = cmd.sprite.dest_extent;
             
             data.sprite_batch.instances[index].src_rect = cmd.sprite.src_rect;
@@ -474,7 +512,9 @@ void GLESCommandProcessor::render()
             data.canvas_element_batch.instances[index].unit = tex_unit;
             data.canvas_element_batch.instances[index].flags = cmd.canvas_element.flags;
 
-            data.canvas_element_batch.instances[index].texture_extent = cmd.canvas_element.texture_extent;
+            data.canvas_element_batch.instances[index].texture_extent = Vector2(
+                GLESMemoryAllocator::texture_get_size(cmd.canvas_element.texture)
+            );
             data.canvas_element_batch.instances[index].dest_extent = cmd.canvas_element.dest_extent;
 
             data.canvas_element_batch.instances[index].src_rect = cmd.canvas_element.src_rect;
@@ -524,6 +564,23 @@ void GLESCommandProcessor::render()
             data.primitive_batch.count += 2;
         }
             break;
+        case RenderCommand::DRAW_CIRCLE:
+        {
+            if (data.primitive_circle_batch.count >= MaxPrimitiveCirclesPerBatch)
+            {
+                update_scene_uniform();
+                end_primitive_circle_batch();
+            }
+
+            u32 index = data.primitive_circle_batch.count;
+
+            data.primitive_circle_batch.primitives[index].point = cmd.circle.point;
+            data.primitive_circle_batch.primitives[index].color = cmd.circle.color;
+            data.primitive_circle_batch.primitives[index].radius = cmd.circle.radius;
+
+            data.primitive_circle_batch.count++;
+        }
+        break;
         case RenderCommand::SET_SCENE_TRANSFORM:
         {
             const Vector2 translation = cmd.transform[2] * -1;
@@ -548,7 +605,7 @@ void GLESCommandProcessor::render()
     {
         end_sprite_batch();
     }
-    
+
     if(data.quad_batch.count > 0)
     {
         end_quad_batch();
@@ -557,6 +614,11 @@ void GLESCommandProcessor::render()
     if(data.primitive_batch.count > 0)
     {
         end_primitive_batch();
+    }
+
+    if (data.primitive_circle_batch.count > 0)
+    {
+        end_primitive_circle_batch();
     }
 
     if (data.canvas_element_batch.count > 0)

@@ -54,17 +54,16 @@ void Engine::initialize()
 
     Audio::initialize(allocator, Audio::DEFAULT_DRIVER);
     Physics2D::initialize(allocator, Physics2D::DEFAULT_DRIVER);
-    Graphics::initialize(allocator, Graphics::DEFAULT_DRIVER);
+    Graphics::initialize(allocator);
 
     ResourceManager::initialize(allocator);
     SceneManager::initialize(allocator);
 
-    // default resources
+    // Default resources
     data.white_texture = GetResource<Texture2D>("white.png");
 
-
     Engine::get_main_window().set_size(__configuration__.WindowSize);
-    SceneManager::get_display_target().set_size(__configuration__.DisplayTargetSize);
+    SceneManager::get_display_target().set_size(__configuration__.WindowSize);
     Engine::set_vsync(__configuration__.VSync);
     
     __preload__();

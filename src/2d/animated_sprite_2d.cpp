@@ -51,10 +51,11 @@ void AnimatedSprite2D::render()
 	);
 	Vector2 extent = Vector2(current_frame.sprite->get_size());
 	Rect2D src_rect{ Vector2(), extent };
-	Graphics2D::draw_texture(
-		get_global_transform(), extent, extent,
+	Graphics::draw_texture(
+		get_global_transform(), extent,
 		src_rect, current_frame.sprite->texture_id,
-		Color(255, 255, 255, 255), (RenderCommand::SpriteFlags)_get_render_flags()
+		Color(255, 255, 255, 255),
+		RenderCommand::BatchFlags(_get_render_flags())
 	);
 }
 
@@ -88,9 +89,9 @@ void AnimatedSprite2D::stop()
 
 u32 AnimatedSprite2D::_get_render_flags()
 {
-	u32 flags = RenderCommand::FLAG_SPRITE_NONE;
-	flags |= centered ? RenderCommand::FLAG_SPRITE_NONE : RenderCommand::FLAG_SPRITE_TOP_LEFT;
-	flags |= flip_v ? RenderCommand::FLAG_SPRITE_FLIP_V : RenderCommand::FLAG_SPRITE_NONE;
-	flags |= flip_h ? RenderCommand::FLAG_SPRITE_FLIP_H : RenderCommand::FLAG_SPRITE_NONE;
+	u32 flags = RenderCommand::FLAG_BATCH_NONE;
+	flags |= centered ? RenderCommand::FLAG_BATCH_NONE : RenderCommand::FLAG_BATCH_TOP_LEFT;
+	flags |= flip_v ? RenderCommand::FLAG_BATCH_FLIP_V : RenderCommand::FLAG_BATCH_NONE;
+	flags |= flip_h ? RenderCommand::FLAG_BATCH_FLIP_H : RenderCommand::FLAG_BATCH_NONE;
 	return flags;
 }

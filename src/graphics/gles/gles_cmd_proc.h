@@ -2,10 +2,22 @@
 #include "graphics/command_interface.h"
 #include "graphics/gles/gles_memory_allocator.h"
 
+
+#define CheckInstanceSize(type) \
+    static_assert(\
+        sizeof(type) <= (MaxInstanceAttributeCount * sizeof(Vector4)),\
+        #type " is greater than 16 32-bit floating vec4!"\
+    );
+
 struct GLESCommandProcessor
 {
+    // Limits get from
+    // https://registry.khronos.org/OpenGL-Refpages/es3/html/glGet.xhtml
+    static constexpr i32 MaxInstanceAttributeCount = 16;
+
     static constexpr u32 MaxInstancesPerBatch = 128;
     static constexpr u32 MaxPrimitivePointsPerBatch = 128 * 8;
+    static constexpr u32 MaxPrimitiveCirclesPerBatch = 128 * 4;
     
     struct SpriteInstance
     {
@@ -26,11 +38,7 @@ struct GLESCommandProcessor
         u32 padding[3];
     };
     static constexpr usize SpriteInstanceAttribCount = 5;
-    
-    static_assert(
-        sizeof(SpriteInstance) <= (16*sizeof(Vector4)),
-        "SpriteInstance is greater than 16 32-bit floating vec4!"
-    );
+    CheckInstanceSize(SpriteInstance);
     
     struct QuadInstance
     {
@@ -42,8 +50,10 @@ struct GLESCommandProcessor
         Vector2 size;
         // attrib 2
         Color color;
+        u32 padding[3];
     };
     static constexpr usize QuadInstanceAttribCount = 3;
+    CheckInstanceSize(QuadInstance);
 
     struct CanvasElementInstance
     {
@@ -64,6 +74,7 @@ struct GLESCommandProcessor
         u32 padding[3];
     };
     static constexpr usize CanvasElementInstanceAttribCount = 5;
+    CheckInstanceSize(CanvasElementInstance);
 
     struct PrimitivePoint
     {
@@ -73,7 +84,18 @@ struct GLESCommandProcessor
         u32 flags;
     };
     static constexpr usize PrimitivePointAttribCount = 1;
-    
+    CheckInstanceSize(PrimitivePoint);
+
+    struct PrimitiveCircle
+    {
+        // attrib 0
+        Vector2 point;
+        Color color;
+        f32 radius;
+    };
+    static constexpr usize PrimitiveCircleAttribCount = 1;
+    CheckInstanceSize(PrimitiveCircle);
+
     struct SceneUniform
     {
         Mat4 screen_transform;
@@ -119,7 +141,7 @@ struct GLESCommandProcessor
         Slice<QuadInstance> instances;
     };
 
-    struct PrimitiveBatch
+    struct PrimitivePointBatch
     {
         GLID vao;
         GLID instance_buffer_object;
@@ -129,12 +151,20 @@ struct GLESCommandProcessor
 
         Slice<PrimitivePoint> primitives;
     };
+
+    struct PrimitiveCircleBatch
+    {
+        GLID vao;
+        GLID instance_buffer_object;
+        GLID program;
+
+        u32 count;
+
+        Slice<PrimitiveCircle> primitives;
+    };
     
     struct ExecutionState
     {
-        GLID last_fbo;
-        GLID current_fbo;
-        Graphics::RenderTargetID current_fb;
         i32 frame_index;
     };
     
@@ -148,7 +178,8 @@ struct GLESCommandProcessor
         SpriteBatch sprite_batch;
         CanvasElementBatch canvas_element_batch;
         QuadBatch quad_batch;
-        PrimitiveBatch primitive_batch;
+        PrimitivePointBatch primitive_batch;
+        PrimitiveCircleBatch primitive_circle_batch;
 
         GLID scene_data_ubo;
         bool scene_data_ubo_update;
@@ -171,8 +202,6 @@ struct GLESCommandProcessor
     static void initialize(mem::Allocator allocator);
     static void shutdown();
 
-    static void recreate_window_transform(Vector2I window_size);
-
     static void bind_program(GLID program);
     static void bind_scene_buffer();
     static void update_scene_uniform();
@@ -181,11 +210,7 @@ struct GLESCommandProcessor
     static void end_canvas_element_batch();
     static void end_quad_batch();
     static void end_primitive_batch();
+    static void end_primitive_circle_batch();
 
-    static void render();
-    
-    [[nodiscard]] static GLID get_current_fbo() { return data.state.current_fbo; }
-    static void set_current_fbo(GLID new_object) { data.state.current_fbo = new_object; }
-    [[nodiscard]] static Graphics::RenderTargetID get_current_fb() { return data.state.current_fb; }
-    static void set_current_fb(Graphics::RenderTargetID new_object) { data.state.current_fb = new_object; }
+    static void render(Graphics::RenderTargetID rt_id, const Graphics::RenderInfo& ri);
 };

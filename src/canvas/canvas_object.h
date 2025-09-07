@@ -15,7 +15,7 @@ struct CanvasObject : Object
     DefineVTable(Object)
     {
         Event<bool(CanvasObject::*)(const Vector2&) const, false> is_inside;
-        Event<bool(CanvasObject::*)(const Vector2&) const, false> get_rect;
+        Event<Rect2D(CanvasObject::*)() const, false> get_rect;
     };
     
     static void _bind_vtable(CanvasObject::VTable& vtable);
@@ -57,7 +57,7 @@ struct CanvasObject : Object
     * Return true is the given position is inside of the CanvasObject.
     * @param pos A world position vector.
     */
-    bool is_inside(const Vector2& pos) const;
+    bool is_inside(const Vector2& point) const;
 
     Rect2D get_rect() const;
 };

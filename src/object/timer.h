@@ -8,7 +8,7 @@ struct Timer : Object
 
     // Timer duration in seconds, when it reaches 0 the timeout event is called,
     // if loop is true the timer will reset and start again.
-    f64 duration = 0;
+    f32 duration = 0;
     
     Event<void(Object::*)()> timeout;
 
@@ -17,7 +17,7 @@ struct Timer : Object
     // resolve some namespace problems.
     struct InternalData
     {
-        f64 acumulator = 0;
+        f32 acumulator = 0;
         bool loop = false;
     } data;
 

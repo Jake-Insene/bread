@@ -4,11 +4,11 @@
 #include "engine/engine.h"
 
 
-static inline HMODULE gllib = nullptr;
+static inline HMODULE gl_lib = nullptr;
 
 static inline void* get_proc_address(const char* name)
 {
-	void* proc = (void*)GetProcAddress(gllib, name);
+	void* proc = (void*)GetProcAddress(gl_lib, name);
 	if (proc == NULL)
 		return (void*)wglGetProcAddress(name);
 	return proc;
@@ -31,11 +31,11 @@ EGL::VTable Win32EGL::get_vtable()
 void Win32EGL::initialize(const mem::Allocator&)
 {
 	platform_get_proc = &get_proc_address;
+   
+	data.current_window = (HWND)Engine::data.main_window.get_native_handle();
+	data.device_context = GetDC(Win32EGL::data.current_window);
 
-    Win32EGL::data.current_window = (HWND)Engine::data.main_window.get_native_handle();
-	Win32EGL::data.device_context = GetDC(Win32EGL::data.current_window);
-
-	gllib = LoadLibraryA("opengl32.dll");
+	gl_lib = LoadLibraryA("opengl32.dll");
 
 	// Initialize OpenGL ES and EGL
 	// Format R8G8B8A8 D24 S8
@@ -53,11 +53,11 @@ void Win32EGL::initialize(const mem::Allocator&)
 	pfd.cDepthBits = 24;
 	pfd.cStencilBits = 8;
     
-	int format = ChoosePixelFormat(Win32EGL::data.device_context, &pfd);
-	SetPixelFormat(Win32EGL::data.device_context, format, &pfd);
+	int format = ChoosePixelFormat(data.device_context, &pfd);
+	SetPixelFormat(data.device_context, format, &pfd);
 
-	HGLRC tmp_ctx = wglCreateContext(Win32EGL::data.device_context);
-	wglMakeCurrent(Win32EGL::data.device_context, tmp_ctx);
+	HGLRC tmp_ctx = wglCreateContext(data.device_context);
+	wglMakeCurrent(data.device_context, tmp_ctx);
 
 	wgl.wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
 
@@ -72,28 +72,28 @@ void Win32EGL::initialize(const mem::Allocator&)
 		0
 	};
 
-	HGLRC real_context = wgl.wglCreateContextAttribsARB(Win32EGL::data.device_context, 0, attribs);
+	HGLRC real_context = wgl.wglCreateContextAttribsARB(data.device_context, 0, attribs);
 	DebugAssert(real_context, "couldn't create the OpenGL context");
 
 	wglDeleteContext(tmp_ctx);
-	wglMakeCurrent(Win32EGL::data.device_context, real_context);
+	wglMakeCurrent(data.device_context, real_context);
 
-	Win32EGL::data.context = real_context;
+	data.context = real_context;
 	
 	wgl.wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
 }
 
 void Win32EGL::shutdown()
 {
-	wglDeleteContext(Win32EGL::data.context);
+	wglDeleteContext(data.context);
 
-	ReleaseDC(Win32EGL::data.current_window, Win32EGL::data.device_context);
+	ReleaseDC(data.current_window, data.device_context);
 
-	FreeLibrary(gllib);
+	FreeLibrary(gl_lib);
 
-	Win32EGL::data.current_window = nullptr;
-	Win32EGL::data.device_context = nullptr;
-	Win32EGL::data.context = nullptr;
+	data.current_window = nullptr;
+	data.device_context = nullptr;
+	data.context = nullptr;
 }
 
 void Win32EGL::recreate_window_surface()
@@ -106,7 +106,7 @@ void Win32EGL::destroy_window_surface()
 
 void Win32EGL::present()
 {
-	wglSwapLayerBuffers(Win32EGL::data.device_context, WGL_SWAP_MAIN_PLANE);
+	wglSwapLayerBuffers(data.device_context, WGL_SWAP_MAIN_PLANE);
 }
 
 void Win32EGL::set_vsync(bool vsync)

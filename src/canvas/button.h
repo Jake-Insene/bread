@@ -38,7 +38,7 @@ struct Button : CanvasObject
     void event(const InputEvent& e);
 
     // CanvasObject
-    bool is_inside(const Vector2& pos) const;
+    bool is_inside(const Vector2& point) const;
     Rect2D get_rect() const;
 
     Texture* get_current_texture() const;

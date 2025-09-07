@@ -15,13 +15,12 @@ void Sprite2D::render()
         return;
     
     Vector2 texture_extent = Vector2(data.texture->get_size());
-    Graphics2D::draw_texture(
+    Graphics::draw_texture(
         get_global_transform(),
-        texture_extent,
         texture_extent,
         src_rect, data.texture->texture_id,
         color,
-        (RenderCommand::SpriteFlags)_get_render_flags()
+        RenderCommand::BatchFlags(_get_render_flags())
     );
 }
 
@@ -36,10 +35,10 @@ void Sprite2D::set_texture(Texture2D* new_texture)
 
 u32 Sprite2D::_get_render_flags()
 {
-    u32 flags = RenderCommand::FLAG_SPRITE_NONE;
-    flags |= centered ? RenderCommand::FLAG_SPRITE_NONE : RenderCommand::FLAG_SPRITE_TOP_LEFT;
-    flags |= flip_v ? RenderCommand::FLAG_SPRITE_FLIP_V : RenderCommand::FLAG_SPRITE_NONE;
-    flags |= flip_h ? RenderCommand::FLAG_SPRITE_FLIP_H : RenderCommand::FLAG_SPRITE_NONE;
+    u32 flags = RenderCommand::FLAG_BATCH_NONE;
+    flags |= centered ? RenderCommand::FLAG_BATCH_NONE : RenderCommand::FLAG_BATCH_TOP_LEFT;
+    flags |= flip_v ? RenderCommand::FLAG_BATCH_FLIP_V : RenderCommand::FLAG_BATCH_NONE;
+    flags |= flip_h ? RenderCommand::FLAG_BATCH_FLIP_H : RenderCommand::FLAG_BATCH_NONE;
     return flags;
 }
 

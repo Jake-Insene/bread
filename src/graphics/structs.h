@@ -29,3 +29,4 @@ struct RenderTargetCreateInfo
     
     Vector2I size;
 };
+

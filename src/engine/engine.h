@@ -65,7 +65,6 @@ struct InputEvent;
 struct EngineConfiguration
 {
     Vector2I WindowSize = Vector2I(Display::DefaultWidth, Display::DefaultHeight);
-    Vector2I DisplayTargetSize = Vector2I(Display::DefaultWidth, Display::DefaultHeight);
     Object* (*CreateMainScene)();
     bool VSync = true;
     bool EnableDebugConsole = false;

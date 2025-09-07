@@ -451,7 +451,7 @@ void P2DDriver::_handle_debug_draw_body(Body& body)
         Transform2D transform = body.target->get_global_transform();
         Vector2 center = copy.get_center();
         transform.translate(center);
-        Graphics2D::draw_quad(Color{ 0, 255, 0, 127 }, shape.get_size(), transform);
+        Graphics::draw_quad(transform, shape.get_size(), Color{ 0, 255, 0, 127 });
     }
 #endif
 }
@@ -468,7 +468,7 @@ void P2DDriver::_handle_debug_draw_area(Area& area)
         Transform2D transform = area.target->get_global_transform();
         Vector2 center = copy.get_center();
         transform.translate(center);
-        Graphics2D::draw_quad(Color{ 0, 255, 0, 127 }, shape.get_size(), transform);
+        Graphics::draw_quad(transform, shape.get_size(), Color{ 0, 255, 0, 127 });
     }
 #endif
 }

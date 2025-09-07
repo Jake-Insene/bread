@@ -37,7 +37,7 @@ void TileMap::render()
 		TileSet::TileData& tile_data = tiles_data[tile.data_index];
 		Vector2 tile_position = Vector2(tile_data.texture_position);
 
-		Rect2D src_rect{ tile_position, tile_position + tile_size };
+		Rect2D src_rect{ tile_position, tile_size };
 
 		Transform2D tile_transform = base_transform * Transform2D(
 			Vector2(1, 0),
@@ -45,10 +45,10 @@ void TileMap::render()
 			Vector2(tile_size * Vector2(tile.position))
 		);
 
-		Graphics2D::draw_texture(
-			tile_transform, texture_size, tile_size, src_rect,
+		Graphics::draw_texture(
+			tile_transform, tile_size, src_rect,
 			tile_map_texture->texture_id, Color(255, 255, 255, 255),
-			RenderCommand::FLAG_SPRITE_NONE
+			RenderCommand::FLAG_BATCH_NONE
 		);
 	}
 }

@@ -28,10 +28,10 @@ void Button::render()
         return;
 
     Vector2 texture_extent = Vector2(current_texture->get_size());
-    Graphics2D::draw_canvas_element(
-        get_global_transform(), texture_extent, get_size(),
+    Graphics::draw_canvas_element(
+        get_global_transform(), get_size(),
         Rect2D(Vector2(), texture_extent), current_texture->texture_id,
-        Color(255, 255, 255, 255), RenderCommand::FLAG_CANVAS_NONE
+        Color(255, 255, 255, 255), RenderCommand::FLAG_BATCH_NONE
     );
 }
 
@@ -65,13 +65,13 @@ void Button::event(const InputEvent& e)
     }
 }
 
-bool Button::is_inside(const Vector2& pos) const
+bool Button::is_inside(const Vector2& point) const
 {
     Transform2D global_transform = get_global_transform();
     return Rect2D(
             global_transform.get_position(),
             get_size() * global_transform.get_scale()
-    ).point_is_in(pos);
+    ).point_is_in(point);
 }
 
 Rect2D Button::get_rect() const

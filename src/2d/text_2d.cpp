@@ -47,18 +47,19 @@ void Text2D::render()
 		ResourceID id = glyph.char_texture;
 		Vector2 extent = Vector2(Graphics::texture_get_size(id));
 
-		Graphics2D::draw_texture(
-			transform, extent, extent,
+		Graphics::draw_texture(
+			transform, extent,
 			Rect2D(Vector2(), extent), id,
 			color,
-			RenderCommand::SpriteFlags(
-				RenderCommand::FLAG_SPRITE_FLIP_V | RenderCommand::FLAG_SPRITE_FONT_CHAR
-				| RenderCommand::FLAG_SPRITE_TOP_LEFT
+			RenderCommand::BatchFlags(
+				RenderCommand::FLAG_BATCH_FLIP_V
+				| RenderCommand::FLAG_BATCH_FONT_CHAR
+				| RenderCommand::FLAG_BATCH_TOP_LEFT
 			)
 		);
 
 		transform.translate(
-			Vector2(f32(glyph.advance.x), 0)
+			Vector2(advance.x, 0)
 		);
 	}
 }

@@ -11,14 +11,14 @@ struct [[nodiscard]] Transform2D
     // [2][0] [2][1] position
     Vector2 rows[3];
 
-    explicit constexpr Transform2D()
+    constexpr Transform2D()
     {
         rows[0] = Vector2(1, 0);
         rows[1] = Vector2(0, 1);
         rows[2] = Vector2(0, 0);
     }
 
-    explicit constexpr Transform2D(const Vector2 xx, const Vector2 yy, const Vector2 zz)
+    constexpr Transform2D(const Vector2 xx, const Vector2 yy, const Vector2 zz)
     {
         rows[0] = xx;
         rows[1] = yy;
@@ -111,7 +111,7 @@ struct [[nodiscard]] Transform2D
         return rows[0].x * rows[1].y - rows[0].y * rows[1].x;
     }
 
-    constexpr Vector2 get_column(usize n)
+    constexpr Vector2 get_column(usize n) const
     {
         if (n == 0)
         {

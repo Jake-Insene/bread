@@ -33,13 +33,12 @@ void ProgressBar::render()
 
     Vector2 fill_texture_extent = Vector2(data.fill_texture->get_size());
     Rect2D fill_src_rect = Rect2D(Vector2(0, 0), fill_texture_extent);
-    Graphics2D::draw_canvas_element(
+    Graphics::draw_canvas_element(
         get_global_transform(),
-        fill_texture_extent,
         draw_size,
         fill_src_rect, data.fill_texture->texture_id,
         fill_color,
-        RenderCommand::FLAG_CANVAS_NONE
+        RenderCommand::FLAG_BATCH_NONE
     );
 
     // Background
@@ -48,13 +47,12 @@ void ProgressBar::render()
 
     Vector2 bg_texture_extent = Vector2(data.bg_texture->get_size());
     Rect2D bg_src_rect = Rect2D(Vector2(0, 0), bg_texture_extent);
-    Graphics2D::draw_canvas_element(
+    Graphics::draw_canvas_element(
         get_global_transform(),
-        bg_texture_extent,
         size,
         bg_src_rect, data.bg_texture->texture_id,
         bg_color,
-        RenderCommand::FLAG_CANVAS_NONE
+        RenderCommand::FLAG_BATCH_NONE
     );
 }
 

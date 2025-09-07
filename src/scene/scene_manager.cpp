@@ -17,7 +17,7 @@ void SceneManager::initialize(mem::Allocator allocator)
     data.allocator = allocator;
 
     data.display_target = RenderTarget::create(
-        Vector2I(Display::DefaultWidth, Display::DefaultHeight)
+        Engine::get_main_window().get_size()
     );
 
     data.background_color = {0, 0, 0, 255};
@@ -127,29 +127,6 @@ void SceneManager::step()
         Physics2D::step(data.delta_time);
     }
 
-    Graphics::add_cmd(
-        RenderCommand
-        {
-            .type = RenderCommand::BIND_RENDER_TARGET,
-            .bind =
-            {
-                .source_id = data.display_target.render_target_id,
-            },
-        }
-    );
-
-    Graphics::add_cmd(
-        RenderCommand
-        {
-            .type = RenderCommand::CLEAR_RENDER_TARGET,
-            .clear =
-            {
-                .rid = data.display_target.render_target_id,
-                .color = data.background_color,
-            },
-        }
-    );
-
     Transform2D camera_transform = Transform2D();
     if (data.current_camera)
         camera_transform = data.current_camera->get_camera_transform();
@@ -173,14 +150,19 @@ void SceneManager::step()
         PROFILE_SCOPE(
             data.debug_time.driver_render_time = duration;
         );
-        Graphics::render();
+        Graphics::RenderInfo ri =
+        {
+            .clear_color = data.background_color
+        };
+
+        Graphics::render(InvalidResource, ri);
     }
 
     {
         PROFILE_SCOPE(
             data.debug_time.driver_present_time = duration;
         );
-        Graphics::present();
+        Graphics::present(InvalidResource);
     }
 
     data.fps_acum++;

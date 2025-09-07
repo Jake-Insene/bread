@@ -8,61 +8,37 @@
 
 struct RenderCommand
 {
-    enum SpriteFlags
+    enum BatchFlags
     {
-        FLAG_SPRITE_NONE = 0x0,
-        FLAG_SPRITE_TOP_LEFT = 0x1,
-        FLAG_SPRITE_FLIP_V = 0x2,
-        FLAG_SPRITE_FLIP_H = 0x4,
-        FLAG_SPRITE_FONT_CHAR = 0x8,
-    };
-
-    enum CanvasFlags
-    {
-        FLAG_CANVAS_NONE = 0x0,
-        FLAG_CANVAS_FLIP_V = 0x1,
-        FLAG_CANVAS_FLIP_H = 0x2,
-        FLAG_CANVAS_FONT_CHAR = 0x4,
-    };
-
-    struct BindSource
-    {
-        ResourceID source_id;
+        FLAG_BATCH_NONE = 0x0,
+        FLAG_BATCH_TOP_LEFT = 0x1,
+        FLAG_BATCH_FLIP_V = 0x2,
+        FLAG_BATCH_FLIP_H = 0x4,
+        FLAG_BATCH_FONT_CHAR = 0x8,
     };
 
     struct Sprite
     {
         Transform2D transform;
-        // The size of the texture binded.
-        Vector2 texture_extent;
         // The size of the rectangle where the texture will be draw.
         Vector2 dest_extent;
         // In texture.
         Rect2D src_rect;
         ResourceID texture;
         Color color;
-        SpriteFlags flags;
+        BatchFlags flags;
     };
 
     struct CanvasElement
     {
         Transform2D transform;
-        // The size of the texture binded.
-        Vector2 texture_extent;
         // The size of the rectangle where the texture will be draw.
         Vector2 dest_extent;
         // In texture.
         Rect2D src_rect;
         ResourceID texture;
         Color color;
-        CanvasFlags flags;
-    };
-
-    struct ClearRT
-    {
-        ResourceID rid;
-        Color color;
-        // TODO: add depth
+        BatchFlags flags;
     };
 
     struct DrawQuad
@@ -79,29 +55,32 @@ struct RenderCommand
         Color color;
     };
 
+    struct DrawCircle
+    {
+        Vector2 point;
+        Color color;
+        f32 radius;
+    };
+
     enum CommandType
     {
         NONE = 0,
-        BIND_RENDER_TARGET,
-        CLEAR_RENDER_TARGET,
-        
         DRAW_SPRITE,
         DRAW_CANVAS_ELEMENT,
         DRAW_QUAD,
         DRAW_LINE,
+        DRAW_CIRCLE,
 
         SET_SCENE_TRANSFORM,
     } type;
     
     union
     {
-        BindSource bind;
         Sprite sprite;
         CanvasElement canvas_element;
-        ClearRT clear;
         DrawQuad quad;
         DrawLine line;
+        DrawCircle circle;
         Transform2D transform;
-        Mat4 matrix;
     };
 };

@@ -7,6 +7,8 @@ layout(location = 2) in vec4 instance_2;
 layout(location = 3) in vec4 instance_3;
 layout(location = 4) in vec4 instance_4;
 
+// Sprites
+#if defined(SPRITE) || defined(CANVAS_ELEMENT)
 #define transform mat2(instance_0.xy, instance_0.zw)
 
 #define transform_translation instance_1.xy
@@ -20,31 +22,95 @@ layout(location = 4) in vec4 instance_4;
 
 #define input_color floatBitsToUint(instance_4.x)
 
-layout(location = 0) flat out uint texture_slot;
-layout(location = 1) out vec2 uv;
-layout(location = 2) flat out uint flags;
-layout(location = 3) out vec4 color;
+// Quads
+#elif defined(QUAD)
 
-#define FLAG_FLIP_V 0x1U
-#define FLAG_FLIP_H 0x2U
-#define FLAG_FONT 0x4U
+#define transform mat2(instance_0.xy, instance_0.zw)
 
+#define transform_translation instance_1.xy
+#define quad_size instance_1.zw
+
+#define input_color floatBitsToUint(instance_2.x)
+
+// Points
+#elif defined(PRIMITIVE)
+
+#define input_point instance_0.xy
+#define input_color floatBitsToUint(instance_0.z)
+#define input_flags floatBitsToUint(instance_0.w)
+
+#elif defined(CIRCLE)
+
+#define input_point instance_0.xy
+#define input_color floatBitsToUint(instance_0.z)
+#define input_radius instance_0.w
+
+#endif
+
+layout(location = 0) out vec4 color;
+
+#if defined(SPRITE) || defined(CANVAS_ELEMENT)
+layout(location = 1) flat out uint texture_slot;
+layout(location = 2) out vec2 uv;
+layout(location = 3) flat out uint flags;
+#endif
+
+#if defined(CIRCLE)
+layout(location = 4) out vec2 local_position;
+layout(location = 5) out float radius;
+#endif
+
+#define FLAG_TOP_LEFT 0x1U
+#define FLAG_FLIP_V 0x2U
+#define FLAG_FLIP_H 0x4U
+#define FLAG_FONT 0x8U
 
 layout(std140, binding = 0) uniform SceneUniform
 {
     mat4 screen_transform;
     mat4 scene_transform;
-    mat4 canvas_transform;
 };
 
 void main()
 {
+    // Getting Vertex Index
+#if defined(QUAD) || defined(CIRCLE) || defined(SPRITE) || defined(CANVAS_ELEMENT)
     int index = gl_VertexID & 3;
-    flags = input_flags;
+#endif
 
+    // World objects can be rendered top-left or centered
+#if defined(QUAD) || defined(CIRCLE) || defined(SPRITE)
     // Vertex
     // Indices 0, 1, 2, 2, 3, 0
     // Center quad
+    // 0 -> -0.5, -0.5
+    // 1 ->  0.5, -0.5
+    // 2 ->  0.5,  0.5
+    // 3 -> -0.5,  0.5
+    vec2 vertice = vec2(-0.5, 0.5);
+    if(index == 0)
+    {
+        vertice = vec2(-0.5, -0.5);
+    }
+    else if(index == 1)
+    {
+        vertice = vec2(0.5, -0.5);
+    }
+    else if(index == 2)
+    {
+        vertice = vec2(0.5, 0.5);
+    }
+
+#if defined(CIRCLE)
+    local_position = vertice * 2;
+    radius = input_radius;
+#endif
+
+    // Canvas elements are always top left
+#elif defined(CANVAS_ELEMENT)
+    // Vertex
+    // Indices 0, 1, 2, 2, 3, 0
+    // Top left quad
     // 0 ->  0, -1
     // 1 ->  1, -1
     // 2 ->  1,  0
@@ -62,44 +128,75 @@ void main()
     {
         vertice = vec2(1, 0);
     }
+#endif
 
+    // Getting vertex extension
+#if defined(QUAD)
+    vec4 out_pos = vec4(vertice * quad_size, 0, 1);
+#elif defined(PRIMITIVE)
+    vec4 out_pos = vec4(input_point.x, input_point.y, 0, 1);
+#elif defined(CIRCLE)
+    vec4 out_pos = vec4(vertice * input_radius, 0, 1);
+#elif defined(SPRITE) 
+    vertice.x += float(flags & FLAG_TOP_LEFT) * 0.5;
+    vertice.y += float(flags & FLAG_TOP_LEFT) * -0.5;
+    
     vec4 out_pos = vec4(vertice * dest_extent, 0, 1);
-
+#elif defined(CANVAS_ELEMENT)
+    vec4 out_pos = vec4(vertice * dest_extent, 0, 1);
+#endif
+    
+    // Getting UV
+#if defined(SPRITE) || defined(CANVAS_ELEMENT) 
     // UV
     // 0 -> 0, 0
     // 1 -> 1, 0
     // 2 -> 1, 1
     // 3 -> 0, 1
-    vec2 position = src_rect.xy;
-    vec2 size = src_rect.zw;
+    vec2 min_corner = src_rect.xy / texture_extent;
+    vec2 max_corner = (src_rect.xy + src_rect.zw) / texture_extent;
 
-    vec2 out_uv = vec2(position.x, size.y) / texture_extent;
+    vec2 out_uv = vec2(min_corner.x, max_corner.y);
     if(index == 0)
     {
-        out_uv = position / texture_extent;
+        out_uv = min_corner;
     }
     else if(index == 1)
     {
-        out_uv = vec2(size.x, position.y) / texture_extent;
+        out_uv = vec2(max_corner.x, min_corner.y);
     }
     else if(index == 2)
     {
-        out_uv = size / texture_extent;
+        out_uv = max_corner;
     }
 
-    out_uv.x = mix(out_uv.x, 1.0 - out_uv.x, float(bool(flags & FLAG_FLIP_H)));
-    out_uv.y = mix(out_uv.y, 1.0 - out_uv.y, float(bool(flags & FLAG_FLIP_V)));
+    // Applying flags
+    flags = input_flags;
     
+    // Fliping on demand
+    out_uv = mix(
+        out_uv, 1.0 - out_uv, bvec2(bool(flags & FLAG_FLIP_H), bool(flags & FLAG_FLIP_V))
+    );
+
+    uv = out_uv;
+    texture_slot = texture_input_slot;
+#endif
+
+#if defined(QUAD) || defined(SPRITE) || defined(CANVAS_ELEMENT)
     mat2 matrix_transform = transform;
     out_pos.xy = matrix_transform * out_pos.xy;
     out_pos.xy += transform_translation;
-    
+#endif
+
+#if !defined(CANVAS_ELEMENT)
+    out_pos = scene_transform * out_pos;
+#endif
     out_pos = screen_transform * out_pos;
 
     gl_Position = out_pos;
-    uv = out_uv;
-    texture_slot = texture_input_slot;
 
+    // Applying color
+#if defined(QUAD) || defined(PRIMITIVE) || defined(CIRCLE) || defined(SPRITE) || defined(CANVAS_ELEMENT)
     // Color
     uint color_uint = input_color;
     uint color_r = color_uint & 255U;
@@ -113,23 +210,34 @@ void main()
         float(color_a)
     );
     color /= 255.0;
+#endif
 }
 
 
 #fragment
 precision mediump float;
 
-layout(location = 0) flat in uint texture_slot;
-layout(location = 1) in vec2 uv;
-layout(location = 2) flat in uint flags;
-layout(location = 3) in vec4 color;
+layout(location = 0) in vec4 color;
+
+#if defined(SPRITE) || defined(CANVAS_ELEMENT)
+layout(location = 1) flat in uint texture_slot;
+layout(location = 2) in vec2 uv;
+layout(location = 3) flat in uint flags;
+#endif
+
+#if defined(CIRCLE)
+layout(location = 4) in vec2 local_position;
+layout(location = 5) in float radius;
+#endif
 
 layout(location = 0) out vec4 frag_color;
 
-#define FLAG_FLIP_V 0x1U
-#define FLAG_FLIP_H 0x2U
-#define FLAG_FONT 0x4U
+#define FLAG_TOP_LEFT 0x1U
+#define FLAG_FLIP_V 0x2U
+#define FLAG_FLIP_H 0x4U
+#define FLAG_FONT 0x8U
 
+#if defined(SPRITE) || defined(CANVAS_ELEMENT)
 layout(binding = 0) uniform sampler2D texture0;
 layout(binding = 1) uniform sampler2D texture1;
 layout(binding = 2) uniform sampler2D texture2;
@@ -146,9 +254,11 @@ layout(binding = 12) uniform sampler2D texture12;
 layout(binding = 13) uniform sampler2D texture13;
 layout(binding = 14) uniform sampler2D texture14;
 layout(binding = 15) uniform sampler2D texture15;
+#endif
 
 void main()
 {
+#if defined(SPRITE) || defined(CANVAS_ELEMENT)
     switch(int(texture_slot))
     {
     case 0:
@@ -218,4 +328,13 @@ void main()
     }
 
     frag_color *= color;
+#elif defined(QUAD) || defined(PRIMITIVE)
+    frag_color = color;
+#elif defined(CIRCLE)
+    float distance = 1.0 - length(vec3(local_position, 0));
+    float circle = smoothstep(0.0, 0.005, distance);
+    circle *= smoothstep(10 + 0.005, 10, distance);
+    frag_color = color;
+    frag_color.a *= circle;
+#endif
 }

@@ -15,13 +15,12 @@ void CanvasSprite::render()
         return;
 
     Vector2 texture_extent = Vector2(data.texture->get_size());
-    Graphics2D::draw_canvas_element(
+    Graphics::draw_canvas_element(
         get_global_transform(),
-        texture_extent,
         texture_extent,
         src_rect, data.texture->texture_id,
         color,
-        (RenderCommand::CanvasFlags)_get_render_flags()
+        RenderCommand::BatchFlags(_get_render_flags())
     );
 }
 
@@ -36,9 +35,9 @@ void CanvasSprite::set_texture(Texture2D* new_texture)
 
 u32 CanvasSprite::_get_render_flags()
 {
-    u32 flags = RenderCommand::FLAG_CANVAS_NONE;
-    flags |= flip_v ? RenderCommand::FLAG_CANVAS_FLIP_V : RenderCommand::FLAG_CANVAS_NONE;
-    flags |= flip_h ? RenderCommand::FLAG_CANVAS_FLIP_H : RenderCommand::FLAG_CANVAS_NONE;
+    u32 flags = RenderCommand::FLAG_BATCH_NONE;
+    flags |= flip_v ? RenderCommand::FLAG_BATCH_FLIP_V : RenderCommand::FLAG_BATCH_NONE;
+    flags |= flip_h ? RenderCommand::FLAG_BATCH_FLIP_H : RenderCommand::FLAG_BATCH_NONE;
     return flags;
 }
 
