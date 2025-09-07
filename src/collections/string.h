@@ -24,26 +24,59 @@ struct [[nodiscard]] String
         return chars[index];
     }
 
-    void set(StringView new_chars);
     void resize(usize new_size);
 
-    void add(StringView str);
-
-    // Conversion
     template<typename T>
-    void add_from_integer(T integer)
+    void set(const T arg)
     {
-        static_assert(IsInteger<T>, "an integer type was expected");
-        if constexpr (IsSigned<T>)
+        if constexpr (IsSame<RemoveReference<T>, StringView>)
         {
-            _add_from_signed(integer);
+            _set_str_view(arg);
+        }
+        else if constexpr (IsSame<RemoveConstPointer<T>, char>)
+        {
+            _set_str_view(StringView(arg, __string_len(arg)));
+        }
+        else if constexpr (IsInteger<T> && IsSigned<T>)
+        {
+            _set_from_signed(arg);
+        }
+        else if constexpr (IsInteger<T> && IsUnsigned<T>)
+        {
+            _set_from_unsigned(arg);
         }
         else
         {
-            _add_from_unsigned(integer);
+            static_assert(false, "unknown argument type");
         }
     }
 
+    template<typename T>
+    void add(const T arg)
+    {
+        if constexpr (IsSame<RemoveReference<T>, StringView>)
+        {
+            _add_str_view(arg);
+        }
+        else if constexpr (IsSame<RemoveConstPointer<T>, char>)
+        {
+            _add_str_view(StringView(arg, __string_len(arg)));
+        }
+        else if constexpr (IsInteger<T> && IsSigned<T>)
+        {
+            _add_from_signed(arg);
+        }
+        else if constexpr (IsInteger<T> && IsUnsigned<T>)
+        {
+            _add_from_unsigned(arg);
+        }
+        else
+        {
+            static_assert(false, "unknown argument type");
+        }
+    }
+
+    // Conversion
     template<typename T>
     void set_from_integer(T integer)
     {
@@ -63,9 +96,11 @@ struct [[nodiscard]] String
     
     StringView view();
 
-    void _add_from_signed(i64 integer);
-    void _add_from_unsigned(u64 integer);
-
+    void _set_str_view(StringView str);
     void _set_from_signed(i64 integer);
     void _set_from_unsigned(u64 integer);
+
+    void _add_str_view(StringView str);
+    void _add_from_signed(i64 integer);
+    void _add_from_unsigned(u64 integer);
 };

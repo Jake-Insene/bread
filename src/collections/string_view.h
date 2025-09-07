@@ -5,7 +5,9 @@ inline constexpr usize __string_len(const char* str)
 {
     usize len = 0;
     while(*str++)
-            len++;
+    {
+        len++;
+    }
             
     return len;
 }

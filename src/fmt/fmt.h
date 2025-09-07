@@ -1,9 +1,8 @@
 #pragma once
 #include "fmt/fmt_types.h"
 
-#include <cstdio>
-
 struct StringView;
+
 
 namespace fmt
 {
@@ -117,6 +116,7 @@ void format(const io::Writer& writer, FormatString<TypeIdentity<TArgs>...> fmt, 
 }
 
 
+#include "collections/string_utility.h"
 #include "collections/string_view.h"
 #include "mem/utils.h"
 #include "io/writer.h"
@@ -136,101 +136,16 @@ inline constexpr bool IsValidBase = IsAnyOfValue<usize, Base, 2, 10, 16>;
 template<usize Base, typename T>
 inline void __format_integer(const io::Writer& writer, T arg)
 {
-	static_assert(IsSigned<T> || IsUnsigned<T>, "expected a integer type");
 	static_assert(IsValidBase<Base>, "invalid integer base");
-
-	static constexpr usize BufferStorageSize = ConditionalValue<usize,
-		Base == 10 && IsAnyOf<T, i64, u64>,
-		21U,
-
-		ConditionalValue<usize,
-		Base == 10 && IsAnyOf<T, i32, u32>,
-		11U,
-
-		ConditionalValue<usize,
-		Base == 10 && IsAnyOf<T, i16, u16>,
-		6U,
-
-		ConditionalValue<usize,
-		Base == 10 && IsAnyOf<T, i8, u8>,
-		4U,
-
-		sizeof(T) * 8
-		>>>>;
-
-	using Unsigned = MakeUnsigned<T>;
-	u8 buffer_storage[BufferStorageSize] = {};
-	auto end = buffer_storage + BufferStorageSize;
-	usize buffer_index = 0;
-
-	Unsigned u = Unsigned(arg);
-	if constexpr (IsSigned<T>)
-	{
-		u = arg < 0 ? Unsigned(-arg) : u;
-	}
-
-	switch (Base)
-	{
-	case 10:
-	{
-		do
-		{
-			*--end = ('0' + u % 10);
-			u /= 10;
-			buffer_index++;
-		} while (u != 0);
-
-		if constexpr (IsSigned<T>)
-		{
-			if (arg < 0)
-			{
-				*--end = '-';
-				buffer_index++;
-			}
-		}
-	}
-	break;
-	case 16:
-	{
-		u32 hex_digit_count = 0;
-
-		static constexpr char HexChar[16] =
-		{
-			'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
-		};
-		do
-		{
-			*--end = HexChar[u & 0xF];
-			u >>= 4;
-			hex_digit_count++;
-			buffer_index++;
-		} while (hex_digit_count < (sizeof(T) * 8) / 4);
-
-		if constexpr (IsSigned<T>)
-		{
-			if (arg < 0)
-			{
-				*--end = '-';
-				buffer_index++;
-			}
-		}
-	}
-	break;
-	default:
-		break;
-	}
-
-	writer.write(Slice(buffer_storage + (BufferStorageSize - buffer_index), buffer_index));
+	StringResult result = StringUtility::integer_to_string<T>(arg, Base);
+	writer.write(Slice(result.result + result.begin, result.len));
 }
 
-inline void __format_float(const io::Writer& writer, f32 arg)
+template<typename T>
+inline void __format_floating_point(const io::Writer& writer, T arg, i32 decimals)
 {
-	__format_integer<10>(writer, i64(arg));
-}
-
-inline void __format_double(const io::Writer& writer, f64 arg)
-{
-	__format_integer<10>(writer, i64(arg));
+	StringResult result = StringUtility::fp_to_string<T>(arg, decimals);
+	writer.write(Slice(result.result, result.len));
 }
 
 template<typename T>
@@ -250,11 +165,11 @@ void __format_single_argument(const io::Writer& writer, T arg)
 	}
 	else if constexpr (type == fmt::FormatType::Float)
 	{
-		__format_float(writer, arg);
+		__format_floating_point<f32>(writer, arg, 6);
 	}
 	else if constexpr (type == fmt::FormatType::Double)
 	{
-		__format_double(writer, arg);
+		__format_floating_point<f64>(writer, arg, 6);
 	}
 	else if constexpr (type == fmt::FormatType::Pointer)
 	{
