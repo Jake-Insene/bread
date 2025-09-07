@@ -1,10 +1,9 @@
 #include "2d/sprite_2d.h"
 
-#include "graphics/graphics.h"
+#include "graphics/viewport.h"
 #include "resource/resource_manager.h"
 
-
-void Sprite2D::enter()
+void Sprite2D::init(const CreateInfo&)
 {
     mark(MARK_RENDER);
 }
@@ -14,13 +13,27 @@ void Sprite2D::render()
     if (data.texture == nullptr)
         return;
     
-    Vector2 texture_extent = Vector2(data.texture->get_size());
-    Graphics::draw_texture(
-        get_global_transform(),
-        texture_extent,
-        src_rect, data.texture->texture_id,
-        color,
-        RenderCommand::BatchFlags(_get_render_flags())
+    Vector2 extent = Vector2(data.texture->get_size());
+    Rect2D rect = Rect2D(Vector2(), extent);
+
+    u32 flags = 0;
+    if (flip_h)
+    {
+        flags |= Viewport::RENDER_FLAG_FLIP_H;
+    }
+    if (flip_v)
+    {
+        flags |= Viewport::RENDER_FLAG_FLIP_V;
+    }
+
+    if (centered)
+    {
+        rect.position = Vector2(rect.size.x / -2.f, rect.size.y / 2.f);
+    }
+
+    draw_sprite(
+        get_global_transform(), get_texture()->texture_id,
+        rect, src_rect, color, flags
     );
 }
 
@@ -31,14 +44,5 @@ void Sprite2D::set_texture(Texture2D* new_texture)
         return;
 
     src_rect.size = Vector2(new_texture->get_size());
-}
-
-u32 Sprite2D::_get_render_flags()
-{
-    u32 flags = RenderCommand::FLAG_BATCH_NONE;
-    flags |= centered ? RenderCommand::FLAG_BATCH_NONE : RenderCommand::FLAG_BATCH_TOP_LEFT;
-    flags |= flip_v ? RenderCommand::FLAG_BATCH_FLIP_V : RenderCommand::FLAG_BATCH_NONE;
-    flags |= flip_h ? RenderCommand::FLAG_BATCH_FLIP_H : RenderCommand::FLAG_BATCH_NONE;
-    return flags;
 }
 

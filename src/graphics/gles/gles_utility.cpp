@@ -112,7 +112,7 @@ namespace gles
         
         sources[source_count-1] = (const char*)fs_string.ptr();
         lengths[source_count-1] = (GLint)fs_string.len;
-        
+
         u32 fs = gl.glCreateShader(GL_FRAGMENT_SHADER);
         gl.glShaderSource(fs, source_count, sources, lengths);
         gl.glCompileShader(fs);

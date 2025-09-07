@@ -1,6 +1,6 @@
 #include "2d/tile_map.h"
 
-#include "graphics/graphics.h"
+#include "graphics/viewport.h"
 
 
 void TileMap::init(const CreateInfo&)
@@ -45,10 +45,13 @@ void TileMap::render()
 			Vector2(tile_size * Vector2(tile.position))
 		);
 
-		Graphics::draw_texture(
-			tile_transform, tile_size, src_rect,
-			tile_map_texture->texture_id, Color(255, 255, 255, 255),
-			RenderCommand::FLAG_BATCH_NONE
+		Rect2D rect = Rect2D(
+			Vector2(tile_size.x/-2.f, tile_size.y/2.f), tile_size
+		);
+
+		draw_sprite(
+			tile_transform, tile_map_texture->texture_id, rect,
+			src_rect, Color(255, 255, 255, 255), 0
 		);
 	}
 }

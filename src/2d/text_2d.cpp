@@ -1,6 +1,6 @@
 #include "2d/text_2d.h"
 
-#include "graphics/graphics.h"
+#include "graphics/viewport.h"
 
 
 void Text2D::init(const CreateInfo&)
@@ -44,18 +44,12 @@ void Text2D::render()
 			continue;
 		}
 
-		ResourceID id = glyph.char_texture;
+		TextureID id = glyph.char_texture;
 		Vector2 extent = Vector2(Graphics::texture_get_size(id));
-
-		Graphics::draw_texture(
-			transform, extent,
-			Rect2D(Vector2(), extent), id,
-			color,
-			RenderCommand::BatchFlags(
-				RenderCommand::FLAG_BATCH_FLIP_V
-				| RenderCommand::FLAG_BATCH_FONT_CHAR
-				| RenderCommand::FLAG_BATCH_TOP_LEFT
-			)
+		draw_sprite(
+			transform, id,
+			Rect2D(Vector2(), extent), Rect2D(Vector2(), extent),
+			color, Viewport::RENDER_FLAG_FLIP_V | Viewport::RENDER_FLAG_FONT_CHAR
 		);
 
 		transform.translate(

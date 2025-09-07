@@ -1,6 +1,6 @@
 #include "physics/p2d/p2d_driver.h"
 
-#include "graphics/graphics.h"
+#include "graphics/viewport.h"
 #include "physics/body_2d.h"
 
 
@@ -451,7 +451,14 @@ void P2DDriver::_handle_debug_draw_body(Body& body)
         Transform2D transform = body.target->get_global_transform();
         Vector2 center = copy.get_center();
         transform.translate(center);
-        Graphics::draw_quad(transform, shape.get_size(), Color{ 0, 255, 0, 127 });
+        Vector2 half_size = shape.get_size() / 2.f;
+        Rect2D rect = Rect2D(
+            Vector2(-half_size.x, half_size.y), shape.get_size()
+        );
+
+        body.target->get_viewport()->render_item_draw_rect(
+            body.target->get_render_item(), transform, rect, Color(0, 255, 0, 127)
+        );
     }
 #endif
 }
@@ -468,7 +475,15 @@ void P2DDriver::_handle_debug_draw_area(Area& area)
         Transform2D transform = area.target->get_global_transform();
         Vector2 center = copy.get_center();
         transform.translate(center);
-        Graphics::draw_quad(transform, shape.get_size(), Color{ 0, 255, 0, 127 });
+
+        Vector2 half_size = shape.get_size() / 2.f;
+        Rect2D rect = Rect2D(
+            shape.get_center() + Vector2(-half_size.x, half_size.y), shape.get_size()
+        );
+
+        area.target->get_viewport()->render_item_draw_rect(
+            area.target->get_render_item(), transform, rect, Color(0, 255, 0, 127)
+        );
     }
 #endif
 }

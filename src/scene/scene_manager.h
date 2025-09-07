@@ -1,6 +1,6 @@
 #pragma once
 #include "collections/array.h"
-#include "graphics/render_target.h"
+#include "graphics/viewport.h"
 #include "object/object.h"
 #include "math/color.h"
 #include "math/vec2.h"
@@ -22,9 +22,12 @@ struct SceneManager
     struct InternalData
     {
         mem::Allocator allocator;
-        RenderTarget display_target;
     
-        Color background_color;
+        bool keep_viewport;
+        
+        Vector2I viewport_size;
+        Viewport main_viewport;
+
         Object* current_scene;
         Camera2D* current_camera;
     
@@ -59,17 +62,25 @@ struct SceneManager
     static inline InternalData data;
     
     static f32 get_delta_time() { return data.delta_time; }
-    static RenderTarget get_display_target() { return data.display_target; }
-    
-    static void initialize(mem::Allocator allocator);
+
+    static void initialize(const mem::Allocator& allocator);
     static void shutdown();
     
     static void change_scene(Object* new_scene);
     
     static void step();
 
-    static void set_background_color(Color new_bg_color) { data.background_color = new_bg_color; }
-    static Color get_background_color() { return data.background_color; }
+    static void recreate_window();
+
+    static void set_keep_viewport(bool keep_viewport);
+    static bool get_keep_viewport() { return data.keep_viewport; }
+
+    static Viewport& get_main_viewport() { return data.main_viewport; }
+    static void set_viewport_size(const Vector2I& new_vp_size);
+    static Vector2I get_viewport_size() { return data.viewport_size; }
+
+    static void set_background_color(Color new_bg_color) { get_main_viewport().clear_color = new_bg_color; }
+    static Color get_background_color() { return get_main_viewport().clear_color; }
 
     static void set_camera_2d(Camera2D* camera);
     [[nodiscard]] static Camera2D* get_camera_2d() { return data.current_camera; }

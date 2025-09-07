@@ -79,7 +79,7 @@ static void engine_handle_cmd(android_app*, int32_t cmd)
         // The window is being shown, get it ready.
         if (AndroidEngine::data.app->window != nullptr)
         {
-            Engine::recreate_window();
+            Engine::request_recreate_window();
     	}
         break;
     case APP_CMD_TERM_WINDOW:

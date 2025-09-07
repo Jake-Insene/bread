@@ -23,6 +23,13 @@ void CanvasObject::enter()
     {
         SceneManager::_add_root_canvas(this);
     }
+
+    data.render_item = get_viewport()->create_item(Viewport::VIEWPORT_LAYER_DEFAULT);
+}
+
+void CanvasObject::exit()
+{
+    get_viewport()->destroy_item(data.render_item);
 }
 
 void CanvasObject::set_position(Vector2 new_pos)
@@ -95,4 +102,13 @@ bool CanvasObject::is_inside(const Vector2&) const
 Rect2D CanvasObject::get_rect() const
 {
     return Rect2D();
+}
+
+void CanvasObject::draw_canvas_element(const Transform2D& transform, TextureID texture, const Rect2D& rect, 
+    const Rect2D& src_rect, Color mod_color, u32 flags)
+{
+    get_viewport()->render_item_draw_sprite(
+        get_render_item(), transform, texture, rect,
+        src_rect, mod_color, Viewport::RenderFlags(flags)
+    );
 }

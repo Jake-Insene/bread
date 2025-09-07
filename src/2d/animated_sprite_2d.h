@@ -21,8 +21,8 @@ struct AnimatedSprite2D : Object2D
 	SpriteAnimation* animation;
 
     bool centered = true;
-    bool flip_v = false;
     bool flip_h = false;
+    bool flip_v = false;
 
 	void init(const CreateInfo&);
     void deinit();
@@ -32,6 +32,4 @@ struct AnimatedSprite2D : Object2D
 
     void play(StringView anim);
     void stop();
-
-    u32 _get_render_flags();
 };

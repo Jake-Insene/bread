@@ -1,15 +1,20 @@
 #pragma once
-#include "resource/resource_id.h"
+#include "graphics/graphics_types.h"
 #include "math/vec2.h"
 
+
+/*
+    Contains a texture to render to.
+*/
 struct [[nodiscard]] RenderTarget
 {
-    ResourceID render_target_id;
+    RenderTargetID render_target_id;
     
+    static RenderTarget get_main_render_target();
     static RenderTarget create(Vector2I size);
     
     void destroy();
 
-    Vector2I get_size() const;
     void set_size(const Vector2I& new_size) const;
+    Vector2I get_size() const;
 };

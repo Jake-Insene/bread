@@ -10,6 +10,16 @@ void Object2D::init(const CreateInfo&)
     mark(MARK_2D);
 }
 
+void Object2D::enter()
+{
+    data.render_item = get_viewport()->create_item(Viewport::VIEWPORT_LAYER_DEFAULT);
+}
+
+void Object2D::exit()
+{
+    get_viewport()->destroy_item(data.render_item);
+}
+
 void Object2D::set_position(Vector2 new_pos)
 {
     data.pos_cache = new_pos;
@@ -75,7 +85,7 @@ Transform2D Object2D::get_global_transform() const
 Vector2 Object2D::get_local_mouse_position() const
 {
     const Camera2D* cam = SceneManager::get_camera_2d();
-    const Vector2 display_size = Vector2(SceneManager::get_display_target().get_size());
+    const Vector2 display_size = Vector2(SceneManager::get_viewport_size());
     const Vector2 screen_pos = Input::get_mouse_position();
     const Vector2 local_pos = screen_pos - Vector2(display_size.x, -display_size.y) * 0.5f;
 
@@ -87,3 +97,11 @@ Vector2 Object2D::get_local_mouse_position() const
     return local_pos;
 }
 
+void Object2D::draw_sprite(const Transform2D& transform, TextureID texture, const Rect2D& rect, 
+    const Rect2D& src_rect, Color mod_color, u32 flags)
+{
+    get_viewport()->render_item_draw_sprite(
+        get_render_item(), transform, texture, rect, src_rect, 
+        mod_color, Viewport::RenderFlags(flags)
+    );
+}

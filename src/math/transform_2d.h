@@ -2,7 +2,9 @@
 #include "math/funcs.h"
 #include "math/vec2.h"
 
-// Use a row major matrix2x3
+/*
+    Use a row major matrix2x3, rotation is handled in radians
+*/
 struct [[nodiscard]] Transform2D
 {
     // It has the following layout

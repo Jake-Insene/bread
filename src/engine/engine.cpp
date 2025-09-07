@@ -35,7 +35,6 @@ void Engine::initialize()
 
     data.main_queue = JobQueue::create_with_size(data.allocator.allocator(), DefaultMainQueueSize);
     data.fps = 60;
-    data.recreate_requested = false;
 
     auto allocator = data.allocator.allocator();
 
@@ -60,16 +59,17 @@ void Engine::initialize()
     SceneManager::initialize(allocator);
 
     // Default resources
-    data.white_texture = GetResource<Texture2D>("white.png");
+    data.white_texture = GetResource<Texture2D>("default/white.png");
 
-    Engine::get_main_window().set_size(__configuration__.WindowSize);
-    SceneManager::get_display_target().set_size(__configuration__.WindowSize);
-    Engine::set_vsync(__configuration__.VSync);
+    Engine::get_main_window().set_size(__configuration__.viewport_size);
+    SceneManager::set_keep_viewport(__configuration__.keep_viewport);
+    SceneManager::set_viewport_size(__configuration__.viewport_size);
+    Engine::set_vsync(__configuration__.vsync);
     
     __preload__();
 
     // Entry point for app
-    SceneManager::change_scene(__configuration__.CreateMainScene());
+    SceneManager::change_scene(__configuration__.create_main_scene());
 }
 
 void Engine::shutdown()
@@ -91,11 +91,6 @@ void Engine::shutdown()
     data.allocator.destroy();
 }
 
-void Engine::recreate_window()
-{
-    Graphics::recreate();
-}
-
 void Engine::destroy()
 {
     Graphics::destroy();
@@ -114,11 +109,9 @@ void Engine::handle_input(const InputEvent& event)
 
 void Engine::request_recreate_window()
 {
-    data.recreate_requested = true;
     data.main_queue.add_job([]() 
         {
-            data.recreate_requested = false;
-            Engine::recreate_window();
+            SceneManager::recreate_window();
         }
     );
 }

@@ -15,9 +15,7 @@ layout(location = 4) in vec4 instance_4;
 #define texture_input_slot floatBitsToUint(instance_1.z)
 #define input_flags floatBitsToUint(instance_1.w)
 
-#define texture_extent instance_2.xy
-#define dest_extent instance_2.zw
-
+#define rect instance_2
 #define src_rect instance_3
 
 #define input_color floatBitsToUint(instance_4.x)
@@ -28,9 +26,9 @@ layout(location = 4) in vec4 instance_4;
 #define transform mat2(instance_0.xy, instance_0.zw)
 
 #define transform_translation instance_1.xy
-#define quad_size instance_1.zw
+#define rect instance_2
 
-#define input_color floatBitsToUint(instance_2.x)
+#define input_color floatBitsToUint(instance_3.x)
 
 // Points
 #elif defined(PRIMITIVE)
@@ -60,54 +58,25 @@ layout(location = 4) out vec2 local_position;
 layout(location = 5) out float radius;
 #endif
 
-#define FLAG_TOP_LEFT 0x1U
+#define FLAG_FLIP_H 0x1U
 #define FLAG_FLIP_V 0x2U
-#define FLAG_FLIP_H 0x4U
-#define FLAG_FONT 0x8U
+#define FLAG_FONT 0x4U
 
 layout(std140, binding = 0) uniform SceneUniform
 {
-    mat4 screen_transform;
+    mat4 viewport_transform;
     mat4 scene_transform;
 };
 
 void main()
 {
     // Getting Vertex Index
-#if defined(QUAD) || defined(CIRCLE) || defined(SPRITE) || defined(CANVAS_ELEMENT)
+#if defined(QUAD) || defined(CIRCLE) || defined(SPRITE)
     int index = gl_VertexID & 3;
 #endif
 
-    // World objects can be rendered top-left or centered
+    // Top left always, center 'rect'
 #if defined(QUAD) || defined(CIRCLE) || defined(SPRITE)
-    // Vertex
-    // Indices 0, 1, 2, 2, 3, 0
-    // Center quad
-    // 0 -> -0.5, -0.5
-    // 1 ->  0.5, -0.5
-    // 2 ->  0.5,  0.5
-    // 3 -> -0.5,  0.5
-    vec2 vertice = vec2(-0.5, 0.5);
-    if(index == 0)
-    {
-        vertice = vec2(-0.5, -0.5);
-    }
-    else if(index == 1)
-    {
-        vertice = vec2(0.5, -0.5);
-    }
-    else if(index == 2)
-    {
-        vertice = vec2(0.5, 0.5);
-    }
-
-#if defined(CIRCLE)
-    local_position = vertice * 2;
-    radius = input_radius;
-#endif
-
-    // Canvas elements are always top left
-#elif defined(CANVAS_ELEMENT)
     // Vertex
     // Indices 0, 1, 2, 2, 3, 0
     // Top left quad
@@ -128,33 +97,31 @@ void main()
     {
         vertice = vec2(1, 0);
     }
+
+#if defined(CIRCLE)
+    local_position = vertice * 2;
+    radius = input_radius;
+#endif
 #endif
 
     // Getting vertex extension
-#if defined(QUAD)
-    vec4 out_pos = vec4(vertice * quad_size, 0, 1);
+#if defined(QUAD) || defined(SPRITE)
+    vec4 out_pos = vec4(rect.xy + (vertice.xy * rect.zw), 0, 1);
 #elif defined(PRIMITIVE)
     vec4 out_pos = vec4(input_point.x, input_point.y, 0, 1);
 #elif defined(CIRCLE)
     vec4 out_pos = vec4(vertice * input_radius, 0, 1);
-#elif defined(SPRITE) 
-    vertice.x += float(flags & FLAG_TOP_LEFT) * 0.5;
-    vertice.y += float(flags & FLAG_TOP_LEFT) * -0.5;
-    
-    vec4 out_pos = vec4(vertice * dest_extent, 0, 1);
-#elif defined(CANVAS_ELEMENT)
-    vec4 out_pos = vec4(vertice * dest_extent, 0, 1);
 #endif
     
     // Getting UV
-#if defined(SPRITE) || defined(CANVAS_ELEMENT) 
+#if defined(SPRITE)
     // UV
     // 0 -> 0, 0
     // 1 -> 1, 0
     // 2 -> 1, 1
     // 3 -> 0, 1
-    vec2 min_corner = src_rect.xy / texture_extent;
-    vec2 max_corner = (src_rect.xy + src_rect.zw) / texture_extent;
+    vec2 min_corner = src_rect.xy;
+    vec2 max_corner = src_rect.zw;
 
     vec2 out_uv = vec2(min_corner.x, max_corner.y);
     if(index == 0)
@@ -182,22 +149,20 @@ void main()
     texture_slot = texture_input_slot;
 #endif
 
-#if defined(QUAD) || defined(SPRITE) || defined(CANVAS_ELEMENT)
+#if defined(QUAD) || defined(SPRITE)
     mat2 matrix_transform = transform;
     out_pos.xy = matrix_transform * out_pos.xy;
     out_pos.xy += transform_translation;
 #endif
 
-#if !defined(CANVAS_ELEMENT)
+#if !defined(NO_SCENE_TRANSFORM)
     out_pos = scene_transform * out_pos;
 #endif
-    out_pos = screen_transform * out_pos;
+    out_pos = viewport_transform * out_pos;
 
     gl_Position = out_pos;
 
     // Applying color
-#if defined(QUAD) || defined(PRIMITIVE) || defined(CIRCLE) || defined(SPRITE) || defined(CANVAS_ELEMENT)
-    // Color
     uint color_uint = input_color;
     uint color_r = color_uint & 255U;
     uint color_g = (color_uint >> 8U) & 255U;
@@ -210,7 +175,6 @@ void main()
         float(color_a)
     );
     color /= 255.0;
-#endif
 }
 
 
@@ -219,7 +183,7 @@ precision mediump float;
 
 layout(location = 0) in vec4 color;
 
-#if defined(SPRITE) || defined(CANVAS_ELEMENT)
+#if defined(SPRITE)
 layout(location = 1) flat in uint texture_slot;
 layout(location = 2) in vec2 uv;
 layout(location = 3) flat in uint flags;
@@ -232,12 +196,11 @@ layout(location = 5) in float radius;
 
 layout(location = 0) out vec4 frag_color;
 
-#define FLAG_TOP_LEFT 0x1U
+#define FLAG_FLIP_H 0x1U
 #define FLAG_FLIP_V 0x2U
-#define FLAG_FLIP_H 0x4U
-#define FLAG_FONT 0x8U
+#define FLAG_FONT 0x4U
 
-#if defined(SPRITE) || defined(CANVAS_ELEMENT)
+#if defined(SPRITE)
 layout(binding = 0) uniform sampler2D texture0;
 layout(binding = 1) uniform sampler2D texture1;
 layout(binding = 2) uniform sampler2D texture2;
@@ -258,7 +221,7 @@ layout(binding = 15) uniform sampler2D texture15;
 
 void main()
 {
-#if defined(SPRITE) || defined(CANVAS_ELEMENT)
+#if defined(SPRITE)
     switch(int(texture_slot))
     {
     case 0:

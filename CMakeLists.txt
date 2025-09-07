@@ -89,6 +89,7 @@ file(GLOB ENGINE_SRC
     src/graphics/egl/egl.cpp
     src/graphics/graphics.cpp
     src/graphics/render_target.cpp
+    src/graphics/viewport.cpp
 
     src/input/input.cpp
 
@@ -128,10 +129,10 @@ file(GLOB ENGINE_SRC
 )
 
 file(GLOB GLES_RENDERER_SRC
-    src/graphics/gles/gles_cmd_proc.cpp
     src/graphics/gles/gles_driver.cpp
     src/graphics/gles/gles_memory_allocator.cpp
     src/graphics/gles/gles_utility.cpp
+    src/graphics/gles/gles_renderer.cpp
 )
 
 set(PLATFORM_LIBRARIES "")

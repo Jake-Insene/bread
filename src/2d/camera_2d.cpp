@@ -54,7 +54,7 @@ Transform2D Camera2D::get_camera_transform()
         break;
     case POSITION_CENTERED:
     {
-        const Vector2 display_size = Vector2(SceneManager::get_display_target().get_size());
+        const Vector2 display_size = Vector2(SceneManager::get_viewport_size());
         Vector2 centered_pos = camera_position * camera_scale;
         centered_pos -= (Vector2(display_size.x, -display_size.y) * 0.5);
 

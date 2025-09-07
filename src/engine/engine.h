@@ -10,7 +10,7 @@
 #define EngineDefaultConfiguration(main_scene) \
     EngineConfiguration __configuration__ =\
     {\
-        .CreateMainScene = DefaultCreateScene(main_scene),\
+        .create_main_scene = DefaultCreateScene(main_scene),\
     }
 
 // Preloading stage
@@ -64,10 +64,11 @@ struct InputEvent;
 
 struct EngineConfiguration
 {
-    Vector2I WindowSize = Vector2I(Display::DefaultWidth, Display::DefaultHeight);
-    Object* (*CreateMainScene)();
-    bool VSync = true;
-    bool EnableDebugConsole = false;
+    Vector2I viewport_size = Vector2I(Display::DefaultWidth, Display::DefaultHeight);
+    Object* (*create_main_scene)();
+    bool vsync = true;
+    bool keep_viewport;
+    bool enable_debug_console = false;
 };
 
 extern EngineConfiguration __configuration__;
@@ -91,7 +92,6 @@ struct Engine
         Texture* white_texture;
 
         i32 fps;
-        bool recreate_requested;
         bool vsync_cache;
     };
 
@@ -100,7 +100,6 @@ struct Engine
     static void initialize();
     static void shutdown();
     
-    static void recreate_window();
     static void destroy();
     
     static void step();

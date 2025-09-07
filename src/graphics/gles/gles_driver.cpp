@@ -4,8 +4,9 @@
 #include "engine/engine.h"
 #include "graphics/egl/egl.h"
 #include "graphics/gles/gles_vtable.h"
-#include "graphics/gles/gles_cmd_proc.h"
+#include "graphics/gles/gles_renderer.h"
 #include "graphics/gles/gles_memory_allocator.h"
+#include "graphics/viewport.h"
 
 
 #if SHOW_DEBUG_INFO
@@ -34,34 +35,6 @@ static inline void debug_callback(
 #endif
 
 
-Graphics::VTable GLESDriver::get_vtable()
-{
-    return Graphics::VTable
-    {
-        
-        .initialize = &GLESDriver::initialize,
-        .shutdown = &GLESDriver::shutdown,
-		.recreate = &GLESDriver::recreate,
-		.destroy = &GLESDriver::destroy,
-        
-        .render = &GLESDriver::render,
-        .present = &GLESDriver::present,
-        
-        .add_cmd = &GLESDriver::add_cmd,
-        
-        .create_texture = &GLESMemoryAllocator::allocate_texture_from_info,
-        .destroy_texture = &GLESMemoryAllocator::texture_free,
-        .create_render_target = &GLESMemoryAllocator::allocate_render_target_from_info,
-        .destroy_render_target = &GLESMemoryAllocator::render_target_free,
-        
-        .texture_set_image = &GLESMemoryAllocator::texture_set_image,
-        .texture_get_size = &GLESMemoryAllocator::texture_get_size,
-        
-        .render_target_set_size = &GLESMemoryAllocator::render_target_set_size,
-        .render_target_get_size = &GLESMemoryAllocator::render_target_get_size,
-    };
-}
-
 void GLESDriver::initialize(const mem::Allocator& allocator)
 {
     GLESDebugInfo("Initializing renderer...");
@@ -82,7 +55,7 @@ void GLESDriver::initialize(const mem::Allocator& allocator)
 void GLESDriver::shutdown()
 {
     GLESDebugInfo("Shutting down renderer...");
-    GLESCommandProcessor::shutdown();
+    GLESRenderer::shutdown();
     GLESMemoryAllocator::shutdown();
     EGL::shutdown();
 }
@@ -90,11 +63,11 @@ void GLESDriver::shutdown()
 void GLESDriver::recreate()
 {
     EGL::recreate_window_surface();
-
-    Vector2I size = Engine::get_main_window().get_size();
-
-    gl.glViewport(0, 0, size.x, size.y);
-    GLESDebugInfo("Viewport: W={} H={}", size.x, size.y);
+    const Vector2I new_viewport_size = Engine::get_main_window().get_size();
+    data.current_viewport_size = new_viewport_size;
+    gl.glViewport(0, 0, new_viewport_size.width, new_viewport_size.height);
+    
+    GLESDebugInfo("Viewport: W={} H={}", new_viewport_size.width, new_viewport_size.height);
 }
 
 void GLESDriver::destroy()
@@ -102,29 +75,23 @@ void GLESDriver::destroy()
     EGL::destroy_window_surface();
 }
 
-void GLESDriver::render(Graphics::RenderTargetID rt_id, const Graphics::RenderInfo& ri)
+void GLESDriver::render(Viewport* viewport)
 {
-    GLESCommandProcessor::render(rt_id, ri);
+    GLESRenderer::render(viewport);
 }
 
-void GLESDriver::present(Graphics::RenderTargetID rt_id)
+void GLESDriver::present(Viewport* viewport)
 {
     Vector2I size = Engine::get_main_window().get_size();
     
-    if (rt_id == InvalidResource)
-    {
-        EGL::present();
-        return;
-    }
-
-    auto& rt = GLESMemoryAllocator::render_target_get(rt_id);
+    auto& rt = GLESMemoryAllocator::render_target_get(viewport->rt.render_target_id);
     // GLES Backbuffer
     if (rt.framebuffer == 0)
     {
         EGL::present();
         return;
     }
-    
+
     gl.glBindFramebuffer(GL_FRAMEBUFFER, 0);
     gl.glViewport(0, 0, size.width, size.height);
 
@@ -142,47 +109,48 @@ void GLESDriver::present(Graphics::RenderTargetID rt_id)
     EGL::present();
 }
 
-void GLESDriver::add_cmd(const RenderCommand& cmd)
-{
-    (void)GLESCommandProcessor::data.commands.add(cmd);
-}
-
-Graphics::TextureID GLESDriver::create_texture(const TextureCreateInfo& create_info)
+TextureID GLESDriver::create_texture(const TextureCreateInfo& create_info)
 {
     return GLESMemoryAllocator::allocate_texture_from_info(create_info);
 }
 
-void GLESDriver::destroy_texture(Graphics::TextureID tex_id)
+void GLESDriver::destroy_texture(TextureID tex_id)
 {
     GLESMemoryAllocator::texture_free(tex_id);
 }
 
-Graphics::RenderTargetID GLESDriver::create_render_target(const RenderTargetCreateInfo& create_info)
+RenderTargetID GLESDriver::create_render_target(const RenderTargetCreateInfo& create_info)
 {
     return GLESMemoryAllocator::allocate_render_target_from_info(create_info);
 }
 
-void GLESDriver::destroy_render_target(Graphics::RenderTargetID rt_id)
+void GLESDriver::destroy_render_target(RenderTargetID rt_id)
 {
     GLESMemoryAllocator::render_target_free(rt_id);
 }
 
-void GLESDriver::texture_set_image(Graphics::TextureID tex_id, Image* img)
+RenderTargetID GLESDriver::get_main_render_target()
+{
+    // Reserved by GLESMemoryAllocator
+    return RenderTargetID(0);
+}
+
+void GLESDriver::texture_set_image(TextureID tex_id, Image* img)
 {
     GLESMemoryAllocator::texture_set_image(tex_id, img);
 }
 
-Vector2I GLESDriver::texture_get_size(Graphics::TextureID tex_id)
+Vector2I GLESDriver::texture_get_size(TextureID tex_id)
 {
     return GLESMemoryAllocator::texture_get_size(tex_id);
 }
 
-void GLESDriver::render_target_set_size(Graphics::RenderTargetID rt_id, const Vector2I& new_size)
+void GLESDriver::render_target_set_size(RenderTargetID rt_id, const Vector2I& new_size)
 {
     GLESMemoryAllocator::render_target_set_size(rt_id, new_size);
 }
 
-Vector2I GLESDriver::render_target_get_size(Graphics::RenderTargetID rt_id)
+Vector2I GLESDriver::render_target_get_size(RenderTargetID rt_id)
 {
     return GLESMemoryAllocator::render_target_get_size(rt_id);
 }
@@ -225,6 +193,6 @@ void GLESDriver::_init_context()
 #endif
     gl.glViewport(0, 0, size.x, size.y );
 
-    GLESCommandProcessor::initialize(data.allocator);
+    GLESRenderer::initialize(data.allocator);
 }
 

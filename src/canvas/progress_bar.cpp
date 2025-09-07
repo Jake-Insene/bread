@@ -1,6 +1,6 @@
 #include "canvas/progress_bar.h"
 
-#include "graphics/graphics.h"
+#include "graphics/viewport.h"
 #include "resource/resource_manager.h"
 
 
@@ -18,6 +18,8 @@ void ProgressBar::internal_update(f32 dt)
 void ProgressBar::render()
 {
     const Vector2 size = get_size();
+    const Transform2D transform = get_global_transform();
+
     // value = max_value -> draw_size = size
     // value = min_value -> draw_size = 0
 
@@ -33,12 +35,9 @@ void ProgressBar::render()
 
     Vector2 fill_texture_extent = Vector2(data.fill_texture->get_size());
     Rect2D fill_src_rect = Rect2D(Vector2(0, 0), fill_texture_extent);
-    Graphics::draw_canvas_element(
-        get_global_transform(),
-        draw_size,
-        fill_src_rect, data.fill_texture->texture_id,
-        fill_color,
-        RenderCommand::FLAG_BATCH_NONE
+    draw_canvas_element(
+        transform, data.fill_texture->texture_id, Rect2D(Vector2(), draw_size), fill_src_rect, 
+        fill_color, Viewport::RENDER_FLAG_NO_SCENE_TRANSFORM
     );
 
     // Background
@@ -47,12 +46,9 @@ void ProgressBar::render()
 
     Vector2 bg_texture_extent = Vector2(data.bg_texture->get_size());
     Rect2D bg_src_rect = Rect2D(Vector2(0, 0), bg_texture_extent);
-    Graphics::draw_canvas_element(
-        get_global_transform(),
-        size,
-        bg_src_rect, data.bg_texture->texture_id,
-        bg_color,
-        RenderCommand::FLAG_BATCH_NONE
+    draw_canvas_element(
+        transform, data.bg_texture->texture_id, Rect2D(Vector2(), size), bg_src_rect,
+        bg_color, Viewport::RENDER_FLAG_NO_SCENE_TRANSFORM
     );
 }
 

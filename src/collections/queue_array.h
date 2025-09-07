@@ -81,7 +81,7 @@ struct [[nodiscard]] QueueArray
         return SlotID((array.count - 1) & SlotBitmask);
     }
 
-    void remove(const SlotID slot)
+    void remove(const SlotID& slot)
     {
         DebugAssert(slot < array.count, "invalid slot");
         DebugAssert(((SlotID*)&array[slot])[0] != InvalidSlot, "slot is already free");
@@ -111,7 +111,7 @@ struct [[nodiscard]] QueueArray
         }
     }
 
-    [[nodiscard]] T& get(const SlotID slot)
+    [[nodiscard]] T& get(const SlotID& slot)
     {
         DebugAssert(slot < array.count, "invalid slot");
         DebugAssert(((SlotID*)&array[slot])[0] != InvalidSlot, "slot isn't free");

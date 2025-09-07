@@ -4,7 +4,7 @@
 #include "debug/debug.h"
 #include "debug/profiler.h"
 #include "engine/engine.h"
-#include "graphics/graphics.h"
+#include "graphics/viewport.h"
 #include "canvas/canvas_object.h"
 #include "input/input.h"
 #include "2d/camera_2d.h"
@@ -12,15 +12,11 @@
 #include "physics/physics_2d.h"
 
 
-void SceneManager::initialize(mem::Allocator allocator)
+void SceneManager::initialize(const mem::Allocator& allocator)
 {
     data.allocator = allocator;
 
-    data.display_target = RenderTarget::create(
-        Engine::get_main_window().get_size()
-    );
-
-    data.background_color = {0, 0, 0, 255};
+    data.main_viewport = Viewport::create_from_render_target(allocator, RenderTarget::get_main_render_target());
     
     data.current_scene = nullptr;
     data.current_camera = nullptr;
@@ -58,13 +54,15 @@ void SceneManager::shutdown()
     data.root_canvas.destroy();
     data.queue_frees.destroy();
 
-    data.display_target.destroy();
+    data.main_viewport.destroy();
 }
 
 void SceneManager::change_scene(Object* new_scene)
 {
     DebugAssert(new_scene != nullptr, "new scene can't be null");
     DebugAssert(data.change_scene.requested == false, "a change scene was already requested");
+
+    new_scene->set_viewport(&get_main_viewport());
 
     if (data.current_scene == nullptr)
     {
@@ -129,15 +127,10 @@ void SceneManager::step()
 
     Transform2D camera_transform = Transform2D();
     if (data.current_camera)
+    {
         camera_transform = data.current_camera->get_camera_transform();
-    
-    Graphics::add_cmd(
-        RenderCommand
-        {
-            .type = RenderCommand::SET_SCENE_TRANSFORM,
-            .transform = camera_transform,
-        }
-    );
+    }
+    get_main_viewport().set_scene_transform(camera_transform);
 
     {
         PROFILE_SCOPE(
@@ -150,19 +143,16 @@ void SceneManager::step()
         PROFILE_SCOPE(
             data.debug_time.driver_render_time = duration;
         );
-        Graphics::RenderInfo ri =
-        {
-            .clear_color = data.background_color
-        };
 
-        Graphics::render(InvalidResource, ri);
+        Graphics::render(&get_main_viewport());
+        get_main_viewport().reset_commands();
     }
 
     {
         PROFILE_SCOPE(
             data.debug_time.driver_present_time = duration;
         );
-        Graphics::present(InvalidResource);
+        Graphics::present(&get_main_viewport());
     }
 
     data.fps_acum++;
@@ -174,6 +164,33 @@ void SceneManager::step()
 
     data.queue_frees.clear();
     _try_clear_root_canvas();
+}
+
+void SceneManager::recreate_window()
+{
+    Graphics::recreate();
+
+    if(!get_keep_viewport())
+    {
+        set_viewport_size(Engine::get_main_window().get_size());
+    }
+}
+
+void SceneManager::set_keep_viewport(bool keep_viewport)
+{
+    if (data.keep_viewport == keep_viewport)
+        return;
+
+    data.keep_viewport = keep_viewport;
+}
+
+void SceneManager::set_viewport_size(const Vector2I& new_vp_size)
+{
+    if (data.viewport_size == new_vp_size)
+        return;
+
+    data.viewport_size = new_vp_size;
+    data.main_viewport.set_size(new_vp_size);
 }
 
 void SceneManager::set_camera_2d(Camera2D* camera)
@@ -278,7 +295,7 @@ Vector2 SceneManager::_screen_make_local_to_canvas(const Vector2& pos)
 {
     // converting touch/mouse position into local canvas position
     const Vector2 window_size = Vector2(Engine::get_main_window().get_size());
-    const Vector2 display_size = Vector2(get_display_target().get_size());
+    const Vector2 display_size = Vector2(get_viewport_size());
 
     // normalized position
     const Vector2 normalized_pos = pos / window_size;

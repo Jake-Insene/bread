@@ -1,8 +1,9 @@
 #pragma once
-#include "object/object.h"
+#include "graphics/graphics_types.h"
 #include "math/rect_2d.h"
 #include "math/transform_2d.h"
 #include "math/color.h"
+#include "object/object.h"
 
 
 /*
@@ -25,6 +26,7 @@ struct CanvasObject : Object
     // resolve some namespace problems.
     struct InternalData
     {
+        RenderItemID render_item;
         Transform2D transform{};
         Vector2 pos_cache = Vector2(0, 0);
         Vector2 scale_cache = Vector2(1, 1);
@@ -37,7 +39,10 @@ struct CanvasObject : Object
     void init(const CreateInfo&);
 
     void enter();
+    void exit();
     
+    RenderItemID get_render_item() { return data.render_item; }
+
     void set_position(Vector2 new_pos);
     Vector2 get_position() const;
 
@@ -60,5 +65,8 @@ struct CanvasObject : Object
     bool is_inside(const Vector2& point) const;
 
     Rect2D get_rect() const;
+
+    void draw_canvas_element(const Transform2D& transform, TextureID texture, const Rect2D& rect,
+        const Rect2D& src_rect, Color mod_color, u32 flags);
 };
 

@@ -2,6 +2,15 @@
 
 #include "graphics/graphics.h"
 
+
+RenderTarget RenderTarget::get_main_render_target()
+{
+    return RenderTarget
+    {
+        .render_target_id = Graphics::get_main_render_target()
+    };
+}
+
 RenderTarget RenderTarget::create(Vector2I size)
 {
     return RenderTarget

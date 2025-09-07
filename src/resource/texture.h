@@ -8,7 +8,7 @@
 struct Texture : Resource
 {
     RESOURCE(RESOURCE_TEXTURE, .LoadFromAssets = true, .Extensions = "png");
-    Graphics::TextureID texture_id;
+    TextureID texture_id;
     
     void init();
     void destroy();

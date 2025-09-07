@@ -1,6 +1,7 @@
 #pragma once
 #include "collections/queue_array.h"
 #include "graphics/gles/gles_driver.h"
+#include "resource/resource_id.h"
 
 using GLID = u32;
 
@@ -19,7 +20,7 @@ struct GLESMemoryAllocator
     struct GLESTexture
     {
         Image* image;
-        ResourceID self_id;
+        TextureID self;
         GLID texture;
 
         // texture
@@ -47,8 +48,8 @@ struct GLESMemoryAllocator
         usize allocated_bytes;
 
         Array<GLESBuffer> buffers;
-        QueueArray<GLESTexture, Graphics::TextureID> textures;
-        QueueArray<GLESRenderTarget, Graphics::RenderTargetID> render_targets;
+        QueueArray<GLESTexture, TextureID> textures;
+        QueueArray<GLESRenderTarget, RenderTargetID> render_targets;
     };
 
     enum UpdateMemoryHint
@@ -75,9 +76,9 @@ struct GLESMemoryAllocator
         GLenum target, GLenum usage);
 
     static GLESTexture& texture_allocate();
-    static void texture_free(Graphics::TextureID tex_id);
+    static void texture_free(TextureID tex_id);
     static GLID texture_allocate_handle();
-    static Graphics::TextureID allocate_texture_from_info(const TextureCreateInfo& create_info);
+    static TextureID allocate_texture_from_info(const TextureCreateInfo& create_info);
     static GLID texture_allocate_handle_and_fill(GLESTexture& texture, const TextureCreateInfo& create_info);
     
     // Pixels being null is valid
@@ -85,9 +86,9 @@ struct GLESMemoryAllocator
         GLenum internal_format, GLenum input_format, Slice<u8> bytes);
 
     static GLESRenderTarget& render_target_allocate();
-    static void render_target_free(Graphics::RenderTargetID rt_id);
+    static void render_target_free(RenderTargetID rt_id);
     static GLID render_target_allocate_handle();
-    static Graphics::RenderTargetID allocate_render_target_from_info(const RenderTargetCreateInfo& create_info);
+    static RenderTargetID allocate_render_target_from_info(const RenderTargetCreateInfo& create_info);
 
     static void render_target_bind_texture(GLID render_target, GLID texture);
     
@@ -95,21 +96,21 @@ struct GLESMemoryAllocator
     static GLESBuffer& buffer_get(ResourceID rid);
     
     // Texture
-    static GLESTexture& texture_get(Graphics::TextureID tex_id);
-    static void texture_set_image(Graphics::TextureID tex_id, Image* image);
-    static Vector2I texture_get_size(Graphics::TextureID tex_id);
-    static GLID texture_get_handle(Graphics::TextureID tex_id);
+    static GLESTexture& texture_get(TextureID tex_id);
+    static void texture_set_image(TextureID tex_id, Image* image);
+    static Vector2I texture_get_size(TextureID tex_id);
+    static GLID texture_get_handle(TextureID tex_id);
 
     static void texture_filter(GLID texture, GLenum target, GLenum min, GLenum mag);
     static void texture_wrap(GLID texture, GLenum target, GLenum wrap);
     
 
     // Render Target
-    static GLESRenderTarget& render_target_get(Graphics::RenderTargetID rt_id);
+    static GLESRenderTarget& render_target_get(RenderTargetID rt_id);
 
-    static Vector2I render_target_get_size(Graphics::RenderTargetID rt_id);
-    static void render_target_set_size(Graphics::RenderTargetID rt_id, const Vector2I& new_size);
-    static GLID render_target_get_handle(Graphics::RenderTargetID rt_id);
+    static Vector2I render_target_get_size(RenderTargetID rt_id);
+    static void render_target_set_size(RenderTargetID rt_id, const Vector2I& new_size);
+    static GLID render_target_get_handle(RenderTargetID rt_id);
 
 };
 

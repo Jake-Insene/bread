@@ -8,6 +8,19 @@
 void Object::_bind_vtable(VTable&)
 {}
 
+void Object::set_viewport(Viewport* new_vp)
+{
+    if (data.viewport == new_vp)
+        return;
+
+    for (usize i = 0; i < data.childs.count; i++)
+    {
+        data.childs[i]->set_viewport(new_vp);
+    }
+
+    data.viewport = new_vp;
+}
+
 void Object::handle_internal_update(f32 dt)
 {
     for (usize i = 0; i < data.childs.count; i++)
@@ -72,6 +85,7 @@ void Object::add_child(Object *obj)
 {
     Object* child = data.childs.add(obj);
     child->data.parent = this;
+    child->set_viewport(get_viewport());
 
     if (has_mark(MARK_IN_SCENE))
     {
@@ -125,6 +139,7 @@ void Object::enter()
 
     for(auto& child : data.childs)
     {
+        child->set_viewport(get_viewport());
         ObjectCallRef(child, enter);
     }
 }

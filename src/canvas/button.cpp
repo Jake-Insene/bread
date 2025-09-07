@@ -1,6 +1,6 @@
 #include "canvas/button.h"
 
-#include "graphics/graphics.h"
+#include "graphics/viewport.h"
 #include "input/input.h"
 #include "math/rect_2d.h"
 #include "resource/resource_manager.h"
@@ -13,7 +13,7 @@ void Button::_bind_vtable(VTable& vtable)
 
 void Button::init(const CreateInfo&)
 {
-    normal_texture = GetResource<Texture2D>("white.png");
+    normal_texture = GetResource<Texture2D>("default/white.png");
     
     data.current_state = STATE_NORMAL;
 }
@@ -28,10 +28,9 @@ void Button::render()
         return;
 
     Vector2 texture_extent = Vector2(current_texture->get_size());
-    Graphics::draw_canvas_element(
-        get_global_transform(), get_size(),
-        Rect2D(Vector2(), texture_extent), current_texture->texture_id,
-        Color(255, 255, 255, 255), RenderCommand::FLAG_BATCH_NONE
+    draw_canvas_element(
+        get_global_transform(), current_texture->texture_id, Rect2D(Vector2(), get_size()), 
+        Rect2D(Vector2(), texture_extent), Color(255, 255, 255, 255), Viewport::RENDER_FLAG_NO_SCENE_TRANSFORM
     );
 }
 

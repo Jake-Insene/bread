@@ -1,6 +1,8 @@
 #pragma once
-#include "graphics/command_interface.h"
 #include "graphics/gles/gles_memory_allocator.h"
+#include "graphics/viewport.h"
+#include "math/vec4.h"
+#include "math/mat4.h"
 
 
 #define CheckInstanceSize(type) \
@@ -9,8 +11,15 @@
         #type " is greater than 16 32-bit floating vec4!"\
     );
 
-struct GLESCommandProcessor
+struct GLESRenderer
 {
+    enum BatchFlag
+    {
+        FLAG_FLIP_H = 0x1U,
+        FLAG_FLIP_V = 0x2U,
+        FLAG_FONT_CHAR = 0x4U,
+    };
+
     // Limits get from
     // https://registry.khronos.org/OpenGL-Refpages/es3/html/glGet.xhtml
     static constexpr i32 MaxInstanceAttributeCount = 16;
@@ -29,8 +38,7 @@ struct GLESCommandProcessor
         GLID unit;
         u32 flags;
         // attrib 2
-        Vector2 texture_extent;
-        Vector2 dest_extent;
+        Rect2D rect;
         // attrib 3
         Rect2D src_rect;
         // attrib 4
@@ -39,21 +47,6 @@ struct GLESCommandProcessor
     };
     static constexpr usize SpriteInstanceAttribCount = 5;
     CheckInstanceSize(SpriteInstance);
-    
-    struct QuadInstance
-    {
-        // attrib 0
-        Vector2 transform_0;
-        Vector2 transform_1;
-        // attrib 1
-        Vector2 transform_2;
-        Vector2 size;
-        // attrib 2
-        Color color;
-        u32 padding[3];
-    };
-    static constexpr usize QuadInstanceAttribCount = 3;
-    CheckInstanceSize(QuadInstance);
 
     struct CanvasElementInstance
     {
@@ -65,8 +58,7 @@ struct GLESCommandProcessor
         GLID unit;
         u32 flags;
         // attrib 2
-        Vector2 texture_extent;
-        Vector2 dest_extent;
+        Rect2D rect;
         // attrib 3
         Rect2D src_rect;
         // attrib 4
@@ -75,6 +67,22 @@ struct GLESCommandProcessor
     };
     static constexpr usize CanvasElementInstanceAttribCount = 5;
     CheckInstanceSize(CanvasElementInstance);
+
+    struct QuadInstance
+    {
+        // attrib 0
+        Vector2 transform_0;
+        Vector2 transform_1;
+        // attrib 1
+        Vector2 transform_2;
+        u32 padding[2];
+        // attrib 2
+        Rect2D rect;
+        // attrib 3
+        Color color;
+    };
+    static constexpr usize QuadInstanceAttribCount = 4;
+    CheckInstanceSize(QuadInstance);
 
     struct PrimitivePoint
     {
@@ -98,7 +106,7 @@ struct GLESCommandProcessor
 
     struct SceneUniform
     {
-        Mat4 screen_transform;
+        Mat4 viewport_transform;
         Mat4 scene_transform;
     };
     
@@ -186,8 +194,6 @@ struct GLESCommandProcessor
     
         SceneUniform scene_data;
     
-        Array<RenderCommand> commands;
-    
         // Execution state
         ExecutionState state;
 
@@ -202,6 +208,8 @@ struct GLESCommandProcessor
     static void initialize(mem::Allocator allocator);
     static void shutdown();
 
+    static void update_viewport_transform(const Vector2I& viewport_size);
+
     static void bind_program(GLID program);
     static void bind_scene_buffer();
     static void update_scene_uniform();
@@ -212,5 +220,7 @@ struct GLESCommandProcessor
     static void end_primitive_batch();
     static void end_primitive_circle_batch();
 
-    static void render(Graphics::RenderTargetID rt_id, const Graphics::RenderInfo& ri);
+    static void render(Viewport* viewport);
+
+    static void _render_item_draw(Viewport::RenderItem& item);
 };

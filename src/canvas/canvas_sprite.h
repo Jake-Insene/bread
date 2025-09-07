@@ -19,8 +19,8 @@ struct CanvasSprite : CanvasObject
 
     Color color{ 255, 255, 255, 255 };
     Rect2D src_rect{};
-    bool flip_v = false;
     bool flip_h = false;
+    bool flip_v = false;
 
     void init(const CreateInfo&);
 
@@ -28,6 +28,4 @@ struct CanvasSprite : CanvasObject
 
     void set_texture(Texture2D* new_texture);
     [[nodiscard]] Texture2D* get_texture() const { return data.texture; }
-
-    u32 _get_render_flags();
 };

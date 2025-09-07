@@ -139,7 +139,7 @@ struct Input
 {
     struct InternalData
     {
-        KeyState keys[256];
+        KeyState keys[0x1000];
         bool mouse_buttons[3];
         Vector2 mouse_position;
     };

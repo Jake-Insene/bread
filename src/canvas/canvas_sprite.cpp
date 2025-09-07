@@ -1,6 +1,6 @@
 #include "canvas/canvas_sprite.h"
 
-#include "graphics/graphics.h"
+#include "graphics/viewport.h"
 #include "resource/resource_manager.h"
 
 
@@ -14,13 +14,21 @@ void CanvasSprite::render()
     if (data.texture == nullptr)
         return;
 
-    Vector2 texture_extent = Vector2(data.texture->get_size());
-    Graphics::draw_canvas_element(
-        get_global_transform(),
-        texture_extent,
-        src_rect, data.texture->texture_id,
-        color,
-        RenderCommand::BatchFlags(_get_render_flags())
+    const Vector2 extent = Vector2(data.texture->get_size());
+    u32 flags = Viewport::RENDER_FLAG_NO_SCENE_TRANSFORM;
+    if (flip_h)
+    {
+        flags |= Viewport::RENDER_FLAG_FLIP_H;
+    }
+    if (flip_v)
+    {
+        flags |= Viewport::RENDER_FLAG_FLIP_V;
+    }
+
+    draw_canvas_element(
+        get_global_transform(), get_texture()->texture_id,
+        Rect2D(Vector2(), extent), src_rect, color,
+        flags
     );
 }
 
@@ -31,13 +39,5 @@ void CanvasSprite::set_texture(Texture2D* new_texture)
         return;
 
     src_rect.size = Vector2(new_texture->get_size());
-}
-
-u32 CanvasSprite::_get_render_flags()
-{
-    u32 flags = RenderCommand::FLAG_BATCH_NONE;
-    flags |= flip_v ? RenderCommand::FLAG_BATCH_FLIP_V : RenderCommand::FLAG_BATCH_NONE;
-    flags |= flip_h ? RenderCommand::FLAG_BATCH_FLIP_H : RenderCommand::FLAG_BATCH_NONE;
-    return flags;
 }
 

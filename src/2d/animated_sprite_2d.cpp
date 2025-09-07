@@ -1,6 +1,6 @@
 #include "2d/animated_sprite_2d.h"
 
-#include "graphics/graphics.h"
+#include "graphics/viewport.h"
 
 
 void AnimatedSprite2D::init(const CreateInfo&)
@@ -50,12 +50,27 @@ void AnimatedSprite2D::render()
 		data.current_animation.view(), data.frame
 	);
 	Vector2 extent = Vector2(current_frame.sprite->get_size());
+	Rect2D rect{ Vector2(), extent };
 	Rect2D src_rect{ Vector2(), extent };
-	Graphics::draw_texture(
-		get_global_transform(), extent,
-		src_rect, current_frame.sprite->texture_id,
-		Color(255, 255, 255, 255),
-		RenderCommand::BatchFlags(_get_render_flags())
+
+	u32 flags = 0;
+	if (flip_h)
+	{
+		flags |= Viewport::RENDER_FLAG_FLIP_H;
+	}
+	if (flip_v)
+	{
+		flags |= Viewport::RENDER_FLAG_FLIP_V;
+	}
+
+	if (centered)
+	{
+		rect.position = Vector2(rect.size.x / -2.f, rect.size.y / 2.f);
+	}
+
+	draw_sprite(
+		get_global_transform(), current_frame.sprite->texture_id,
+		rect, src_rect, Color(255, 255, 255, 255), flags
 	);
 }
 
@@ -84,14 +99,4 @@ void AnimatedSprite2D::stop()
 	data.frame = 0;
 	data.current_animation.set("");
 	unmark(MARK_INTERNAL_UPDATE);
-}
-
-
-u32 AnimatedSprite2D::_get_render_flags()
-{
-	u32 flags = RenderCommand::FLAG_BATCH_NONE;
-	flags |= centered ? RenderCommand::FLAG_BATCH_NONE : RenderCommand::FLAG_BATCH_TOP_LEFT;
-	flags |= flip_v ? RenderCommand::FLAG_BATCH_FLIP_V : RenderCommand::FLAG_BATCH_NONE;
-	flags |= flip_h ? RenderCommand::FLAG_BATCH_FLIP_H : RenderCommand::FLAG_BATCH_NONE;
-	return flags;
 }

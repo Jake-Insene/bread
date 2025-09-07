@@ -99,7 +99,11 @@ void GLESMemoryAllocator::initialize(const mem::Allocator& allocator)
 
     data.buffers = Array<GLESBuffer>::with_size(allocator, 4);
     data.textures = QueueArray<GLESTexture, ResourceID>::with_size(allocator, 4);
-    data.render_targets = QueueArray<GLESRenderTarget, Graphics::RenderTargetID>::with_size(allocator, 4);
+    data.render_targets = QueueArray<GLESRenderTarget, RenderTargetID>::with_size(allocator, 4);
+
+    // Allocating the backbuffer we should present this instead of a intermediate backbuffer.
+    GLESRenderTarget& rt = render_target_allocate();
+    rt.framebuffer = 0;
 }
 
 void GLESMemoryAllocator::shutdown()
@@ -196,13 +200,13 @@ GLID GLESMemoryAllocator::buffer_allocate_handle_and_fill(GLESBuffer& buffer, Sl
 
 GLESMemoryAllocator::GLESTexture& GLESMemoryAllocator::texture_allocate()
 {
-    Graphics::TextureID text_id = data.textures.add(GLESTexture());
-    GLESTexture& texture = data.textures.get(text_id);
-    texture.self_id = text_id;
+    TextureID tex_id = data.textures.add(GLESTexture());
+    GLESTexture& texture = data.textures.get(tex_id);
+    texture.self = tex_id;
     return texture;
 }
 
-void GLESMemoryAllocator::texture_free(Graphics::TextureID tex_id)
+void GLESMemoryAllocator::texture_free(TextureID tex_id)
 {
     GLESTexture& texture = texture_get(tex_id);
     gl.glDeleteTextures(1, &texture.texture);
@@ -220,14 +224,14 @@ GLID GLESMemoryAllocator::texture_allocate_handle()
     return texture;
 }
 
-Graphics::TextureID GLESMemoryAllocator::allocate_texture_from_info(const TextureCreateInfo& create_info)
+TextureID GLESMemoryAllocator::allocate_texture_from_info(const TextureCreateInfo& create_info)
 {
     GLESMemoryAllocator::GLESTexture& tex = GLESMemoryAllocator::texture_allocate();
     tex.image = nullptr;
     tex.size = create_info.size;
 
     tex.texture = texture_allocate_handle_and_fill(tex, create_info);
-    return tex.self_id;
+    return tex.self;
 }
 
 GLID GLESMemoryAllocator::texture_allocate_handle_and_fill(GLESTexture& texture, const TextureCreateInfo& create_info)
@@ -282,14 +286,14 @@ void GLESMemoryAllocator::texture_allocate_memory(GLID texture, GLenum target, c
 
 GLESMemoryAllocator::GLESRenderTarget& GLESMemoryAllocator::render_target_allocate()
 {
-    Graphics::RenderTargetID rt_id = data.render_targets.add(GLESRenderTarget());
+    RenderTargetID rt_id = data.render_targets.add(GLESRenderTarget());
     GLESRenderTarget& rt = render_target_get(rt_id);
     rt.self_id = rt_id;
     return rt;
 
 }
 
-void GLESMemoryAllocator::render_target_free(Graphics::RenderTargetID rt_id)
+void GLESMemoryAllocator::render_target_free(RenderTargetID rt_id)
 {
     GLESRenderTarget& rt = render_target_get(rt_id);
     gl.glDeleteTextures(1, &rt.color_buffer);
@@ -306,7 +310,7 @@ GLID GLESMemoryAllocator::render_target_allocate_handle()
     return framebuffer;
 }
 
-Graphics::RenderTargetID GLESMemoryAllocator::allocate_render_target_from_info(const RenderTargetCreateInfo& create_info)
+RenderTargetID GLESMemoryAllocator::allocate_render_target_from_info(const RenderTargetCreateInfo& create_info)
 {
     GLESRenderTarget& rt = render_target_allocate();
     rt.size = create_info.size;
@@ -339,22 +343,22 @@ GLESMemoryAllocator::GLESBuffer& GLESMemoryAllocator::buffer_get(ResourceID buff
     return data.buffers[buffer_id];
 }
 
-GLESMemoryAllocator::GLESTexture& GLESMemoryAllocator::texture_get(Graphics::TextureID tex_id)
+GLESMemoryAllocator::GLESTexture& GLESMemoryAllocator::texture_get(TextureID tex_id)
 {
     return data.textures.get(tex_id);
 }
 
-void GLESMemoryAllocator::texture_set_image(Graphics::TextureID tex_id, Image* image)
+void GLESMemoryAllocator::texture_set_image(TextureID tex_id, Image* image)
 {
     texture_get(tex_id).image = image;
 }
 
-Vector2I GLESMemoryAllocator::texture_get_size(Graphics::TextureID tex_id)
+Vector2I GLESMemoryAllocator::texture_get_size(TextureID tex_id)
 {
     return texture_get(tex_id).size;
 }
 
-GLID GLESMemoryAllocator::texture_get_handle(Graphics::TextureID tex_id)
+GLID GLESMemoryAllocator::texture_get_handle(TextureID tex_id)
 {
     return texture_get(tex_id).texture;
 }
@@ -375,32 +379,36 @@ void GLESMemoryAllocator::texture_wrap(GLID texture, GLenum target, GLenum wrap)
     gl.glBindTexture(target, 0);
 }
 
-GLESMemoryAllocator::GLESRenderTarget& GLESMemoryAllocator::render_target_get(Graphics::RenderTargetID rt_id)
+GLESMemoryAllocator::GLESRenderTarget& GLESMemoryAllocator::render_target_get(RenderTargetID rt_id)
 {
     return data.render_targets.get(rt_id);
 }
 
-Vector2I GLESMemoryAllocator::render_target_get_size(Graphics::RenderTargetID rt_id)
+Vector2I GLESMemoryAllocator::render_target_get_size(RenderTargetID rt_id)
 {
     return render_target_get(rt_id).size;
 }
 
-void GLESMemoryAllocator::render_target_set_size(Graphics::RenderTargetID rt_id, const Vector2I& new_size)
+void GLESMemoryAllocator::render_target_set_size(RenderTargetID rt_id, const Vector2I& new_size)
 {
+    // ignore backbuffer modifications
+    if (rt_id == RenderTargetID(0))
+        return;
+
     GLESRenderTarget& rt = render_target_get(rt_id);
-    
+
     usize old_byte_size = rt.size.width * rt.size.height * _get_format_size(rt.format);
     data.allocated_bytes -= old_byte_size;
     texture_allocate_memory(rt.color_buffer, GL_TEXTURE_2D, new_size, rt.format, GL_RGBA, {});
 
-    gl.glBindFramebuffer(GL_FRAMEBUFFER, rt.framebuffer);
-    gl.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rt.color_buffer, 0);
-    gl.glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        gl.glBindFramebuffer(GL_FRAMEBUFFER, rt.framebuffer);
+        gl.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rt.color_buffer, 0);
+        gl.glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     rt.size = new_size;
 }
 
-GLID GLESMemoryAllocator::render_target_get_handle(Graphics::RenderTargetID rt_id)
+GLID GLESMemoryAllocator::render_target_get_handle(RenderTargetID rt_id)
 {
     return render_target_get(rt_id).framebuffer;
 }

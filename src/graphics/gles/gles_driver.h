@@ -13,19 +13,19 @@ struct GLESDriver
     {
         i32 max_texture_units;
     };
-    
+
     struct InternalData
     {
         mem::Allocator allocator;
         
         GLLimits limits;
+        Vector2I current_viewport_size;
     };
     
     static inline InternalData data;
 
-    static Graphics::VTable get_vtable();
-
     [[nodiscard]] static mem::Allocator& get_allocator() { return data.allocator; }
+    [[nodiscard]] static Vector2I get_current_viewport_size() { return data.current_viewport_size; }
 
     static void initialize(const mem::Allocator& allocator);
     static void shutdown();
@@ -33,21 +33,21 @@ struct GLESDriver
     static void recreate();
     static void destroy();
     
-    static void render(Graphics::RenderTargetID rt_id, const Graphics::RenderInfo& ri);
-    static void present(Graphics::RenderTargetID rt_id);
+    static void render(Viewport* viewport);
+    static void present(Viewport* viewport);
     
-    static void add_cmd(const RenderCommand& cmd);
+    static TextureID create_texture(const TextureCreateInfo& create_info);
+    static void destroy_texture(TextureID tex_id);
+    static RenderTargetID create_render_target(const RenderTargetCreateInfo& create_info);
+    static void destroy_render_target(RenderTargetID rt_id);
 
-    static Graphics::TextureID create_texture(const TextureCreateInfo& create_info);
-    static void destroy_texture(Graphics::TextureID);
-    static Graphics::RenderTargetID create_render_target(const RenderTargetCreateInfo& create_info);
-    static void destroy_render_target(Graphics::RenderTargetID);
+    static RenderTargetID get_main_render_target();
 
-    static void texture_set_image(Graphics::TextureID tex_id, Image* img);
-    static Vector2I texture_get_size(Graphics::TextureID tex_id);
+    static void texture_set_image(TextureID tex_id, Image* img);
+    static Vector2I texture_get_size(TextureID tex_id);
 
-    static void render_target_set_size(Graphics::RenderTargetID rt_id, const Vector2I& new_size);
-    static Vector2I render_target_get_size(Graphics::RenderTargetID rt_id);
+    static void render_target_set_size(RenderTargetID rt_id, const Vector2I& new_size);
+    static Vector2I render_target_get_size(RenderTargetID rt_id);
 
     static void _init_context();
 };

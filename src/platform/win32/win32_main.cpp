@@ -40,7 +40,7 @@ extern "C" {
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-	if(Engine::get_configuration().EnableDebugConsole)
+	if(Engine::get_configuration().enable_debug_console)
 		AllocConsole();
 
 	Win32Engine::initialize();

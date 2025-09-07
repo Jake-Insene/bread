@@ -3,6 +3,7 @@
 
 using WindowID = Display::WindowID;
 
+
 struct Window
 {
     WindowID window_id;

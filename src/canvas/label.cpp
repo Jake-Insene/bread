@@ -1,6 +1,6 @@
 #include "canvas/label.h"
 
-#include "graphics/graphics.h"
+#include "graphics/viewport.h"
 
 
 void Label::init(const CreateInfo&)
@@ -45,13 +45,9 @@ void Label::render()
 		ResourceID id = glyph.char_texture;
 		Vector2 extent = Vector2(Graphics::texture_get_size(id));
 		
-		Graphics::draw_canvas_element(
-			transform, extent,
-			Rect2D(Vector2(), extent), id,
-			get_color(),
-			RenderCommand::BatchFlags(RenderCommand::FLAG_BATCH_FLIP_V 
-				| RenderCommand::FLAG_BATCH_FONT_CHAR
-			)
+		draw_canvas_element(
+			transform, id, Rect2D(Vector2(), extent), Rect2D(Vector2(), extent),
+			get_color(), Viewport::RENDER_FLAG_FLIP_V | Viewport::RENDER_FLAG_FONT_CHAR | Viewport::RENDER_FLAG_NO_SCENE_TRANSFORM
 		);
 
 		transform.translate(

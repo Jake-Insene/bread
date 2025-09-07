@@ -111,6 +111,7 @@
 
 struct Object;
 struct InputEvent;
+struct Viewport;
 
 /*
 * The minimum entity that can be placed in a scene, can safely instanced in a scene.
@@ -188,6 +189,8 @@ struct Object
 
         BitField<MARK_COUNT> marks{};
         BitField<64> bit_groups;
+
+        Viewport* viewport;
     } data;
 
     // Internal, you should not use them
@@ -212,6 +215,9 @@ struct Object
 
     void set_group(u64 group_bit, bool value);
     [[nodiscard]] bool has_group(u64 group_bit) const { return data.bit_groups.is_set(group_bit); }
+
+    Viewport* get_viewport() const { return data.viewport; }
+    void set_viewport(Viewport* new_vp);
 
     // Object std functions
 
