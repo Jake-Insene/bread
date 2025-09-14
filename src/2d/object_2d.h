@@ -13,10 +13,7 @@
 struct Object2D : Object
 {
     OBJECT(Object2D, Object);
-
-    // As everything in a struct is public we need to hide data
-    // that should not be modified/access directly, this also
-    // resolve some namespace problems.
+    
     struct InternalData
     {
         RenderItemID render_item;

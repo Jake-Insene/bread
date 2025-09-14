@@ -24,7 +24,7 @@ bool Image::load(StringView file_path)
 {
     if (File::exists(file_path) == false)
     {
-        Fatal("Couldn't load the image '{}'", file_path);
+        RMFatal("Couldn't load the image '{}'", file_path);
         return false;
     }
 
@@ -50,7 +50,7 @@ bool Image::load(StringView file_path)
     }
     else
     {
-        Fatal("invalid channel count {}", channels);
+        RMFatal("invalid channel count {}", channels);
     }
     
     pixels.len = size.width * size.height * channels;

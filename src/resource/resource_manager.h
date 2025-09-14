@@ -11,15 +11,13 @@
 #include "resource/tile_set.h"
 
 #define RMDebugInfo(...) DebugInfo("[ResourceManager]: " __VA_ARGS__)
+#define RMFatal(...) Fatal("[ResourceManager]: " __VA_ARGS__)
 
 
 struct ResourceManager
 {
     static constexpr usize DefaultFontSize = 32;
 
-    // As everything in a struct is public we need to hide data
-    // that should not be modified/access directly, this also
-    // resolve some namespace problems.
     struct InternalData
     {
         mem::Allocator allocator;

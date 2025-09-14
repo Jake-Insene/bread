@@ -12,9 +12,6 @@ struct Body2D : Object2D
     using BodyType = Physics2D::BodyType;
     using CollisionMask = Physics2D::CollisionMask;
     
-    // As everything in a struct is public we need to hide data
-    // that should not be modified/access directly, this also
-    // resolve some namespace problems.
     struct InternalData
     {
         Physics2D::BodyID body_id = Physics2D::BodyID::InvalidID;
@@ -31,7 +28,7 @@ struct Body2D : Object2D
         CollisionMask collision_mask = Physics2D::DEFAULT_COLLISION_MASK;
     } data;
 
-    Event<void(Object::*)(Body2D*)> on_collide;
+    Event<void(Object::*)(Object2D*)> on_collide;
     
     void init(const CreateInfo&);
     void deinit();

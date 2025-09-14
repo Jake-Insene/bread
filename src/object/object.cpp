@@ -60,30 +60,43 @@ void Object::handle_render()
     }
 }
 
-void Object::handle_event(const InputEvent& e)
+void Object::handle_event(const InputEvent& event)
 {
     for (usize i = 0; i < data.childs.count; i++)
     {
-        data.childs[i]->handle_event(e);
+        data.childs[i]->handle_event(event);
     }
 
     if (has_mark(MARK_EVENT))
     {
-        ObjectCall(event, e);
+        ObjectCall(event, event);
     }
 }
 
-void Object::set_group(u64 group_bit, bool value)
+void Object::set_mark(MarkName mark_name, bool value)
 {
     if (value)
-        data.bit_groups.set(group_bit);
+        data.marks.set(mark_name);
     else
-        data.bit_groups.unset(group_bit);
+        data.marks.unset(mark_name);
 }
 
-void Object::add_child(Object *obj)
+void Object::set_group(GroupName group_name, bool value)
 {
-    Object* child = data.childs.add(obj);
+    if (value)
+        data.bit_groups.set(group_name);
+    else
+        data.bit_groups.unset(group_name);
+}
+
+bool Object::has_group(GroupName group_name) const
+{
+    return data.bit_groups.is_set(group_name);
+}
+
+void Object::add_child(Object* request_child)
+{
+    Object* child = data.childs.add(request_child);
     child->data.parent = this;
     child->set_viewport(get_viewport());
 

@@ -11,7 +11,7 @@ extern "C" {
 	extern "C" void __chkstk(void) {}
 
 	#pragma function(memset)
-	void* __cdecl memset(void* dest, int c, size_t count)
+	void* __cdecl __bread_memset(void* dest, int c, size_t count)
 	{
 		unsigned char* p = (unsigned char*)dest;
 		while (count--)
@@ -23,7 +23,7 @@ extern "C" {
 
 	// memcpy
 	#pragma function(memcpy)
-	void* __cdecl memcpy(void* dest, const void* src, size_t count)
+	void* __cdecl __bread_memcpy(void* dest, const void* src, size_t count)
 	{
 		unsigned char* d = (unsigned char*)dest;
 		const unsigned char* s = (const unsigned char*)src;

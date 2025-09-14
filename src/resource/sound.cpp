@@ -54,7 +54,7 @@ void Sound::load(StringView file_path)
 {
     if (File::exists(file_path) == false)
     {
-        Fatal("Couldn't load the sound file '{}'", file_path);
+        RMFatal("Couldn't load the sound file '{}'", file_path);
         return;
     }
 

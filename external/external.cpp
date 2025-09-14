@@ -32,7 +32,7 @@ static void _free(void* ptr)
     }
 }
 
-static void* __memcpy(void* dest, void* src, size_t len)
+static void* __bread_memcpy(void* dest, void* src, size_t len)
 {
     auto dest_items = Slice((u8*)dest, len);
     auto src_items = Slice((u8*)src, len);
@@ -40,7 +40,7 @@ static void* __memcpy(void* dest, void* src, size_t len)
     return dest;
 }
 
-static void* __memset(void* dest, int value, size_t len)
+static void* __bread_memset(void* dest, int value, size_t len)
 {
     auto dest_items = Slice((u8*)dest, len);
     mem::set(dest_items, u8(value));
@@ -77,8 +77,6 @@ static u32 _lrotl(u32 x, int y)
 
 #define abs(x) math::abs(x)
 #define fabs(x) abs(x)
-#define memcpy __memcpy
-#define memset __memset
 
 #include "external/stb_image.h"
 
@@ -96,8 +94,8 @@ static u32 _lrotl(u32 x, int y)
 #define STBTT_acos(x) math::acos(x)
 #define STBTT_fabs(x) math::abs(x)
 
-#define STBTT_memcpy(dest, src, size) __memcpy(dest, src, size)
-#define STBTT_memset(dest, value, size) __memset(dest, value, size)
+#define STBTT_memcpy(dest, src, size) __bread_memcpy(dest, src, size)
+#define STBTT_memset(dest, value, size) __bread_memset(dest, value, size)
 
 #include "external/stb_truetype.h"
 
@@ -105,8 +103,8 @@ static u32 _lrotl(u32 x, int y)
 #define DRWAV_MALLOC(size) _alloc(size)
 #define DRWAV_REALLOC(ptr, size) _realloc(ptr, 0, size)
 #define DRWAV_FREE(ptr) _free(ptr)
-#define DRWAV_COPY_MEMORY(dest, src, len) __memcpy((void*)(dest), (void*)(src), len)
-#define DRWAV_ZERO_MEMORY(dest, len) __memset((void*)(dest), 0, len)
+#define DRWAV_COPY_MEMORY(dest, src, len) __bread_memcpy((void*)(dest), (void*)(src), len)
+#define DRWAV_ZERO_MEMORY(dest, len) __bread_memset((void*)(dest), 0, len)
 
 #define DR_WAV_NO_STDIO
 #define DR_WAV_IMPLEMENTATION

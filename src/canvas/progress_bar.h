@@ -12,9 +12,6 @@ struct ProgressBar : CanvasObject
     static constexpr f32 DefaultMin = 0.f;
     static constexpr f32 DefaultMax = 100.f;
 
-    // As everything in a struct is public we need to hide data
-    // that should not be modified/access directly, this also
-    // resolve some namespace problems.
     struct InternalData
     {
         Texture2D* bg_texture;

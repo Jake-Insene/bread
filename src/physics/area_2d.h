@@ -13,9 +13,6 @@ struct Area2D : Object2D
 
     using CollisionMask = Physics2D::CollisionMask;
 
-    // As everything in a struct is public we need to hide data
-    // that should not be modified/access directly, this also
-    // resolve some namespace problems.
     struct InternalData
     {
         Physics2D::AreaID area_id = Physics2D::AreaID::InvalidID;

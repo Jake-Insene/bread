@@ -55,6 +55,7 @@ void String::resize(usize new_size)
     if (!chars.ptr())
     {
         chars = mem::from_bytes<char>(allocator.alloc(new_size, alignof(usize)));
+        count = new_size;
         return;
     }
 
@@ -87,6 +88,18 @@ bool String::ends_with(StringView str) const
 StringView String::view()
 {
     return StringView{chars.ptr(), count};
+}
+
+io::Writer String::writer()
+{
+    io::Writer writer = {};
+    writer.self = this;
+    writer.write_fn = [](void* self, const Slice<const u8> bytes) -> void
+        {
+            String* str = (String*)self;
+            str->add(StringView((const char*)bytes.ptr(), bytes.len));
+        };
+    return writer;
 }
 
 void String::_set_str_view(StringView str)

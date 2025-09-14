@@ -2,7 +2,13 @@
 #include "mem/allocator.h"
 #include "mem/utils.h"
 
+
 struct StringView;
+
+namespace io
+{
+struct Writer;
+}
 
 
 struct [[nodiscard]] String
@@ -96,6 +102,8 @@ struct [[nodiscard]] String
     
     StringView view();
 
+    io::Writer writer();
+
     void _set_str_view(StringView str);
     void _set_from_signed(i64 integer);
     void _set_from_unsigned(u64 integer);
@@ -104,3 +112,4 @@ struct [[nodiscard]] String
     void _add_from_signed(i64 integer);
     void _add_from_unsigned(u64 integer);
 };
+

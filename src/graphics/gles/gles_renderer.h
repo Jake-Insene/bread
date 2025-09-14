@@ -48,7 +48,7 @@ struct GLESRenderer
     static constexpr usize SpriteInstanceAttribCount = 5;
     CheckInstanceSize(SpriteInstance);
 
-    struct CanvasElementInstance
+    struct UISpriteInstance
     {
         // attrib 0
         Vector2 transform_0;
@@ -66,7 +66,7 @@ struct GLESRenderer
         u32 padding[3];
     };
     static constexpr usize CanvasElementInstanceAttribCount = 5;
-    CheckInstanceSize(CanvasElementInstance);
+    CheckInstanceSize(UISpriteInstance);
 
     struct QuadInstance
     {
@@ -124,7 +124,7 @@ struct GLESRenderer
         Slice<SpriteInstance> instances;
     };
 
-    struct CanvasElementBatch
+    struct UISpriteBatch
     {
         GLID vao;
         GLID instance_buffer_object;
@@ -135,7 +135,7 @@ struct GLESRenderer
 
         GLID texture_units[MaxInstancesPerBatch];
 
-        Slice<CanvasElementInstance> instances;
+        Slice<UISpriteInstance> instances;
     };
     
     struct QuadBatch
@@ -184,7 +184,7 @@ struct GLESRenderer
         i32 usable_texture_units;
         
         SpriteBatch sprite_batch;
-        CanvasElementBatch canvas_element_batch;
+        UISpriteBatch ui_sprite_batch;
         QuadBatch quad_batch;
         PrimitivePointBatch primitive_batch;
         PrimitiveCircleBatch primitive_circle_batch;
@@ -215,7 +215,7 @@ struct GLESRenderer
     static void update_scene_uniform();
 
     static void end_sprite_batch();
-    static void end_canvas_element_batch();
+    static void end_ui_sprite_batch();
     static void end_quad_batch();
     static void end_primitive_batch();
     static void end_primitive_circle_batch();

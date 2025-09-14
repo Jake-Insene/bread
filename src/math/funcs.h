@@ -152,24 +152,36 @@ template<typename T>
     return (180 / PI<T>) * rads;
 }
 
-template<typename T>
-[[nodiscard]] constexpr T cos(T r)
-{
-    return impl::cos_approx<T>(r);
-}
-
+/*
+* @param r Angle in radians, compute the sine(x)
+*/
 template<typename T>
 [[nodiscard]] constexpr T sin(T r)
 {
     return impl::sin_approx<T>(r);
 }
 
+/*
+* @param r Angle in radians, compute the cosine(x)
+*/
+template<typename T>
+[[nodiscard]] constexpr T cos(T r)
+{
+    return impl::cos_approx<T>(r);
+}
+
+/*
+* @param r Angle in radians, compute the tan(x)
+*/
 template<typename T>
 [[nodiscard]] constexpr T tan(T r)
 {
     return impl::tan_approx<T>(r);
 }
 
+/*
+* @param r Angle in radians, compute the acos(x)
+*/
 template<typename T>
 [[nodiscard]] constexpr T acos(T r)
 {

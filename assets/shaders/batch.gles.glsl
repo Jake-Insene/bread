@@ -7,8 +7,8 @@ layout(location = 2) in vec4 instance_2;
 layout(location = 3) in vec4 instance_3;
 layout(location = 4) in vec4 instance_4;
 
-// Sprites
-#if defined(SPRITE) || defined(CANVAS_ELEMENT)
+// Sprites/UI Sprite
+#if defined(SPRITE)
 #define transform mat2(instance_0.xy, instance_0.zw)
 
 #define transform_translation instance_1.xy
@@ -47,7 +47,7 @@ layout(location = 4) in vec4 instance_4;
 
 layout(location = 0) out vec4 color;
 
-#if defined(SPRITE) || defined(CANVAS_ELEMENT)
+#if defined(SPRITE)
 layout(location = 1) flat out uint texture_slot;
 layout(location = 2) out vec2 uv;
 layout(location = 3) flat out uint flags;
@@ -155,7 +155,7 @@ void main()
     out_pos.xy += transform_translation;
 #endif
 
-#if !defined(NO_SCENE_TRANSFORM)
+#if !defined(UI_SPRITE)
     out_pos = scene_transform * out_pos;
 #endif
     out_pos = viewport_transform * out_pos;

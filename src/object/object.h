@@ -54,14 +54,13 @@
     {\
         return reinterpret_cast<void*>(&name::_bind_vtable);\
     }\
-    static bool _try_bind_vtable(name::VTable& vtable)\
+    static void _try_bind_vtable(name::VTable& vtable)\
     {\
         base::_try_bind_vtable(vtable);\
         if(name::_get_bind_vtable() != base::_get_bind_vtable())\
         {\
             name::_bind_vtable(static_cast<name::VTable&>(vtable));\
         }\
-        return true;\
     }\
     static Class* get_class()\
     {\
@@ -77,12 +76,12 @@
             tmp.render.bind(&name::render);\
             tmp.exit.bind(&name::exitv);\
             tmp.event.bind(&name::eventv);\
+            name::_try_bind_vtable(tmp);\
             return tmp;\
         }();\
-        static bool unused = name::_try_bind_vtable(vtable);\
-        (void)unused;\
         static Class klass\
         {\
+            .super_class = base::get_class(),\
             .class_name = #name,\
             .class_size = sizeof(name),\
             .vtable = vtable,\
@@ -93,8 +92,8 @@
     OBJECT_FUNCV_ARG1(name, base, init, const CreateInfo&)\
     OBJECT_RFUNCV(name, base, deinit)\
     OBJECT_FUNCV(name, base, enter)\
-    OBJECT_FUNCV_ARG1(name, base, internal_update, f32)\
     OBJECT_FUNCV(name, base, exit)\
+    OBJECT_FUNCV_ARG1(name, base, internal_update, f32)\
     OBJECT_FUNCV_ARG1(name, base, event, const InputEvent&)\
     
     
@@ -112,6 +111,8 @@
 struct Object;
 struct InputEvent;
 struct Viewport;
+using GroupName = u64;
+using MarkName = u64;
 
 /*
 * The minimum entity that can be placed in a scene, can safely instanced in a scene.
@@ -132,16 +133,17 @@ struct Object
         Event<void(Object::*)(), false> deinit;
 
         Event<void(Object::*)(), false> enter;
+        Event<void(Object::*)(), false> exit;
         Event<void(Object::*)(f32), false> internal_update;
         Event<void(Object::*)(f32), false> update;
         Event<void(Object::*)(), false> render;
-        Event<void(Object::*)(), false> exit;
 
         Event<void(Object::*)(const InputEvent&), false> event;
     };
 
     struct Class
     {
+        Class* super_class;
         StringView class_name;
         usize class_size;
         VTable& vtable;
@@ -149,38 +151,128 @@ struct Object
 
     static void* _get_bind_vtable() { return reinterpret_cast<void*>(&Object::_bind_vtable); }
 
-    static void _try_bind_vtable(VTable& vtable)
+    static void _try_bind_vtable(VTable& vtable) {}
+    static void _bind_vtable(VTable& vtable);
+
+    static Class* get_class()
     {
-        return _bind_vtable(vtable);
+        static VTable vtable = []()
+        {
+            VTable tmp = {};
+            tmp.construct.bind([](Object* obj) -> void { ::new (obj) Object(); });
+            tmp.init.bind(&Object::initv);
+            tmp.deinit.bind(&Object::deinitv);
+            tmp.enter.bind(&Object::enterv);
+            tmp.internal_update.bind(&Object::internal_updatev);
+            tmp.update.bind(&Object::update);
+            tmp.render.bind(&Object::render);
+            tmp.exit.bind(&Object::exitv);
+            tmp.event.bind(&Object::eventv);
+            return tmp;
+        }();
+
+        static Class klass
+        {
+            .super_class = nullptr,
+            .class_name = "Object",
+            .class_size = sizeof(Object),
+            .vtable = vtable,
+        };
+
+        return &klass;
     }
 
-    static void _bind_vtable(VTable& vtable);
+    // Object callbacks
+#define OBJECT_FDEFAULT(name)\
+    void(Object::*get_##name()) ()\
+    {\
+        return (void(Object::*)())&Object::name;\
+    }\
+    void name##v()\
+    {\
+        name();\
+    }\
+
+#define OBJECT_FDEFAULT_ARG1(name, arg0)\
+    void(Object::*get_##name()) (arg0)\
+    {\
+        return (void(Object::*)(arg0))&Object::name;\
+    }\
+    void name##v(arg0 _0)\
+    {\
+        name(_0);\
+    }\
+
+    // Only for recursive functions.
+    // update and render should not be recursive.
+    OBJECT_FDEFAULT_ARG1(init, const CreateInfo&);
+    OBJECT_FDEFAULT(deinit);
+    OBJECT_FDEFAULT(enter);
+    OBJECT_FDEFAULT(exit);
+    OBJECT_FDEFAULT_ARG1(internal_update, f32);
+    OBJECT_FDEFAULT_ARG1(event, const InputEvent&);
+
+#undef OBJECT_DEFAULT
+#undef OBJECT_FDEFAULT_ARG1
 
     // Non-static fields
 
-    ObjectID id;
+    ObjectID id{};
     const Class* klass{};
     mem::Allocator allocator{};
 
     enum
     {
+        /*
+        * The object has internal behaviour that needs to be preserved.
+        */
         MARK_INTERNAL_UPDATE,
+        
+        /*
+        * The object has unique behaviour, can overrided by its derived classes.
+        */
         MARK_UPDATE,
+
+        /*
+        * The object has rendering behaviour, can overrided by its derived classes.
+        */
         MARK_RENDER,
+
+        /*
+        * Input devices can interact with the object.
+        */
         MARK_EVENT,
+
+        /*
+        * The object is in the main scene.
+        */
         MARK_IN_SCENE,
 
+        /*
+        * The object is a 2D world element.
+        */
         MARK_2D,
+
+        /*
+        * The object is a 2D world element.
+        */
         MARK_CANVAS,
 
+        /*
+        * The object was marked to be deleted at the end of the frame.
+        */
         MARK_QUEUE_FREE,
 
         MARK_COUNT,
     };
 
-    // As everything in a struct is public we need to hide data
-    // that should not be modified/access directly, this also
-    // resolve some namespace problems.
+    /**
+    * As soon as you can see struct/clases in the engine are always public,
+    * this is a design pattern, to expose public read/write data you can
+    * create member function or let the user acces directly to them, for private
+    * data you should use a 'data' field, this way you separate public from private data members
+    * in a visual way.
+    */
     struct InternalData
     {
         String name{}; // necessary?
@@ -193,79 +285,122 @@ struct Object
         Viewport* viewport;
     } data;
 
-    // Internal, you should not use them
-    void handle_internal_update(f32 dt);
-    void handle_update(f32 dt);
-    void handle_render();
-    void handle_event(const InputEvent& e);
+    void handle_internal_update(f32 dt) Function(FunctionInternal);
+    void handle_update(f32 dt) Function(FunctionInternal);
+    void handle_render() Function(FunctionInternal);
+    void handle_event(const InputEvent& event) Function(FunctionInternal);
 
-    // Query info
-    void set_mark(u64 mark, bool value)
-    { 
-        if (value)
-            data.marks.set(mark);
-        else
-            data.marks.unset(mark);
-    }
+    /*
+    * @param mark_name The mark to enable/disable.
+    * @param value Enable/Disable.
+    */
+    void set_mark(MarkName mark_name, bool value);
 
-    [[nodiscard]] bool has_mark(u64 mark) const { return data.marks.is_set(mark); }
+    /*
+	* @param mark The mark to check.
+    * @return True if the mark is enable, false otherwise.
+    */
+    [[nodiscard]] bool has_mark(MarkName mark_name) const { return data.marks.is_set(mark_name); }
 
-    void mark(u64 mark) { data.marks.set(mark); }
-    void unmark(u64 mark) { data.marks.unset(mark); }
+    /*
+    * @param mark The mark to enable.
+    */
+    void mark(MarkName mark_name) { data.marks.set(mark_name); }
+   
+    /*
+    * @param mark The mark to disable.
+    */
+    void unmark(MarkName mark_name) { data.marks.unset(mark_name); }
 
-    void set_group(u64 group_bit, bool value);
-    [[nodiscard]] bool has_group(u64 group_bit) const { return data.bit_groups.is_set(group_bit); }
+    /*
+    * @param group_bit The group bit to set.
+    * @param value The group bit value.
+    */
+    void set_group(GroupName group_name, bool value);
 
-    Viewport* get_viewport() const { return data.viewport; }
+    /*
+	* @param group_bit The group bit to check.
+    * @return The value of the group bit.
+    */
+    [[nodiscard]] bool has_group(GroupName group_name) const;
+
+    /*
+    * @return The viewport where the object is being rendered.
+    */
+    [[nodiscard]] Viewport* get_viewport() const { return data.viewport; }
+
+    /*
+    * Do not use directly.
+    */
     void set_viewport(Viewport* new_vp);
 
-    // Object std functions
-
+    /*
+    * @param Object Object to check.
+    * @return True if the object is a subclass of T, false otherwise.
+    */
     template<typename T>
-    [[nodiscard]] T* cast() const { return (T*)this; }
+    [[nodiscard]] static bool is_class_of(Object* object)
+    {
+        const Class* klass = object->klass;
+        while (klass)
+        {
+            if (klass == T::get_class())
+                return true;
 
-    // Can be null on root scene
+            klass = klass->super_class;
+        }
+
+        return false;
+    }
+
+    /*
+    * Not safe, direct cast of the object.
+    * @return The object casted to T, if the object class is not T returns nullptr.
+    */
+    template<typename T>
+    [[nodiscard]] static T* cast(Object* object)
+    {
+        return is_class_of<T>(object) ? reinterpret_cast<T*>(object) : nullptr;
+    }
+
+    /*
+	* @return The parent of the object, if it has no parent return nullptr.
+    */
     [[nodiscard]] Object* get_parent() const { return data.parent; }
 
-    void add_child(Object* obj);
-    void remove_child(Object* obj);
+    /*
+    * Add the child to the object, if the object is in the main scene
+    * it will call enter() on the child and propagate it to its childs.
+    *
+    * @param request_child The child to add.
+    */
+    void add_child(Object* request_child);
+
+    /*
+    * Finds and removes the given object child,
+    * only check the childs of the object not its sub childs.
+    * 
+    * @param child The child to remove.
+    */
+    void remove_child(Object* child);
+
+    /*
+    * @return The number of childs of the object.
+    */
     [[nodiscard]] usize get_child_count() const { return data.childs.count; }
+
+    /*
+    * Get the child at the given index.
+    * 
+    * @param index The index of the child to get.
+    */
     Object* get_child(usize index) { return data.childs[index]; }
 
+    /*
+    * Perform a safe free of the object, deleting it at the end of the frame.
+    * The childs of the object are also deleted.
+    */
     void queue_free();
-    
-    // Object callbacks
-#define OBJECT_FDEFAULT(name)\
-    void(Object::*get_##name()) ()\
-    {\
-        return (void(Object::*)())&Object::name;\
-    }\
-    void name##v()\
-    {\
-        name();\
-    }\
-    
-#define OBJECT_FDEFAULT_ARG1(name, arg0)\
-    void(Object::*get_##name()) (arg0)\
-    {\
-        return (void(Object::*)(arg0))&Object::name;\
-    }\
-    void name##v(arg0 _0)\
-    {\
-        name(_0);\
-    }\
-    
-    // Only for recursive functions
-    // update and render should not be recursive
-    OBJECT_FDEFAULT_ARG1(init, const CreateInfo&);
-    OBJECT_FDEFAULT(deinit);
-    OBJECT_FDEFAULT(enter);
-    OBJECT_FDEFAULT_ARG1(internal_update, f32);
-    OBJECT_FDEFAULT(exit);
-    OBJECT_FDEFAULT_ARG1(event, const InputEvent&);
-    
-#undef OBJECT_DEFAULT
-#undef OBJECT_FDEFAULT_ARG1
     
     /*
     * Called after the object is allocated.
@@ -282,46 +417,44 @@ struct Object
     /*
     * Called after the object is instanced in the main scene.
     */
-    void enter() Function(FunctionPropagate);
+    void enter() RequireMark(MARK_IN_SCENE) Function(FunctionPropagate);
+
+    /*
+    * Called after the object exit from the main scene.
+    */
+    void exit() RequireMark(MARK_IN_SCENE) Function(FunctionPropagate);
 
     /*
     * Called every frame like update(f32).
-    * 
-    * Used to create inherit behavior.
-    * 
+    *
+    * Used to create inherit behaviour.
+    *
     * Mark: MARK_INTERNAL_UPDATE
     * @param dt The elapsed time since the last frame.
     */
-    void internal_update(f32) Function(FunctionPropagate) {}
+    void internal_update(f32) RequireMark(MARK_INTERNAL_UPDATE) Function(FunctionPropagate)
+    {}
 
     /*
-    * Called every frame. Used to create object behavior.
+    * Called every frame. Used to create object behaviour.
     * 
     * Mark: MARK_UPDATE
-    * @param dt The elapsed time since the last frame
     */
-    void update(f32) {}
+    void update(f32) RequireMark(MARK_UPDATE) {}
 
     /*
     * Called every frame to request draw commands.
     * 
     * Mark: MARK_RENDER
     */
-    void render() {}
+    void render() RequireMark(MARK_RENDER) {}
 
-    /*
-    * Called after the object exit from the main scene.
-    */
-    void exit() Function(FunctionPropagate);
-    
     /*
     * Called when the application receives input from a input device.
     * 
     * See InputEventType.
     * 
     * @param event Contains information about the input that triggers the call.
-    * 
-    * @Function(PropagateToChildren)
     */
-    void event(const InputEvent& event) Function(FunctionPropagate);
+    void event(const InputEvent& event) RequireMark(MARK_EVENT) Function(FunctionPropagate);
 };

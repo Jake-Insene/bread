@@ -107,7 +107,7 @@ Rect2D CanvasObject::get_rect() const
 void CanvasObject::draw_canvas_element(const Transform2D& transform, TextureID texture, const Rect2D& rect, 
     const Rect2D& src_rect, Color mod_color, u32 flags)
 {
-    get_viewport()->render_item_draw_sprite(
+    get_viewport()->render_item_draw_ui_sprite(
         get_render_item(), transform, texture, rect,
         src_rect, mod_color, Viewport::RenderFlags(flags)
     );

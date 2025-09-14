@@ -1,7 +1,6 @@
 #include "physics/body_2d.h"
 
 
-
 void Body2D::init(const CreateInfo&)
 {
     data.body_id = Physics2D::create_body(this);
@@ -118,5 +117,5 @@ void Body2D::_on_body_collide(void* _this, Object2D* obj)
     if (body->on_collide.has_func() == false)
         return;
 
-    body->on_collide.call(obj->cast<Body2D>());
+    body->on_collide.call(obj);
 }

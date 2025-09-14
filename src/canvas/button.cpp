@@ -30,7 +30,8 @@ void Button::render()
     Vector2 texture_extent = Vector2(current_texture->get_size());
     draw_canvas_element(
         get_global_transform(), current_texture->texture_id, Rect2D(Vector2(), get_size()), 
-        Rect2D(Vector2(), texture_extent), Color(255, 255, 255, 255), Viewport::RENDER_FLAG_NO_SCENE_TRANSFORM
+        Rect2D(Vector2(), texture_extent),
+        Color(255, 255, 255, 255), Viewport::RENDER_FLAG_NONE
     );
 }
 

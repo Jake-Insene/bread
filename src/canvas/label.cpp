@@ -47,7 +47,7 @@ void Label::render()
 		
 		draw_canvas_element(
 			transform, id, Rect2D(Vector2(), extent), Rect2D(Vector2(), extent),
-			get_color(), Viewport::RENDER_FLAG_FLIP_V | Viewport::RENDER_FLAG_FONT_CHAR | Viewport::RENDER_FLAG_NO_SCENE_TRANSFORM
+			get_color(), Viewport::RENDER_FLAG_FLIP_V | Viewport::RENDER_FLAG_FONT_CHAR
 		);
 
 		transform.translate(

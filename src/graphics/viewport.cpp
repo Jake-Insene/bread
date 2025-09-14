@@ -133,6 +133,20 @@ void Viewport::render_item_draw_sprite(RenderItemID render_item_id, const Transf
 	sprite->flags = flags;
 }
 
+void Viewport::render_item_draw_ui_sprite(RenderItemID render_item_id, const Transform2D& transform, TextureID texture,
+	const Rect2D& rect, const Rect2D& src_rect, Color mod_color, RenderFlags flags)
+{
+	RenderItem& item = items.get(render_item_id);
+	auto ui_sprite = item.alloc<RenderItem::CommandUISprite>();
+	ui_sprite->type = RenderItem::CMD_UI_SPRITE;
+	ui_sprite->transform = transform;
+	ui_sprite->texture = texture;
+	ui_sprite->rect = rect;
+	ui_sprite->src_rect = src_rect;
+	ui_sprite->mod_color = mod_color;
+	ui_sprite->flags = flags;
+}
+
 void Viewport::render_item_draw_rect(RenderItemID render_item_id, const Transform2D& transform,
 	const Rect2D& dest_rect, Color color)
 {

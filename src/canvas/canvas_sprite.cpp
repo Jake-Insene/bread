@@ -15,11 +15,13 @@ void CanvasSprite::render()
         return;
 
     const Vector2 extent = Vector2(data.texture->get_size());
-    u32 flags = Viewport::RENDER_FLAG_NO_SCENE_TRANSFORM;
+    u32 flags = Viewport::RENDER_FLAG_NONE;
+   
     if (flip_h)
     {
         flags |= Viewport::RENDER_FLAG_FLIP_H;
     }
+   
     if (flip_v)
     {
         flags |= Viewport::RENDER_FLAG_FLIP_V;

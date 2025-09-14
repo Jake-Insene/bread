@@ -6,7 +6,7 @@
 // A group of tiles
 struct TileSet : Resource
 {
-	RESOURCE(RESOURCE_TILE_SET, .LoadFromAssets = false, .Extensions = "");
+	RESOURCE(RESOURCE_TILE_SET, LoadFromAssets, ResourceExtensions(""));
 	
 	struct Tile
 	{

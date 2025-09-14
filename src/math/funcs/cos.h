@@ -6,21 +6,24 @@
 namespace math::impl
 {
 
-// I don't know how this works.
+/*
+* Reference: https://www.mathsisfun.com/algebra/taylor-series.html
+*/
 template<typename T>
 constexpr T cos_approx(T x)
 {
     static_assert(
         IsArithmetic<T>,
         "expected arithmetic type"
-    );
+        );
 
-    while (x > PI<T>)  x -= 2 * PI<T>;
-    while (x < -PI<T>) x += 2 * PI<T>;
+    // Using taylor series for only 5 terms,
+    // x is converted to a value between [-PI/2, PI/2].
+
+    while (x > PI2<T>)  x -= 2 * PI2<T>;
+    while (x < -PI2<T>) x += 2 * PI2<T>;
 
     T x2 = x * x;
-
-    // Taylor series expansion (first 5 terms)
     T result = T(1.0);
     T term = T(1.0);
 

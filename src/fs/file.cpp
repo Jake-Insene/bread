@@ -1,8 +1,9 @@
 #include "fs/file.h"
 
+
 io::Writer File::writer()
 {
-    io::Writer writer = io::Writer();
+    io::Writer writer = {};
     writer.self = this;
     writer.write_fn = [](void* self, const Slice<const u8> bytes) -> void
     {

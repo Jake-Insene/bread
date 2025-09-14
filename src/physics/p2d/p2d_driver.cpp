@@ -445,11 +445,10 @@ void P2DDriver::_handle_debug_draw_body(Body& body)
     if (Physics2D::get_property("/debug_draw").get<bool>() == false)
         return;
 
-    for (auto& shape : body.shapes)
+    for (auto shape : body.shapes)
     {
-        Shape2D copy = shape;
         Transform2D transform = body.target->get_global_transform();
-        Vector2 center = copy.get_center();
+        Vector2 center = shape.get_center();
         transform.translate(center);
         Vector2 half_size = shape.get_size() / 2.f;
         Rect2D rect = Rect2D(
@@ -469,16 +468,15 @@ void P2DDriver::_handle_debug_draw_area(Area& area)
     if (Physics2D::get_property("/debug_draw").get<bool>() == false)
         return;
 
-    for (auto& shape : area.shapes)
+    for (auto shape : area.shapes)
     {
-        Shape2D copy = shape;
         Transform2D transform = area.target->get_global_transform();
-        Vector2 center = copy.get_center();
+        Vector2 center = shape.get_center();
         transform.translate(center);
 
         Vector2 half_size = shape.get_size() / 2.f;
         Rect2D rect = Rect2D(
-            shape.get_center() + Vector2(-half_size.x, half_size.y), shape.get_size()
+            Vector2(-half_size.x, half_size.y), shape.get_size()
         );
 
         area.target->get_viewport()->render_item_draw_rect(
@@ -540,10 +538,10 @@ void P2DDriver::_step_body(Body& body, f32 dt)
             body.velocity.y = math::move_to(body.velocity.y, 0.0f, body.air_friction * dt);
         }
 
-        if ((body.velocity_input.x > 0.f && body.velocity.x > body.force.x)
-            || (body.force.x < 0.f && body.velocity.x < body.force.x))
+        if ((body.velocity_input.x > 0.f && body.velocity.x > body.velocity_input.x)
+            || (body.velocity_input.x < 0.f && body.velocity.x < body.velocity_input.x))
         {
-            body.velocity.x = body.force.x;
+            body.velocity.x = body.velocity_input.x;
         }
 
         if (math::abs(body.velocity.x) < 0.01f)
@@ -586,8 +584,9 @@ void P2DDriver::_step_body(Body& body, f32 dt)
         _check_collision_in_group(group, body, input, result);
     }
 
-    body.velocity = body.velocity * result.collision_axis;
-    body.target->translate(result.displacement * result.collision_axis);
+    // Apply collision response: zero out velocity on collision axes
+    body.velocity *= result.collision_axis;
+    body.target->translate(result.displacement);
 }
 
 void P2DDriver::_check_collision_in_group(CollisionMaskGroup& group, Body& body, 
@@ -611,6 +610,9 @@ void P2DDriver::_check_collision_in_group(CollisionMaskGroup& group, Body& body,
 void P2DDriver::_check_collision_on_body(Body& body, const Shape2D& body_shape, Body& other_body, 
     const CollisionInput& input, CollisionResult& result)
 {
+    if (body_shape.get_size() == Vector2())
+        return;
+
     const Vector2 body_position = body.target->get_global_transform().get_position();
     const Vector2 bodyj_position = other_body.target->get_global_transform().get_position();
 
@@ -633,9 +635,7 @@ void P2DDriver::_check_collision_on_body(Body& body, const Shape2D& body_shape, 
         {
             // X correction
             tmp_result.collision_axis.x = 0;
-            tmp_result.displacement.x = 0;
             collided = true;
-            
             result.displacement.x = 0;
         }
 
@@ -643,7 +643,7 @@ void P2DDriver::_check_collision_on_body(Body& body, const Shape2D& body_shape, 
         if (test_shape.intersect(other_shape))
         {
             // Y correction
-            //tmp_result.collision_axis.y = 0;
+            tmp_result.collision_axis.y = 0;
             collided = true;
 
             body.is_on_floor = input.displacement.y < 0;
@@ -655,14 +655,18 @@ void P2DDriver::_check_collision_on_body(Body& body, const Shape2D& body_shape, 
             AABB aabb = real_shape.get_aabb();
             AABB aabbj = other_shape.get_aabb();
 
-            if (input.displacement.y > 0) // Upwards collision
+            if (input.displacement.y > 0)
             {
+                // Upwards collision
                 result.displacement.y = aabbj.max.y - aabb.min.y;
             }
-            else if (input.displacement.y < 0) // Downwards collision
+            else if (input.displacement.y < 0)
             {
+                // Downwards collision
                 result.displacement.y = aabbj.min.y - aabb.max.y;
             }
+         
+            result.displacement.y *= bool(tmp_result.collision_axis.x);
         }
 
         if (collided && body.on_collide.has_func())
@@ -704,20 +708,14 @@ void P2DDriver::_check_body_in_area(const Vector2& area_position, Area& area, Bo
     if (area.shapes.count == 0)
         return;
 
-    if (area.on_body_enter.has_func() == false)
-        return;
-
-    if (area.on_body_exit.has_func() == false)
-        return;
-    
     const Vector2 body_position = body.target->get_global_transform().get_position();
 
+    // area_shape is not a reference, modify it is safe.
     for (auto area_shape : area.shapes)
     {
         if (area_shape.get_size() == Vector2())
             continue;
 
-        // area_shape is not a reference, modify it is safe.
         area_shape.translate(area_position);
         _check_body_in_shape(area_shape, area, body, body_position);
     }
@@ -743,6 +741,9 @@ void P2DDriver::_check_body_in_shape(const Shape2D& area_shape, Area& area, Body
                 }
             );
 
+            if (area.on_body_enter.has_func() == false)
+                continue;
+
             area.on_body_enter.call(area._this, body.target);
         }
         else
@@ -752,6 +753,10 @@ void P2DDriver::_check_body_in_shape(const Shape2D& area_shape, Area& area, Body
          
             area.bodies_inside.get(body.self).is_inside = false;
             area.bodies_inside.remove(body.self);
+
+            if (area.on_body_exit.has_func() == false)
+                continue;
+
             area.on_body_exit.call(area._this, body.target);
         }
     }

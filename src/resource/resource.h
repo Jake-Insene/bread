@@ -2,16 +2,6 @@
 #include "collections/string.h"
 
 
-struct ResourceTypeSpecification
-{
-    bool LoadFromAssets = false;
-    StringView Extensions = "";
-};
-
-#define RESOURCE(ResType, ...) \
-    static constexpr ResourceTypeSpecification Specification = {__VA_ARGS__};\
-    static constexpr ResourceType Type = ResType\
-
 enum ResourceType
 {
     RESOURCE_UNKNOWN = 0,
@@ -25,10 +15,44 @@ enum ResourceType
     RESOURCE_TILE_SET,
  };
 
-// A 'Resource' represents a collection of data that can be reused across the application.
+struct ResourceTypeSpecification
+{
+    bool LoadFromAssets = false;
+    StringView Extensions = "";
+};
+
+enum
+{
+    NoResourceFlags = 0,
+    LoadFromAssets = 1,
+};
+
+static constexpr ResourceTypeSpecification _construct_from_flags(usize flags, StringView extensions)
+{
+    return ResourceTypeSpecification
+    {
+        .LoadFromAssets = bool(flags & LoadFromAssets),
+        .Extensions = extensions,
+    };
+}
+
+#define RESOURCE(resource_type, flags, extensions) \
+    static constexpr ResourceTypeSpecification Specification = _construct_from_flags(flags, extensions);\
+    static constexpr ResourceType Type = resource_type;\
+
+#define ResourceExtensions(extensions) extensions
+
+
+/*
+* A 'Resource' represents a collection of data that can be reused across the application.
+*/
 struct Resource
 {
-    RESOURCE(RESOURCE_UNKNOWN, .LoadFromAssets = false, .Extensions = "");
+    RESOURCE(
+        RESOURCE_UNKNOWN,
+        NoResourceFlags, 
+        ResourceExtensions(""));
+    
     ResourceType type;
     String path;
     

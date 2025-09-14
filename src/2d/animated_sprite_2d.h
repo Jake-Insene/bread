@@ -7,9 +7,6 @@ struct AnimatedSprite2D : Object2D
 {
 	OBJECT(AnimatedSprite2D, Object2D);
 
-	// As everything in a struct is public we need to hide data
-    // that should not be modified/access directly, this also
-    // resolve some namespace problems.
     struct InternalData
     {
         i32 frame = 0;

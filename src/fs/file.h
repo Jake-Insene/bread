@@ -54,19 +54,11 @@ struct File
 
     void flush();
 
-    template<usize N, typename... TArgs>
-    void print(const char(&fmt_str)[N], TArgs... args);
-
     io::Writer writer();
 };
 
 #include "fmt/fmt.h"
 
-template<usize N, typename... TArgs>
-void File::print(const char(&fmt_str)[N], TArgs... args)
-{
-    fmt::format(writer(), fmt_str, args...);
-}
 
 
 

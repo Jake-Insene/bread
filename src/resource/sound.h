@@ -7,7 +7,7 @@
 
 struct Sound : Resource
 {
-    RESOURCE(RESOURCE_SOUND, .LoadFromAssets = true, .Extensions = "wav");
+    RESOURCE(RESOURCE_SOUND, LoadFromAssets, ResourceExtensions("wav"));
 
     struct InternalData
     {

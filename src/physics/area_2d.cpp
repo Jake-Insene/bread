@@ -1,5 +1,7 @@
 #include "physics/area_2d.h"
 
+#include "physics/body_2d.h"
+
 
 void Area2D::init(const CreateInfo&)
 {
@@ -62,7 +64,7 @@ void Area2D::_on_body_enter(void* _this, Object2D* obj)
     if (area->on_body_enter.has_func() == false)
         return;
 
-    area->on_body_enter.call(obj->cast<Body2D>());
+    area->on_body_enter.call(Object::cast<Body2D>(obj));
 }
 
 void Area2D::_on_body_exit(void* _this, Object2D* obj)
@@ -72,5 +74,5 @@ void Area2D::_on_body_exit(void* _this, Object2D* obj)
     if (area->on_body_exit.has_func() == false)
         return;
 
-    area->on_body_exit.call(obj->cast<Body2D>());
+    area->on_body_exit.call(Object::cast<Body2D>(obj));
 }

@@ -6,7 +6,7 @@
 // Represents a collection of pixels in memory.
 struct Image : Resource
 {
-    RESOURCE(RESOURCE_IMAGE, .LoadFromAssets = true, .Extensions = "png");
+    RESOURCE(RESOURCE_IMAGE, LoadFromAssets, ResourceExtensions("png"));
 
     enum ImageFormat
     {

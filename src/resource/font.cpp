@@ -73,7 +73,7 @@ void Font::load_from_file(StringView file_path)
 {
     if (File::exists(file_path) == false)
     {
-        Fatal("Couldn't load the font '{}'", file_path);
+        RMFatal("Couldn't load the font '{}'", file_path);
         return;
     }
 

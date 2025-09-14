@@ -6,7 +6,7 @@
 
 struct SpriteAnimation : Resource
 {
-	RESOURCE(RESOURCE_SPRITE_ANIMATION, .LoadFromAssets = false);
+	RESOURCE(RESOURCE_SPRITE_ANIMATION, NoResourceFlags, ResourceExtensions(""));
 
 	struct SpriteFrame
 	{

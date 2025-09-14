@@ -34,7 +34,6 @@ struct [[nodiscard]] Viewport
         RENDER_FLAG_FLIP_H = Bit(0),
         RENDER_FLAG_FLIP_V = Bit(1),
         RENDER_FLAG_FONT_CHAR = Bit(2),
-        RENDER_FLAG_NO_SCENE_TRANSFORM = Bit(3),
     };
 
     struct RenderItem
@@ -43,6 +42,7 @@ struct [[nodiscard]] Viewport
         {
             CMD_RECT,
             CMD_SPRITE,
+            CMD_UI_SPRITE,
         };
 
         struct alignas(16) Command
@@ -67,6 +67,12 @@ struct [[nodiscard]] Viewport
             Rect2D src_rect;
             Color mod_color;
             RenderFlags flags;
+        };
+
+        // Same as sprite but type is CMD_UI_SPRITE, 
+        // the renderer should handle the special case
+        struct CommandUISprite : CommandSprite
+        {
         };
 
         RenderItemID self = RenderItemID::InvalidID;
@@ -148,6 +154,9 @@ struct [[nodiscard]] Viewport
     ViewportLayerMask item_get_layers(RenderItemID render_item_id);
 
     void render_item_draw_sprite(RenderItemID render_item_id, const Transform2D& transform, TextureID texture, 
+        const Rect2D& rect, const Rect2D& src_rect, Color mod_color, RenderFlags flags);
+
+    void render_item_draw_ui_sprite(RenderItemID render_item_id, const Transform2D& transform, TextureID texture,
         const Rect2D& rect, const Rect2D& src_rect, Color mod_color, RenderFlags flags);
 
     void render_item_draw_rect(RenderItemID render_item_id, const Transform2D& transform, 

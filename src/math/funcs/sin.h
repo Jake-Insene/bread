@@ -5,7 +5,9 @@
 namespace math::impl
 {
 
-// I don't know how this works.
+/*
+* Reference: https://www.mathsisfun.com/algebra/taylor-series.html
+*/
 template<typename T>
 constexpr T sin_approx(T x)
 {
@@ -13,6 +15,12 @@ constexpr T sin_approx(T x)
         IsArithmetic<T>,
         "expected arithmetic type"
     );
+
+    // Using taylor series for only 5 terms,
+    // x is converted to a value between [-PI, PI].
+
+    while (x > PI<T>)  x -= 2 * PI<T>;
+    while (x < -PI<T>) x += 2 * PI<T>;
 
     T x2 = x * x;
     T term = x;
@@ -25,11 +33,6 @@ constexpr T sin_approx(T x)
     term *= -x2 / (T(6.0) * T(7.0));     // -x^7 / 7!
     result += term;
     term *= -x2 / (T(8.0) * T(9.0));     // +x^9 / 9!
-    result += term;
-    term *= -x2 / (T(10.0) * T(11.0));   // -x^11 / 11!
-    result += term;
-    term *= -x2 / (T(12.0) * T(13.0));   // +x^13 / 13!
-    result += term;
 
     return result;
 }
