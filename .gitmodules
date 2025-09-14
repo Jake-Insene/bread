@@ -1,4 +1,0 @@
-[submodule "external/freetype"]
-	path = external/freetype
-	url = https://github.com/Jake-Insene/freetype.git
-	branch = master
