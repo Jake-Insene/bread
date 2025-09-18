@@ -1,45 +1,25 @@
 #include "os/semaphore.h"
 
-#include "platform/platform_header.h"
-
 
 Semaphore Semaphore::create(usize initial_value)
 {
     return Semaphore
     {
-        .value = initial_value,
-        .mutex = Mutex::create(),
+        .id = OS::semaphore_create(initial_value),
     };
 }
 
 void Semaphore::destroy()
 {
-    mutex.destroy();
+    OS::semaphore_destroy(id);
 }
 
 void Semaphore::signal()
 {
-    mutex.lock();
-    {
-        if (value >= MaxValue)
-        {
-            mutex.unlock();
-            return;
-        }
-        value++;
-    }
-    mutex.unlock();
+    OS::semaphore_signal(id);
 }
 
 void Semaphore::wait()
 {
-    mutex.lock();
-    usize cpy_value = value;
-    mutex.unlock();
-    while (cpy_value == 0)
-    {
-        mutex.lock();
-        cpy_value = value;
-        mutex.unlock();
-    }
+    OS::semaphore_wait(id);
 }

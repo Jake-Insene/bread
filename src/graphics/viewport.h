@@ -1,5 +1,5 @@
 #pragma once
-#include "collections/queue_array.h"
+#include "collections/free_list.h"
 #include "graphics/render_target.h"
 #include "math/color.h"
 #include "math/transform_2d.h"
@@ -124,7 +124,7 @@ struct [[nodiscard]] Viewport
     };
 
     mem::Allocator allocator;
-    QueueArray<RenderItem, RenderItemID> items;
+    FreeList<RenderItem, RenderItemID> items;
 
     RenderTarget rt;
     OT order_table;

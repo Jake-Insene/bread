@@ -116,7 +116,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 void Display::initialize(const mem::Allocator& allocator)
 {
 	Win32Display::data.allocator = allocator;
-	Win32Display::data.windows = QueueArray<Win32Display::WindowData, Display::WindowID>::with_size(allocator, 4);
+	Win32Display::data.windows = FreeList<Win32Display::WindowData, Display::WindowID>::with_size(allocator, 4);
 
 	WNDCLASSEXA wc = {};
 	wc.cbSize = sizeof(wc);

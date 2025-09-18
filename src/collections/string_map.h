@@ -14,7 +14,7 @@ struct [[nodiscard]] StringMap
 
     static constexpr HashType InvalidHash = HashType(-1);
     static constexpr usize InvalidPos = usize(-1);
-    static constexpr usize DefaultCapacity = 4;
+    static constexpr usize DefaultCapacity = 16;
     
     struct MapEntry
     {
@@ -266,19 +266,25 @@ struct [[nodiscard]] StringMap
             return;
         }
         
-        if (!allocator.realloc(mem::to_bytes(entries), sizeof(MapEntry*) * new_size, alignof(MapEntry*)))
-        {
-            auto new_items = allocator.array<MapEntry*>(new_size);
-            mem::copy(new_items, entries);
-            allocator.free(mem::to_bytes(entries));
+        Slice<MapEntry*> new_entries = new_entries = allocator.array<MapEntry*>(new_size);
 
-            entries = new_items;
-        }
-        else
+        for (MapEntry* e = first; e != nullptr; e = e->next)
         {
-            allocator.construct_array(entries.add(new_size - entries.len));
-            entries.len = new_size;
+            u64 hash = e->kv.first;
+            usize i = hash & (new_size - 1);
+            while (new_entries[i] != nullptr)
+            {
+                i = (i + 1) % new_size;
+            }
+            new_entries[i] = e;
         }
+
+        if (entries.ptr())
+        {
+            allocator.free(mem::to_bytes(entries));
+        }
+
+        entries = new_entries;
     }
     
     [[nodiscard]] bool has(StringView str) const

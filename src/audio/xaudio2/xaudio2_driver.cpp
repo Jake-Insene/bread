@@ -27,7 +27,7 @@ void XAudio2Driver::initialize(const mem::Allocator& allocator)
 {
 	data.allocator = allocator;
 
-	data.source_voices = QueueArray<SourceVoice, Audio::SourceVoiceID>::with_size(
+	data.source_voices = FreeList<SourceVoice, Audio::SourceVoiceID>::with_size(
 		data.allocator, 4
 	);
 	

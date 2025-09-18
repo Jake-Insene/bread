@@ -11,6 +11,17 @@
             </ArrayItems>
         </Expand>
     </Type>
+	<Type Name="StaticArray&lt;*&gt;">
+		<DisplayString>{{ count={count} }}</DisplayString>
+		<Expand>
+			<Item Name="[count]" ExcludeView="simple">count</Item>
+			<Item Name="[capacity]" ExcludeView="simple">sizeof(items)/sizeof(items[0])</Item>
+			<ArrayItems>
+				<Size>count</Size>
+				<ValuePointer>items</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
 	<Type Name="Stack&lt;*&gt;">
 		<DisplayString>{{ count={sp} }}</DisplayString>
 		<Expand>

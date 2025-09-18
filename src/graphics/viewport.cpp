@@ -6,7 +6,7 @@ Viewport Viewport::create_from_render_target(const mem::Allocator& allocator, Re
 	Viewport vp = Viewport
 	{
 		.allocator = allocator,
-		.items = QueueArray<RenderItem, RenderItemID>::with_size(allocator, 16),
+		.items = FreeList<RenderItem, RenderItemID>::with_size(allocator, 16),
 		.rt = rt,
 		.viewport_size = Vector2I(),
 		.clear_color = Color(0, 0, 0, 255),

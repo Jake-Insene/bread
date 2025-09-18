@@ -26,29 +26,14 @@ void Area2D::enter()
 void Area2D::exit()
 {}
 
-void Area2D::add_shape(const Shape2D& new_shape)
+void Area2D::set_shape(const Shape2D& shape)
 {
-    Physics2D::area_add_shape(data.area_id, new_shape);
+    Physics2D::area_set_shape(data.area_id, shape);
 }
 
-void Area2D::remove_shape(usize index)
+Shape2D Area2D::get_shape()
 {
-    Physics2D::area_remove_shape(data.area_id, index);
-}
-
-usize Area2D::get_shape_count()
-{
-    return Physics2D::area_get_shape_count(data.area_id);
-}
-
-void Area2D::set_shape(usize index, const Shape2D& shape)
-{
-    Physics2D::area_set_shape(data.area_id, index, shape);
-}
-
-Shape2D Area2D::get_shape(usize index)
-{
-    return Physics2D::area_get_shape(data.area_id, index);
+    return Physics2D::area_get_shape(data.area_id);
 }
 
 void Area2D::set_residence_mask(CollisionMask mask)

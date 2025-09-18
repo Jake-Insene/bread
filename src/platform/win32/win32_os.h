@@ -1,12 +1,14 @@
 #pragma once
+#include "collections/free_list.h"
 #include "os/os.h"
 #include "platform/platform_header.h"
 
 
-struct Win32OS : OS
+struct Win32OS
 {
-    static constexpr usize MaxThreadCount = 16;
-    static constexpr usize MaxMutexCount = 1024;
+    static constexpr usize InitialThreadCount = 16;
+    static constexpr usize InitialMutexCount = 1024;
+    static constexpr usize InitialSemaphoreCount = 1024;
 
     static constexpr usize MaxThreadNameLen = 128;
 
@@ -19,6 +21,8 @@ struct Win32OS : OS
 
     struct ThreadData
     {
+        char name[MaxThreadNameLen];
+
         void* arg;
         OS::ThreadFn fn;
 
@@ -31,22 +35,58 @@ struct Win32OS : OS
     struct MutexData
     {
         SRWLOCK srw;
-        ThreadID lock_owner;
+        OS::ThreadID lock_owner;
+    };
 
-        bool allocated;
+    struct SemaphoreData
+    {
+        HANDLE handle;
     };
 
     struct InternalData
     {
-        ThreadData threads_data[MaxThreadCount];
-        MutexData mutex_data[MaxMutexCount];
+        mem::Allocator allocator;
+
+        FreeList<ThreadData, OS::ThreadID> threads;
+        FreeList<MutexData, OS::MutexID> mutexes;
+        FreeList<SemaphoreData, OS::SemaphoreID> semaphores;
     };
 
-    static inline InternalData data;
+    static inline Win32OS::InternalData data;
 
-    static ThreadID thread_data_allocate();
-    static ThreadData& thread_data_get(ThreadID tid);
+    [[nodiscard]] static mem::Allocator& get_allocator() { return data.allocator; }
 
-    static MutexID mutex_data_allocate();
-    static MutexData& mutex_data_get(MutexID mid);
+    static void initialize(const mem::Allocator& allocator);
+    static void shutdown();
+
+    static void exit(u64 code);
+    static usize get_page_size();
+
+    static OS::ThreadID thread_create(OS::ThreadFn fn, void* arg);
+    static void thread_destroy(OS::ThreadID tid);
+    static bool thread_join(OS::ThreadID tid);
+    static void thread_set_name(OS::ThreadID tid, StringView new_name);
+    static StringView thread_get_name(OS::ThreadID tid);
+
+    static OS::MutexID mutex_create();
+    static void mutex_destroy(OS::MutexID mid);
+    static void mutex_lock(OS::MutexID mid);
+    static bool mutex_try_lock(OS::MutexID mid);
+    static void mutex_unlock(OS::MutexID mid);
+
+    static OS::SemaphoreID semaphore_create(usize initial_value);
+    static void semaphore_destroy(OS::SemaphoreID sid);
+    static void semaphore_signal(OS::SemaphoreID sid);
+    static void semaphore_wait(OS::SemaphoreID sid);
+
+    static bool set_current_directory(StringView dir);
+
+    static OS::ThreadID thread_data_allocate();
+    static ThreadData& thread_data_get(OS::ThreadID tid);
+
+    static OS::MutexID mutex_data_allocate();
+    static MutexData& mutex_data_get(OS::MutexID mid);
+
+    static OS::SemaphoreID semaphore_data_allocate();
+    static SemaphoreData& semaphore_data_get(OS::SemaphoreID sid);
 };

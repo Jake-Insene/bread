@@ -62,7 +62,7 @@ Object* ObjectAllocator::allocate_object(const Object::Class* klass)
             chunk.last_free_id = InvalidObjectID;
         }
         
-        klass->vtable.construct.call(obj);
+        klass->vtable->construct.call(obj);
         obj->klass = klass;
         obj->id = copied_id;
         return obj;
@@ -86,7 +86,7 @@ Object* ObjectAllocator::allocate_object(const Object::Class* klass)
                 (Object*)(block.bytes.add(block.index * chunk.object_size).ptr());
             block.index++;
 
-            klass->vtable.construct.call(new_object);
+            klass->vtable->construct.call(new_object);
             new_object->id = new_id;
             new_object->klass = klass;
             return new_object;

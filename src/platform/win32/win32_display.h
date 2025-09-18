@@ -1,5 +1,5 @@
 #pragma once
-#include "collections/queue_array.h"
+#include "collections/free_list.h"
 #include "platform/platform_header.h"
 #include "display/display.h"
 
@@ -19,7 +19,7 @@ struct Win32Display
     {
         mem::Allocator allocator;
 
-        QueueArray<WindowData, Display::WindowID> windows;
+        FreeList<WindowData, Display::WindowID> windows;
         RECT fullscreen_rect;
     };
 

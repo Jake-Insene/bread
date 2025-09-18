@@ -2,6 +2,11 @@
 #include "core/types.h"
 #include "core/templates.h"
 
+
+/*
+* Contains a collection of T elements,
+* T The type of the elements in the slice.
+*/
 template<typename T>
 struct [[nodiscard]] Slice
 {

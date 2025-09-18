@@ -1,36 +1,18 @@
 #pragma once
-#include "collections/slice.h"
-#include "debug/debug.h"
+
+template<typename T>
+struct Slice;
 
 namespace mem
 {
     template<typename T>
-    inline Slice<u8> to_bytes(const Slice<T>& items)
-    {
-        return Slice<u8>(
-            (u8*)items.items,
-            items.len * sizeof(T)
-        );
-    }
+    inline Slice<u8> to_bytes(const Slice<T>& items);
 
     template<typename T>
-    inline Slice<const u8> to_const_bytes(const Slice<T>& items)
-    {
-        return Slice<const u8>(
-            (const u8*)items.items,
-            items.len * sizeof(T)
-        );
-    }
+    inline Slice<const u8> to_const_bytes(const Slice<T>& items);
     
     template<typename T>
-    inline Slice<T> from_bytes(const Slice<u8>& bytes)
-    {
-        return Slice<T>
-        {
-            (T*)bytes.items,
-            bytes.len / sizeof(T),
-        };
-    }
+    inline Slice<T> from_bytes(const Slice<u8>& bytes);
     
     template<typename T>
     constexpr T align_up(T value, T alignment)
@@ -45,54 +27,102 @@ namespace mem
     }
     
     template<typename T>
-    constexpr bool compare(Slice<const T> src1, Slice<const T> src2)
+    constexpr bool compare(Slice<const T> src1, Slice<const T> src2);
+
+    template<typename T>
+    constexpr void copy(Slice<T> dest, const Slice<const T>& src);
+
+    template<typename T>
+    constexpr void copy(Slice<T> dest, const Slice<T>& src);
+
+    template<typename T>
+    constexpr void set(Slice<T> dest, const T value);
+
+}
+
+
+#include "collections/slice.h"
+#include "debug/debug.h"
+
+namespace mem
+{
+
+template<typename T>
+inline Slice<u8> to_bytes(const Slice<T>& items)
+{
+    return Slice<u8>(
+        (u8*)items.items,
+        items.len * sizeof(T)
+    );
+}
+
+template<typename T>
+inline Slice<const u8> to_const_bytes(const Slice<T>& items)
+{
+    return Slice<const u8>(
+        (const u8*)items.items,
+        items.len * sizeof(T)
+    );
+}
+
+template<typename T>
+inline Slice<T> from_bytes(const Slice<u8>& bytes)
+{
+    return Slice<T>
     {
-        if(src1.len != src2.len)
+        (T*)bytes.items,
+            bytes.len / sizeof(T),
+    };
+}
+
+template<typename T>
+constexpr bool compare(Slice<const T> src1, Slice<const T> src2)
+{
+    if (src1.len != src2.len)
+    {
+        return false;
+    }
+
+    for (usize i = 0; i < src1.len; i++)
+    {
+        if (src1[i] != src2[i])
         {
             return false;
         }
-        
-        for(usize i = 0; i < src1.len; i++)
-        {
-            if(src1[i] != src2[i])
-            {
-                return false;
-            }
-        }
-        
-        return true;
     }
 
+    return true;
+}
 
-    template<typename T>
-    constexpr void copy(Slice<T> dest, const Slice<const T>& src)
+template<typename T>
+constexpr void copy(Slice<T> dest, const Slice<const T>& src)
+{
+    DebugAssert(dest.len >= src.len, "invalid destination");
+
+    for (usize i = 0; i < src.len; i++)
     {
-        DebugAssert(dest.len >= src.len, "invalid destination");
-
-        for(usize i = 0; i < src.len; i++)
-        {
-            dest[i] = src[i];
-        }
+        dest[i] = src[i];
     }
+}
 
-    template<typename T>
-    constexpr void copy(Slice<T> dest, const Slice<T>& src)
+template<typename T>
+constexpr void copy(Slice<T> dest, const Slice<T>& src)
+{
+    DebugAssert(dest.len >= src.len, "invalid destination");
+
+    for (usize i = 0; i < src.len; i++)
     {
-        DebugAssert(dest.len >= src.len, "invalid destination");
-
-        for (usize i = 0; i < src.len; i++)
-        {
-            dest[i] = src[i];
-        }
+        dest[i] = src[i];
     }
+}
 
-    template<typename T>
-    constexpr void set(Slice<T> dest, const T value)
+template<typename T>
+constexpr void set(Slice<T> dest, const T value)
+{
+    for (usize i = 0; i < dest.len; i++)
     {
-        for(usize i = 0; i < dest.len; i++)
-        {
-            dest[i] = value;
-        }
+        dest[i] = value;
     }
+}
 
 }

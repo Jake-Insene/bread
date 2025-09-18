@@ -39,11 +39,8 @@ struct Body2D : Object2D
     void set_type(Body2D::BodyType new_type);
     Body2D::BodyType get_type() const { return data.type;}
     
-    void add_shape(const Shape2D& new_shape);
-    void remove_shape(usize index);
-    usize get_shape_count();
-    void set_shape(usize index, const Shape2D& shape);
-    Shape2D get_shape(usize index);
+    void set_shape(const Shape2D& shape);
+    Shape2D get_shape();
     
     void set_velocity(const Vector2& new_velocity);
     Vector2 get_velocity() const { return data.velocity; }

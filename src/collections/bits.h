@@ -2,6 +2,7 @@
 #include "core/types.h"
 #include "debug/assertion.h"
 
+
 template<usize bits = sizeof(usize)*8>
 struct [[nodiscard]] BitField
 {

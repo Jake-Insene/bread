@@ -30,11 +30,17 @@ template<typename T>
     i64 xi = i64(x);
 
     if (x == xi)
+    {
         return T(xi);
+    }
     else if (x < 0)
+    {
         return T(xi);
+    }
     else
+    {
         return T(xi + 1);
+    }
 }
 
 template<typename T>

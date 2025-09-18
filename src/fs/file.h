@@ -16,16 +16,6 @@ namespace io
 struct Writer;
 }
 
-namespace fmt
-{
-template<typename... TArgs>
-struct FormatString;
-
-template<typename... TArgs>
-void format(const io::Writer& writer, FormatString<TypeIdentity<TArgs>...>, TArgs...);
-
-}
-
 struct File
 {
     enum OpenMode
@@ -56,9 +46,5 @@ struct File
 
     io::Writer writer();
 };
-
-#include "fmt/fmt.h"
-
-
 
 

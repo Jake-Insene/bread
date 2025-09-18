@@ -46,6 +46,23 @@ struct [[nodiscard]] Array
         return array;
     }
     
+    template<typename... TList>
+    static constexpr Array from_list(const mem::Allocator& allocator, const TList... list)
+    {
+        static constexpr usize ListLen = sizeof...(list);
+        Array array =
+        {
+            .allocator = allocator,
+            .items = allocator.array<T>(ListLen),
+            .count = ListLen,
+        };
+
+        const T list_array[] = { list... };
+        mem::copy(array.items, Slice(list_array, ListLen));
+
+        return array;
+    }
+
     void destroy()
     {
         if(items.ptr())

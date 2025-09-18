@@ -29,11 +29,8 @@ struct Area2D : Object2D
     void enter();
     void exit();
 
-    void add_shape(const Shape2D& new_shape);
-    void remove_shape(usize index);
-    usize get_shape_count();
-    void set_shape(usize index, const Shape2D& shape);
-    Shape2D get_shape(usize index);
+    void set_shape(const Shape2D& shape);
+    Shape2D get_shape();
 
     void set_residence_mask(CollisionMask mask);
     [[nodiscard]] CollisionMask get_residence_mask() const { return data.residence_mask; }

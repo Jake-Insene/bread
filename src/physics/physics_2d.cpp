@@ -20,7 +20,7 @@ void Physics2D::initialize(const mem::Allocator& allocator, Physics2D::DriverTyp
     data.properties = StringMap<PropertyValue>::with_size(data.allocator, 4);
     data.properties.insert("/gravity", Property::Vector2(0, -98));
     data.properties.insert("/debug_draw", Property::Bool(false));
-    data.properties.insert("/tile_size", Property::Integer(100));
+    data.properties.insert("/tile_size", Property::Integer(64));
 
     vtable.initialize(allocator);
 }

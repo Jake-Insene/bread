@@ -5,8 +5,8 @@
 
 void CanvasObject::_bind_vtable(CanvasObject::VTable& vtable)
 {
-    vtable.is_inside.bind(&CanvasObject::is_inside);
-    vtable.get_rect.bind(&CanvasObject::get_rect);
+    BindVTable(vtable, is_inside, &CanvasObject::is_inside);
+    BindVTable(vtable, get_rect, &CanvasObject::get_rect);
 };
 
 

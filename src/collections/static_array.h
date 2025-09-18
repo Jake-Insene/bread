@@ -30,6 +30,23 @@ struct [[nodiscard]] StaticArray
         return array;
     }
 
+    template<typename... TList>
+    static constexpr StaticArray from_list(const TList... list)
+    {
+        static constexpr usize ListLen = sizeof...(list);
+        DebugAssert(N >= ListLen, "Static Array size is too small for the provided items");
+        StaticArray array =
+        {
+            .count = ListLen,
+        };
+
+        const T list_array[] = { list... };
+        Slice<T> dest = Slice(array.items, N);
+        mem::copy(dest, Slice(list_array, ListLen));
+
+        return array;
+    }
+
     [[nodiscard]] constexpr T& operator[](const usize index)
     {
         DebugAssert(index < count, "index out of range");

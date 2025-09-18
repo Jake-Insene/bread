@@ -1,11 +1,10 @@
 #pragma once
-#include "core/header.h"
+#include "os/os.h"
+
 
 struct [[nodiscard]] Mutex
 {
-    using MutexID = ID<u32>;
-
-    MutexID id;
+    OS::MutexID id;
 
     static Mutex create();
 

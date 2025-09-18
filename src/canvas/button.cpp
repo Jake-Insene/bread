@@ -8,7 +8,7 @@
 
 void Button::_bind_vtable(VTable& vtable)
 {
-    vtable.is_inside.bind(&Button::is_inside);
+    BindVTable(vtable, is_inside, &Button::is_inside);
 }
 
 void Button::init(const CreateInfo&)

@@ -5,11 +5,10 @@
 namespace math
 {
 
-template<typename T>
-[[nodiscard]] constexpr i64 floor(T value)
+template<typename T, typename Integer = Conditional<IsSame<T, f32>, i32, i64>>
+[[nodiscard]] constexpr Integer floor(T value)
 {
-    static_assert(IsArithmetic<T>, "expected arithmetic type");
-    using Integer = i64;
+    static_assert(IsFloatingPoint<T>, "expected floating point type");
     const Integer i = Integer(value);
     return (value < 0 && value != static_cast<T>(i)) ? (i - 1) : i;
 }

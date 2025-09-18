@@ -1,6 +1,7 @@
 #pragma once
 #include "core/types.h"
 
+
 // Type comparison
 template<typename A, typename B>
 inline constexpr bool IsSame = false;

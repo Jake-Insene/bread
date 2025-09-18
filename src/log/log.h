@@ -20,6 +20,7 @@ struct Log
     static void info(const fmt::FormatString<TypeIdentity<TArgs>...> fmt, TArgs... args);
 };
 
+#include "fmt/fmt.h"
 #include "fs/file.h"
 #include "io/writer.h"
 

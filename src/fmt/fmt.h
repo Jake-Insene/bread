@@ -3,6 +3,11 @@
 
 struct StringView;
 
+namespace io
+{
+struct Writer;
+}
+
 
 namespace fmt
 {

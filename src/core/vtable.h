@@ -27,3 +27,4 @@
     (*self.*self->vtable.fn)(__VA_ARGS__)
 
 #define VTCastGet(field, func) (decltype(field))&func
+

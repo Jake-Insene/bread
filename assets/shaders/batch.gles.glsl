@@ -55,7 +55,7 @@ layout(location = 3) flat out uint flags;
 
 #if defined(CIRCLE)
 layout(location = 4) out vec2 local_position;
-layout(location = 5) out float radius;
+layout(location = 5) flat out float radius;
 #endif
 
 #define FLAG_FLIP_H 0x1U
@@ -163,18 +163,7 @@ void main()
     gl_Position = out_pos;
 
     // Applying color
-    uint color_uint = input_color;
-    uint color_r = color_uint & 255U;
-    uint color_g = (color_uint >> 8U) & 255U;
-    uint color_b = (color_uint >> 16U) & 255U;
-    uint color_a = (color_uint >> 24U) & 255U;
-    color = vec4(
-        float(color_r),
-        float(color_g),
-        float(color_b),
-        float(color_a)
-    );
-    color /= 255.0;
+    color = unpackUnorm4x8(input_color);
 }
 
 
@@ -191,7 +180,7 @@ layout(location = 3) flat in uint flags;
 
 #if defined(CIRCLE)
 layout(location = 4) in vec2 local_position;
-layout(location = 5) in float radius;
+layout(location = 5) flat in float radius;
 #endif
 
 layout(location = 0) out vec4 frag_color;

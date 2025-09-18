@@ -98,8 +98,8 @@ void GLESMemoryAllocator::initialize(const mem::Allocator& allocator)
     data.allocator = allocator;
 
     data.buffers = Array<GLESBuffer>::with_size(allocator, 4);
-    data.textures = QueueArray<GLESTexture, ResourceID>::with_size(allocator, 4);
-    data.render_targets = QueueArray<GLESRenderTarget, RenderTargetID>::with_size(allocator, 4);
+    data.textures = FreeList<GLESTexture, ResourceID>::with_size(allocator, 4);
+    data.render_targets = FreeList<GLESRenderTarget, RenderTargetID>::with_size(allocator, 4);
 
     // Allocating the backbuffer we should present this instead of a intermediate backbuffer.
     GLESRenderTarget& rt = render_target_allocate();

@@ -1,6 +1,6 @@
 #pragma once
 #include "audio/audio.h"
-#include "collections/queue_array.h"
+#include "collections/free_list.h"
 #include "platform/platform_header.h"
 
 #define XAudio2Fatal(...) Fatal("[XAudio2Driver]: " __VA_ARGS__)
@@ -44,7 +44,7 @@ struct XAudio2Driver
 	{
 		mem::Allocator allocator;
 
-		QueueArray<SourceVoice, Audio::SourceVoiceID> source_voices;
+		FreeList<SourceVoice, Audio::SourceVoiceID> source_voices;
 
 		IXAudio2* xaudio;
 		IXAudio2MasteringVoice* master_voice;

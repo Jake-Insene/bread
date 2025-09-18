@@ -64,28 +64,32 @@
     }\
     static Class* get_class()\
     {\
-        static name::VTable vtable = []()\
+        static bool is_initialized = false;\
+        static Class klass = {};\
+        static name::VTable vtable = {};\
+        if(!is_initialized)\
         {\
-            name::VTable tmp = {};\
-            tmp.construct.bind([](Object* obj) -> void { ::new ((name*)obj) name(); });\
-            tmp.init.bind(&name::initv);\
-            tmp.deinit.bind(&name::deinitv);\
-            tmp.enter.bind(&name::enterv);\
-            tmp.internal_update.bind(&name::internal_updatev);\
-            tmp.update.bind(&name::update);\
-            tmp.render.bind(&name::render);\
-            tmp.exit.bind(&name::exitv);\
-            tmp.event.bind(&name::eventv);\
-            name::_try_bind_vtable(tmp);\
-            return tmp;\
-        }();\
-        static Class klass\
-        {\
-            .super_class = base::get_class(),\
-            .class_name = #name,\
-            .class_size = sizeof(name),\
-            .vtable = vtable,\
-        };\
+            vtable = []()\
+            {\
+                name::VTable tmp = {};\
+                tmp.construct.bind([](Object* obj) -> void { ::new ((name*)obj) name(); });\
+                tmp.init.bind(&name::initv);\
+                tmp.deinit.bind(&name::deinitv);\
+                tmp.enter.bind(&name::enterv);\
+                tmp.internal_update.bind(&name::internal_updatev);\
+                tmp.update.bind(&name::update);\
+                tmp.render.bind(&name::render);\
+                tmp.exit.bind(&name::exitv);\
+                tmp.event.bind(&name::eventv);\
+                name::_try_bind_vtable(tmp);\
+                return tmp;\
+            }();\
+            klass.super_class = base::get_class();\
+            klass.class_name = #name;\
+            klass.class_size = sizeof(name);\
+            klass.vtable = &vtable;\
+            is_initialized = true;\
+        }\
         return &klass;\
     }\
     \
@@ -100,13 +104,15 @@
 // Don't use VTableCall because it reference the member vtable that
 // is not in an object.
 #define ObjectCall(name, ...) \
-    static_cast<RemoveConstPointer<decltype(this)>::VTable&>(klass->vtable).name.call(this, __VA_ARGS__)
+    static_cast<RemoveConstPointer<decltype(this)>::VTable&>(*klass->vtable).name.call(this, __VA_ARGS__)
 
 #define ObjectCallRef(ref, name, ...) \
-    static_cast<RemoveConstPointer<decltype(ref)>::VTable&>(ref->klass->vtable).name.call(ref, __VA_ARGS__)
+    static_cast<RemoveConstPointer<decltype(ref)>::VTable&>(*ref->klass->vtable).name.call(ref, __VA_ARGS__)
 
 
 #define DefineVTable(base) struct VTable : base::VTable
+
+#define BindVTable(vtable, func_name, address) vtable.func_name.bind(address)
 
 struct Object;
 struct InputEvent;
@@ -146,13 +152,13 @@ struct Object
         Class* super_class;
         StringView class_name;
         usize class_size;
-        VTable& vtable;
+        VTable* vtable;
     };
 
     static void* _get_bind_vtable() { return reinterpret_cast<void*>(&Object::_bind_vtable); }
 
-    static void _try_bind_vtable(VTable& vtable) {}
-    static void _bind_vtable(VTable& vtable);
+    static void _try_bind_vtable(VTable&) {}
+    static void _bind_vtable(VTable&);
 
     static Class* get_class()
     {
@@ -176,7 +182,7 @@ struct Object
             .super_class = nullptr,
             .class_name = "Object",
             .class_size = sizeof(Object),
-            .vtable = vtable,
+            .vtable = &vtable,
         };
 
         return &klass;

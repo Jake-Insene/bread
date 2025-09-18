@@ -1,5 +1,5 @@
 #pragma once
-#include "collections/queue_array.h"
+#include "collections/free_list.h"
 #include "graphics/gles/gles_driver.h"
 #include "resource/resource_id.h"
 
@@ -48,8 +48,8 @@ struct GLESMemoryAllocator
         usize allocated_bytes;
 
         Array<GLESBuffer> buffers;
-        QueueArray<GLESTexture, TextureID> textures;
-        QueueArray<GLESRenderTarget, RenderTargetID> render_targets;
+        FreeList<GLESTexture, TextureID> textures;
+        FreeList<GLESRenderTarget, RenderTargetID> render_targets;
     };
 
     enum UpdateMemoryHint

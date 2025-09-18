@@ -74,11 +74,8 @@ struct Physics2D
         VTFunc(AreaID, create_area, Object2D*);
         VTFunc(void, destroy_area, AreaID);
 
-        VTFunc(void, body_add_shape, BodyID, const Shape2D&);
-        VTFunc(void, body_remove_shape, BodyID, usize);
-        VTFunc(usize, body_get_shape_count, BodyID);
-        VTFunc(void, body_set_shape, BodyID, usize, const Shape2D&);
-        VTFunc(Shape2D, body_get_shape, BodyID, usize);
+        VTFunc(void, body_set_shape, BodyID, const Shape2D&);
+        VTFunc(Shape2D, body_get_shape, BodyID);
 
         VTFunc(void, body_set_type, BodyID, BodyType);
         VTFunc(void, body_set_velocity, BodyID, const Vector2&);
@@ -100,11 +97,8 @@ struct Physics2D
         VTFunc(CollisionMask, body_get_collision_mask, BodyID);
         VTFunc(void, body_set_on_collide, BodyID, void*, EventOnCollide);
 
-        VTFunc(void, area_add_shape, AreaID, const Shape2D&);
-        VTFunc(void, area_remove_shape, AreaID, usize);
-        VTFunc(usize, area_get_shape_count, AreaID);
-        VTFunc(void, area_set_shape, AreaID, usize, const Shape2D&);
-        VTFunc(Shape2D, area_get_shape, AreaID, usize);
+        VTFunc(void, area_set_shape, AreaID, const Shape2D&);
+        VTFunc(Shape2D, area_get_shape, AreaID);
 
         VTFunc(void, area_set_residence_mask, AreaID, CollisionMask);
         VTFunc(CollisionMask, area_get_residence_mask, AreaID);
@@ -136,11 +130,8 @@ struct Physics2D
     VTFuncDefArg1RetS(AreaID, create_area, Object2D*);
     VTFuncDefArg1S(destroy_area, AreaID);
 
-    VTFuncDefArg2S(body_add_shape, BodyID, const Shape2D&);
-    VTFuncDefArg2S(body_remove_shape, BodyID, usize);
-    VTFuncDefArg1RetS(usize, body_get_shape_count, BodyID);
-    VTFuncDefArg3S(body_set_shape, BodyID, usize, const Shape2D&);
-    VTFuncDefArg2RetS(Shape2D, body_get_shape, BodyID, usize);
+    VTFuncDefArg2S(body_set_shape, BodyID, const Shape2D&);
+    VTFuncDefArg1RetS(Shape2D, body_get_shape, BodyID);
 
     VTFuncDefArg2S(body_set_type, BodyID, BodyType);
     VTFuncDefArg2S(body_set_velocity, BodyID, const Vector2&);
@@ -162,11 +153,8 @@ struct Physics2D
     VTFuncDefArg1RetS(CollisionMask, body_get_collision_mask, BodyID);
     VTFuncDefArg3S(body_set_on_collide, BodyID, void*, EventOnCollide);
 
-    VTFuncDefArg2S(area_add_shape, AreaID, const Shape2D&);
-    VTFuncDefArg2S(area_remove_shape, AreaID, usize);
-    VTFuncDefArg1RetS(usize, area_get_shape_count, AreaID);
-    VTFuncDefArg3S(area_set_shape, AreaID, usize, const Shape2D&);
-    VTFuncDefArg2RetS(Shape2D, area_get_shape, AreaID, usize);
+    VTFuncDefArg2S(area_set_shape, AreaID, const Shape2D&);
+    VTFuncDefArg1RetS(Shape2D, area_get_shape, AreaID);
 
     VTFuncDefArg2S(area_set_residence_mask, AreaID, CollisionMask);
     VTFuncDefArg1RetS(CollisionMask, area_get_residence_mask, AreaID);

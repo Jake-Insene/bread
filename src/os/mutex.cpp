@@ -1,7 +1,5 @@
 #include "os/mutex.h"
 
-#include "os/os.h"
-
 
 Mutex Mutex::create()
 {

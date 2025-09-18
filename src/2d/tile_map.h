@@ -13,7 +13,7 @@ struct TileMap : Object2D
 		TileSet* tile_set;
 
 		// Only when there is a tile with a shape.
-		Physics2D::BodyID body_id;
+		Array<Physics2D::BodyID> bodies;
 	} data;
 
 	void init(const CreateInfo&);
@@ -24,5 +24,5 @@ struct TileMap : Object2D
 	void set_tile_set(TileSet* new_tile_set);
 	TileSet* get_tile_set() const { return data.tile_set; }
 
-	void _try_create_physics_body();
+	Physics2D::BodyID _try_create_physics_body();
 };

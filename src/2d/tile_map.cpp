@@ -6,14 +6,18 @@
 void TileMap::init(const CreateInfo&)
 {
 	mark(MARK_RENDER);
+
+	data.bodies = Array<Physics2D::BodyID>::with_size(allocator, 4);
 }
 
 void TileMap::deinit()
 {
-	if (data.body_id != Physics2D::BodyID::InvalidID)
+	for (auto body_id : data.bodies)
 	{
-		Physics2D::destroy_body(data.body_id);
+		Physics2D::destroy_body(body_id);
 	}
+
+	data.bodies.destroy();
 }
 
 void TileMap::render()
@@ -64,7 +68,6 @@ void TileMap::set_tile_set(TileSet* new_tile_set)
 	if (data.tile_set == nullptr || tiles.len == 0)
 		return;
 
-	_try_create_physics_body();
 
 	Vector2 tile_size = Vector2(data.tile_set->get_tile_size());
 	usize shape_count = 0;
@@ -73,12 +76,14 @@ void TileMap::set_tile_set(TileSet* new_tile_set)
 		if (tile.has_shape_2d == false)
 			continue;
 
+		Physics2D::BodyID body_id = _try_create_physics_body();
+
 		shape_count++;
 		Vector2 position = Vector2(tile.position);
 		Shape2D tile_shape = Shape2D::make_box(tile_size / 2);
 
 		tile_shape.translate(position * tile_size);
-		Physics2D::body_add_shape(data.body_id, tile_shape);
+		Physics2D::body_set_shape(body_id, tile_shape);
 	}
 
 	usize ptr_id = (usize)id.id;
@@ -86,12 +91,10 @@ void TileMap::set_tile_set(TileSet* new_tile_set)
 }
 
 
-void TileMap::_try_create_physics_body()
+Physics2D::BodyID TileMap::_try_create_physics_body()
 {
-	if (data.body_id != Physics2D::BodyID::InvalidID)
-		return;
-
-	data.body_id = Physics2D::create_body(this);
-	Physics2D::body_set_type(data.body_id, Physics2D::STATIC);
-
+	Physics2D::BodyID body_id = Physics2D::create_body(this);
+	Physics2D::body_set_type(body_id, Physics2D::STATIC);
+	(void)data.bodies.add(body_id);
+	return body_id;
 }

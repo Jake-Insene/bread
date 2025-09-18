@@ -1,5 +1,8 @@
 #include "fs/file.h"
 
+#include "collections/slice.h"
+#include "io/writer.h"
+
 
 io::Writer File::writer()
 {

@@ -1,7 +1,9 @@
 #pragma once
 #include "collections/slice.h"
 
-inline constexpr usize __string_len(const char* str)
+
+template<typename T>
+inline constexpr usize __string_len(const T* str)
 {
     usize len = 0;
     while(*str++)

@@ -32,17 +32,18 @@ void operator delete(void*)
 void Engine::initialize()
 {
     data.allocator = {};
-
-    data.main_queue = JobQueue::create_with_size(data.allocator.allocator(), DefaultMainQueueSize);
-    data.fps = 60;
-
     auto allocator = data.allocator.allocator();
+
+    // To use thread and mutexes.
+    OS::initialize(allocator);
+
+    data.main_queue = JobQueue::create_with_size(allocator, DefaultMainQueueSize);
+    data.fps = 60;
 
     // Going to the assets folder, crash is intended
     FailOn(OS::set_current_directory("assets") == false, "assets directory not found")
 
     Time::initialize();
-    OS::initialize();
 
     ObjectAllocator::initialize();
 
@@ -84,10 +85,12 @@ void Engine::shutdown()
     Display::shutdown();
     ObjectAllocator::shutdown();
 
-    OS::shutdown();
     Time::shutdown();
 
     data.main_queue.destroy();
+
+    OS::shutdown();
+
     data.allocator.destroy();
 }
 

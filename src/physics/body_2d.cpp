@@ -34,29 +34,14 @@ void Body2D::set_type(Body2D::BodyType new_type)
     data.air_friction = Physics2D::body_get_air_friction(data.body_id);
 }
 
-void Body2D::add_shape(const Shape2D& new_shape)
+void Body2D::set_shape(const Shape2D& shape)
 {
-    Physics2D::body_add_shape(data.body_id, new_shape);
+    Physics2D::body_set_shape(data.body_id, shape);
 }
 
-void Body2D::remove_shape(usize index)
+Shape2D Body2D::get_shape()
 {
-    Physics2D::body_remove_shape(data.body_id, index);
-}
-
-usize Body2D::get_shape_count()
-{
-    return Physics2D::body_get_shape_count(data.body_id);
-}
-
-void Body2D::set_shape(usize index, const Shape2D& shape)
-{
-    Physics2D::body_set_shape(data.body_id, index, shape);
-}
-
-Shape2D Body2D::get_shape(usize index)
-{
-    return Physics2D::body_get_shape(data.body_id, index);
+    return Physics2D::body_get_shape(data.body_id);
 }
 
 void Body2D::set_velocity(const Vector2& new_velocity)

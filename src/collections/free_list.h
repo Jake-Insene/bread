@@ -2,10 +2,12 @@
 #include "collections/array.h"
 
 
-// A array that reuse the empty elements to create local unique identifier.
-// Useful for local system resource referenced as an ID.
+/*
+* A array that can reuse empty slots.
+* Useful for local system resource referenced as an ID.
+*/
 template<typename T, typename SlotID = u32>
-struct [[nodiscard]] QueueArray
+struct [[nodiscard]] FreeList
 {
     static constexpr SlotID _get_invalid_slot_value()
     {
@@ -31,9 +33,9 @@ struct [[nodiscard]] QueueArray
     SlotID last_free_element;
     u32 count;
 
-    static QueueArray from_allocator(mem::Allocator& allocator)
+    static FreeList from_allocator(mem::Allocator& allocator)
     {
-        return QueueArray
+        return FreeList
         {
             .array = Array<T>::with_allocator(allocator),
             .last_free_element = InvalidSlot,
@@ -41,9 +43,9 @@ struct [[nodiscard]] QueueArray
         };
     }
 
-    static QueueArray with_size(const mem::Allocator& allocator, const SlotID size)
+    static FreeList with_size(const mem::Allocator& allocator, const SlotID size)
     {
-        return QueueArray
+        return FreeList
         {
             .array = Array<T>::with_size(allocator, size),
             .last_free_element = InvalidSlot,
