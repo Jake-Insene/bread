@@ -2,7 +2,8 @@
 
 struct Debug
 {
-    static void breakpoint()
+    
+    [[noreturn]] static void breakpoint()
     {
 #if defined(ENGINE_WIN32)
         __debugbreak();

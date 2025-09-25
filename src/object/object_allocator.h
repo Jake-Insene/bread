@@ -51,12 +51,14 @@ struct ObjectAllocator
     static Object* get_by_id(ObjectID& id);
 };
 
-// Create an object of the given type.
-// It don't put it in the scene tree, you must explicitly call add_child.
+/*
+* Create an object of the given type.
+* It don't put it in the scene tree, you must explicitly call add_child.
+*/ 
 template<typename T>
+    requires(IsObjectBase<T>)
 [[nodiscard]] inline T* CreateObject()
 {
-    static_assert(!IsSame<Object, T>, "You cannot allocate an Object class directly");
     return reinterpret_cast<T*>(
         ObjectAllocator::allocate_class(
             T::get_class()
@@ -64,17 +66,12 @@ template<typename T>
     );
 }
 
-// Destroy the given object.
-// You should use this only if obj is not in the scene,
-// use remove_child instead.
-inline void DestroyObject(Object* obj)
-{
-    ObjectAllocator::destroy_object(obj);
-}
 
-
-// Get the object referenced by the id.
+/*
+* Get the object referenced by the id.
+*/
 template<typename T>
+    requires(IsObjectBase<T>)
 [[nodiscard]] inline T* GetObjectByID(ObjectID id)
 {
     return reinterpret_cast<T*>(ObjectAllocator::get_by_id(id));

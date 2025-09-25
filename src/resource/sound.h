@@ -1,4 +1,5 @@
 #pragma once
+#include "collections/error.h"
 #include "audio/audio.h"
 #include "resource/resource.h"
 
@@ -17,7 +18,7 @@ struct Sound : Resource
     void init();
     void destroy();
 
-    void load(StringView file_path);
+    Error load(StringView file_path);
 
     [[nodiscard]] Audio::SourceVoiceID get_source_voice() const { return data.source_voice; }
 };

@@ -75,7 +75,7 @@ void main()
     int index = gl_VertexID & 3;
 #endif
 
-    // Top left always, center 'rect'
+    // Top left always
 #if defined(QUAD) || defined(CIRCLE) || defined(SPRITE)
     // Vertex
     // Indices 0, 1, 2, 2, 3, 0
@@ -99,7 +99,9 @@ void main()
     }
 
 #if defined(CIRCLE)
-    local_position = vertice * 2;
+    // Always centered
+    vertice += vec2(-0.5, 0.5);
+    local_position = vertice;
     radius = input_radius;
 #endif
 #endif
@@ -153,6 +155,8 @@ void main()
     mat2 matrix_transform = transform;
     out_pos.xy = matrix_transform * out_pos.xy;
     out_pos.xy += transform_translation;
+#elif defined(CIRCLE)
+    out_pos.xy += input_point;
 #endif
 
 #if !defined(UI_SPRITE)
@@ -283,10 +287,10 @@ void main()
 #elif defined(QUAD) || defined(PRIMITIVE)
     frag_color = color;
 #elif defined(CIRCLE)
-    float distance = 1.0 - length(vec3(local_position, 0));
-    float circle = smoothstep(0.0, 0.005, distance);
-    circle *= smoothstep(10 + 0.005, 10, distance);
+    float edge_smoothness = 0.005;
+    float dist = distance(vec2(0, 0), local_position);
+    float alpha = 1.0 - smoothstep(0.5 - edge_smoothness, 0.5 + edge_smoothness, dist);
     frag_color = color;
-    frag_color.a *= circle;
+    frag_color.a *= alpha;
 #endif
 }

@@ -3,6 +3,8 @@
 #include "debug/assertion.h"
 #include "math/funcs.h"
 
+
+
 template <typename T>
 union [[nodiscard]] Vector2T
 {
@@ -40,7 +42,7 @@ union [[nodiscard]] Vector2T
 
     static constexpr Vector2T rotate_around_point(const Vector2T& vertice, const Vector2T& point, const T rot)
     {
-        Vector2T rotated{};
+        Vector2T rotated = Vector2T();
 
         const Vector2T direction = vertice - point;
 
@@ -59,7 +61,7 @@ union [[nodiscard]] Vector2T
         return math::lerp<Vector2T>(v0, v1, t);
     }
     
-    constexpr Vector2T() = default;
+    constexpr Vector2T() : x(T(0)), y(T(0)) {};
     constexpr explicit Vector2T(const T _x, const T _y) : x(_x), y(_y) {}
     constexpr explicit Vector2T(const T v) : x(v), y(v) {}
     
@@ -211,23 +213,31 @@ union [[nodiscard]] Vector2T
 
     constexpr Vector2T normal() const
     {
-		return Vector2T(y, -x);
+		return Vector2T(-y, x);
     }
 };
 
 using Vector2 = Vector2T<f32>;
 using Vector2I = Vector2T<i32>;
 
+namespace fmt
+{
+
+template<>
+void format_custom<Vector2>(const io::Writer& writer, const Vector2& v);
+
+template<>
+void format_custom<Vector2I>(const io::Writer& writer, const Vector2I& v);
+
+}
+
 namespace math
 {
     template<typename T>
+        requires(IsArithmetic<T>)
     [[nodiscard]] constexpr T to_range(const T v, const Vector2T<T>& orange, const Vector2T<T>& nrange)
     {
-        static_assert(
-            IsArithmetic<T>,
-            "expected arithmetic type"
-        );
-        
         return nrange.min + ((v - orange.min) / (orange.max - orange.min)) * (nrange.max - nrange.min);
     }
 }
+

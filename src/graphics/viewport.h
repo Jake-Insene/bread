@@ -11,7 +11,7 @@
 */
 struct [[nodiscard]] Viewport
 {
-    static constexpr usize DefaultCommandBufferSize = 1024 * 16;
+    static constexpr usize DefaultCommandBufferSize = 1024;
 
     enum ViewportLayerMask
     {
@@ -41,6 +41,8 @@ struct [[nodiscard]] Viewport
         enum CommandType
         {
             CMD_RECT,
+            CMD_LINE,
+            CMD_CIRCLE,
             CMD_SPRITE,
             CMD_UI_SPRITE,
         };
@@ -48,13 +50,27 @@ struct [[nodiscard]] Viewport
         struct alignas(16) Command
         {
             CommandType type;
-            Command* next;
+            usize next;
         };
 
         struct CommandRect : Command
         {
             Transform2D transform;
             Rect2D rect;
+            Color color;
+        };
+
+        struct CommandLine : Command
+        {
+            Vector2 point1;
+            Vector2 point2;
+            Color color;
+        };
+
+        struct CommandCircle : Command
+        {
+            Vector2 center;
+            f32 radius;
             Color color;
         };
 
@@ -76,29 +92,46 @@ struct [[nodiscard]] Viewport
         };
 
         RenderItemID self = RenderItemID::InvalidID;
+        mem::Allocator allocator;
         ViewportLayerMask layers = ViewportLayerMask(0);
 
         Slice<u8> command_buffer = {};
         usize offset = 0;
-        Command* begin = nullptr;
-        Command* end = nullptr;
+        usize last_element = usize(-1);
+
+        [[nodiscard]] Command* begin() { return reinterpret_cast<Command*>(command_buffer.ptr()); }
+        [[nodiscard]] Command* end() { return reinterpret_cast<Command*>(command_buffer.ptr() + offset); }
+
+        [[nodiscard]] Command* get_command_at(usize cmd_offset)
+        {
+            return reinterpret_cast<Command*>(command_buffer.ptr() + cmd_offset);
+        }
 
         template<typename T>
         T* alloc()
         {
-            T* new_cmd = reinterpret_cast<T*>(command_buffer.add(offset).ptr());
-            new_cmd->next = nullptr;
-            offset += sizeof(T);
-
-            if (begin == nullptr)
+            if (offset + sizeof(T) > command_buffer.len)
             {
-                begin = new_cmd;
-                end = new_cmd;
+                auto new_command_buffer = allocator.alloc(command_buffer.len * 2, alignof(RenderItem::Command));
+                mem::copy(new_command_buffer, command_buffer);
+                allocator.free(command_buffer);
+                command_buffer = new_command_buffer;
+            }
+
+            DebugAssert(offset < command_buffer.len, "command buffer full!");
+            T* new_cmd = reinterpret_cast<T*>(command_buffer.add(offset).ptr());
+            usize cmd_offset = usize(new_cmd) - usize(begin());
+            offset += sizeof(T);
+            new_cmd->next = offset;
+
+            if (last_element == usize(-1))
+            {
+                last_element = cmd_offset;
             }
             else
             {
-                end->next = new_cmd;
-                end = new_cmd;
+                get_command_at(last_element)->next = cmd_offset;
+                last_element = cmd_offset;
             }
 
             return new_cmd;
@@ -106,9 +139,8 @@ struct [[nodiscard]] Viewport
 
         void reset()
         {
-            begin = nullptr;
-            end = nullptr;
             offset = 0;
+            last_element = usize(-1);
         }
     };
 
@@ -153,12 +185,18 @@ struct [[nodiscard]] Viewport
     void item_set_layers(RenderItemID render_item_id, ViewportLayerMask layers);
     ViewportLayerMask item_get_layers(RenderItemID render_item_id);
 
+    void render_item_draw_rect(RenderItemID render_item_id, const Transform2D& transform, 
+        const Rect2D& dest_rect, Color color);
+
+    void render_item_draw_line(RenderItemID render_item_id,
+        const Vector2& point1, const Vector2& point2, Color color);
+
+    void render_item_draw_circle(RenderItemID render_item_id,
+        const Vector2& center, f32 radius, Color color);
+
     void render_item_draw_sprite(RenderItemID render_item_id, const Transform2D& transform, TextureID texture, 
         const Rect2D& rect, const Rect2D& src_rect, Color mod_color, RenderFlags flags);
 
     void render_item_draw_ui_sprite(RenderItemID render_item_id, const Transform2D& transform, TextureID texture,
         const Rect2D& rect, const Rect2D& src_rect, Color mod_color, RenderFlags flags);
-
-    void render_item_draw_rect(RenderItemID render_item_id, const Transform2D& transform, 
-        const Rect2D& dest_rect, Color color);
 };

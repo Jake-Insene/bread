@@ -82,21 +82,6 @@ struct [[nodiscard]] String
         }
     }
 
-    // Conversion
-    template<typename T>
-    void set_from_integer(T integer)
-    {
-        static_assert(IsInteger<T>, "an integer type was expected");
-        if constexpr (IsSigned<T>)
-        {
-            _set_from_signed(integer);
-        }
-        else
-        {
-            _set_from_unsigned(integer);
-        }
-    }
-
     [[nodiscard]] bool equals(StringView str) const;
     [[nodiscard]] bool ends_with(StringView str) const;
     

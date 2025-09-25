@@ -115,7 +115,7 @@ struct FormatString
 	StringView view() const;
 };
 
-template<typename... TArgs>
+template<bool NewLine, typename... TArgs>
 void format(const io::Writer& writer, FormatString<TypeIdentity<TArgs>...> fmt, TArgs...);
 
 }
@@ -139,9 +139,9 @@ template<usize Base>
 inline constexpr bool IsValidBase = IsAnyOfValue<usize, Base, 2, 10, 16>;
 
 template<usize Base, typename T>
+	requires(IsValidBase<Base>)
 inline void __format_integer(const io::Writer& writer, T arg)
 {
-	static_assert(IsValidBase<Base>, "invalid integer base");
 	StringResult result = StringUtility::integer_to_string<T>(arg, Base);
 	writer.write(Slice(result.result + result.begin, result.len));
 }
@@ -154,15 +154,22 @@ inline void __format_floating_point(const io::Writer& writer, T arg, i32 decimal
 }
 
 template<typename T>
+void format_custom(const io::Writer& writer, const T& arg);
+
+template<typename T>
 void __format_single_argument(const io::Writer& writer, T arg)
 {
 	static constexpr fmt::FormatType type = fmt::__GetFormatType<T>;
 	if constexpr (type == fmt::FormatType::Bool)
 	{
 		if (arg)
+		{
 			writer.write(mem::to_const_bytes(StringView("true")));
+		}
 		else 
+		{
 			writer.write(mem::to_const_bytes(StringView("false")));
+		}
 	}
 	else if constexpr (type == fmt::FormatType::Signed || type == fmt::FormatType::Unsigned)
 	{
@@ -180,6 +187,10 @@ void __format_single_argument(const io::Writer& writer, T arg)
 	{
 		__format_integer<16, usize>(writer, usize(arg));
 	}
+	else if constexpr (type == fmt::FormatType::String)
+	{
+		writer.write(mem::to_const_bytes(arg.view()));
+	}
 	else if constexpr (type == fmt::FormatType::StringView)
 	{
 		writer.write(mem::to_const_bytes(arg));
@@ -187,6 +198,10 @@ void __format_single_argument(const io::Writer& writer, T arg)
 	else if constexpr (type == fmt::FormatType::CChars)
 	{
 		writer.write(mem::to_const_bytes(StringView(arg, __string_len(arg))));
+	}
+	else
+	{
+		format_custom<T>(writer, arg);
 	}
 }
 
@@ -213,7 +228,7 @@ void __format_argument(const io::Writer& writer, const StringView view, fmt::For
 	}
 }
 
-template<typename... TArgs>
+template<bool NewLine, typename... TArgs>
 void format(const io::Writer& writer, FormatString<TypeIdentity<TArgs>...> fmtstring, TArgs... args)
 {
 	using FString = FormatString<TypeIdentity<TArgs>...>;
@@ -224,9 +239,12 @@ void format(const io::Writer& writer, FormatString<TypeIdentity<TArgs>...> fmtst
 	else
 		__format_argument<FString::WriteIntervalCount, TArgs...>(writer, view, fmtstring, args...);
 
-	u8 _character = '\n';
-	Slice<u8> new_line = { &_character, 1 };
-	writer.write(new_line);
+	if constexpr (NewLine)
+	{
+		u8 _character = '\n';
+		Slice<u8> new_line = { &_character, 1 };
+		writer.write(new_line);
+	}
 }
 
 }

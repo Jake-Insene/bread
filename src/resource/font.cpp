@@ -69,12 +69,12 @@ void Font::destroy()
 }
 
 
-void Font::load_from_file(StringView file_path)
+Error Font::load(StringView file_path)
 {
     if (File::exists(file_path) == false)
     {
         RMFatal("Couldn't load the font '{}'", file_path);
-        return;
+        return MakeError(FileNotFound);
     }
 
     auto allocator = ResourceManager::get_allocator();
@@ -93,6 +93,8 @@ void Font::load_from_file(StringView file_path)
     _load_theme(&font, default_theme);
     
     allocator.free(content);
+
+    return Ok;
 }
 
 const Font::FontTheme& Font::get_font_theme(i32 font_size)

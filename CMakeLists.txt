@@ -26,7 +26,7 @@ if(MSVC)
         BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} 
         "/W3"  "/Oi" "/Zl" "/GS-" "/GR-" "/EHs-" "/EHc-" "/Zc:threadSafeInit-"
         # Some warnings needs to be treated as error because we eliminated the compiler runtime,
-        # so now is more easy to create errors.
+        # so now is more easy to create bugs.
         "/we4701" "/we4700" "/we4101" "/we4703" "/we4189"
     )
     set(BREAD_LINK_OPTIONS ${BREAD_LINK_OPTIONS} "/NODEFAULTLIBS")
@@ -59,6 +59,13 @@ file(GLOB EXTERNAL_SRC
 )
 
 file(GLOB ENGINE_SRC
+    src/2d/animated_sprite_2d.cpp
+    src/2d/camera_2d.cpp
+    src/2d/object_2d.cpp
+    src/2d/sprite_2d.cpp
+    src/2d/text_2d.cpp
+    src/2d/tile_map.cpp
+
     src/audio/audio.cpp
 
     src/canvas/button.cpp
@@ -67,13 +74,7 @@ file(GLOB ENGINE_SRC
     src/canvas/label.cpp
     src/canvas/progress_bar.cpp
 
-    src/2d/animated_sprite_2d.cpp
-    src/2d/camera_2d.cpp
-    src/2d/object_2d.cpp
-    src/2d/sprite_2d.cpp
-    src/2d/text_2d.cpp
-    src/2d/tile_map.cpp
-
+    src/collections/error.cpp
     src/collections/job_queue.cpp
     src/collections/string.cpp
     
@@ -96,6 +97,8 @@ file(GLOB ENGINE_SRC
     src/io/writer.cpp
 
     src/log/log.cpp
+
+    src/math/vec2.cpp
     
     src/mem/utils.cpp
     src/mem/generic_allocator.cpp
@@ -114,9 +117,12 @@ file(GLOB ENGINE_SRC
     src/physics/area_2d.cpp
     src/physics/body_2d.cpp
     src/physics/physics_2d.cpp
+    src/physics/shape_2d.cpp
 
     # Default 2d physics driver
+    src/physics/p2d/p2d_collision.cpp
     src/physics/p2d/p2d_driver.cpp
+    src/physics/p2d/p2d_shape.cpp
 
     src/resource/font.cpp
     src/resource/image.cpp

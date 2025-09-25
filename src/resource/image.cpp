@@ -20,12 +20,12 @@ void Image::destroy()
     }
 }
 
-bool Image::load(StringView file_path)
+Error Image::load(StringView file_path)
 {
     if (File::exists(file_path) == false)
     {
         RMFatal("Couldn't load the image '{}'", file_path);
-        return false;
+        return MakeError(FileNotFound);
     }
 
     Slice<u8> buffer = File::read_all(ResourceManager::get_allocator(), file_path);
@@ -37,7 +37,7 @@ bool Image::load(StringView file_path)
 
     if(pixels.null())
     {
-        return false;
+        return MakeError(ImageCorrupted);
     }
     
     if(channels == 3)
@@ -56,7 +56,7 @@ bool Image::load(StringView file_path)
     pixels.len = size.width * size.height * channels;
     ResourceManager::get_allocator().free(buffer);
     
-    return true;
+    return Ok;
 }
 
 void Image::unload()

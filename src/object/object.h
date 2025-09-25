@@ -126,6 +126,8 @@ using MarkName = u64;
 */
 struct Object
 {
+    static constexpr bool IsObject = true;
+
     struct CreateInfo
     {
         mem::Allocator allocator;
@@ -463,4 +465,11 @@ struct Object
     * @param event Contains information about the input that triggers the call.
     */
     void event(const InputEvent& event) RequireMark(MARK_EVENT) Function(FunctionPropagate);
+};
+
+
+template<typename T>
+concept IsObjectBase = requires
+{
+    T::IsObject;
 };

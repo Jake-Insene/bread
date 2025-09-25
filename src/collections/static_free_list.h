@@ -7,6 +7,7 @@
 * Useful for local system resource referenced as an ID.
 */
 template<typename T, usize N, typename SlotID = u32>
+    requires(sizeof(T) >= sizeof(SlotID))
 struct [[nodiscard]] StaticFreeList
 {
     static constexpr SlotID _get_invalid_slot_value()
@@ -23,11 +24,6 @@ struct [[nodiscard]] StaticFreeList
 
     static constexpr SlotID InvalidSlot = _get_invalid_slot_value();
     static constexpr SlotID SlotBitmask = SlotID(~0U);
-
-    static_assert(
-        sizeof(T) >= sizeof(SlotID),
-        "T in size must to be greater or equal to the size of SlotType"
-        );
 
     StaticArray<T, N> array;
     SlotID last_free_element;

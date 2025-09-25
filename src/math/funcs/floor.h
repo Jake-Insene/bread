@@ -6,9 +6,9 @@ namespace math
 {
 
 template<typename T, typename Integer = Conditional<IsSame<T, f32>, i32, i64>>
+    requires(IsFloatingPoint<T>)
 [[nodiscard]] constexpr Integer floor(T value)
 {
-    static_assert(IsFloatingPoint<T>, "expected floating point type");
     const Integer i = Integer(value);
     return (value < 0 && value != static_cast<T>(i)) ? (i - 1) : i;
 }

@@ -3,6 +3,10 @@
 #include "debug/assertion.h"
 
 
+/*
+* Set/unset a collection of bits.
+* Useful for flags.
+*/
 template<usize bits = sizeof(usize)*8>
 struct [[nodiscard]] BitField
 {

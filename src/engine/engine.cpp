@@ -59,9 +59,6 @@ void Engine::initialize()
     ResourceManager::initialize(allocator);
     SceneManager::initialize(allocator);
 
-    // Default resources
-    data.white_texture = GetResource<Texture2D>("default/white.png");
-
     Engine::get_main_window().set_size(__configuration__.viewport_size);
     SceneManager::set_keep_viewport(__configuration__.keep_viewport);
     SceneManager::set_viewport_size(__configuration__.viewport_size);

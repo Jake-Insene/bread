@@ -61,10 +61,9 @@ constexpr i64 __pow_integer(FP base, i64 exp)
 }
 
 template<typename T>
+    requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T pow(T x, T y)
 {
-    static_assert(IsArithmetic<T>, "expected arithmetic type");
-
     if constexpr (IsInteger<T>)
     {
         return T(__pow_integer<f64>(f64(x), i64(y)));

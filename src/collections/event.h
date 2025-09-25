@@ -2,53 +2,6 @@
 #include "core/templates.h"
 
 
-template<typename Fn>
-struct IsMemberFunctionT
-{
-	static constexpr bool Value = false;
-};
-
-template<typename RT, typename T, typename... TArgs>
-struct IsMemberFunctionT<RT(T::*)(TArgs...)>
-{
-	static constexpr bool Value = true;
-};
-
-template<typename RT, typename T, typename... TArgs>
-struct IsMemberFunctionT<RT(T::*)(TArgs...) const>
-{
-	static constexpr bool Value = true;
-};
-
-template<typename Fn>
-inline constexpr bool IsMemberFunction = IsMemberFunctionT<Fn>::Value;
-
-template<typename Fn>
-struct EventFnDecomposed {};
-
-template<typename RT, typename... TArgs>
-struct EventFnDecomposed<RT(*)(TArgs...)>
-{
-	using ReturnType = RT;
-};
-
-template<typename RT, typename T, typename... TArgs>
-struct EventFnDecomposed<RT(T::*)(TArgs...)>
-{
-	static constexpr bool IsConst = false;
-	using ReturnType = RT;
-	using ObjectType = T;
-};
-
-template<typename RT, typename T, typename... TArgs>
-struct EventFnDecomposed<RT(T::*)(TArgs...) const>
-{
-	static constexpr bool IsConst = true;
-	using ReturnType = RT;
-	using ObjectType = T;
-};
-
-
 template<typename Fn, bool UseInstance>
 struct EventStorage
 {
@@ -86,7 +39,7 @@ struct EventStorage<RT(T::*)(TArgs...) const, false>
 template<typename Fn, bool UseInstance = true>
 struct [[nodiscard]] Event
 {
-	using Decomposed = EventFnDecomposed<Fn>;
+	using Decomposed = FunctionDecomposed<Fn>;
 	using ReturnType = Decomposed::ReturnType;
 
 	EventStorage<Fn, UseInstance> storage{};

@@ -1,5 +1,6 @@
 #pragma once
 #include "collections/array.h"
+#include "collections/error.h"
 #include "graphics/graphics.h"
 #include "resource/resource.h"
 #include "resource/resource_id.h"
@@ -37,7 +38,7 @@ struct Font : Resource
 	void init();
 	void destroy();
 
-	void load_from_file(StringView file_path);
+	Error load(StringView file_path);
 
 	[[nodiscard]] const FontTheme& get_font_theme(i32 font_size);
 

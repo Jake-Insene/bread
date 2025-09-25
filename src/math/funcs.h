@@ -1,6 +1,7 @@
 #pragma once
 #include "core/templates.h"
 #include "core/macros.h"
+#include "core/test.h"
 
 #include "math/funcs/abs.h"
 #include "math/funcs/acos.h"
@@ -13,20 +14,22 @@
 #include "math/funcs/sqrt.h"
 #include "math/funcs/tan.h"
 
+#include <cmath>
+
 namespace math
 {
 
 template<typename Result, typename T>
+    requires(IsInteger<Result> && IsArithmetic<T>)
 [[nodiscard]] constexpr Result trunc(T value)
 {
-    static_assert(IsInteger<Result> && IsArithmetic<T>, "expected arithmetic type");
     return Result(value);
 }
 
 template<typename T>
+    requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T ceil(T x)
 {
-    static_assert(IsArithmetic<T>, "expected arithmetic type");
     i64 xi = i64(x);
 
     if (x == xi)
@@ -44,32 +47,32 @@ template<typename T>
 }
 
 template<typename T>
+    requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T sign(T v)
 {
-    static_assert(IsArithmetic<T>, "expected arithmetic type");
     return v > 0 ? T(1) : v < 0 ? T(-1) : T(0);
 }
 
 template<typename T>
+    requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T clamp(T value, T min, T max)
 {
-    static_assert(IsArithmetic<T>, "expected arithmetic type");
     return value < min ? min
         : value > max ? max
         : value;
 }
 
 template<typename T>
+    requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T dist(T a, T b)
 {
     return ::math::abs(b - a);
 }
 
 template<typename T>
+    requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T next_pow2(const T n)
 {
-    static_assert(IsArithmetic<T>, "expected arithmetic type");
-
     if (n == 0)
     {
         return 1;
@@ -86,6 +89,7 @@ template<typename T>
 
 
 template<typename T, typename... TArgs>
+    requires(IsArithmetic<T> && (IsArithmetic<TArgs> && ...))
 [[nodiscard]] constexpr T min(T a, TArgs... args)
 {
     if constexpr (sizeof...(args) == 0)
@@ -99,6 +103,7 @@ template<typename T, typename... TArgs>
 }
 
 template<typename T, typename... TArgs>
+    requires(IsArithmetic<T> && (IsArithmetic<TArgs> && ...))
 [[nodiscard]] constexpr T max(T a, TArgs... args)
 {
     if constexpr (sizeof...(args) == 0)
@@ -112,6 +117,7 @@ template<typename T, typename... TArgs>
 }
 
 template<typename T>
+    requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T lerp(const T start, const T end, const T step)
 {
     return start + (end - start) * step;
@@ -119,6 +125,7 @@ template<typename T>
 
 template<typename T>
 [[nodiscard]] constexpr T move_to(const T start, const T end, T step)
+    requires(IsArithmetic<T>)
 {
     return dist<T>(start, end) <= step ? end : start + sign(end - start) * step;
 }
@@ -126,10 +133,9 @@ template<typename T>
 // Mod
 
 template<typename T>
+    requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T mod(T a, T b)
 {
-    static_assert(IsArithmetic<T>, "expected arithmetic type");
-
     if constexpr (IsInteger<T>)
     {
         return a % b;
@@ -145,23 +151,24 @@ template<typename T>
 // Angles
 
 template<typename T>
+    requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T rads(const T degrees)
 {
-    static_assert(IsArithmetic<T>, "expected arithmetic type");
-    return (PI<T> / 180) * degrees;
+    return (PI<T> / T(180)) * degrees;
 }
 
 template<typename T>
+    requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T degrees(const T rads)
 {
-    static_assert(IsArithmetic<T>, "expected arithmetic type");
-    return (180 / PI<T>) * rads;
+    return (T(180) / PI<T>) * rads;
 }
 
 /*
 * @param r Angle in radians, compute the sine(x)
 */
 template<typename T>
+    requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T sin(T r)
 {
     return impl::sin_approx<T>(r);
@@ -171,6 +178,7 @@ template<typename T>
 * @param r Angle in radians, compute the cosine(x)
 */
 template<typename T>
+    requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T cos(T r)
 {
     return impl::cos_approx<T>(r);
@@ -180,6 +188,7 @@ template<typename T>
 * @param r Angle in radians, compute the tan(x)
 */
 template<typename T>
+    requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T tan(T r)
 {
     return impl::tan_approx<T>(r);
@@ -189,15 +198,19 @@ template<typename T>
 * @param r Angle in radians, compute the acos(x)
 */
 template<typename T>
+    requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T acos(T r)
 {
     return impl::acos_approx(r);
 }
 
 template<typename T>
+    requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T atan2(T y, T x)
 {
     return impl::atan2_approx<T>(y, x);
 }
 
 }
+
+

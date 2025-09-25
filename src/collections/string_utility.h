@@ -56,10 +56,9 @@ struct StringUtility
 	}
 
 	template<typename T>
+		requires(IsInteger<T>)
 	static constexpr StringResult integer_to_string(T integer, i32 base)
 	{
-		static_assert(IsSigned<T> || IsUnsigned<T>, "expected a integer type");
-
 		using Unsigned = MakeUnsigned<T>;
 		StringResult result = {};
 		auto end = result.result + 64;

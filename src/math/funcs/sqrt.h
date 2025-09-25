@@ -6,9 +6,9 @@ namespace math
 {
 
 template<typename T>
+    requires(IsFloatingPoint<T>)
 [[nodiscard]] constexpr T sqrt(T n)
 {
-    static_assert(IsFloatingPoint<T>, "expected floating point type");
     // TODO: Improve this
     if (n == T(0))
         return n;

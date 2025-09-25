@@ -5,10 +5,9 @@ namespace math
 {
 
 template<typename T>
+    requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T log2(T n)
 {
-    static_assert(IsArithmetic<T>, "expected arithmetic type");
-
     if constexpr (IsInteger<T>)
     {
         T result = 0;

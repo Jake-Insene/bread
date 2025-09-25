@@ -50,12 +50,12 @@ void Sound::destroy()
     Audio::destroy_source_voice(data.source_voice);
 }
 
-void Sound::load(StringView file_path)
+Error Sound::load(StringView file_path)
 {
     if (File::exists(file_path) == false)
     {
         RMFatal("Couldn't load the sound file '{}'", file_path);
-        return;
+        return MakeError(FileNotFound);
     }
 
     auto allocator = ResourceManager::get_allocator();
@@ -87,4 +87,6 @@ void Sound::load(StringView file_path)
     drwav_uninit(&wav);
     allocator.free(buffer);
     allocator.free(content);
+
+    return Ok;
 }

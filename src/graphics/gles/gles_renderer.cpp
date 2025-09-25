@@ -492,8 +492,8 @@ void GLESRenderer::render(Viewport* viewport)
 
 void GLESRenderer::_render_item_draw(Viewport::RenderItem& item)
 {
-    Viewport::RenderItem::Command* cmd = item.begin;
-    for (; cmd != nullptr; cmd = cmd->next)
+    Viewport::RenderItem::Command* cmd = item.begin();
+    for (; cmd != item.end(); cmd = item.get_command_at(cmd->next))
     {
         switch (cmd->type)
         {
@@ -502,7 +502,6 @@ void GLESRenderer::_render_item_draw(Viewport::RenderItem& item)
             auto rect = reinterpret_cast<Viewport::RenderItem::CommandRect*>(cmd);
             if (data.quad_batch.count >= MaxInstancesPerBatch)
             {
-                update_scene_uniform();
                 end_quad_batch();
             }
 
@@ -516,6 +515,44 @@ void GLESRenderer::_render_item_draw(Viewport::RenderItem& item)
             data.quad_batch.instances[index].color = rect->color;
 
             data.quad_batch.count++;
+        }
+        break;
+        case Viewport::RenderItem::CMD_LINE:
+        {
+            auto line = reinterpret_cast<Viewport::RenderItem::CommandLine*>(cmd);
+            if (data.primitive_batch.count >= MaxPrimitivePointsPerBatch)
+            {
+                end_primitive_batch();
+            }
+
+            u32 index = data.primitive_batch.count;
+
+            data.primitive_batch.primitives[index].point = line->point1;
+            data.primitive_batch.primitives[index].color = line->color;
+            data.primitive_batch.primitives[index].flags = 0;
+
+            data.primitive_batch.primitives[index + 1].point = line->point2;
+            data.primitive_batch.primitives[index + 1].color = line->color;
+            data.primitive_batch.primitives[index + 1].flags = 0;
+
+            data.primitive_batch.count += 2;
+        }
+        break;
+        case Viewport::RenderItem::CMD_CIRCLE:
+        {
+            auto circle = reinterpret_cast<Viewport::RenderItem::CommandCircle*>(cmd);
+            if (data.primitive_circle_batch.count >= MaxPrimitiveCirclesPerBatch)
+            {
+                end_primitive_circle_batch();
+            }
+
+            u32 index = data.primitive_circle_batch.count;
+
+            data.primitive_circle_batch.primitives[index].point = circle->center;
+            data.primitive_circle_batch.primitives[index].color = circle->color;
+            data.primitive_circle_batch.primitives[index].radius = circle->radius;
+
+            data.primitive_circle_batch.count++;
         }
         break;
         case Viewport::RenderItem::CMD_SPRITE:
@@ -658,44 +695,6 @@ void GLESRenderer::_render_item_draw(Viewport::RenderItem& item)
             data.ui_sprite_batch.count++;
         }
         break;
-        /*case RenderCommand::DRAW_LINE:
-        {
-            if (data.primitive_batch.count >= MaxPrimitivePointsPerBatch)
-            {
-                update_scene_uniform();
-                end_primitive_batch();
-            }
-
-            u32 index = data.primitive_batch.count;
-
-            data.primitive_batch.primitives[index].point = cmd.line.start;
-            data.primitive_batch.primitives[index].color = cmd.line.color;
-            data.primitive_batch.primitives[index].flags = 0;
-
-            data.primitive_batch.primitives[index + 1].point = cmd.line.end;
-            data.primitive_batch.primitives[index + 1].color = cmd.line.color;
-            data.primitive_batch.primitives[index + 1].flags = 0;
-
-            data.primitive_batch.count += 2;
-        }
-        break;
-        case RenderCommand::DRAW_CIRCLE:
-        {
-            if (data.primitive_circle_batch.count >= MaxPrimitiveCirclesPerBatch)
-            {
-                update_scene_uniform();
-                end_primitive_circle_batch();
-            }
-
-            u32 index = data.primitive_circle_batch.count;
-
-            data.primitive_circle_batch.primitives[index].point = cmd.circle.point;
-            data.primitive_circle_batch.primitives[index].color = cmd.circle.color;
-            data.primitive_circle_batch.primitives[index].radius = cmd.circle.radius;
-
-            data.primitive_circle_batch.count++;
-        }
-        break;*/
         default:
             break;
         }

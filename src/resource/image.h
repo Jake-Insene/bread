@@ -1,4 +1,5 @@
 #pragma once
+#include "collections/error.h"
 #include "resource/resource.h"
 #include "math/vec2.h"
 
@@ -22,7 +23,7 @@ struct Image : Resource
     void init();
     void destroy();
     
-    [[nodiscard]] bool load(StringView file_path);
+    Error load(StringView file_path);
     void unload();
 };
 

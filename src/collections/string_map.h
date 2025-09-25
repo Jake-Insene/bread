@@ -6,6 +6,9 @@
 #include "mem/utils.h"
 
 
+/*
+* A collection of items referenced as a string.
+*/
 template<typename T>
 struct [[nodiscard]] StringMap
 {

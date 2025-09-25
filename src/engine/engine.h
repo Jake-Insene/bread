@@ -34,13 +34,13 @@
 
 #define AnimationEnd() }; __sprite_animation__->add_animation(__animation_name__, __frames__, __loop__); }
 
-#define AnimationFrame(texture_path, duration) SpriteAnimation::SpriteFrame(GetResource<Texture2D>(texture_path), duration),
+#define AnimationFrame(texture_path, duration) SpriteAnimation::SpriteFrame(GetResource<Texture2D>(texture_path).value(), duration),
 
 
 // TileSet
 #define TileSetBegin(set_name, texture_path, tile_size, ...) {\
     TileSet* __tile_set__ = ResourceManager::create_tile_set(set_name, tile_size);\
-    __tile_set__->set_texture(GetResource<Texture2D>(texture_path));
+    __tile_set__->set_texture(GetResource<Texture2D>(texture_path).value());
 
 #define TileSetEnd() }
 

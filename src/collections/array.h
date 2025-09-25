@@ -4,6 +4,10 @@
 #include "mem/utils.h"
 
 
+/*
+* A collection of linear memory that contains items of type T.
+* You can add/remove or clear it.
+*/
 template<typename T>
 struct [[nodiscard]] Array
 {

@@ -82,7 +82,7 @@ void ResourceManager::shutdown()
     data.cached_images.destroy();
 }
 
-Resource* ResourceManager::load_resource(ResourceType type,
+Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
     ResourceTypeSpecification, StringView path)
 {
     switch (type)
@@ -114,27 +114,57 @@ Resource* ResourceManager::load_resource(ResourceType type,
         {
             return data.resources.get(path);
         }
-        return nullptr;
+        return MakeError(ResourceNotFound);
     }
     break;
     default:
-        return nullptr;
+        break;
     }
 
-    return nullptr;
+    return MakeError(InvalidResourceType);
 }
 
 
-bool ResourceManager::place_resource(StringView path, Resource* resource)
+bool ResourceManager::place_resource(StringView resource_name, Resource* resource)
 {
-    if (data.resources.has(path))
+    if (data.resources.has(resource_name))
         return false;
 
-    data.resources.insert(path, resource);
+    data.resources.insert(resource_name, resource);
     return true;
 }
 
-Image* ResourceManager::_load_image(StringView path)
+SpriteAnimation* ResourceManager::create_sprite_animation(StringView name)
+{
+    if (data.resources.has(name))
+    {
+        FailOn(true, "SpriteAnimation already create");
+        return nullptr;
+    }
+
+    SpriteAnimation* sprite_animation = _create_resource<SpriteAnimation>();
+    data.resources.insert(name, sprite_animation);
+
+    sprite_animation->path.set("local");
+    return sprite_animation;
+}
+
+TileSet* ResourceManager::create_tile_set(StringView name, Vector2I tile_size)
+{
+    if (data.resources.has(name))
+    {
+        FailOn(true, "TileSet already create");
+        return nullptr;
+    }
+
+    TileSet* tile_set = _create_resource<TileSet>();
+    data.resources.insert(name, tile_set);
+    tile_set->path.set("local");
+    tile_set->set_tile_size(tile_size);
+    return tile_set;
+}
+
+Result<Resource*, Error> ResourceManager::_load_image(StringView path)
 {
     Image* image = nullptr;
     if (data.resources.has(path))
@@ -144,20 +174,24 @@ Image* ResourceManager::_load_image(StringView path)
     else
     {
         Image tmp_image{};
-        if (!tmp_image.load(path))
-            return nullptr;
+
+        Error load_result = tmp_image.load(path);
+        if (!load_result)
+        {
+            return load_result;
+        }
 
         image = _create_resource<Image>();
         *image = tmp_image;
         image->path.set(path);
-        data.resources.insert(path, (Resource*)image);
+        (void)place_resource(path, image);
     }
 
     return image;
 }
 
 
-Texture2D* ResourceManager::_load_texture_2d(StringView path, const TextureLoadInfo& load_info)
+Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, const TextureLoadInfo& load_info)
 {
     Image* image = nullptr;
     if(data.resources.has(path))
@@ -168,10 +202,11 @@ Texture2D* ResourceManager::_load_texture_2d(StringView path, const TextureLoadI
     {
         image = _create_resource<Image>();
         image->path.set(path);
-        data.resources.insert(path, (Resource*)image);
+        (void)place_resource(path, image);
         
-        if (!image->load(path))
-            return nullptr;
+        Error load_result = image->load(path);
+        if (!load_result)
+            return load_result;
     }
     
     Texture2D* tex = nullptr;
@@ -204,21 +239,25 @@ Texture2D* ResourceManager::_load_texture_2d(StringView path, const TextureLoadI
     return tex;
 }
 
-Sound* ResourceManager::_load_sound(StringView path)
+Result<Resource*, Error> ResourceManager::_load_sound(StringView path)
 {
     if (data.resources.has(path))
     {
         return (Sound*)data.resources.get(path);
     }
 
-    Sound* new_font = _create_resource<Sound>();
-    new_font->load(path);
+    Sound* new_sound = _create_resource<Sound>();
+    Error load_result = new_sound->load(path);
+    if (!load_result)
+    {
+        return load_result;
+    }
 
-    data.resources.insert(path, new_font);
-    return new_font;
+    (void)place_resource(path, new_sound);
+    return new_sound;
 }
 
-Font* ResourceManager::_load_font(StringView path)
+Result<Resource*, Error> ResourceManager::_load_font(StringView path)
 {
     if (data.resources.has(path))
     {
@@ -226,38 +265,13 @@ Font* ResourceManager::_load_font(StringView path)
     }
 
     Font* new_font = _create_resource<Font>();
-    new_font->load_from_file(path);
+    Error load_result = new_font->load(path);
+    if (!load_result)
+    {
+        return load_result;
+    }
 
-    data.resources.insert(path, new_font);
+    (void)place_resource(path, new_font);
     return new_font;
 }
 
-SpriteAnimation* ResourceManager::create_sprite_animation(StringView name)
-{
-    if (data.resources.has(name))
-    {
-        FailOn(true, "SpriteAnimation already create");
-        return nullptr;
-    }
-
-    SpriteAnimation* sprite_animation = _create_resource<SpriteAnimation>();
-    data.resources.insert(name, sprite_animation);
-
-    sprite_animation->path.set("local");
-    return sprite_animation;
-}
-
-TileSet* ResourceManager::create_tile_set(StringView name, Vector2I tile_size)
-{
-    if (data.resources.has(name))
-    {
-        FailOn(true, "TileSet already create");
-        return nullptr;
-    }
-
-    TileSet* tile_set = _create_resource<TileSet>();
-    data.resources.insert(name, tile_set);
-    tile_set->path.set("local");
-    tile_set->set_tile_size(tile_size);
-    return tile_set;
-}

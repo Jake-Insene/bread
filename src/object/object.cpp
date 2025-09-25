@@ -110,7 +110,7 @@ void Object::remove_child(Object* child)
 {
     data.childs.remove_equal(child);
     ObjectCallRef(child, exit);
-    DestroyObject(child);
+    ObjectAllocator::destroy_object(child);
 }
 
 void Object::queue_free()
@@ -138,7 +138,7 @@ void Object::deinit()
     
     for(auto& child : data.childs)
     {
-        DestroyObject(child);
+        ObjectAllocator::destroy_object(child);
     }
 
     data.childs.destroy();

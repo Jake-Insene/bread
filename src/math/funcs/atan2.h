@@ -8,13 +8,9 @@ namespace math::impl
 
 // I don't know how this works.
 template<typename T>
+    requires(IsArithmetic<T>)
 constexpr T atan2_approx(T y, T x)
 {
-    static_assert(
-        IsArithmetic<T>,
-        "expected arithmetic type"
-    );
-
     if (x == T(0.0))
     {
         if (y > T(0.0))

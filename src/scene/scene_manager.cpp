@@ -47,7 +47,7 @@ void SceneManager::shutdown()
     if(data.current_scene)
     {
 		ObjectCallRef(data.current_scene, exit);
-        DestroyObject(data.current_scene);
+        ObjectAllocator::destroy_object(data.current_scene);
     }
 
     data.touched_focus.destroy();
@@ -284,7 +284,7 @@ void SceneManager::_handle_change_scene()
 
     data.change_scene.requested = false;
     ObjectCallRef(data.current_scene, exit);
-    DestroyObject(data.current_scene);
+    ObjectAllocator::destroy_object(data.current_scene);
 
     data.current_scene = data.change_scene.new_scene;
     data.change_scene.new_scene = nullptr;
@@ -295,11 +295,11 @@ Vector2 SceneManager::_screen_make_local_to_canvas(const Vector2& pos)
 {
     // converting touch/mouse position into local canvas position
     const Vector2 window_size = Vector2(Engine::get_main_window().get_size());
-    const Vector2 display_size = Vector2(get_viewport_size());
+    const Vector2 viewport_size = Vector2(get_viewport_size());
 
     // normalized position
     const Vector2 normalized_pos = pos / window_size;
-    const Vector2 canvas_pos = normalized_pos * display_size;
+    const Vector2 canvas_pos = normalized_pos * viewport_size;
 
     return canvas_pos;
 }
@@ -330,7 +330,7 @@ void SceneManager::_queue_free(Object* parent, Object* child)
     }
     else
     {
-        DestroyObject(child);
+        ObjectAllocator::destroy_object(child);
     }
 }
 

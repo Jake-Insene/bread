@@ -1,7 +1,9 @@
 #include "physics/p2d/p2d_driver.h"
 
 #include "graphics/viewport.h"
+#include "physics/area_2d.h"
 #include "physics/body_2d.h"
+#include "2d/tile_map.h"
 
 
 
@@ -106,24 +108,21 @@ void P2DDriver::shutdown()
 
 void P2DDriver::step(f32 dt)
 {
+    for (auto area_id : data.active_areas)
+    {
+        Area& area = _get_area(area_id);
+        _area_recompute_tiles(area);
+        _check_area_collision(area);
+        _handle_debug_draw_area(area);
+    }
+
     for(auto body_id : data.active_bodies)
     {
         Body& body = _get_body(body_id);
-        _step_body(body, dt);
+        _move_body(body, dt);
+        _body_recompute_tiles(body);
+        _check_body_collision(body);
         _handle_debug_draw_body(_get_body(body_id));
-    }
-   
-    for (usize i = 0; i < Physics2D::MAX_COLLISION_MASKS; i++)
-    {
-        CollisionMaskGroup& group = data.mask_groups[i];
-        if (group.active == false)
-            continue;
-
-        for (auto body_id : group.bodies)
-        {
-            Body& b = _get_body(body_id);
-            _check_body_in_areas(b);
-        }
     }
 
     _resolve_collision_callbacks();
@@ -131,16 +130,8 @@ void P2DDriver::step(f32 dt)
     for (auto& body_id : data.active_bodies)
     {
         Body& body = _get_body(body_id);
-        _body_recompute_tiles(body);
         body.moved = false;
     }
-
-    for(auto& area_id : data.active_areas)
-    {
-        Area& area = _get_area(area_id);
-        _handle_debug_draw_area(area);
-    }
-
 }
 
 Physics2D::BodyID P2DDriver::create_body(Object2D* object)
@@ -156,7 +147,7 @@ Physics2D::BodyID P2DDriver::create_body(Object2D* object)
 
     new_body.collision_mask = Physics2D::CollisionMask(Physics2D::DEFAULT_COLLISION_MASK);
 
-    new_body.shape = Shape2D::make_box(Vector2(0));
+    new_body.shape = P2DShape();
     new_body.tiles_on = Array<PhysicsTileCoord>::with_size(get_allocator(), 4);
 
     return id;
@@ -190,7 +181,7 @@ Physics2D::AreaID P2DDriver::create_area(Object2D* object)
     new_area.residence_mask = Physics2D::CollisionMask(Physics2D::DEFAULT_COLLISION_MASK);
     _active_area(id);
 
-    new_area.shape = Shape2D::make_box(Vector2());
+    new_area.shape = P2DShape();
     new_area.bodies_inside = HashMap<Physics2D::BodyID, Area::BodyInArea>::with_size(get_allocator(), 4);
     new_area.tiles_on = Array<PhysicsTileCoord>::with_size(get_allocator(), 4);
 
@@ -210,14 +201,14 @@ void P2DDriver::destroy_area(Physics2D::AreaID area_id)
 void P2DDriver::body_set_shape(Physics2D::BodyID body_id, const Shape2D& shape)
 {
     Body& body = _get_body(body_id);
-    body.shape = shape;
+    body.shape = P2DShape::from_shape_2d(shape);
     _body_recompute_tiles(body);
 }
 
 Shape2D P2DDriver::body_get_shape(Physics2D::BodyID body_id)
 {
     Body& body = _get_body(body_id);
-    return body.shape;
+    return body.shape.to_shape_2d();
 }
 
 void P2DDriver::body_set_type(Physics2D::BodyID body_id, Physics2D::BodyType new_type)
@@ -363,15 +354,16 @@ void P2DDriver::body_set_on_collide(Physics2D::BodyID body_id, void* _this, Phys
 void P2DDriver::area_set_shape(Physics2D::AreaID area_id, const Shape2D& shape)
 {
     Area& area = _get_area(area_id);
-    area.shape = shape;
+    area.shape = P2DShape::from_shape_2d(shape);
 
     // Getting tiles in area
+    _area_recompute_tiles(area);
 }
 
 Shape2D P2DDriver::area_get_shape(Physics2D::AreaID area_id)
 {
     Area& area = _get_area(area_id);
-    return area.shape;
+    return area.shape.to_shape_2d();
 }
 
 void P2DDriver::area_set_residence_mask(Physics2D::AreaID area_id, Physics2D::CollisionMask mask)
@@ -427,18 +419,26 @@ void P2DDriver::_handle_debug_draw_body(Body& body)
     if (Physics2D::get_property("/debug_draw").get<bool>() == false)
         return;
 
+    P2DShape shape = body.shape;
     Transform2D transform = body.target->get_global_transform();
-    Vector2 center = body.shape.get_center();
-    transform.translate(center);
-    Vector2 half_size = body.shape.get_size() / 2.f;
-    Rect2D rect = Rect2D(
-        Vector2(-half_size.x, half_size.y), body.shape.get_size()
+    shape.apply_transform(transform);
+
+    for(usize i = 0; i < 4; i++)
+    {
+        Vector2 point1 = shape.vertices[i];
+        Vector2 point2 = shape.vertices[(i + 1) % 4];
+
+        body.target->get_viewport()->render_item_draw_line(
+            body.target->get_render_item(),
+            point1, point2, Color(255, 0, 0, 255)
+        );
+    }
+
+    body.target->get_viewport()->render_item_draw_circle(
+        body.target->get_render_item(),
+        transform * shape.get_centroid(), 1.f, Color(255, 0, 0, 255)
     );
 
-    body.target->get_viewport()->render_item_draw_rect(
-        body.target->get_render_item(), transform, rect, Color(0, 255, 0, 127)
-    );
- 
 #endif
 }
 
@@ -448,30 +448,29 @@ void P2DDriver::_handle_debug_draw_area(Area& area)
     if (Physics2D::get_property("/debug_draw").get<bool>() == false)
         return;
 
+    P2DShape shape = area.shape;
     Transform2D transform = area.target->get_global_transform();
-    Vector2 center = area.shape.get_center();
-    transform.translate(center);
+    shape.apply_transform(transform);
 
-    Vector2 half_size = area.shape.get_size() / 2.f;
-    Rect2D rect = Rect2D(
-        Vector2(-half_size.x, half_size.y), area.shape.get_size()
-    );
+    for (usize i = 0; i < 4; i++)
+    {
+        Vector2 point1 = shape.vertices[i];
+        Vector2 point2 = shape.vertices[(i + 1) % 4];
 
-    area.target->get_viewport()->render_item_draw_rect(
-        area.target->get_render_item(), transform, rect, Color(0, 0, 255, 127)
+        area.target->get_viewport()->render_item_draw_line(
+            area.target->get_render_item(),
+            point1, point2, Color(0, 0, 255, 255)
+        );
+    }
+
+    area.target->get_viewport()->render_item_draw_circle(
+        area.target->get_render_item(),
+        transform * shape.get_centroid(), 1.f, Color(255, 0, 0, 255)
     );
 #endif
 }
 
-void P2DDriver::_check_tile_collisions(PhysicsTile& tile, f32 dt)
-{
-    for (auto body_id : tile.bodies)
-    {
-        _step_body(_get_body(body_id), dt);
-    }
-}
-
-void P2DDriver::_step_body(Body& body, f32 dt)
+void P2DDriver::_move_body(Body& body, f32 dt)
 {
     if (body.type == Physics2D::STATIC)
         return;
@@ -479,12 +478,15 @@ void P2DDriver::_step_body(Body& body, f32 dt)
     if (body.moved)
         return;
 
+    body.moved = true;
+
     switch (body.type)
     {
     case Physics2D::STATIC:
         return;
     case Physics2D::KINEMATIC:
     {
+        // TODO: This is only for ForYourGrace, remove when the physics engine can handle top down.
         body.velocity = body.velocity_input;
         body.force = Vector2();
     }
@@ -544,37 +546,26 @@ void P2DDriver::_step_body(Body& body, f32 dt)
         return;
     }
     
-    Vector2 displacement = body.velocity * dt;
-
-    // Handle collisions
-    CollisionInput input =
-    {
-        .displacement = displacement,
-    };
-
-    CollisionResult result =
-    {
-        .displacement = displacement,
-        .collision_axis = Vector2(1),
-    };
-
     body.is_on_floor = false;
     body.is_on_ceil = false;
 
-    for (auto tile_coord : body.tiles_on)
-    {
-        PhysicsTile& tile = data.world_tiles.get(tile_coord);
-        _check_collisions_on_tile(body, tile, input, result);
-    }
-
-    // Apply collision response: zero out velocity on collision axes
-    body.velocity *= result.collision_axis;
-    body.target->translate(result.displacement);
-    body.moved = true;
+    body.target->translate(body.velocity * dt);
 }
 
-void P2DDriver::_check_collisions_on_tile(Body& body, PhysicsTile& tile, const CollisionInput& input, CollisionResult& result)
+void P2DDriver::_check_body_collision(Body& body)
 {
+    for (auto tile_coord : body.tiles_on)
+    {
+        PhysicsTile& tile = _get_or_create_tile(tile_coord);
+        _check_body_collisions_on_tile(body, tile);
+    }
+}
+
+void P2DDriver::_check_body_collisions_on_tile(Body& body, PhysicsTile& tile)
+{
+    P2DShape body_shape = body.shape;
+    body_shape.apply_transform(body.target->get_global_transform());
+
     for (auto other_body_id : tile.bodies)
     {
         if (body.self == other_body_id)
@@ -584,156 +575,94 @@ void P2DDriver::_check_collisions_on_tile(Body& body, PhysicsTile& tile, const C
         if ((body.collision_mask & other_body.residence_mask) == 0)
             continue;
 
-        _check_collision_on_body(body, other_body, input, result);
+        P2DShape other_shape = other_body.shape;
+        other_shape.apply_transform(other_body.target->get_global_transform());
+
+        P2DCollision::CollisionManifold manifold = P2DCollision::polygon_v_polygon(body_shape, other_shape);
+        if (!manifold.valid)
+            continue;
+
+        if (body.on_collide.has_func())
+        {
+            data.collision_callbacks_map.insert(
+                CollisionID(body.self, other_body.self),
+                CollisionCallback
+                {
+                    .body = body.self,
+                    .collided = other_body.self,
+                }
+            );
+        }
     }
 }
 
-void P2DDriver::_check_collision_on_body(Body& body, Body& other_body,
-    const CollisionInput& input, CollisionResult& result)
+void P2DDriver::_check_area_collision(Area& area)
 {
-    const Vector2 body_position = body.target->get_global_transform().get_position();
-    const Vector2 bodyj_position = other_body.target->get_global_transform().get_position();
-
-    CollisionResult tmp_result =
+    for (auto tile_coord : area.tiles_on)
     {
-        .collision_axis = Vector2(1),
-    };
-
-    bool collided = false;
-
-    Shape2D test_shape = body.shape;
-    Shape2D other_shape = other_body.shape;
-    other_shape.translate(bodyj_position);
-
-    test_shape.translate(body_position + Vector2(input.displacement.x, 0));
-    if (test_shape.intersect(other_shape))
-    {
-        // X correction
-        tmp_result.collision_axis.x = 0;
-        collided = true;
-        result.displacement.x = 0;
+        PhysicsTile& tile = _get_or_create_tile(tile_coord);
+        _check_area_collision_on_tile(area, tile);
     }
+}
 
-    test_shape.translate(Vector2(-input.displacement.x, input.displacement.y));
-    if (test_shape.intersect(other_shape))
+void P2DDriver::_check_area_collision_on_tile(Area& area, PhysicsTile& tile)
+{
+    P2DShape area_shape = area.shape;
+    area_shape.apply_transform(area.target->get_global_transform());
+
+    for(auto& body_id : tile.bodies)
     {
-        // Y correction
-        tmp_result.collision_axis.y = 0;
-        collided = true;
+        Body& body = _get_body(body_id);
+        if ((area.residence_mask & body.residence_mask) == 0)
+            continue;
 
-        body.is_on_floor = input.displacement.y < 0;
-        body.is_on_ceil = input.displacement.y > 0;
+        P2DShape other_shape = body.shape;
+        other_shape.apply_transform(body.target->get_global_transform());
 
-        Shape2D real_shape = body.shape;
-        real_shape.translate(body_position);
-
-        AABB aabb = real_shape.get_aabb();
-        AABB aabbj = other_shape.get_aabb();
-
-        if (input.displacement.y > 0 && tmp_result.collision_axis.x == 0)
+        P2DCollision::CollisionManifold manifold = P2DCollision::polygon_v_polygon(area_shape, other_shape);
+        if (manifold.valid)
         {
-            // Upwards collision
-            result.displacement.y = aabbj.max.y - aabb.min.y;
-        }
-        else if (input.displacement.y < 0 && tmp_result.collision_axis.x == 0)
-        {
-            // Downwards collision
-            result.displacement.y = aabbj.min.y - aabb.max.y;
+            area.bodies_inside.insert(
+                body.self,
+                Area::BodyInArea
+                {
+                    .is_inside = true
+                }
+            );
+
+            if (area.on_body_enter.has_func() == false)
+                continue;
+
+            area.on_body_enter.call(area._this, body.target);
         }
         else
         {
-            result.displacement.y = 0;
+            if (area.bodies_inside.has(body.self) == false)
+                continue;
+
+            area.bodies_inside.get(body.self).is_inside = false;
+            area.bodies_inside.remove(body.self);
+
+            if (area.on_body_exit.has_func() == false)
+                continue;
+
+            area.on_body_exit.call(area._this, body.target);
         }
-    }
-
-    if (collided && body.on_collide.has_func())
-    {
-        data.collision_callbacks_map.insert(
-            CollisionID(body.self, other_body.self),
-            CollisionCallback
-            {
-                .body = body.self,
-                .collided = other_body.target,
-            }
-        );
-    }
-
-    result.collision_axis.x = result.collision_axis.x ?
-        tmp_result.collision_axis.x : 0;
-    result.collision_axis.y = result.collision_axis.y ?
-        tmp_result.collision_axis.y : 0;
-}
-
-void P2DDriver::_check_body_in_areas(Body& body)
-{
-    for (usize i = 0; i < data.active_areas.count; i++)
-    {
-        Physics2D::AreaID area_id = data.active_areas[i];
-        Area& area = _get_area(area_id);
-
-        if ((body.residence_mask & area.residence_mask) == 0)
-            continue;
-
-        const Vector2 area_position = area.target->get_global_transform().get_position();
-        _check_body_in_area(area_position, area, body);
-    }
-}
-
-void P2DDriver::_check_body_in_area(const Vector2& area_position, Area& area, Body& body)
-{
-    const Vector2 body_position = body.target->get_global_transform().get_position();
-
-    // area_shape is not a reference, modify it is safe.
-    if (area.shape.get_size() == Vector2())
-        return;
-
-    _check_body_in_shape(area, body, area_position, body_position);
-}
-
-void P2DDriver::_check_body_in_shape(Area& area, Body& body, const Vector2& area_position, const Vector2& body_position)
-{
-    Shape2D area_shape = area.shape;
-    area_shape.translate(area_position);
-    Shape2D body_shape = body.shape;
-    body_shape.translate(body_position);
-
-    bool intersect = area_shape.intersect(body_shape);
-    if (intersect)
-    {
-        area.bodies_inside.insert(
-            body.self,
-            Area::BodyInArea
-            {
-                .is_inside = true
-            }
-        );
-
-        if (area.on_body_enter.has_func() == false)
-            return;
-
-        area.on_body_enter.call(area._this, body.target);
-    }
-    else
-    {
-        if (area.bodies_inside.has(body.self) == false)
-            return;
-
-        area.bodies_inside.get(body.self).is_inside = false;
-        area.bodies_inside.remove(body.self);
-
-        if (area.on_body_exit.has_func() == false)
-            return;
-
-        area.on_body_exit.call(area._this, body.target);
     }
 }
 
 void P2DDriver::_resolve_collision_callbacks()
 {
-    for (auto& it : data.collision_callbacks_map)
+    for (auto& [hash, value] : data.collision_callbacks_map)
     {
-        Body& body = _get_body(it.second.body);
-        body.on_collide.call(body._this, it.second.collided);
+        Body& body = _get_body(value.body);
+        Body& collided = _get_body(value.collided);
+        body.on_collide.call(body._this, collided.target);
+
+        if (collided.on_collide.has_func())
+        {
+            collided.on_collide.call(collided._this, body.target);
+        }
     }
 
     data.collision_callbacks_map.clear();
@@ -776,6 +705,25 @@ void P2DDriver::_disable_area(Physics2D::AreaID area_id)
     data.active_areas.remove_equal(area_id);
 }
 
+static constexpr PhysicsTileCoord get_tile_coord(Vector2 point, Vector2 tile_size)
+{
+    const Vector2 normalized_point = point / tile_size;
+    PhysicsTileCoord tile = {};
+
+    tile.x = math::floor(normalized_point.x);
+    if (tile.x < 0)
+        tile.x += 1;
+
+    tile.y = math::floor(normalized_point.y);
+    if (tile.y < 0)
+        tile.y += 1;
+
+    return tile;
+}
+
+static constexpr auto tile00 = get_tile_coord(Vector2(), Vector2(64, 64));
+static constexpr auto tile0_m1 = get_tile_coord(Vector2(0, -200), Vector2(64, 64));
+
 PhysicsTileCoord P2DDriver::_convert_to_world_tile(const Vector2& point)
 {
     const Vector2 normalized_point = point / f32(_get_tile_size());
@@ -792,9 +740,10 @@ PhysicsTileCoord P2DDriver::_convert_to_world_tile(const Vector2& point)
     return tile;
 }
 
+
 void P2DDriver::_body_recompute_tiles(Body& body)
 {
-    // Removeing from a tiles
+    // Removing from a tiles
     for (auto& tile_id : body.tiles_on)
     {
         PhysicsTile& tile = _get_or_create_tile(tile_id);
@@ -803,7 +752,7 @@ void P2DDriver::_body_recompute_tiles(Body& body)
     body.tiles_on.clear();
 
     // Getting tiles in shape
-    Shape2D body_shape = body.shape;
+    P2DShape body_shape = body.shape;
     body_shape.translate(body.target->get_global_transform().get_position());
 
     for (auto vertice : body_shape.vertices)
@@ -834,6 +783,45 @@ void P2DDriver::_body_recompute_tiles(Body& body)
 
         if(can_insert)
             (void)tile.bodies.add(body.self);
+    }
+}
+
+void P2DDriver::_area_recompute_tiles(Area& area)
+{
+    area.tiles_on.clear();
+
+    // Getting tiles in shape
+    P2DShape body_shape = area.shape;
+    body_shape.apply_transform(area.target->get_global_transform());
+
+    for (auto vertice : body_shape.vertices)
+    {
+        PhysicsTileCoord tile_coord = _convert_to_world_tile(vertice);
+        bool can_insert_tile_coord = true;
+        for (auto tile_on : area.tiles_on)
+        {
+            if (tile_on == tile_coord)
+            {
+                can_insert_tile_coord = false;
+            }
+        }
+
+        if (can_insert_tile_coord)
+            (void)area.tiles_on.add(tile_coord);
+
+        PhysicsTile& tile = _get_or_create_tile(tile_coord);
+        bool can_insert = true;
+        for (auto body_id : tile.bodies)
+        {
+            if (body_id == area.self)
+            {
+                can_insert = false;
+                break;
+            }
+        }
+
+        if (can_insert)
+            (void)tile.bodies.add(area.self);
     }
 }
 

@@ -12,6 +12,10 @@ struct HashOfType
     [[nodiscard]] static constexpr bool compare(const T& k1, const T& k2) { return k1 == k2; }
 };
 
+
+/*
+* A collection of items referenced as a key.
+*/
 template<typename K, typename V>
 struct [[nodiscard]] HashMap
 {

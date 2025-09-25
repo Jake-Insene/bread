@@ -10,18 +10,14 @@ namespace math::impl
 * Reference: https://www.mathsisfun.com/algebra/taylor-series.html
 */
 template<typename T>
+    requires(IsArithmetic<T>)
 constexpr T cos_approx(T x)
 {
-    static_assert(
-        IsArithmetic<T>,
-        "expected arithmetic type"
-        );
-
     // Using taylor series for only 5 terms,
     // x is converted to a value between [-PI/2, PI/2].
 
-    while (x > PI2<T>)  x -= 2 * PI2<T>;
-    while (x < -PI2<T>) x += 2 * PI2<T>;
+    while (x > PI<T>)  x -= 2 * PI<T>;
+    while (x < -PI<T>) x += 2 * PI<T>;
 
     T x2 = x * x;
     T result = T(1.0);

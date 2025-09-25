@@ -69,6 +69,7 @@ RenderItemID Viewport::create_item(ViewportLayerMask layers)
 	RenderItem& item = items.get(new_item);
 	
 	item.self = new_item;
+	item.allocator = allocator;
 	item.command_buffer = allocator.alloc(DefaultCommandBufferSize, alignof(RenderItem::Command));
 	item_set_layers(new_item, layers);
 
@@ -113,6 +114,38 @@ void Viewport::item_set_layers(RenderItemID render_item_id, ViewportLayerMask la
 	}
 }
 
+void Viewport::render_item_draw_rect(RenderItemID render_item_id, const Transform2D& transform,
+	const Rect2D& dest_rect, Color color)
+{
+	RenderItem& item = items.get(render_item_id);
+	auto rect = item.alloc<RenderItem::CommandRect>();
+	rect->type = RenderItem::CMD_RECT;
+	rect->transform = transform;
+	rect->rect = dest_rect;
+	rect->color = color;
+}
+
+void Viewport::render_item_draw_line(RenderItemID render_item_id, const Vector2& point1, const Vector2& point2, Color color)
+{
+	RenderItem& item = items.get(render_item_id);
+	auto line = item.alloc<RenderItem::CommandLine>();
+	line->type = RenderItem::CMD_LINE;
+	line->point1 = point1;
+	line->point2 = point2;
+	line->color = color;
+}
+
+void Viewport::render_item_draw_circle(RenderItemID render_item_id, const Vector2& center, f32 radius, Color color)
+{
+	RenderItem& item = items.get(render_item_id);
+	auto circle = item.alloc<RenderItem::CommandCircle>();
+	circle->type = RenderItem::CMD_CIRCLE;
+	circle->center = center;
+	circle->radius = radius;
+	circle->color = color;
+}
+
+
 Viewport::ViewportLayerMask Viewport::item_get_layers(RenderItemID render_item_id)
 {
 	RenderItem& item = items.get(render_item_id);
@@ -145,16 +178,5 @@ void Viewport::render_item_draw_ui_sprite(RenderItemID render_item_id, const Tra
 	ui_sprite->src_rect = src_rect;
 	ui_sprite->mod_color = mod_color;
 	ui_sprite->flags = flags;
-}
-
-void Viewport::render_item_draw_rect(RenderItemID render_item_id, const Transform2D& transform,
-	const Rect2D& dest_rect, Color color)
-{
-	RenderItem& item = items.get(render_item_id);
-	auto rect = item.alloc<RenderItem::CommandRect>();
-	rect->type = RenderItem::CMD_RECT;
-	rect->transform = transform;
-	rect->rect = dest_rect;
-	rect->color = color;
 }
 

@@ -84,14 +84,24 @@ Transform2D Object2D::get_global_transform() const
 
 Vector2 Object2D::get_local_mouse_position() const
 {
+    // TODO: fix this
     const Camera2D* cam = SceneManager::get_camera_2d();
-    const Vector2 display_size = Vector2(SceneManager::get_viewport_size());
+    const Vector2 viewport_size = Vector2(SceneManager::get_viewport_size());
     const Vector2 screen_pos = Input::get_mouse_position();
-    const Vector2 local_pos = screen_pos - Vector2(display_size.x, -display_size.y) * 0.5f;
+    Vector2 local_pos = Vector2(screen_pos);
 
     if (cam)
     {
-        return cam->get_global_transform() * local_pos;
+        Camera2D::PositionMode mode = cam->get_position_mode();
+        switch (mode)
+        {
+        case Camera2D::POSITION_CENTERED:
+            local_pos += Vector2(-viewport_size.x, viewport_size.y) * 0.5f;
+            return cam->get_global_transform() * local_pos;
+        default:
+            return cam->get_global_transform() * local_pos;
+        }
+
     }
 
     return local_pos;

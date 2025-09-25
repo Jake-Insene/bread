@@ -13,7 +13,7 @@ void Button::_bind_vtable(VTable& vtable)
 
 void Button::init(const CreateInfo&)
 {
-    normal_texture = GetResource<Texture2D>("default/white.png");
+    normal_texture = GetResource<Texture2D>("default/white.png").value();
     
     data.current_state = STATE_NORMAL;
 }

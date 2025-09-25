@@ -48,6 +48,8 @@ static constexpr ResourceTypeSpecification _construct_from_flags(usize flags, St
 */
 struct Resource
 {
+    static constexpr bool IsResource = true;
+
     RESOURCE(
         RESOURCE_UNKNOWN,
         NoResourceFlags, 
@@ -58,4 +60,10 @@ struct Resource
     
     void init(ResourceType resource_type);
     void destroy();
+};
+
+template<typename T>
+concept IsResourceBase = requires
+{
+    T::IsResource;
 };

@@ -3,7 +3,9 @@
 #include "collections/hash_map.h"
 #include "collections/free_list.h"
 #include "physics/physics_2d.h"
-#include "physics/shape_2d.h"
+
+#include "physics/p2d/p2d_collision.h"
+#include "physics/p2d/p2d_shape.h"
 
 
 struct CollisionID
@@ -48,9 +50,8 @@ struct P2DDriver
 
     struct CollisionCallback
     {
-        bool two_ways;
         Physics2D::BodyID body;
-        Object2D* collided;
+        Physics2D::BodyID collided;
     };
 
     struct [[nodiscard]] Body
@@ -64,7 +65,8 @@ struct P2DDriver
         void* _this;
         Physics2D::EventOnCollide on_collide;
 
-        Shape2D shape;
+        P2DShape shape;
+
         Vector2 velocity;
         Vector2 velocity_input;
         Vector2 force;
@@ -91,8 +93,8 @@ struct P2DDriver
         Physics2D::EventOnBodyEnter on_body_enter;
         Physics2D::EventOnBodyExit on_body_exit;
 
-        Shape2D shape;
-    
+        P2DShape shape;
+
         bool is_active;
 
         struct BodyInArea
@@ -108,20 +110,6 @@ struct P2DDriver
     {
         bool active;
         Array<Physics2D::BodyID> bodies;
-    };
-
-
-    struct CollisionInput
-    {
-        Vector2 displacement;
-    };
-
-    struct CollisionResult
-    {
-        Vector2 displacement;
-        // 0 -> Collision
-        // 1 -> No Collision
-        Vector2 collision_axis;
     };
 
     struct PhysicsTile
@@ -225,23 +213,16 @@ struct P2DDriver
     static void _handle_debug_draw_body(Body& body);
     static void _handle_debug_draw_area(Area& area);
 
-    // Tile routines
-
-    static void _check_tile_collisions(PhysicsTile& tile, f32 dt);
-
     // Body routines
 
-    static void _step_body(Body& body, f32 dt);
-    static void _check_collisions_on_tile(Body& body, PhysicsTile& tile,
-        const CollisionInput& input, CollisionResult& result);
-    static void _check_collision_on_body(Body& body, Body& other_body,
-        const CollisionInput& input, CollisionResult& result);
+    static void _move_body(Body& body, f32 dt);
+    static void _check_body_collision(Body& body);
+    static void _check_body_collisions_on_tile(Body& body, PhysicsTile& tile);
 
     // Area routines
-    static void _check_body_in_areas(Body& body);
-    static void _check_body_in_area(const Vector2& area_position, Area& area, Body& body);
-    static void _check_body_in_shape(Area& area, Body& body, const Vector2& area_position, const Vector2& body_position);
-
+    static void _check_area_collision(Area& area);
+    static void _check_area_collision_on_tile(Area& area, PhysicsTile& tile);
+    
     // Collision callbacks
     static void _resolve_collision_callbacks();
 
@@ -255,5 +236,6 @@ struct P2DDriver
     [[nodiscard]] static PhysicsTileCoord _convert_to_world_tile(const Vector2& point);
 
     static void _body_recompute_tiles(Body& body);
+    static void _area_recompute_tiles(Area& area);
     static PhysicsTile& _get_or_create_tile(PhysicsTileCoord tile_coord);
 };

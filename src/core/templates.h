@@ -202,6 +202,57 @@ struct TypeIdentityT
 template<typename T>
 using TypeIdentity = TypeIdentityT<T>::Type;
 
+
+template<typename Fn>
+struct IsMemberFunctionT
+{
+    static constexpr bool Value = false;
+};
+
+template<typename RT, typename T, typename... TArgs>
+struct IsMemberFunctionT<RT(T::*)(TArgs...)>
+{
+    static constexpr bool Value = true;
+};
+
+template<typename RT, typename T, typename... TArgs>
+struct IsMemberFunctionT<RT(T::*)(TArgs...) const>
+{
+    static constexpr bool Value = true;
+};
+
+template<typename Fn>
+inline constexpr bool IsMemberFunction = IsMemberFunctionT<Fn>::Value;
+
+template<typename Fn>
+struct FunctionDecomposed;
+
+template<typename RT, typename... TArgs>
+struct FunctionDecomposed<RT(*)(TArgs...)>
+{
+    using ReturnType = RT;
+};
+
+template<typename RT, typename T, typename... TArgs>
+struct FunctionDecomposed<RT(T::*)(TArgs...)>
+{
+    static constexpr bool IsConst = false;
+    using ReturnType = RT;
+    using ObjectType = T;
+};
+
+template<typename RT, typename T, typename... TArgs>
+struct FunctionDecomposed<RT(T::*)(TArgs...) const>
+{
+    static constexpr bool IsConst = true;
+    using ReturnType = RT;
+    using ObjectType = T;
+};
+
+template<typename T>
+struct FunctionDecomposed : FunctionDecomposed<decltype(&T::operator())> {};
+
+
 template<typename... TArgs>
 constexpr void Unused(TArgs...) {}
 

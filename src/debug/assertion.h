@@ -5,7 +5,7 @@
 #define DebugAssert(cond, ...) \
     if(!(cond))\
     {\
-        Log::error(__FILE__ ":" MakeString(__LINE__) " " __VA_ARGS__);\
+        Log::error(__FILE__ ":" MakeString(__LINE__) ": " __VA_ARGS__);\
         Debug::breakpoint();\
     }
 #else
