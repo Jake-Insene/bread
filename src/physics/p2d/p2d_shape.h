@@ -1,5 +1,6 @@
 #pragma once
 #include "math/transform_2d.h"
+#include "math/aabb.h"
 #include "physics/shape_2d.h"
 
 
@@ -9,6 +10,7 @@ struct [[nodiscard]] P2DShape
 	Vector2 normals[4];
 	f32 area;
 	Vector2 centroid;
+	AABB aabb;
 
 	static P2DShape from_shape_2d(const Shape2D& shape);
 
@@ -21,6 +23,7 @@ struct [[nodiscard]] P2DShape
 
 	Shape2D to_shape_2d() const;
 
+	void _calc_aabb();
 	void _calc_normals();
 	void _calc_area();
 	void _calc_centroid();

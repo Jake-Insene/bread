@@ -80,8 +80,6 @@ static u32 _lrotl(u32 x, int y)
 
 #include "external/stb_image.h"
 
-#undef memcpy
-#undef memset
 #undef abs
 #undef fabs
 

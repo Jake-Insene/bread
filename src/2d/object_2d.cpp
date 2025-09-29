@@ -24,6 +24,7 @@ void Object2D::set_position(Vector2 new_pos)
 {
     data.pos_cache = new_pos;
     data.transform.set_position(new_pos);
+    _update_transform();
 }
 
 Vector2 Object2D::get_position() const
@@ -35,6 +36,7 @@ void Object2D::translate(Vector2 t)
 {
     data.pos_cache += t;
     data.transform.translate(t);
+    _update_transform();
 }
 
 void Object2D::set_scale(Vector2 new_scale)
@@ -44,6 +46,7 @@ void Object2D::set_scale(Vector2 new_scale)
 
     data.scale_cache = new_scale;
     data.transform.set_scale(new_scale);
+    _update_transform();
 }
 
 Vector2 Object2D::get_scale() const
@@ -58,6 +61,7 @@ void Object2D::set_rotation(f32 new_rot)
  
     data.rot_cache = new_rot;
     data.transform.set_rotation(new_rot);
+    _update_transform();
 }
 
 f32 Object2D::get_rotation() const
@@ -72,14 +76,7 @@ Transform2D Object2D::get_transform() const
 
 Transform2D Object2D::get_global_transform() const
 {
-    Object* parent = get_parent();
-    if (parent && parent->has_mark(MARK_2D))
-    {
-        Object2D* p2d = (Object2D*)parent;
-        return p2d->get_global_transform() * data.transform;
-    }
-
-    return data.transform;
+    return data._global_transform_cache;
 }
 
 Vector2 Object2D::get_local_mouse_position() const
@@ -114,4 +111,28 @@ void Object2D::draw_sprite(const Transform2D& transform, TextureID texture, cons
         get_render_item(), transform, texture, rect, src_rect, 
         mod_color, Viewport::RenderFlags(flags)
     );
+}
+
+void Object2D::_update_transform()
+{
+    data._global_transform_cache = _make_global_transform();
+    for (usize i = 0; i < get_child_count(); i++)
+    {
+        if (Object2D* child = Object::cast<Object2D>(get_child(i)))
+        {
+            child->_update_transform();
+        }
+    }
+}
+
+Transform2D Object2D::_make_global_transform() const
+{
+    Object* parent = get_parent();
+    if (parent && parent->has_mark(MARK_2D))
+    {
+        Object2D* p2d = (Object2D*)parent;
+        return p2d->get_global_transform() * data.transform;
+    }
+
+    return data.transform;
 }

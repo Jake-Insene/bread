@@ -18,6 +18,7 @@ struct Object2D : Object
     {
         RenderItemID render_item;
         Transform2D transform{};
+        Transform2D _global_transform_cache{};
         Vector2 pos_cache = Vector2(0, 0);
         Vector2 scale_cache = Vector2(1, 1);
         // In Radians
@@ -48,4 +49,7 @@ struct Object2D : Object
 
     void draw_sprite(const Transform2D& transform, TextureID texture, const Rect2D& rect,
         const Rect2D& src_rect, Color mod_color, u32 flags);
+
+    void _update_transform();
+    Transform2D _make_global_transform() const;
 };

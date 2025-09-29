@@ -9,7 +9,7 @@ struct AnimatedSprite2D : Object2D
 
     struct InternalData
     {
-        i32 frame = 0;
+        u32 frame = 0;
         bool playing = false;
         String current_animation{};
         f32 remain;

@@ -3,6 +3,7 @@
 #include "debug/assertion.h"
 #include "math/funcs.h"
 
+#include "platform/instrinsics.h"
 
 
 template <typename T>
@@ -180,6 +181,12 @@ union [[nodiscard]] Vector2T
 
     constexpr Vector2T normalized() const
     {
+#if BREAD_ENABLE_INTRISICS
+        T x1 = x;
+        T y1 = y;
+        PlatformIntricics::vecnormalize(x1, y1);
+        return Vector2T(x1, y1);
+#else
         Vector2T v = *this;
         const T len = (T)math::sqrt(x * x + y * y);
         if (len)
@@ -189,16 +196,21 @@ union [[nodiscard]] Vector2T
         }
 
         return v;
+#endif
     }
     
     constexpr void normalize()
     {
+#if BREAD_ENABLE_INTRISICS
+        PlatformIntricics::vecnormalize(x, y);
+#else
         const T len = (T)math::sqrt(x * x + y * y);
         if(len)
         {
             x /= len;
             y /= len;
         }
+#endif
     }
 
     constexpr Vector2T abs() const

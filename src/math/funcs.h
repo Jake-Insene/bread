@@ -11,6 +11,7 @@
 #include "math/funcs/log.h"
 #include "math/funcs/pow.h"
 #include "math/funcs/sin.h"
+#include "math/funcs/sincos.h"
 #include "math/funcs/sqrt.h"
 #include "math/funcs/tan.h"
 
@@ -144,8 +145,6 @@ template<typename T>
     {
         return a - trunc<i64>(a / b) * b;
     }
-
-    
 }
 
 // Angles
@@ -171,7 +170,7 @@ template<typename T>
     requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T sin(T r)
 {
-    return impl::sin_approx<T>(r);
+    return impl::sin<T>(r);
 }
 
 /*
@@ -181,7 +180,14 @@ template<typename T>
     requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T cos(T r)
 {
-    return impl::cos_approx<T>(r);
+    return impl::cos<T>(r);
+}
+
+template<typename T>
+    requires(IsArithmetic<T>)
+constexpr void sincos(T& s, T& c, T r)
+{
+    impl::sincos<T>(s, c, r);
 }
 
 /*

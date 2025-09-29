@@ -1,8 +1,9 @@
 #pragma once
 #include "core/header.h"
 
-#if defined(ENGINE_ANDROID)
+
+#if defined(BREAD_ANDROID)
 #include "platform/android/android_header.h"
-#elif defined(ENGINE_WIN32)
+#elif defined(BREAD_WIN32)
 #include "platform/win32/win32_header.h"
 #endif

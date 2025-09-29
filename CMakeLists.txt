@@ -10,6 +10,12 @@ set(BREAD_DEBUG_DEFINITIONS "-DDEBUG -DSHOW_DEBUG_INFO -DENABLE_DEBUG_OPTIONS")
 set(CMAKE_MSVC_RUNTIME_CHECKS OFF)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+# Target Arch
+if("${BREAD_TARGET_ARCH}" STREQUAL "X64")
+    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "BREAD_ENABLE_INTRISICS" "BREAD_X64")
+endif()
+
+# Compiler
 if(MSVC)
     foreach(flag_var
         CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG
@@ -29,24 +35,24 @@ if(MSVC)
         # so now is more easy to create bugs.
         "/we4701" "/we4700" "/we4101" "/we4703" "/we4189"
     )
-    set(BREAD_LINK_OPTIONS ${BREAD_LINK_OPTIONS} "/NODEFAULTLIBS")
-    set(BREAD_EXE_LINK_OPTIONS ${BREAD_EXE_LINK_OPTIONS} "/NODEFAULTLIBS" "/ENTRY:WinMain")
+    set(BREAD_LINK_OPTIONS ${BREAD_LINK_OPTIONS} "/NODEFAULTLIB")
+    set(BREAD_EXE_LINK_OPTIONS ${BREAD_EXE_LINK_OPTIONS} "/NODEFAULTLIB" "/ENTRY:WinMain")
+    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_MSVC")
 else()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
-    set(CMAKE_CXX_FLAGS
-        "${CMAKE_CXX_FLAGS} -fno-rtti -fno-exceptions -Wall -Wextra"
+    set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} "-Wall" "-Wextra" "-msse4.1")
+    set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS}
+        "-fno-rtti" "-fno-exceptions" "-Wall" "-Wextra" "-msse4.1"
+        "-DBREAD_CLANG"
     )
+    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_CLANG")
 endif()
 
-if(${CMAKE_BUILD_TYPE} STREQUAL "Debug" AND MSVC)
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} ${BREAD_DEBUG_DEFINITIONS})
-    set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} "/MTd")
-elseif(${CMAKE_BUILD_TYPE} STREQUAL "Release" AND MSVC)
+elseif(${CMAKE_BUILD_TYPE} STREQUAL "Release")
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DRELEASE")
-    set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} "/MT")
-elseif(${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo" AND MSVC)
+elseif(${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} ${BREAD_DEBUG_DEFINITIONS})
-    set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} "/MT")
 endif()
 
 set(BREAD_MSVC_RUNTIME_LIBRARY ${BREAD_MSVC_RUNTIME_LIBRARY})
@@ -98,6 +104,7 @@ file(GLOB ENGINE_SRC
 
     src/log/log.cpp
 
+    src/math/transform_2d.cpp
     src/math/vec2.cpp
     
     src/mem/utils.cpp
@@ -120,9 +127,12 @@ file(GLOB ENGINE_SRC
     src/physics/shape_2d.cpp
 
     # Default 2d physics driver
+    src/physics/p2d/p2d_body.cpp
     src/physics/p2d/p2d_collision.cpp
     src/physics/p2d/p2d_driver.cpp
     src/physics/p2d/p2d_shape.cpp
+    
+    src/platform/intrinsics.cpp
 
     src/resource/font.cpp
     src/resource/image.cpp
@@ -159,7 +169,7 @@ if(ANDROID)
 
         ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c
     )
-    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DENGINE_ANDROID")
+    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_ANDROID")
     set(PLATFORM_LIBRARIES GLESv3 EGL android log)
 elseif(WIN32)
     file(GLOB PLATFORM_SRC
@@ -175,7 +185,7 @@ elseif(WIN32)
         src/platform/win32/win32_page_allocator.cpp
         src/platform/win32/win32_time.cpp
     )
-    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DENGINE_WIN32")
+    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_WIN32")
     set(PLATFORM_LIBRARIES opengl32 xaudio2)
 endif()
 

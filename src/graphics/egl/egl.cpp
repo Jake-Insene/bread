@@ -6,17 +6,18 @@
 #include "scene/scene_manager.h"
 #include "log/log.h"
 
-#if defined(ENGINE_ANDROID)
+
+#if defined(BREAD_ANDROID)
 #include "platform/android/android_egl.h"
-#elif defined(ENGINE_WIN32)
+#elif defined(BREAD_WIN32)
 #include "platform/win32/win32_egl.h"
 #endif
 
 static inline EGL::VTable get_vtable()
 {
-#if defined(ENGINE_ANDROID)
+#if defined(BREAD_ANDROID)
     return AndroidEGL::get_vtable();
-#elif defined(ENGINE_WIN32)
+#elif defined(BREAD_WIN32)
     return Win32EGL::get_vtable();
 #endif
 }

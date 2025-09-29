@@ -4,45 +4,12 @@
 #include "collections/free_list.h"
 #include "physics/physics_2d.h"
 
+#include "physics/p2d/p2d_body.h"
 #include "physics/p2d/p2d_collision.h"
 #include "physics/p2d/p2d_shape.h"
+#include "physics/p2d/p2d_types.h"
 
 
-struct CollisionID
-{
-    Physics2D::BodyID id1;
-    Physics2D::BodyID id2;
-};
-
-using PhysicsTileCoord = Vector2I;
-
-template<>
-struct HashOfType<CollisionID>
-{
-    [[nodiscard]] static constexpr u64 hashfunc(const CollisionID& k)
-    {
-        return k.id1.id | (u64(k.id2.id) << 32);
-    }
-
-    [[nodiscard]] static constexpr bool compare(const CollisionID& k1, const CollisionID& k2)
-    {
-        return (k1.id1 == k2.id1 && k1.id2 == k2.id2) || (k1.id1 == k2.id2 && k1.id2 == k2.id1);
-    }
-};
-
-template<>
-struct HashOfType<PhysicsTileCoord>
-{
-    [[nodiscard]] static constexpr u64 hashfunc(const PhysicsTileCoord& k)
-    {
-        return k.x | (u64(k.y) << 32);
-    }
-
-    [[nodiscard]] static constexpr bool compare(const PhysicsTileCoord& k1, const PhysicsTileCoord& k2)
-    {
-        return k1.x == k2.x && k1.y == k2.y;
-    }
-};
 
 struct P2DDriver
 {
@@ -52,35 +19,6 @@ struct P2DDriver
     {
         Physics2D::BodyID body;
         Physics2D::BodyID collided;
-    };
-
-    struct [[nodiscard]] Body
-    {
-        Object2D* target;
-        Physics2D::BodyID self;
-        Physics2D::BodyType type;
-        Physics2D::CollisionMask residence_mask;
-        Physics2D::CollisionMask collision_mask;
-
-        void* _this;
-        Physics2D::EventOnCollide on_collide;
-
-        P2DShape shape;
-
-        Vector2 velocity;
-        Vector2 velocity_input;
-        Vector2 force;
-        
-        f32 mass;
-        f32 friction;
-        f32 air_friction;
-
-        bool fixed_rotation;
-        bool is_on_floor;
-        bool is_on_ceil;
-        bool moved;
-
-        Array<PhysicsTileCoord> tiles_on;
     };
 
     struct [[nodiscard]] Area
@@ -128,7 +66,7 @@ struct P2DDriver
         Array<Physics2D::AreaID> active_areas;
         Array<Physics2D::BodyID> active_bodies;
 
-        FreeList<Body, Physics2D::BodyID> current_bodies;
+        FreeList<P2DBody, Physics2D::BodyID> current_bodies;
         FreeList<Area, Physics2D::AreaID> current_areas;
 
         HashMap<CollisionID, CollisionCallback> collision_callbacks_map;
@@ -146,7 +84,7 @@ struct P2DDriver
         return data.allocator;
     }
 
-    [[nodiscard]] static Body& _get_body(Physics2D::BodyID body_id)
+    [[nodiscard]] static P2DBody& _get_body(Physics2D::BodyID body_id)
     {
         return data.current_bodies.get(body_id);
     }
@@ -179,8 +117,10 @@ struct P2DDriver
     static f32 body_get_mass(Physics2D::BodyID body_id);
     static void body_set_friction(Physics2D::BodyID body_id, f32 new_friction);
     static f32 body_get_friction(Physics2D::BodyID body_id);
-    static void body_set_air_friction(Physics2D::BodyID body_id, f32 new_friction);
+    static void body_set_air_friction(Physics2D::BodyID body_id, f32 new_air_friction);
     static f32 body_get_air_friction(Physics2D::BodyID body_id);
+    static void body_set_bounce(Physics2D::BodyID body_id, f32 new_bounce);
+    static f32 body_get_bounce(Physics2D::BodyID body_id);
     static void body_apply_force(Physics2D::BodyID body_id, const Vector2& point, const Vector2& force);
     static void body_apply_impulse(Physics2D::BodyID body_id, const Vector2& point, const Vector2& force);
     static void body_set_fixed_rotation(Physics2D::BodyID body_id, bool enable);
@@ -210,14 +150,14 @@ struct P2DDriver
 
     // Draw routines
 
-    static void _handle_debug_draw_body(Body& body);
+    static void _handle_debug_draw_body(P2DBody& body);
     static void _handle_debug_draw_area(Area& area);
 
     // Body routines
 
-    static void _move_body(Body& body, f32 dt);
-    static void _check_body_collision(Body& body);
-    static void _check_body_collisions_on_tile(Body& body, PhysicsTile& tile);
+    static void _move_body(P2DBody& body, f32 dt);
+    static void _check_body_collision(P2DBody& body);
+    static void _check_body_collisions_on_tile(P2DBody& body, PhysicsTile& tile);
 
     // Area routines
     static void _check_area_collision(Area& area);
@@ -235,7 +175,7 @@ struct P2DDriver
 
     [[nodiscard]] static PhysicsTileCoord _convert_to_world_tile(const Vector2& point);
 
-    static void _body_recompute_tiles(Body& body);
+    static void _body_recompute_tiles(P2DBody& body);
     static void _area_recompute_tiles(Area& area);
     static PhysicsTile& _get_or_create_tile(PhysicsTileCoord tile_coord);
 };

@@ -3,9 +3,9 @@
 
 
 
-#if defined(ENGINE_ANDROID)
+#if defined(BREAD_ANDROID)
 inline EGLAPI __eglMustCastToProperFunctionPointerType (*platform_get_proc)(const char* name) = nullptr;
-#elif defined(ENGINE_WIN32)
+#elif defined(BREAD_WIN32)
 inline void* (*platform_get_proc)(const char* name) = nullptr;
 #endif 
 

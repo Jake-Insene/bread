@@ -14,6 +14,7 @@ P2DShape P2DShape::from_shape_2d(const Shape2D& shape)
         }
     };
 
+    pshape._calc_aabb();
     pshape._calc_normals();
     pshape._calc_area();
     pshape._calc_centroid();
@@ -29,6 +30,7 @@ void P2DShape::apply_transform(const Transform2D& transform)
     vertices[3] = transform * vertices[3];
 
     // The transformation could rotate the vertices
+    _calc_aabb();
     _calc_normals();
 }
 
@@ -40,6 +42,8 @@ void P2DShape::translate(const Vector2& translation)
     vertices[3] += translation;
 
     centroid += translation;
+ 
+    _calc_aabb();
 }
 
 void P2DShape::rotate(const f32 r)
@@ -50,6 +54,7 @@ void P2DShape::rotate(const f32 r)
     }
 
     _calc_normals();
+    _calc_aabb();
 }
 
 f32 P2DShape::get_area() const
@@ -76,12 +81,35 @@ Shape2D P2DShape::to_shape_2d() const
     };
 }
 
+void P2DShape::_calc_aabb()
+{
+    aabb.min.x = math::min(
+        vertices[0].x, vertices[1].x,
+        vertices[2].x, vertices[3].x
+    );
+
+    aabb.min.y = math::min(
+        vertices[0].y, vertices[1].y,
+        vertices[2].y, vertices[3].y
+    );
+
+    aabb.max.x = math::max(
+        vertices[0].x, vertices[1].x,
+        vertices[2].x, vertices[3].x
+    );
+
+    aabb.max.y = math::max(
+        vertices[0].y, vertices[1].y,
+        vertices[2].y, vertices[3].y
+    );
+}
+
 void P2DShape::_calc_normals()
 {
     for (usize i = 0; i < 4; i++)
     {
         const Vector2& v1 = vertices[i];
-        const Vector2& v2 = vertices[(i + 1) % 4];
+        const Vector2& v2 = vertices[(i + 1) & 3];
 
         normals[i] = (v2 - v1).normalized().normal();
     }
@@ -95,7 +123,7 @@ void P2DShape::_calc_area()
     for (usize i = 0; i < 4; i++)
     {
         const Vector2& v1 = vertices[i];
-        const Vector2& v2 = vertices[(i + 1) % 4];
+        const Vector2& v2 = vertices[(i + 1) & 3];
         area += v1.x * v2.y - v2.x * v1.y;
     }
 
@@ -116,7 +144,7 @@ void P2DShape::_calc_centroid()
     for (usize i = 0; i < 4; i++)
     {
         const Vector2& v1 = vertices[i];
-        const Vector2& v2 = vertices[(i + 1) % 4];
+        const Vector2& v2 = vertices[(i + 1) & 3];
 
         const f32 v1_v2_x = v1.x + v2.x;
         const f32 v1_v2_y = v1.y + v2.y;

@@ -46,8 +46,12 @@ Shape2D Body2D::get_shape()
 
 void Body2D::set_velocity(const Vector2& new_velocity)
 {
-    data.velocity = new_velocity;
     Physics2D::body_set_velocity(data.body_id, new_velocity);
+}
+
+Vector2 Body2D::get_velocity() const
+{
+    return Physics2D::body_get_velocity(data.body_id);
 }
 
 void Body2D::set_mass(f32 new_mass)
@@ -66,6 +70,17 @@ void Body2D::set_air_friction(f32 new_air_friction)
 {
     data.air_friction = new_air_friction;
     Physics2D::body_set_air_friction(data.body_id, new_air_friction);
+}
+
+void Body2D::set_bounce(f32 new_bounce)
+{
+    data.bounce = new_bounce;
+    Physics2D::body_set_bounce(data.body_id, new_bounce);
+}
+
+f32 Body2D::get_bounce() const
+{
+    return Physics2D::body_get_bounce(data.body_id);
 }
 
 void Body2D::apply_force(const Vector2& point, const Vector2& force) const

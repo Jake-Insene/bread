@@ -1,11 +1,6 @@
 #pragma once
 #include "math/vec2.h"
 
-struct AABB
-{
-    Vector2 min;
-    Vector2 max;
-};
 
 /*
 * Use to represent the a shape that forms a body.

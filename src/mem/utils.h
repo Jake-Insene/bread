@@ -1,4 +1,6 @@
 #pragma once
+#include "core/types.h"
+
 
 template<typename T>
 struct Slice;
@@ -30,13 +32,13 @@ namespace mem
     constexpr bool compare(Slice<const T> src1, Slice<const T> src2);
 
     template<typename T>
-    constexpr void copy(Slice<T> dest, const Slice<const T>& src);
+    inline void copy(Slice<T> dest, const Slice<const T>& src);
 
     template<typename T>
-    constexpr void copy(Slice<T> dest, const Slice<T>& src);
+    inline void copy(Slice<T> dest, const Slice<T>& src);
 
     template<typename T>
-    constexpr void set(Slice<T> dest, const T value);
+    inline void set(Slice<T> dest, const T value);
 
 }
 
@@ -94,31 +96,49 @@ constexpr bool compare(Slice<const T> src1, Slice<const T> src2)
     return true;
 }
 
+void _copy(Slice<u8> dest, Slice<const u8> src);
+
 template<typename T>
-constexpr void copy(Slice<T> dest, const Slice<const T>& src)
+inline void copy(Slice<T> dest, const Slice<const T>& src)
 {
     DebugAssert(dest.len >= src.len, "invalid destination");
-
+#if BREAD_ENABLE_INTRISICS
+    _copy(to_bytes(dest), to_const_bytes(src));
+#else
     for (usize i = 0; i < src.len; i++)
     {
         dest[i] = src[i];
     }
+#endif
 }
 
 template<typename T>
-constexpr void copy(Slice<T> dest, const Slice<T>& src)
+inline void copy(Slice<T> dest, const Slice<T>& src)
 {
     DebugAssert(dest.len >= src.len, "invalid destination");
-
+#if BREAD_ENABLE_INTRISICS
+    _copy(to_bytes(dest), to_const_bytes(src));
+#else
     for (usize i = 0; i < src.len; i++)
     {
         dest[i] = src[i];
     }
+#endif
 }
 
+void _set_zero(Slice<u8> dest);
+
 template<typename T>
-constexpr void set(Slice<T> dest, const T value)
+inline void set(Slice<T> dest, const T value)
 {
+#if BREAD_ENABLE_INTRISICS
+    if (value == T(0)) // for floating point values it works
+    {
+        _set_zero(to_bytes(dest));
+        return;
+    }
+#endif
+
     for (usize i = 0; i < dest.len; i++)
     {
         dest[i] = value;

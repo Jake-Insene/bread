@@ -11,17 +11,11 @@
 #include "physics/physics_2d.h"
 #include "resource/resource_manager.h"
 
-#if defined(ENGINE_ANDROID)
-#include "platform/android/android_engine.h"
-#elif defined(ENGINE_WIN32)
-#include "platform/win32/win32_engine.h"
-#endif
-
 
 void* operator new(size_t size)
 {
     FailOn(true, "Avoid 'new' statements!");
-    return Engine::data.allocator.alloc(size, alignof(usize)).ptr();
+    return nullptr;
 }
 
 void operator delete(void*)

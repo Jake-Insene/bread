@@ -86,6 +86,8 @@ struct Physics2D
         VTFunc(f32, body_get_friction, BodyID);
         VTFunc(void, body_set_air_friction, BodyID, f32);
         VTFunc(f32, body_get_air_friction, BodyID);
+        VTFunc(void, body_set_bounce, BodyID, f32);
+        VTFunc(f32, body_get_bounce, BodyID);
         VTFunc(void, body_apply_force, BodyID, const Vector2&, const Vector2&);
         VTFunc(void, body_apply_impulse, BodyID, const Vector2&, const Vector2&);
         VTFunc(void, body_set_fixed_rotation, BodyID, bool);
@@ -142,6 +144,8 @@ struct Physics2D
     VTFuncDefArg1RetS(f32, body_get_friction, BodyID);
     VTFuncDefArg2S(body_set_air_friction, BodyID, f32);
     VTFuncDefArg1RetS(f32, body_get_air_friction, BodyID);
+    VTFuncDefArg2S(body_set_bounce, BodyID, f32);
+    VTFuncDefArg1RetS(f32, body_get_bounce, BodyID);
     VTFuncDefArg3S(body_apply_force, BodyID, const Vector2&, const Vector2&);
     VTFuncDefArg3S(body_apply_impulse, BodyID, const Vector2&, const Vector2&);
     VTFuncDefArg2S(body_set_fixed_rotation, BodyID, bool);

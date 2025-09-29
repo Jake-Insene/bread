@@ -17,10 +17,10 @@ struct Body2D : Object2D
         Physics2D::BodyID body_id = Physics2D::BodyID::InvalidID;
         BodyType type = BodyType::UNKNOWN;
         
-        Vector2 velocity{0, 0};
-        f32 mass = 1;
-        f32 friction = 1;
-        f32 air_friction = 1;
+        f32 mass = 1.f;
+        f32 friction = 1.f;
+        f32 air_friction = 1.f;
+        f32 bounce = 1.f;
 
         bool grounded = false;
 
@@ -41,9 +41,9 @@ struct Body2D : Object2D
     
     void set_shape(const Shape2D& shape);
     Shape2D get_shape();
-    
+
     void set_velocity(const Vector2& new_velocity);
-    Vector2 get_velocity() const { return data.velocity; }
+    Vector2 get_velocity() const;
 
     void set_mass(f32 new_mass);
     [[nodiscard]] f32 get_mass() const { return data.mass; }
@@ -53,6 +53,9 @@ struct Body2D : Object2D
 
     void set_air_friction(f32 new_air_friction);
     [[nodiscard]] f32 get_air_friction() const { return data.air_friction; }
+
+    void set_bounce(f32 new_bounce);
+    [[nodiscard]] f32 get_bounce() const;
 
     void apply_force(const Vector2& point, const Vector2& force) const;
     void apply_impulse(const Vector2& point, const Vector2& force) const;

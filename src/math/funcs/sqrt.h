@@ -1,15 +1,22 @@
 #pragma once
 #include "math/funcs/abs.h"
+#include "platform/instrinsics.h"
+
 
 
 namespace math
 {
 
+
 template<typename T>
     requires(IsFloatingPoint<T>)
-[[nodiscard]] constexpr T sqrt(T n)
+[[nodiscard]] constexpr T sqrt(T x)
 {
     // TODO: Improve this
+
+#if BREAD_ENABLE_INTRISICS
+    return PlatformIntricics::sqrt(x);
+#else
     if (n == T(0))
         return n;
 
@@ -25,6 +32,7 @@ template<typename T>
 
         x = root;
     }
+#endif
 }
 
 }

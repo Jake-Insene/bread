@@ -29,7 +29,6 @@ void TileMap::render()
 	if (tile_map_texture == nullptr)
 		return;
 
-	const Vector2 texture_size = Vector2(data.tile_set->get_texture()->get_size());
 	const Vector2 tile_size = Vector2(data.tile_set->get_tile_size());
 
 	Transform2D base_transform = get_global_transform();
@@ -87,8 +86,7 @@ void TileMap::set_tile_set(TileSet* new_tile_set)
 		Physics2D::body_set_shape(body_id, tile_shape);
 	}
 
-	usize ptr_id = (usize)id.id;
-	DebugInfo("TileMap({}): Creating {} shapes", (void*)ptr_id, shape_count);
+	DebugInfo("TileMap({}): Creating {} shapes", (void*)usize(id.id), shape_count);
 }
 
 

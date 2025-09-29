@@ -3,11 +3,10 @@
 #include "collections/free_list.h"
 #include "platform/platform_header.h"
 
+
 #define XAudio2Fatal(...) Fatal("[XAudio2Driver]: " __VA_ARGS__)
 #define XAudio2DebugInfo(...) DebugInfo("[XAudio2Driver]: " __VA_ARGS__)
 
-
-#include <atomic>
 
 struct XAudio2Driver
 {

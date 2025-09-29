@@ -62,7 +62,7 @@ namespace gles
     u32 compile_program(StringView program_path, StringView defines)
     {
         constexpr StringView glsl_version_header =
-#if defined(ENGINE_ANDROID)
+#if defined(BREAD_ANDROID)
         "#version 310 es\n";
 #else
         "#version 450 core\n";

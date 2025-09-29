@@ -49,6 +49,7 @@ struct [[nodiscard]] Result
 		}
 
 		DebugAssert(false, "the result hasn't a value");
+		return T();
 	}
 
 	constexpr auto error() const

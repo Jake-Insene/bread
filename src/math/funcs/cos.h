@@ -1,7 +1,7 @@
 #pragma once
-#include "core/macros.h"
-#include "core/templates.h"
 #include "math/constants.h"
+#include "platform/instrinsics.h"
+
 
 namespace math::impl
 {
@@ -36,6 +36,13 @@ constexpr T cos_approx(T x)
     result += term;
 
     return result;
+}
+
+template<typename T>
+    requires(IsArithmetic<T>)
+constexpr T cos(T r)
+{
+    return cos_approx<T>(r);
 }
 
 }

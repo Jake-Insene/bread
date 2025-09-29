@@ -14,7 +14,7 @@ struct Audio
         DEFAULT_DRIVER = XAUDIO2,
     };
 
-    using SourceVoiceID = ID<i32>;
+    using SourceVoiceID = ID<u32>;
 
     struct VTable
     {

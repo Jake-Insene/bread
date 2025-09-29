@@ -269,7 +269,7 @@ struct [[nodiscard]] StringMap
             return;
         }
         
-        Slice<MapEntry*> new_entries = new_entries = allocator.array<MapEntry*>(new_size);
+        Slice<MapEntry*> new_entries = allocator.array<MapEntry*>(new_size);
 
         for (MapEntry* e = first; e != nullptr; e = e->next)
         {

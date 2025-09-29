@@ -1,5 +1,6 @@
 #include "physics/p2d/p2d_collision.h"
 
+#include "2d/object_2d.h"
 #include "math/values.h"
 
 
@@ -78,4 +79,74 @@ P2DCollision::CollisionManifold P2DCollision::polygon_v_polygon(
 	}
 
 	return contact;
+}
+
+void P2DCollision::positional_correction(CollisionManifold& manifold, P2DBody& body_a, P2DBody& body_b)
+{
+	const f32 correction_percentage = 1.f;
+
+	f32 inv_mass_a = body_a.get_inv_mass();
+	f32 inv_mass_b = body_b.get_inv_mass();
+	f32 inv_mass_sum = inv_mass_a + inv_mass_b;
+
+	if (inv_mass_sum > 0)
+	{
+		inv_mass_sum = 1.f / inv_mass_sum;
+	}
+	else if (body_a.type == Physics2D::KINEMATIC)
+	{
+		inv_mass_sum = 1.f;
+		inv_mass_a = 1.f;
+	}
+
+	const f32 amount_to_correct = manifold.depth * inv_mass_sum * correction_percentage;
+	const Vector2 correction_vector = manifold.normal * amount_to_correct;
+
+	const Vector2 body_a_movement = correction_vector * inv_mass_a * -1;
+	const Vector2 body_b_movement = correction_vector * inv_mass_b;
+
+	if (body_a.type != Physics2D::STATIC)
+	{
+		body_a.target->translate(body_a_movement);
+	}
+	if (body_b.type != Physics2D::STATIC)
+	{
+		body_b.target->translate(body_b_movement);
+	}
+
+}
+
+void P2DCollision::resolve_collision(CollisionManifold& manifold, P2DBody& body_a, P2DBody& body_b)
+{
+	// Linear impulse
+	const Vector2 relative_velocity = body_b.get_velocity() - body_a.get_velocity();
+	const f32 relative_velocity_along_normal = relative_velocity.dot(manifold.normal);
+	if (relative_velocity_along_normal > 0.f)
+	{
+		return;
+	}
+
+	if (body_a.type != Physics2D::DYNAMIC && body_b.type != Physics2D::DYNAMIC)
+	{
+		return;
+	}
+
+	const f32 inv_mass_sum = body_a.get_inv_mass() + body_b.get_inv_mass();
+
+	//const f32 e = math::min(body_a.get_bounce(), body_b.get_bounce());
+	f32 inv_bounce_sum = body_a.get_bounce() + body_b.get_bounce();
+	if (inv_bounce_sum > 0)
+	{
+		inv_bounce_sum = 1.f / inv_bounce_sum;
+	}
+	const f32 e = (2*body_a.get_bounce()*body_b.get_bounce()) * inv_bounce_sum;
+
+	f32 j = -(1.f + e) * relative_velocity_along_normal;
+	j /= inv_mass_sum;
+
+	const Vector2 impulse = manifold.normal * j;
+	const Vector2 impulse_body_a = impulse * body_a.get_inv_mass() * -1;
+	const Vector2 impulse_body_b = impulse * body_b.get_inv_mass();
+	body_a.set_velocity(body_a.get_velocity() + impulse_body_a);
+	body_b.set_velocity(body_b.get_velocity() + impulse_body_b);
 }

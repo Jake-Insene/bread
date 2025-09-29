@@ -1,5 +1,6 @@
 #pragma once
 #include "physics/p2d/p2d_shape.h"
+#include "physics/p2d/p2d_body.h"
 
 
 struct P2DCollision
@@ -24,5 +25,8 @@ struct P2DCollision
 	static CollisionManifold get_contact_point(const P2DShape& shape_a, const P2DShape& shape_b);
 
 	static CollisionManifold polygon_v_polygon(const P2DShape& shape_a, const P2DShape& shape_b);
+
+	static void positional_correction(CollisionManifold& manifold, P2DBody& body_a, P2DBody& body_b);
+	static void resolve_collision(CollisionManifold& manifold, P2DBody& body_a, P2DBody& body_b);
 };
 

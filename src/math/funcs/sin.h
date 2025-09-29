@@ -1,6 +1,6 @@
 #pragma once
-#include "core/macros.h"
-#include "core/templates.h"
+#include "platform/instrinsics.h"
+
 
 namespace math::impl
 {
@@ -22,19 +22,36 @@ constexpr T sin_approx(T x)
     T term = x;
     T result = term;
 
-    term *= -x2 / (T(2.0) * T(3.0));     // -x^3 / 3!
+    // 1/3!
+    static constexpr T fact_1_3 = T(1) / (T(2) * T(3));
+    // 1/5!
+    static constexpr T fact_1_5 = T(1) / (T(4) * T(5));
+    // 1/7!
+    static constexpr T fact_1_7 = T(1) / (T(6) * T(7));
+    // 1/9!
+    static constexpr T fact_1_9 = T(1) / (T(8) * T(9));
+
+    term *= -x2 * fact_1_3;     // -x^3 / 3!
     result += term;
 
-    term *= -x2 / (T(4.0) * T(5.0));     // +x^5 / 5!
+    term *= -x2 * fact_1_5;     // +x^5 / 5!
     result += term;
     
-    term *= -x2 / (T(6.0) * T(7.0));     // -x^7 / 7!
+    term *= -x2 * fact_1_7;     // -x^7 / 7!
     result += term;
     
-    term *= -x2 / (T(8.0) * T(9.0));     // +x^9 / 9!
+    term *= -x2 * fact_1_9;     // +x^9 / 9!
     result += term;
 
     return result;
+}
+
+
+template<typename T>
+    requires(IsArithmetic<T>)
+constexpr T sin(T r)
+{
+    return sin_approx<T>(r);
 }
 
 }

@@ -1,6 +1,7 @@
 #include "os/os.h"
 
-#if defined(ENGINE_WIN32)
+
+#if defined(BREAD_WIN32)
 #include "platform/win32/win32_os.h"
 using PlatformOS = Win32OS;
 #endif
