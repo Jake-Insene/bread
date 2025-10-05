@@ -330,7 +330,7 @@ void P2DDriver::body_apply_force(Physics2D::BodyID body_id, const Vector2&, cons
     body.add_force(force);
 }
 
-void P2DDriver::body_apply_impulse(Physics2D::BodyID body_id, const Vector2& point, const Vector2& impulse)
+void P2DDriver::body_apply_impulse(Physics2D::BodyID, const Vector2&, const Vector2&)
 {}
 
 void P2DDriver::body_set_fixed_rotation(Physics2D::BodyID body_id, bool enable)
@@ -484,17 +484,17 @@ void P2DDriver::_handle_debug_draw_body(P2DBody& body)
 
     body.target->get_viewport()->render_item_draw_circle(
         body.target->get_render_item(),
-        shape.get_centroid(), 2.f, Color(255, 0, 0, 255)
+        shape.get_centroid(), 1.f, Color(255, 0, 0, 255)
     );
 
     body.target->get_viewport()->render_item_draw_circle(
         body.target->get_render_item(),
-        shape.aabb.min, 2.f, Color(0, 255, 0, 255)
+        shape.aabb.min, 1.f, Color(0, 255, 0, 255)
     );
 
     body.target->get_viewport()->render_item_draw_circle(
         body.target->get_render_item(),
-        shape.aabb.max, 2.f, Color(0, 0, 255, 255)
+        shape.aabb.max, 1.f, Color(0, 0, 255, 255)
     );
 }
 

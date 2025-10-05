@@ -101,7 +101,7 @@ void main()
 #if defined(CIRCLE)
     // Always centered
     vertice += vec2(-0.5, 0.5);
-    local_position = vertice;
+    local_position = vertice * 2.0;
     radius = input_radius;
 #endif
 #endif
@@ -112,7 +112,7 @@ void main()
 #elif defined(PRIMITIVE)
     vec4 out_pos = vec4(input_point.x, input_point.y, 0, 1);
 #elif defined(CIRCLE)
-    vec4 out_pos = vec4(vertice * input_radius, 0, 1);
+    vec4 out_pos = vec4(vertice * 2.0 * input_radius, 0, 1);
 #endif
     
     // Getting UV
@@ -289,7 +289,7 @@ void main()
 #elif defined(CIRCLE)
     float edge_smoothness = 0.005;
     float dist = distance(vec2(0, 0), local_position);
-    float alpha = 1.0 - smoothstep(0.5 - edge_smoothness, 0.5 + edge_smoothness, dist);
+    float alpha = 1.0 - smoothstep(1.0 - edge_smoothness, 1.0 + edge_smoothness, dist);
     frag_color = color;
     frag_color.a *= alpha;
 #endif
