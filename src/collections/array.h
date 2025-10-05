@@ -92,9 +92,7 @@ struct [[nodiscard]] Array
     [[nodiscard]] constexpr T* end() { return items.items + count; }
     [[nodiscard]] constexpr const T* end() const { return items.items + count; }
     
-    // funcs
-
-    [[nodiscard]] bool is_empty() const { return count > 0; }
+    [[nodiscard]] bool is_empty() const { return count == 0; }
     
     void ensure_capacity(const usize required_capacity)
     {

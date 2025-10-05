@@ -12,7 +12,10 @@ struct [[nodiscard]] P2DBody
     {
         Vector2 velocity;
         Vector2 force_accumulator;
-
+        f32 angular_velocity;
+        
+        f32 inertia;
+        f32 inv_inertia;
         f32 mass;
         f32 inv_mass;
         f32 friction;
@@ -46,6 +49,11 @@ struct [[nodiscard]] P2DBody
     void set_velocity(const Vector2& new_velocity);
     Vector2 get_velocity() const;
 
+    void set_angular_velocity(f32 new_angular_velocity);
+    f32 get_angular_velocity() const;
+
+    [[nodiscard]] f32 get_inv_inertia() const {return data.inv_inertia; }
+
     void set_mass(f32 new_mass);
     [[nodiscard]] f32 get_mass() const { return data.mass; }
     [[nodiscard]] f32 get_inv_mass() const { return data.inv_mass; }
@@ -64,8 +72,8 @@ struct [[nodiscard]] P2DBody
 
     void step(f32 dt);
     void integrate(f32 dt);
+    void compute_inertia();
 
     void _semi_implicit_euler(f32 dt);
-    void runge_kutta4(f32 dt);
 
 };

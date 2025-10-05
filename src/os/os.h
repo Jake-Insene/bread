@@ -6,6 +6,13 @@
 
 struct OS
 {
+    enum MapAccess
+    {
+        MapUnknown = 0,
+        MapReadWrtie,
+        MapReadWrtieExecute,
+    };
+
     using ThreadID = ID<u32>;
     using ThreadFn = void(*)(void*);
 
@@ -18,6 +25,9 @@ struct OS
 
     static void exit(u64 code);
     static usize get_page_size();
+
+    static Slice<u8> map_memory(usize memory_size, MapAccess access);
+    static void unmap_memory(Slice<u8> memory);
 
     static ThreadID thread_create(ThreadFn fn, void* arg);
     static void thread_destroy(ThreadID tid);

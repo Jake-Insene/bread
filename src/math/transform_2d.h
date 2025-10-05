@@ -13,6 +13,8 @@ struct [[nodiscard]] Transform2D
     // [2][0] [2][1] position
     Vector2 rows[3];
 
+    static Transform2D with_rotation(const f32 rads);
+
     Transform2D()
     {
         rows[0] = Vector2(1, 0);
@@ -43,6 +45,7 @@ struct [[nodiscard]] Transform2D
 
     void set_rotation(const f32 rads);
     [[nodiscard]] f32 get_rotation() const;
+    void rotate(const f32 rads);
 
     [[nodiscard]] f32 determinant() const;
     Vector2 get_column(usize n) const;

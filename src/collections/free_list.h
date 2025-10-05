@@ -86,6 +86,9 @@ struct [[nodiscard]] FreeList
 
         count--;
 
+        T& item = get(slot);
+        item.~T();
+
         if(last_free_element == InvalidSlot)
         {
             last_free_element = slot;

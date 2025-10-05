@@ -32,12 +32,9 @@ union [[nodiscard]] Vector2T
     static constexpr Vector2T right() { return Vector2T(1, 0); }
     static constexpr Vector2T left() { return Vector2T(-1, 0); }
 
-    static constexpr Vector2T cross(const Vector2T& v1, const Vector2T& v2)
+    static constexpr T cross(const Vector2T& v1, const Vector2T& v2)
     {
-        return Vector2T
-        {
-            (v1.x * v2.y) - (v1.y * v2.x)
-        };
+		return v1.x * v2.y - v1.y * v2.x;
     }
 
 

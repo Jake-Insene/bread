@@ -18,7 +18,7 @@ struct Object2D : Object
     {
         RenderItemID render_item;
         Transform2D transform{};
-        Transform2D _global_transform_cache{};
+        Transform2D global_transform_cache{};
         Vector2 pos_cache = Vector2(0, 0);
         Vector2 scale_cache = Vector2(1, 1);
         // In Radians
@@ -41,6 +41,8 @@ struct Object2D : Object
     
     void set_rotation(f32 new_rot);
     [[nodiscard]] f32 get_rotation() const;
+
+    void rotate(const f32 rads);
 
     Transform2D get_transform() const;
     Transform2D get_global_transform() const;

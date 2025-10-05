@@ -62,6 +62,9 @@ struct Win32OS
     static void exit(u64 code);
     static usize get_page_size();
 
+    static Slice<u8> map_memory(usize memory_size, OS::MapAccess access);
+    static void unmap_memory(Slice<u8> memory);
+
     static OS::ThreadID thread_create(OS::ThreadFn fn, void* arg);
     static void thread_destroy(OS::ThreadID tid);
     static bool thread_join(OS::ThreadID tid);

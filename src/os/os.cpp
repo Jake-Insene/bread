@@ -1,9 +1,12 @@
 #include "os/os.h"
 
 
-#if defined(BREAD_WIN32)
+#if BREAD_WIN32
 #include "platform/win32/win32_os.h"
 using PlatformOS = Win32OS;
+#elif BREAD_ANDROID
+#include "platform/android/android_os.h"
+using PlatformOS = AndroidOS;
 #endif
 
 
@@ -25,6 +28,16 @@ void OS::exit(u64 code)
 usize OS::get_page_size()
 {
 	return PlatformOS::get_page_size();
+}
+
+Slice<u8> OS::map_memory(usize memory_size, MapAccess access)
+{
+	return PlatformOS::map_memory(memory_size, access);
+}
+
+void OS::unmap_memory(Slice<u8> memory)
+{
+	PlatformOS::unmap_memory(memory);
 }
 
 OS::ThreadID OS::thread_create(ThreadFn fn, void* arg)

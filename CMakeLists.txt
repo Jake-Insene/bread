@@ -10,9 +10,21 @@ set(BREAD_DEBUG_DEFINITIONS "-DDEBUG -DSHOW_DEBUG_INFO -DENABLE_DEBUG_OPTIONS")
 set(CMAKE_MSVC_RUNTIME_CHECKS OFF)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+if(DEFINED BREAD_ANDROID)
+    message(${ANDROID_ABI})
+    string(FIND "${ANDROID_ABI}" "arm64-v8a" IS_ARM)
+    if("${IS_ARM}" STREQUAL "-1")
+        set(BREAD_TARGET_ARCH ${BREAD_TARGET_ARCH} "X64")
+    else()
+        set(BREAD_TARGET_ARCH ${BREAD_TARGET_ARCH} "ARM64")
+    endif()
+endif()
+
 # Target Arch
 if("${BREAD_TARGET_ARCH}" STREQUAL "X64")
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "BREAD_ENABLE_INTRISICS" "BREAD_X64")
+elseif("${BREAD_TARGET_ARCH}" STREQUAL "ARM64")
+    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "BREAD_ENABLE_INTRISICS" "BREAD_ARM64")
 endif()
 
 # Compiler
@@ -30,7 +42,7 @@ if(MSVC)
 
     set(
         BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} 
-        "/W3"  "/Oi" "/Zl" "/GS-" "/GR-" "/EHs-" "/EHc-" "/Zc:threadSafeInit-"
+        "/W3" "/Oi" "/Zl" "/GS-" "/GR-" "/EHs-" "/EHc-" "/Zc:threadSafeInit-" "/Zc:preprocessor"
         # Some warnings needs to be treated as error because we eliminated the compiler runtime,
         # so now is more easy to create bugs.
         "/we4701" "/we4700" "/we4101" "/we4703" "/we4189"
@@ -39,19 +51,28 @@ if(MSVC)
     set(BREAD_EXE_LINK_OPTIONS ${BREAD_EXE_LINK_OPTIONS} "/NODEFAULTLIB" "/ENTRY:WinMain")
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_MSVC")
 else()
-    set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} "-Wall" "-Wextra" "-msse4.1")
+    if("${BREAD_TARGET_ARCH}" STREQUAL "X64")
+        set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} "-msse4.1")
+    endif()
     set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS}
-        "-fno-rtti" "-fno-exceptions" "-Wall" "-Wextra" "-msse4.1"
-        "-DBREAD_CLANG"
+        "-fno-rtti" "-fno-exceptions" "-Wall" "-Wextra"
     )
+    
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_CLANG")
 endif()
 
+# Build type
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} ${BREAD_DEBUG_DEFINITIONS})
 elseif(${CMAKE_BUILD_TYPE} STREQUAL "Release")
+    if(NOT MSVC)
+        set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} "-O3" "-ffast-math")
+    endif()
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DRELEASE")
 elseif(${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
+    if(NOT MSVC)
+        set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} "-O3" "-ffast-math")
+    endif()
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} ${BREAD_DEBUG_DEFINITIONS})
 endif()
 
@@ -91,8 +112,6 @@ file(GLOB ENGINE_SRC
     
     src/engine/engine.cpp
 
-    src/fs/file.cpp
-    
     src/graphics/egl/egl.cpp
     src/graphics/graphics.cpp
     src/graphics/render_target.cpp
@@ -100,6 +119,7 @@ file(GLOB ENGINE_SRC
 
     src/input/input.cpp
     
+    src/io/file.cpp
     src/io/writer.cpp
 
     src/log/log.cpp
@@ -109,6 +129,7 @@ file(GLOB ENGINE_SRC
     
     src/mem/utils.cpp
     src/mem/generic_allocator.cpp
+    src/mem/page_allocator.cpp
 
     src/os/mutex.cpp
     src/os/os.cpp
@@ -164,7 +185,6 @@ if(ANDROID)
         src/platform/android/android_main.cpp
         src/platform/android/android_math.cpp
         src/platform/android/android_os.cpp
-        src/platform/android/android_page_allocator.cpp
         src/platform/android/android_time.cpp
 
         ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c
@@ -182,7 +202,6 @@ elseif(WIN32)
         src/platform/win32/win32_main.cpp
         src/platform/win32/win32_math.cpp
         src/platform/win32/win32_os.cpp
-        src/platform/win32/win32_page_allocator.cpp
         src/platform/win32/win32_time.cpp
     )
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_WIN32")

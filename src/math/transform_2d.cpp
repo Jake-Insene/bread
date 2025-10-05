@@ -4,6 +4,17 @@
 #include "math/funcs.h"
 
 
+Transform2D Transform2D::with_rotation(const f32 rads)
+{
+    f32 s, c;
+    math::sincos(s, c, rads);
+    return Transform2D(
+        Vector2(c, -s),
+        Vector2(s, c),
+        Vector2()
+    );
+}
+
 Vector2& Transform2D::operator[](usize index)
 {
     DebugAssert(index < 3, "index can only be 0, 1 or 2");
@@ -86,6 +97,11 @@ void Transform2D::set_rotation(const f32 rads)
 f32 Transform2D::get_rotation() const
 {
     return math::atan2(rows[1].x, rows[0].x);
+}
+
+void Transform2D::rotate(const f32 rads)
+{
+    *this = *this * Transform2D::with_rotation(rads);
 }
 
 f32 Transform2D::determinant() const

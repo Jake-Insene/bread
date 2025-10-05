@@ -17,9 +17,11 @@ struct [[nodiscard]] P2DShape
 	void apply_transform(const Transform2D& transform);
 	void translate(const Vector2& translation);
 	void rotate(const f32 r);
-
+	
 	[[nodiscard]] f32 get_area() const;
 	[[nodiscard]] Vector2 get_centroid() const;
+
+	f32 calculate_inertia(f32 mass) const;
 
 	Shape2D to_shape_2d() const;
 

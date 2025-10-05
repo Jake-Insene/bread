@@ -32,8 +32,8 @@ void Camera2D::set_enable(bool _enable)
 Transform2D Camera2D::get_camera_transform()
 {
     const Transform2D camera_transform = get_global_transform();
-    const Vector2 camera_position = camera_transform.get_position();
     const Vector2 camera_scale = camera_transform.get_scale();
+    const Vector2 camera_position = camera_transform.get_position() * camera_scale;
     const f32 camera_rot = camera_transform.get_rotation();
     const f32 dt = SceneManager::get_delta_time();
 
@@ -55,7 +55,7 @@ Transform2D Camera2D::get_camera_transform()
     case POSITION_CENTERED:
     {
         const Vector2 display_size = Vector2(SceneManager::get_viewport_size());
-        Vector2 centered_pos = camera_position * camera_scale;
+        Vector2 centered_pos = camera_position;
         centered_pos -= (Vector2(display_size.x, -display_size.y) * 0.5);
 
         if (smooth_position)
@@ -73,8 +73,8 @@ Transform2D Camera2D::get_camera_transform()
     }
 
     Transform2D transform;
+    transform.set_rotation(camera_rot);
     transform.set_scale(camera_scale);
     transform.translate(data.old_pos);
-    transform.set_rotation(camera_rot);
     return transform;
 }

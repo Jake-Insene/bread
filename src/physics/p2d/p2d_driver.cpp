@@ -4,6 +4,7 @@
 #include "physics/area_2d.h"
 #include "physics/body_2d.h"
 #include "2d/tile_map.h"
+#include "physics/physics_2d.h"
 
 
 
@@ -27,6 +28,8 @@ Physics2D::VTable P2DDriver::get_vtable()
         .body_set_type = &P2DDriver::body_set_type,
         .body_set_velocity = &P2DDriver::body_set_velocity,
         .body_get_velocity = &P2DDriver::body_get_velocity,
+        .body_set_angular_velocity = &P2DDriver::body_set_angular_velocity,
+        .body_get_angular_velocity = &P2DDriver::body_get_angular_velocity,
         .body_set_mass = &P2DDriver::body_set_mass,
         .body_get_mass = &P2DDriver::body_get_mass,
         .body_set_friction = &P2DDriver::body_set_friction,
@@ -38,6 +41,7 @@ Physics2D::VTable P2DDriver::get_vtable()
         .body_apply_force = &P2DDriver::body_apply_force,
         .body_apply_impulse = &P2DDriver::body_apply_impulse,
         .body_set_fixed_rotation = &P2DDriver::body_set_fixed_rotation,
+
         .body_is_on_floor = &P2DDriver::body_is_on_floor,
         .body_is_on_ceil = &P2DDriver::body_is_on_ceil,
         
@@ -160,6 +164,9 @@ Physics2D::BodyID P2DDriver::create_body(Object2D* object)
     new_body.set_friction(1.f);
     new_body.set_air_friction(1.f);
     new_body.set_bounce(0.f);
+    new_body.compute_inertia();
+    new_body.set_velocity(Vector2());
+    new_body.set_angular_velocity(0.f);
 
     new_body.tiles_on = Array<PhysicsTileCoord>::with_size(get_allocator(), 4);
 
@@ -257,6 +264,18 @@ Vector2 P2DDriver::body_get_velocity(Physics2D::BodyID body_id)
     return body.get_velocity();
 }
 
+void P2DDriver::body_set_angular_velocity(Physics2D::BodyID body_id, f32 angular_velocity)
+{
+    P2DBody& body = _get_body(body_id);
+    body.set_angular_velocity(angular_velocity);
+}
+
+f32 P2DDriver::body_get_angular_velocity(Physics2D::BodyID body_id)
+{
+    const P2DBody& body = _get_body(body_id);
+    return body.get_angular_velocity();
+}
+
 void P2DDriver::body_set_mass(Physics2D::BodyID body_id, f32 new_mass)
 {
     P2DBody& body = _get_body(body_id);
@@ -311,9 +330,8 @@ void P2DDriver::body_apply_force(Physics2D::BodyID body_id, const Vector2&, cons
     body.add_force(force);
 }
 
-void P2DDriver::body_apply_impulse(Physics2D::BodyID, const Vector2&, const Vector2&)
-{
-}
+void P2DDriver::body_apply_impulse(Physics2D::BodyID body_id, const Vector2& point, const Vector2& impulse)
+{}
 
 void P2DDriver::body_set_fixed_rotation(Physics2D::BodyID body_id, bool enable)
 {
@@ -438,33 +456,25 @@ void P2DDriver::property_change(StringView property_name, PropertyValue new_valu
     {
         data.gravity = new_value.get<Vector2>();
     }
+    else if (property_name.equals("/debug_draw"))
+    {
+        data.debug_draw = new_value.get<bool>();
+    }
 }
 
 void P2DDriver::_handle_debug_draw_body(P2DBody& body)
 {
-#if defined(ENABLE_DEBUG_OPTIONS)
-    if (Physics2D::get_property("/debug_draw").get<bool>() == false)
+    if (data.debug_draw == false)
         return;
 
     P2DShape shape = body.get_shape();
     Transform2D transform = body.target->get_global_transform();
     shape.apply_transform(transform);
 
-    for(usize i = 0; i < 4; i++)
-    {
-        Vector2 point1 = shape.vertices[i];
-        Vector2 point2 = shape.vertices[(i + 1) & 3];
-
-        body.target->get_viewport()->render_item_draw_line(
-            body.target->get_render_item(),
-            point1, point2, Color(255, 0, 0, 255)
-        );
-    }
-
     for (usize i = 0; i < 4; i++)
     {
         Vector2 point1 = shape.vertices[i];
-        Vector2 point2 = shape.vertices[(i + 1) & 3];
+        Vector2 point2 = shape.vertices[(i + 1) % 4];
 
         body.target->get_viewport()->render_item_draw_line(
             body.target->get_render_item(),
@@ -474,26 +484,23 @@ void P2DDriver::_handle_debug_draw_body(P2DBody& body)
 
     body.target->get_viewport()->render_item_draw_circle(
         body.target->get_render_item(),
-        shape.get_centroid(), 1.f, Color(255, 0, 0, 255)
+        shape.get_centroid(), 2.f, Color(255, 0, 0, 255)
     );
 
     body.target->get_viewport()->render_item_draw_circle(
         body.target->get_render_item(),
-        shape.aabb.min, 1.f, Color(0, 255, 0, 255)
+        shape.aabb.min, 2.f, Color(0, 255, 0, 255)
     );
 
     body.target->get_viewport()->render_item_draw_circle(
         body.target->get_render_item(),
-        shape.aabb.max, 1.f, Color(0, 0, 255, 255)
+        shape.aabb.max, 2.f, Color(0, 0, 255, 255)
     );
-
-#endif
 }
 
 void P2DDriver::_handle_debug_draw_area(Area& area)
 {
-#if defined(ENABLE_DEBUG_OPTIONS)
-    if (Physics2D::get_property("/debug_draw").get<bool>() == false)
+    if (data.debug_draw == false)
         return;
 
     P2DShape shape = area.shape;
@@ -503,7 +510,7 @@ void P2DDriver::_handle_debug_draw_area(Area& area)
     for (usize i = 0; i < 4; i++)
     {
         Vector2 point1 = shape.vertices[i];
-        Vector2 point2 = shape.vertices[(i + 1) & 3];
+        Vector2 point2 = shape.vertices[(i + 1) % 4];
 
         area.target->get_viewport()->render_item_draw_line(
             area.target->get_render_item(),
@@ -515,7 +522,6 @@ void P2DDriver::_handle_debug_draw_area(Area& area)
         area.target->get_render_item(),
         shape.get_centroid(), 1.f, Color(255, 0, 0, 255)
     );
-#endif
 }
 
 void P2DDriver::_move_body(P2DBody& body, f32 dt)
@@ -546,8 +552,9 @@ void P2DDriver::_check_body_collision(P2DBody& body)
 
 void P2DDriver::_check_body_collisions_on_tile(P2DBody& body, PhysicsTile& tile)
 {
-    P2DShape body_shape = body.get_shape();
-    body_shape.apply_transform(body.target->get_global_transform());
+	P2DShape body_shape = body.get_shape();
+	Transform2D global_transform = body.target->get_global_transform();
+	body_shape.apply_transform(global_transform);
 
     for (auto other_body_id : tile.bodies)
     {
@@ -555,6 +562,10 @@ void P2DDriver::_check_body_collisions_on_tile(P2DBody& body, PhysicsTile& tile)
             continue;
 
         P2DBody& other_body = _get_body(other_body_id);
+        // Ignore collision between static objects.
+        if(body.type == Physics2D::STATIC && other_body.type == Physics2D::STATIC)
+            continue;
+
         if ((body.collision_mask & other_body.residence_mask) == 0)
             continue;
 
@@ -575,11 +586,11 @@ void P2DDriver::_check_body_collisions_on_tile(P2DBody& body, PhysicsTile& tile)
             continue;
         }
 
-        body.is_on_floor |= manifold.normal.y < 0;
-        body.is_on_ceil |= manifold.normal.y > 0;
+        body.is_on_floor = manifold.normal.y < 0;
+        body.is_on_ceil = manifold.normal.y > 0;
 
-        other_body.is_on_floor |= manifold.normal.y > 0;
-        other_body.is_on_ceil |= manifold.normal.y < 0;
+        other_body.is_on_floor = manifold.normal.y > 0;
+        other_body.is_on_ceil = manifold.normal.y < 0;
 
         P2DCollision::positional_correction(manifold, body, other_body);
         P2DCollision::resolve_collision(manifold, body, other_body);

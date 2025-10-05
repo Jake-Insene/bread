@@ -3,16 +3,12 @@
 
 P2DShape P2DShape::from_shape_2d(const Shape2D& shape)
 {
-    P2DShape pshape =
-    {
-        .vertices =
-        {
-            shape.vertices[0],
-            shape.vertices[1],
-            shape.vertices[2],
-            shape.vertices[3],
-        }
-    };
+    P2DShape pshape = {};
+    
+    pshape.vertices[0] =shape.vertices[0];
+    pshape.vertices[1] = shape.vertices[1];
+    pshape.vertices[2] =shape.vertices[2];
+    pshape.vertices[3] = shape.vertices[3];
 
     pshape._calc_aabb();
     pshape._calc_normals();
@@ -28,6 +24,8 @@ void P2DShape::apply_transform(const Transform2D& transform)
     vertices[1] = transform * vertices[1];
     vertices[2] = transform * vertices[2];
     vertices[3] = transform * vertices[3];
+
+    centroid += transform.get_position();
 
     // The transformation could rotate the vertices
     _calc_aabb();
@@ -65,6 +63,26 @@ f32 P2DShape::get_area() const
 Vector2 P2DShape::get_centroid() const
 {
     return centroid;
+}
+
+f32 P2DShape::calculate_inertia(f32 mass) const
+{
+    f32 inertia = 0.f;
+    const f32 mass_per_triangle_face = mass / 4.f;
+    for(usize i = 0; i < 4; i++)
+    {
+        const Vector2 center_to_vertice = vertices[i] - centroid;
+        const Vector2 center_to_vertice1 = vertices[(i + 1) % 4] - centroid;
+        const f32 center_to_vertice_lenght2 = center_to_vertice.dot(center_to_vertice);
+        const f32 center_to_vertice1_lenght2 = center_to_vertice1.dot(center_to_vertice1);
+        const f32 inertia_triangle = mass_per_triangle_face * 
+            (center_to_vertice_lenght2 + center_to_vertice1_lenght2
+            + center_to_vertice.dot(center_to_vertice1)) / 6.f;
+        
+        inertia += inertia_triangle;
+    } 
+
+    return inertia;
 }
 
 Shape2D P2DShape::to_shape_2d() const
@@ -109,7 +127,7 @@ void P2DShape::_calc_normals()
     for (usize i = 0; i < 4; i++)
     {
         const Vector2& v1 = vertices[i];
-        const Vector2& v2 = vertices[(i + 1) & 3];
+        const Vector2& v2 = vertices[(i + 1) % 4];
 
         normals[i] = (v2 - v1).normalized().normal();
     }
@@ -123,7 +141,7 @@ void P2DShape::_calc_area()
     for (usize i = 0; i < 4; i++)
     {
         const Vector2& v1 = vertices[i];
-        const Vector2& v2 = vertices[(i + 1) & 3];
+        const Vector2& v2 = vertices[(i + 1) % 4];
         area += v1.x * v2.y - v2.x * v1.y;
     }
 
@@ -144,7 +162,7 @@ void P2DShape::_calc_centroid()
     for (usize i = 0; i < 4; i++)
     {
         const Vector2& v1 = vertices[i];
-        const Vector2& v2 = vertices[(i + 1) & 3];
+        const Vector2& v2 = vertices[(i + 1) % 4];
 
         const f32 v1_v2_x = v1.x + v2.x;
         const f32 v1_v2_y = v1.y + v2.y;

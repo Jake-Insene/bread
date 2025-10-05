@@ -11,9 +11,8 @@ extern "C" {
 	extern "C" void __chkstk(void) {}
 
 	#pragma function(memset)
-	void* __cdecl memset(void* dest, int c, size_t count)
+	extern "C" void* __cdecl memset(void* dest, int c, size_t count)
 	{
-		//PlatformIntricics::copy(dest, c, count);
 		unsigned char* p = (unsigned char*)dest;
 		while (count--)
 		{
@@ -22,9 +21,8 @@ extern "C" {
 		return dest;
 	}
 
-	// memcpy
 	#pragma function(memcpy)
-	void* __cdecl memcpy(void* dest, const void* src, size_t count)
+	extern "C" void* __cdecl memcpy(void* dest, const void* src, size_t count)
 	{
 		unsigned char* d = (unsigned char*)dest;
 		const unsigned char* s = (const unsigned char*)src;

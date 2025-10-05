@@ -1,8 +1,11 @@
 #pragma once
 #include "collections/slice.h"
 
-#include <intrin.h>
-#include <xmmintrin.h>
+#if BREAD_X64
+#include <smmintrin.h>
+#elif BREAD_ARM64
+#include <arm_neon.h>
+#endif
 
 
 struct PlatformIntricics
@@ -17,7 +20,10 @@ struct PlatformIntricics
 #if BREAD_X64
 			__m128 mm = _mm_set_ss(x);
 			return _mm_cvtss_f32(_mm_sqrt_ss(mm));
-#else
+#elif BREAD_ARM64
+            const float32x2_t v = vdup_n_f32(x);
+            const float32x2_t result = vsqrt_f32(v);
+            return vget_lane_f32(result, 0);
 #endif
 		}
 	}
@@ -53,7 +59,17 @@ struct PlatformIntricics
 			_mm_store_ps(fields, normalized);
 			x1 = fields[0];
 			y1 = fields[1];
-#else
+#elif BREAD_ARM64
+            float32x2_t v = vdup_n_f32(0.f);
+            v = vset_lane_f32(x1, v, 0);
+            v = vset_lane_f32(y1, v, 1);
+            const float32x2_t squared = vmul_f32(v, v);
+            const float sum = vget_lane_f32(vpadd_f32(squared, squared), 0);
+            const float len = sqrt(sum);
+            const float32x2_t inv_len = vdup_n_f32(1.0f / len);
+            const float32x2_t result = vmul_f32(v, inv_len);
+            x1 = vget_lane_f32(result, 0);
+            y1 = vget_lane_f32(result, 1);
 #endif
 		}
 	}

@@ -5,9 +5,9 @@ struct Debug
     
     [[noreturn]] static void breakpoint()
     {
-#if defined(BREAD_WIN32)
+#if defined(BREAD_MSVC)
         __debugbreak();
-#elif defined(BREAD_ANDROID)
+#elif defined(BREAD_CLANG)
         __builtin_trap();
 #endif
     }

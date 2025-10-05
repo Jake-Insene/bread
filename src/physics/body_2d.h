@@ -45,6 +45,9 @@ struct Body2D : Object2D
     void set_velocity(const Vector2& new_velocity);
     Vector2 get_velocity() const;
 
+    void set_angular_velocity(f32 angular_velocity) const;
+    [[nodiscard]] f32 get_angular_velocity() const;
+
     void set_mass(f32 new_mass);
     [[nodiscard]] f32 get_mass() const { return data.mass; }
 

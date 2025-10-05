@@ -12,10 +12,10 @@
 #include "resource/resource_manager.h"
 
 
-void* operator new(size_t size)
+void* operator new(size_t)
 {
     FailOn(true, "Avoid 'new' statements!");
-    return nullptr;
+    return (void*)0xFFFFFFFF'FFFFFFFF;
 }
 
 void operator delete(void*)

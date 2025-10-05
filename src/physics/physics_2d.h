@@ -80,6 +80,8 @@ struct Physics2D
         VTFunc(void, body_set_type, BodyID, BodyType);
         VTFunc(void, body_set_velocity, BodyID, const Vector2&);
         VTFunc(Vector2, body_get_velocity, BodyID);
+        VTFunc(void, body_set_angular_velocity, BodyID, f32);
+        VTFunc(f32, body_get_angular_velocity, BodyID);
         VTFunc(void, body_set_mass, BodyID, f32);
         VTFunc(f32, body_get_mass, BodyID);
         VTFunc(void, body_set_friction, BodyID, f32);
@@ -138,6 +140,8 @@ struct Physics2D
     VTFuncDefArg2S(body_set_type, BodyID, BodyType);
     VTFuncDefArg2S(body_set_velocity, BodyID, const Vector2&);
     VTFuncDefArg1RetS(Vector2, body_get_velocity, BodyID);
+    VTFuncDefArg2S(body_set_angular_velocity, BodyID, f32);
+    VTFuncDefArg1RetS(f32, body_get_angular_velocity, BodyID);
     VTFuncDefArg2S(body_set_mass, BodyID, f32);
     VTFuncDefArg1RetS(f32, body_get_mass, BodyID);
     VTFuncDefArg2S(body_set_friction, BodyID, f32);

@@ -104,10 +104,10 @@
 // Don't use VTableCall because it reference the member vtable that
 // is not in an object.
 #define ObjectCall(name, ...) \
-    static_cast<RemoveConstPointer<decltype(this)>::VTable&>(*klass->vtable).name.call(this, __VA_ARGS__)
+    static_cast<RemoveConstPointer<decltype(this)>::VTable&>(*klass->vtable).name.call(this __VA_OPT__(,) __VA_ARGS__)
 
 #define ObjectCallRef(ref, name, ...) \
-    static_cast<RemoveConstPointer<decltype(ref)>::VTable&>(*ref->klass->vtable).name.call(ref, __VA_ARGS__)
+    static_cast<RemoveConstPointer<decltype(ref)>::VTable&>(*ref->klass->vtable).name.call(ref __VA_OPT__(,) __VA_ARGS__)
 
 
 #define DefineVTable(base) struct VTable : base::VTable

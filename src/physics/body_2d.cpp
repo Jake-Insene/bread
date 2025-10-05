@@ -54,6 +54,16 @@ Vector2 Body2D::get_velocity() const
     return Physics2D::body_get_velocity(data.body_id);
 }
 
+void Body2D::set_angular_velocity(f32 angular_velocity) const
+{
+    Physics2D::body_set_angular_velocity(data.body_id, angular_velocity);
+}
+
+f32 Body2D::get_angular_velocity() const
+{
+    return Physics2D::body_get_angular_velocity(data.body_id);
+}
+
 void Body2D::set_mass(f32 new_mass)
 {
     data.mass = new_mass;

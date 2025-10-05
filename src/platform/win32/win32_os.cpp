@@ -1,5 +1,6 @@
 #include "platform/win32/win32_os.h"
 #include "math/values.h"
+#include <winnt.h>
 
 
 static inline void _mutex_lock(SRWLOCK* srw)
@@ -66,6 +67,45 @@ usize Win32OS::get_page_size()
     SYSTEM_INFO info;
     GetSystemInfo(&info);
     return (usize)info.dwPageSize;
+}
+
+Slice<u8> Win32OS::map_memory(usize memory_size, OS::MapAccess access)
+{
+    const usize aligned_size = mem::align_up(memory_size, get_page_size());
+    Slice<u8> ptr{};
+
+    switch (access)
+    {
+    case OS::MapUnknown:
+        break;
+    case OS::MapReadWrtie:
+    {
+        ptr.items = (u8*)VirtualAllocEx(GetCurrentProcess(),
+            nullptr, aligned_size,
+            MEM_RESERVE | MEM_COMMIT,
+            PAGE_READWRITE
+        );
+        ptr.len = aligned_size;
+    }
+        break;
+    case OS::MapReadWrtieExecute:
+    {
+        ptr.items = (u8*)VirtualAllocEx(GetCurrentProcess(),
+            nullptr, aligned_size,
+            MEM_RESERVE | MEM_COMMIT,
+            PAGE_EXECUTE_READWRITE
+        );
+        ptr.len = aligned_size;
+    }
+        break;
+    }
+
+    return ptr;
+}
+
+void Win32OS::unmap_memory(Slice<u8> memory)
+{
+    VirtualFreeEx(GetCurrentProcess(), memory.items, 0, MEM_RELEASE);
 }
 
 OS::ThreadID Win32OS::thread_create(OS::ThreadFn fn, void* arg)
@@ -170,7 +210,7 @@ OS::SemaphoreID Win32OS::semaphore_create(usize initial_value)
 {
     OS::SemaphoreID sid = semaphore_data_allocate();
     SemaphoreData& semaphore_data = semaphore_data_get(sid);
-
+    
     semaphore_data.handle = CreateSemaphoreA(nullptr, LONG(initial_value), math::MaxValue<i32>, nullptr);
     DebugAssert(semaphore_data.handle != nullptr, "can't create a new semaphore");
 

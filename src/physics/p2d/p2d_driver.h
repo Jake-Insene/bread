@@ -72,6 +72,7 @@ struct P2DDriver
         HashMap<CollisionID, CollisionCallback> collision_callbacks_map;
 
         i32 tile_size;
+        bool debug_draw;
         HashMap<PhysicsTileCoord, PhysicsTile> world_tiles;
     };
 
@@ -113,6 +114,8 @@ struct P2DDriver
     static void body_set_type(Physics2D::BodyID body_id, Physics2D::BodyType new_type);
     static void body_set_velocity(Physics2D::BodyID body_id, const Vector2& new_velocity);
     static Vector2 body_get_velocity(Physics2D::BodyID body_id);
+    static void body_set_angular_velocity(Physics2D::BodyID body_id, f32 angular_velocity);
+    static f32 body_get_angular_velocity(Physics2D::BodyID body_id);
     static void body_set_mass(Physics2D::BodyID body_id, f32 new_mass);
     static f32 body_get_mass(Physics2D::BodyID body_id);
     static void body_set_friction(Physics2D::BodyID body_id, f32 new_friction);

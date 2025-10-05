@@ -27,6 +27,7 @@ struct [[nodiscard]] String
     
     [[nodiscard]] char get(usize index) const
     {
+        DebugAssert(index < count, "index out of range");
         return chars[index];
     }
 

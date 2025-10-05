@@ -10,12 +10,11 @@ namespace math
 
 template<typename T>
     requires(IsFloatingPoint<T>)
-[[nodiscard]] constexpr T sqrt(T x)
+[[nodiscard]] constexpr T sqrt(T n)
 {
     // TODO: Improve this
-
 #if BREAD_ENABLE_INTRISICS
-    return PlatformIntricics::sqrt(x);
+    return PlatformIntricics::sqrt(n);
 #else
     if (n == T(0))
         return n;

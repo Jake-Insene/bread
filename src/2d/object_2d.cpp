@@ -69,6 +69,14 @@ f32 Object2D::get_rotation() const
     return data.rot_cache;
 }
 
+void Object2D::rotate(const f32 rads)
+{
+    data.rot_cache += rads;
+    data.transform.rotate(rads);
+    _update_transform();
+}
+
+
 Transform2D Object2D::get_transform() const
 {
     return data.transform;
@@ -76,7 +84,7 @@ Transform2D Object2D::get_transform() const
 
 Transform2D Object2D::get_global_transform() const
 {
-    return data._global_transform_cache;
+    return data.global_transform_cache;
 }
 
 Vector2 Object2D::get_local_mouse_position() const
@@ -115,7 +123,7 @@ void Object2D::draw_sprite(const Transform2D& transform, TextureID texture, cons
 
 void Object2D::_update_transform()
 {
-    data._global_transform_cache = _make_global_transform();
+    data.global_transform_cache = _make_global_transform();
     for (usize i = 0; i < get_child_count(); i++)
     {
         if (Object2D* child = Object::cast<Object2D>(get_child(i)))

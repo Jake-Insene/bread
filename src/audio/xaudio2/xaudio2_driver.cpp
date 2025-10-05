@@ -115,6 +115,7 @@ void XAudio2Driver::source_voice_play(Audio::SourceVoiceID sv_id)
 		.Flags = XAUDIO2_END_OF_STREAM,
 		.AudioBytes = (UINT32)sv.buffer.len,
 		.pAudioData = sv.buffer.ptr(),
+		.PlayBegin = 0,
 	};
 
 	sv.sv_xaudio->SubmitSourceBuffer(&buffer);
@@ -132,6 +133,7 @@ void XAudio2Driver::source_voice_keep_playing(Audio::SourceVoiceID sv_id)
 			.Flags = XAUDIO2_END_OF_STREAM,
 			.AudioBytes = (UINT32)sv.buffer.len,
 			.pAudioData = sv.buffer.ptr(),
+			.PlayBegin = 0,
 		};
 
 		sv.sv_xaudio->SubmitSourceBuffer(&buffer);

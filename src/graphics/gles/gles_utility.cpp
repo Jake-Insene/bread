@@ -2,7 +2,7 @@
 
 #include "graphics/gles/gles_driver.h"
 #include "graphics/gles/gles_vtable.h"
-#include "fs/file.h"
+#include "io/file.h"
 #include "platform/platform_header.h"
 #include "resource/resource_manager.h"
 
