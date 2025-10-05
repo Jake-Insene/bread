@@ -56,7 +56,10 @@ struct [[nodiscard]] P2DBody
 
     void set_mass(f32 new_mass);
     [[nodiscard]] f32 get_mass() const { return data.mass; }
-    [[nodiscard]] f32 get_inv_mass() const { return data.inv_mass; }
+    [[nodiscard]] f32 get_inv_mass() const {
+        if (type == Physics2D::STATIC || type == Physics2D::KINEMATIC) return 0.0f;
+        return data.inv_mass;
+    }
 
     void set_friction(f32 new_friction);
     [[nodiscard]] f32 get_friction() const { return data.friction; }
