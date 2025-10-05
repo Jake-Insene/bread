@@ -74,6 +74,9 @@ struct P2DDriver
         i32 tile_size;
         bool debug_draw;
         HashMap<PhysicsTileCoord, PhysicsTile> world_tiles;
+
+        f32 fixed_step;
+        f32 accumulator;
     };
 
     static inline InternalData data;
@@ -150,6 +153,7 @@ struct P2DDriver
     static void property_change(StringView property_name, PropertyValue new_value);
 
     // P2D Internal
+    static void _step_fixed(f32 dt);
 
     // Draw routines
 
