@@ -108,6 +108,7 @@ void P2DDriver::shutdown()
         if(entry)
         {
             entry->kv.second.bodies.destroy();
+            entry->kv.second.areas.destroy();
         }
     }
     data.world_tiles.destroy();
@@ -132,6 +133,24 @@ void P2DDriver::step(f32 dt)
     {
         Area& area = _get_area(area_id);
         _handle_debug_draw_area(area);
+    }
+
+    if (data.debug_draw)
+    {
+        P2DBody& first_body = _get_body(data.active_bodies[0]);
+        Viewport* viewport = first_body.target->get_viewport();
+        for (auto& entry : data.world_tiles)
+        {
+            PhysicsTileCoord coord = entry.second.coord;
+
+            f32 ts = _get_tile_size();
+            Vector2 min = Vector2((coord.x ) * ts, (coord.y) * ts);
+            Vector2 max = min + Vector2(ts, ts);
+            viewport->render_item_draw_line(first_body.target->get_render_item(), Vector2(min.x, min.y), Vector2(max.x, min.y), Color(128,128,128,255));
+            viewport->render_item_draw_line(first_body.target->get_render_item(), Vector2(max.x, min.y), Vector2(max.x, max.y), Color(128,128,128,255));
+            viewport->render_item_draw_line(first_body.target->get_render_item(), Vector2(max.x, max.y), Vector2(min.x, max.y), Color(128,128,128,255));
+            viewport->render_item_draw_line(first_body.target->get_render_item(), Vector2(min.x, max.y), Vector2(min.x, min.y), Color(128,128,128,255));
+        }
     }
 }
 
@@ -762,12 +781,7 @@ PhysicsTileCoord P2DDriver::_convert_to_world_tile(const Vector2& point)
     PhysicsTileCoord tile = {};
 
     tile.x = math::floor(normalized_point.x);
-    if (tile.x < 0)
-        tile.x += 1;
-
     tile.y = math::floor(normalized_point.y);
-    if (tile.y < 0)
-        tile.y += 1;
 
     return tile;
 }
@@ -775,7 +789,7 @@ PhysicsTileCoord P2DDriver::_convert_to_world_tile(const Vector2& point)
 
 void P2DDriver::_body_recompute_tiles(P2DBody& body)
 {
-    // Removing from a tiles
+    // Removing from old tiles
     for (auto& tile_id : body.tiles_on)
     {
         PhysicsTile& tile = _get_or_create_tile(tile_id);
@@ -785,36 +799,36 @@ void P2DDriver::_body_recompute_tiles(P2DBody& body)
 
     // Getting tiles in shape
     P2DShape body_shape = body.get_shape();
-    body_shape.apply_transform(body.target->get_global_transform());
+    Transform2D global_transform = body.target->get_global_transform();
+    body_shape.apply_transform(global_transform);
 
-    for (auto vertice : body_shape.vertices)
+    AABB aabb = body_shape.aabb;
+    PhysicsTileCoord min_tile = _convert_to_world_tile(aabb.min);
+    PhysicsTileCoord max_tile = _convert_to_world_tile(aabb.max);
+
+    for (i32 x = min_tile.x; x <= max_tile.x; x++)
     {
-        PhysicsTileCoord tile_coord = _convert_to_world_tile(vertice);
-        bool can_insert_tile_coord = true;
-        for (auto tile_on : body.tiles_on)
+        for (i32 y = min_tile.y; y <= max_tile.y; y++)
         {
-            if (tile_on == tile_coord)
-            {
-                can_insert_tile_coord = false;
-            }
-        }
-
-        if(can_insert_tile_coord)
+            PhysicsTileCoord tile_coord;
+            tile_coord.x = x;
+            tile_coord.y = y;
             (void)body.tiles_on.add(tile_coord);
 
-        PhysicsTile& tile = _get_or_create_tile(tile_coord);
-        bool can_insert = true;
-        for (auto body_id : tile.bodies)
-        {
-            if (body_id == body.self)
+            PhysicsTile& tile = _get_or_create_tile(tile_coord);
+            bool can_insert = true;
+            for (auto body_id : tile.bodies)
             {
-                can_insert = false;
-                break;
+                if (body_id == body.self)
+                {
+                    can_insert = false;
+                    break;
+                }
             }
-        }
 
-        if(can_insert)
-            (void)tile.bodies.add(body.self);
+            if (can_insert)
+                (void)tile.bodies.add(body.self);
+        }
     }
 }
 
@@ -824,36 +838,36 @@ void P2DDriver::_area_recompute_tiles(Area& area)
 
     // Getting tiles in shape
     P2DShape body_shape = area.shape;
-    body_shape.apply_transform(area.target->get_global_transform());
+    Transform2D global_transform = area.target->get_global_transform();
+    body_shape.apply_transform(global_transform);
 
-    for (auto vertice : body_shape.vertices)
+    auto aabb = body_shape.aabb;
+    PhysicsTileCoord min_tile = _convert_to_world_tile(aabb.min);
+    PhysicsTileCoord max_tile = _convert_to_world_tile(aabb.max);
+
+    for (i32 x = min_tile.x; x <= max_tile.x; x++)
     {
-        PhysicsTileCoord tile_coord = _convert_to_world_tile(vertice);
-        bool can_insert_tile_coord = true;
-        for (auto tile_on : area.tiles_on)
+        for (i32 y = min_tile.y; y <= max_tile.y; y++)
         {
-            if (tile_on == tile_coord)
-            {
-                can_insert_tile_coord = false;
-            }
-        }
-
-        if (can_insert_tile_coord)
+            PhysicsTileCoord tile_coord;
+            tile_coord.x = x;
+            tile_coord.y = y;
             (void)area.tiles_on.add(tile_coord);
 
-        PhysicsTile& tile = _get_or_create_tile(tile_coord);
-        bool can_insert = true;
-        for (auto body_id : tile.bodies)
-        {
-            if (body_id == area.self)
+            PhysicsTile& tile = _get_or_create_tile(tile_coord);
+            bool can_insert = true;
+            for (auto area_id : tile.areas)
             {
-                can_insert = false;
-                break;
+                if (area_id == area.self)
+                {
+                    can_insert = false;
+                    break;
+                }
             }
-        }
 
-        if (can_insert)
-            (void)tile.bodies.add(area.self);
+            if (can_insert)
+                (void)tile.areas.add(area.self);
+        }
     }
 }
 
@@ -866,6 +880,7 @@ P2DDriver::PhysicsTile& P2DDriver::_get_or_create_tile(PhysicsTileCoord tile_coo
     
     PhysicsTile& new_tile = data.world_tiles.insert(tile_coord, PhysicsTile());
     new_tile.bodies = Array<Physics2D::BodyID>::with_size(get_allocator(), 16);
+    new_tile.areas = Array<Physics2D::AreaID>::with_size(get_allocator(), 16);
     new_tile.coord = tile_coord;
     return new_tile;
 }

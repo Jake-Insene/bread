@@ -32,7 +32,12 @@ struct HashOfType<PhysicsTileCoord>
 {
     [[nodiscard]] static constexpr u64 hashfunc(const PhysicsTileCoord& k)
     {
-        return k.x | (u64(k.y) << 32);
+        const i32 SHIFT = 10000;
+        i32 shifted_x = k.x + SHIFT;
+        i32 shifted_y = k.y + SHIFT;
+        u32 x = shifted_x >= 0 ? static_cast<u32>(shifted_x) : 0u;
+        u32 y = shifted_y >= 0 ? static_cast<u32>(shifted_y) : 0u;
+        return x | (u64(y) << 32);
     }
 
     [[nodiscard]] static constexpr bool compare(const PhysicsTileCoord& k1, const PhysicsTileCoord& k2)

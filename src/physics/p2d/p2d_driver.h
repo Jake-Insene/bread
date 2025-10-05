@@ -54,6 +54,7 @@ struct P2DDriver
     {
         PhysicsTileCoord coord;
         Array<Physics2D::BodyID> bodies;
+        Array<Physics2D::AreaID> areas;
     };
 
     struct InternalData
