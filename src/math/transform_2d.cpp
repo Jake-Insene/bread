@@ -86,12 +86,10 @@ Vector2 Transform2D::get_scale() const
 
 void Transform2D::set_rotation(const f32 rads)
 {
-    const Vector2 scale = get_scale();
     f32 s, c;
     math::sincos(s, c, rads);
     rows[0] = Vector2(c, -s);
     rows[1] = Vector2(s, c);
-    set_scale(scale);
 }
 
 f32 Transform2D::get_rotation() const

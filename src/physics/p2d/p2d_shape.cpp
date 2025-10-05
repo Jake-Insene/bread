@@ -25,7 +25,7 @@ void P2DShape::apply_transform(const Transform2D& transform)
     vertices[2] = transform * vertices[2];
     vertices[3] = transform * vertices[3];
 
-    centroid += transform.get_position();
+    centroid = transform * centroid;
 
     // The transformation could rotate the vertices
     _calc_aabb();
