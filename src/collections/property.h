@@ -79,7 +79,7 @@ struct [[nodiscard]] PropertyValue
 		}
 		else if constexpr (IsFloatingPoint<T>)
 		{
-			return storage.f;
+			return T(storage.f);
 		}
 		else if constexpr (IsSame<T, Vector2>)
 		{

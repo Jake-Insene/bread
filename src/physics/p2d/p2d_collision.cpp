@@ -111,8 +111,8 @@ void P2DCollision::positional_correction(CollisionManifold& manifold, P2DBody& b
 
 void P2DCollision::resolve_collision(CollisionManifold& manifold, P2DBody& body_a, P2DBody& body_b)
 {
-	if (body_a.type == Physics2D::KINEMATIC 
-		&& body_b.type == Physics2D::KINEMATIC)
+	if (body_a.type != Physics2D::DYNAMIC
+		&& body_b.type != Physics2D::DYNAMIC)
 		return;
 
 	const Vector2 local_centroid_a = body_a.get_shape().get_centroid();
