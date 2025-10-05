@@ -21,6 +21,7 @@ void Physics2D::initialize(const mem::Allocator& allocator, Physics2D::DriverTyp
     data.properties.insert("/gravity", Property::Vector2(0, -98));
     data.properties.insert("/debug_draw", Property::Bool(false));
     data.properties.insert("/tile_size", Property::Integer(64));
+    data.properties.insert("/fixed_step", Property::Float(1.0f / 60.0f));
 
     vtable.initialize(allocator);
 }

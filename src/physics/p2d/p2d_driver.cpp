@@ -1,9 +1,7 @@
 #include "physics/p2d/p2d_driver.h"
 
+#include "2d/object_2d.h"
 #include "graphics/viewport.h"
-#include "physics/area_2d.h"
-#include "physics/body_2d.h"
-#include "2d/tile_map.h"
 #include "physics/physics_2d.h"
 
 
@@ -86,6 +84,9 @@ void P2DDriver::initialize(const mem::Allocator& allocator)
 
     data.tile_size = Physics2D::get_property("/tile_size").get<i32>();
 	data.world_tiles = HashMap<PhysicsTileCoord, PhysicsTile>::with_size(data.allocator, InitialWorldTiles);
+
+    data.fixed_step = Physics2D::get_property("/fixed_step").get<f32>();
+    data.accumulator = 0.0f;
 }
 
 void P2DDriver::shutdown()
@@ -114,34 +115,23 @@ void P2DDriver::shutdown()
 
 void P2DDriver::step(f32 dt)
 {
-    for (auto area_id : data.active_areas)
+    data.accumulator += dt;
+    while (data.accumulator >= data.fixed_step)
     {
-        Area& area = _get_area(area_id);
-        _area_recompute_tiles(area);
-        _check_area_collision(area);
-        _handle_debug_draw_area(area);
-    }
-
-    for(auto body_id : data.active_bodies)
-    {
-        P2DBody& body = _get_body(body_id);
-        _move_body(body, dt);
-        _body_recompute_tiles(body);
+        _step_fixed(data.fixed_step);
+        data.accumulator -= data.fixed_step;
     }
 
     for (auto body_id : data.active_bodies)
     {
         P2DBody& body = _get_body(body_id);
-        _check_body_collision(body);
         _handle_debug_draw_body(body);
     }
 
-    _resolve_collision_callbacks();
-
-    for (auto& body_id : data.active_bodies)
+    for (auto area_id : data.active_areas)
     {
-        P2DBody& body = _get_body(body_id);
-        body.moved = false;
+        Area& area = _get_area(area_id);
+        _handle_debug_draw_area(area);
     }
 }
 
@@ -330,8 +320,14 @@ void P2DDriver::body_apply_force(Physics2D::BodyID body_id, const Vector2&, cons
     body.add_force(force);
 }
 
-void P2DDriver::body_apply_impulse(Physics2D::BodyID, const Vector2&, const Vector2&)
-{}
+void P2DDriver::body_apply_impulse(Physics2D::BodyID body_id, const Vector2&, const Vector2& impulse)
+{
+    P2DBody& body = _get_body(body_id);
+    if (body.get_inv_mass() > 0.f)
+    {
+        body.set_velocity(body.get_velocity() + impulse * body.get_inv_mass());
+    }
+}
 
 void P2DDriver::body_set_fixed_rotation(Physics2D::BodyID body_id, bool enable)
 {
@@ -459,6 +455,41 @@ void P2DDriver::property_change(StringView property_name, PropertyValue new_valu
     else if (property_name.equals("/debug_draw"))
     {
         data.debug_draw = new_value.get<bool>();
+    }
+    else if (property_name.equals("/fixed_step"))
+    {
+        data.fixed_step = new_value.get<f32>();
+    }
+}
+
+void P2DDriver::_step_fixed(f32 dt)
+{
+    for (auto area_id : data.active_areas)
+    {
+        Area& area = _get_area(area_id);
+        _area_recompute_tiles(area);
+        _check_area_collision(area);
+    }
+
+    for(auto body_id : data.active_bodies)
+    {
+        P2DBody& body = _get_body(body_id);
+        _move_body(body, dt);
+        _body_recompute_tiles(body);
+    }
+
+    for (auto body_id : data.active_bodies)
+    {
+        P2DBody& body = _get_body(body_id);
+        _check_body_collision(body);
+    }
+
+    _resolve_collision_callbacks();
+
+    for (auto& body_id : data.active_bodies)
+    {
+        P2DBody& body = _get_body(body_id);
+        body.moved = false;
     }
 }
 
