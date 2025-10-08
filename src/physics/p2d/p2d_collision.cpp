@@ -172,34 +172,4 @@ void P2DCollision::resolve_collision(CollisionManifold& manifold, P2DBody& body_
 	body_b.set_angular_velocity(
 		body_b.get_angular_velocity() + p_to_centeroid_cross_normal_b * j * inv_inertia_b
 	);
-
-	// Friction
-	const f32 friction = (body_a.get_friction() + body_b.get_friction()) * 0.5f;
-	if (friction > 0)
-	{
-		const Vector2 tangent = Vector2(-manifold.normal.y, manifold.normal.x);
-		const f32 relative_vel_tangent = relative_velocity.dot(tangent);
-
-		const f32 max_friction = friction * abs(j);
-		f32 friction_impulse;
-		if (abs(relative_vel_tangent) < max_friction)
-			friction_impulse = relative_vel_tangent;
-		else
-			friction_impulse = max_friction * (relative_vel_tangent > 0 ? -1 : 1);
-
-		const Vector2 friction_vec = tangent * friction_impulse;
-		const Vector2 friction_body_a = friction_vec * body_a.get_inv_mass() * -1;
-		const Vector2 friction_body_b = friction_vec * body_b.get_inv_mass();
-		body_a.set_velocity(body_a.get_velocity() + friction_body_a);
-		body_b.set_velocity(body_b.get_velocity() + friction_body_b);
-
-		const f32 p_to_centeroid_cross_tangent_a = Vector2::cross(penetration_to_centeroid_a, tangent);
-		const f32 p_to_centeroid_cross_tangent_b = Vector2::cross(penetration_to_centeroid_b, tangent);
-		body_a.set_angular_velocity(
-			body_a.get_angular_velocity() + -p_to_centeroid_cross_tangent_a * friction_impulse * inv_inertia_a
-		);
-		body_b.set_angular_velocity(
-			body_b.get_angular_velocity() + p_to_centeroid_cross_tangent_b * friction_impulse * inv_inertia_b
-		);
-	}
 }

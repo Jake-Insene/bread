@@ -513,15 +513,6 @@ void P2DDriver::_step_fixed(f32 dt)
             P2DBody& other_body = _get_body(body.pending_static_collision.other);
             P2DCollision::positional_correction(body.pending_static_collision.manifold, body, other_body);
             P2DCollision::resolve_collision(body.pending_static_collision.manifold, body, other_body);
-            // Insert callback
-            data.collision_callbacks_map.insert(
-                CollisionID(body.self, body.pending_static_collision.other),
-                CollisionCallback
-                {
-                    .body = body.self,
-                    .collided = body.pending_static_collision.other,
-                }
-            );
         }
      
         body.has_pending_static_collision = false;
@@ -688,16 +679,6 @@ void P2DDriver::_check_body_collisions_on_tile(P2DBody& body, PhysicsTile& tile)
                 P2DCollision::positional_correction(manifold, body, other_body);
                 P2DCollision::resolve_collision(manifold, body, other_body);
             }
-
-            // Insert callback for non-static
-            data.collision_callbacks_map.insert(
-                CollisionID(body.self, other_body.self),
-                CollisionCallback
-                {
-                    .body = body.self,
-                    .collided = other_body.self,
-                }
-            );
         }
 
         if (body.on_collide.has_func())
