@@ -13,7 +13,8 @@ struct [[nodiscard]] StaticArray
     {
         return StaticArray
         {
-            .count = item_count,
+            .items = {},
+            .count = item_count
         };
     }
 

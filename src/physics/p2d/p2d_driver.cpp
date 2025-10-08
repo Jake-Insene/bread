@@ -2,6 +2,7 @@
 
 #include "2d/object_2d.h"
 #include "graphics/viewport.h"
+#include "physics/p2d/p2d_types.h"
 #include "physics/physics_2d.h"
 
 
@@ -81,6 +82,7 @@ void P2DDriver::initialize(const mem::Allocator& allocator)
     data.current_areas = FreeList<Area, Physics2D::AreaID>::with_size(data.allocator, 4);
 
     data.collision_callbacks_map = HashMap<CollisionID, CollisionCallback>::with_size(data.allocator, 4);
+    data.resolved_pairs = HashMap<CollisionID, bool>::with_size(data.allocator, 16);
 
     data.tile_size = Physics2D::get_property("/tile_size").get<i32>();
 	data.world_tiles = HashMap<PhysicsTileCoord, PhysicsTile>::with_size(data.allocator, InitialWorldTiles);
@@ -102,6 +104,7 @@ void P2DDriver::shutdown()
     data.current_bodies.destroy();
     data.current_areas.destroy();
     data.collision_callbacks_map.destroy();
+    data.resolved_pairs.destroy();
 
     for (auto& entry : data.world_tiles.entries)
     {
@@ -143,7 +146,7 @@ void P2DDriver::step(f32 dt)
         {
             PhysicsTileCoord coord = entry.second.coord;
 
-            f32 ts = _get_tile_size();
+            const f32 ts = f32(_get_tile_size());
             Vector2 min = Vector2((coord.x ) * ts, (coord.y) * ts);
             Vector2 max = min + Vector2(ts, ts);
             viewport->render_item_draw_line(first_body.target->get_render_item(), Vector2(min.x, min.y), Vector2(max.x, min.y), Color(128,128,128,255));
@@ -176,6 +179,7 @@ Physics2D::BodyID P2DDriver::create_body(Object2D* object)
     new_body.compute_inertia();
     new_body.set_velocity(Vector2());
     new_body.set_angular_velocity(0.f);
+    new_body.has_pending_static_collision = false;
 
     new_body.tiles_on = Array<PhysicsTileCoord>::with_size(get_allocator(), 4);
 
@@ -490,26 +494,42 @@ void P2DDriver::_step_fixed(f32 dt)
         _check_area_collision(area);
     }
 
+    data.resolved_pairs.clear();
+
     for(auto body_id : data.active_bodies)
     {
         P2DBody& body = _get_body(body_id);
         _move_body(body, dt);
         _body_recompute_tiles(body);
-    }
-
-    for (auto body_id : data.active_bodies)
-    {
-        P2DBody& body = _get_body(body_id);
         _check_body_collision(body);
     }
 
-    _resolve_collision_callbacks();
-
-    for (auto& body_id : data.active_bodies)
+    // Resolve pending static collisions
+    for (auto body_id : data.active_bodies)
     {
         P2DBody& body = _get_body(body_id);
+        if (body.has_pending_static_collision)
+        {
+            P2DBody& other_body = _get_body(body.pending_static_collision.other);
+            P2DCollision::positional_correction(body.pending_static_collision.manifold, body, other_body);
+            P2DCollision::resolve_collision(body.pending_static_collision.manifold, body, other_body);
+            // Insert callback
+            data.collision_callbacks_map.insert(
+                CollisionID(body.self, body.pending_static_collision.other),
+                CollisionCallback
+                {
+                    .body = body.self,
+                    .collided = body.pending_static_collision.other,
+                }
+            );
+        }
+     
+        body.has_pending_static_collision = false;
+        body.pending_static_collision = PendingCollision();
         body.moved = false;
     }
+
+    _resolve_collision_callbacks();
 }
 
 void P2DDriver::_handle_debug_draw_body(P2DBody& body)
@@ -589,6 +609,7 @@ void P2DDriver::_move_body(P2DBody& body, f32 dt)
 
     body.is_on_floor = false;
     body.is_on_ceil = false;
+    body.has_pending_static_collision = false;
 }
 
 void P2DDriver::_check_body_collision(P2DBody& body)
@@ -623,7 +644,7 @@ void P2DDriver::_check_body_collisions_on_tile(P2DBody& body, PhysicsTile& tile)
         other_shape.apply_transform(other_body.target->get_global_transform());
 
         bool collided = false; 
-        P2DCollision::CollisionManifold manifold;
+        CollisionManifold manifold;
         collided = body_shape.aabb.intersecs(other_shape.aabb);
         if (collided)
         {
@@ -642,8 +663,42 @@ void P2DDriver::_check_body_collisions_on_tile(P2DBody& body, PhysicsTile& tile)
         other_body.is_on_floor = manifold.normal.y > 0;
         other_body.is_on_ceil = manifold.normal.y < 0;
 
-        P2DCollision::positional_correction(manifold, body, other_body);
-        P2DCollision::resolve_collision(manifold, body, other_body);
+        if (other_body.type == Physics2D::STATIC)
+        {
+            if(body.has_pending_static_collision)
+            {
+                if(body.pending_static_collision.manifold.depth < manifold.depth)
+                {
+                    body.pending_static_collision = PendingCollision{manifold, other_body.self};
+                }
+            }
+            else
+            {
+                body.has_pending_static_collision = true;
+                body.pending_static_collision = PendingCollision{manifold, other_body.self};
+            }
+        }
+        else
+        {
+            // Resolve non-static immediately
+            CollisionID pair_id = CollisionID{body.self, other_body.self};
+            if (!data.resolved_pairs.has(pair_id))
+            {
+                data.resolved_pairs.insert(pair_id, true);
+                P2DCollision::positional_correction(manifold, body, other_body);
+                P2DCollision::resolve_collision(manifold, body, other_body);
+            }
+
+            // Insert callback for non-static
+            data.collision_callbacks_map.insert(
+                CollisionID(body.self, other_body.self),
+                CollisionCallback
+                {
+                    .body = body.self,
+                    .collided = other_body.self,
+                }
+            );
+        }
 
         if (body.on_collide.has_func())
         {
@@ -686,7 +741,7 @@ void P2DDriver::_check_area_collision_on_tile(Area& area, PhysicsTile& tile)
         collided = area_shape.aabb.intersecs(other_shape.aabb);
         if(collided)
         {
-            P2DCollision::CollisionManifold manifold = P2DCollision::polygon_v_polygon(area_shape, other_shape);
+            CollisionManifold manifold = P2DCollision::polygon_v_polygon(area_shape, other_shape);
             collided = manifold.valid;
         }
 

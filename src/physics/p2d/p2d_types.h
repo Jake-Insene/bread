@@ -4,11 +4,26 @@
 #include "physics/physics_2d.h"
 
 
+struct CollisionManifold
+{
+    Vector2 normal;
+    Vector2 point;
+    f32 depth;
+    bool valid;
+};
+
+
 
 struct CollisionID
 {
     Physics2D::BodyID id1;
     Physics2D::BodyID id2;
+};
+
+struct PendingCollision
+{
+    CollisionManifold manifold;
+    Physics2D::BodyID other;
 };
 
 using PhysicsTileCoord = Vector2I;

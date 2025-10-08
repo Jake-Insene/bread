@@ -71,6 +71,7 @@ struct P2DDriver
         FreeList<Area, Physics2D::AreaID> current_areas;
 
         HashMap<CollisionID, CollisionCallback> collision_callbacks_map;
+        HashMap<CollisionID, bool> resolved_pairs;
 
         i32 tile_size;
         bool debug_draw;

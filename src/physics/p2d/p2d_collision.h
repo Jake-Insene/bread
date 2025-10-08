@@ -5,14 +5,6 @@
 
 struct P2DCollision
 {
-	struct CollisionManifold
-	{
-		Vector2 normal;
-		Vector2 point;
-		f32 depth;
-		bool valid;
-	};
-
 	struct SupportPoint
 	{
 		Vector2 vertice;

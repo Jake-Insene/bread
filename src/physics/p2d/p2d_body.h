@@ -40,6 +40,9 @@ struct [[nodiscard]] P2DBody
     bool is_on_floor;
     bool is_on_ceil;
     bool moved;
+    
+    bool has_pending_static_collision;
+    PendingCollision pending_static_collision;
 
     Array<PhysicsTileCoord> tiles_on;
 
