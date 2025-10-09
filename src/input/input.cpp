@@ -4,7 +4,7 @@
 
 bool Input::is_key_down(Key k)
 {
-	return data.keys[(i32)k] == KeyState::Pressed;
+	return data.keys[i32(k)] == KeyState::Pressed;
 }
 
 bool Input::is_key_just_down(Key k)

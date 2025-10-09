@@ -4,6 +4,7 @@
 #include "graphics/graphics.h"
 #include "io/file.h"
 #include "os/os.h"
+#include "resource/resource_manager_internal.h"
 
 #include <external/stb_image.h>
 

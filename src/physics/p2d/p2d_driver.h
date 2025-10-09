@@ -167,11 +167,13 @@ struct P2DDriver
     static void _move_body(P2DBody& body, f32 dt);
     static void _check_body_collision(P2DBody& body);
     static void _check_body_collisions_on_tile(P2DBody& body, PhysicsTile& tile);
+    static void _body_solve_manifold(P2DBody& body, P2DBody& other_body, const CollisionManifold& manifold);
 
     // Area routines
     static void _check_area_collision(Area& area);
     static void _check_area_collision_on_tile(Area& area, PhysicsTile& tile);
-    
+    static void _area_handle_collision(Area& area, P2DBody& body, bool collided);
+
     // Collision callbacks
     static void _resolve_collision_callbacks();
 

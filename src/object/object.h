@@ -190,6 +190,58 @@ struct Object
         return &klass;
     }
 
+    /*
+    * @param Object Object to check.
+    * @return True if the object is a subclass of T, false otherwise.
+    */
+    template<typename T>
+    [[nodiscard]] static bool is_class_of(Object* object)
+    {
+        const Class* klass = object->klass;
+        while (klass)
+        {
+            if (klass == T::get_class())
+                return true;
+
+            klass = klass->super_class;
+        }
+
+        return false;
+    }
+
+    static Object* _get_by_id(ObjectID id);
+
+    /*
+    * Not safe, direct cast of the object.
+    * @return The object casted to T, if the object class is not T returns nullptr.
+    */
+    template<typename T>
+    [[nodiscard]] static T* cast(Object* object)
+    {
+        return is_class_of<T>(object) ? reinterpret_cast<T*>(object) : nullptr;
+    }
+
+    [[nodiscard]] static Object* create_from_class(const Class* object_klass);
+
+    /*
+    * Create an object of the given type.
+    * It don't put it in the scene tree, you must explicitly call add_child.
+    */ 
+    template<typename T>
+    [[nodiscard]] static T* create()
+    {
+        return reinterpret_cast<T*>(create_from_class(T::get_class()));
+    }
+
+    /*
+    * Get the object referenced by the id.
+    */
+    template<typename T>
+    [[nodiscard]] static T* get_by_id(ObjectID id)
+    {
+        return reinterpret_cast<T*>(_get_by_id(id));
+    }
+
     // Object callbacks
 #define OBJECT_FDEFAULT(name)\
     void(Object::*get_##name()) ()\
@@ -274,7 +326,7 @@ struct Object
         MARK_COUNT,
     };
 
-    /**
+    /*
     * As soon as you can see struct/clases in the engine are always public,
     * this is a design pattern, to expose public read/write data you can
     * create member function or let the user acces directly to them, for private
@@ -341,35 +393,6 @@ struct Object
     * Do not use directly.
     */
     void set_viewport(Viewport* new_vp);
-
-    /*
-    * @param Object Object to check.
-    * @return True if the object is a subclass of T, false otherwise.
-    */
-    template<typename T>
-    [[nodiscard]] static bool is_class_of(Object* object)
-    {
-        const Class* klass = object->klass;
-        while (klass)
-        {
-            if (klass == T::get_class())
-                return true;
-
-            klass = klass->super_class;
-        }
-
-        return false;
-    }
-
-    /*
-    * Not safe, direct cast of the object.
-    * @return The object casted to T, if the object class is not T returns nullptr.
-    */
-    template<typename T>
-    [[nodiscard]] static T* cast(Object* object)
-    {
-        return is_class_of<T>(object) ? reinterpret_cast<T*>(object) : nullptr;
-    }
 
     /*
 	* @return The parent of the object, if it has no parent return nullptr.

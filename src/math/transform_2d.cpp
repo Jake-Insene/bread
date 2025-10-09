@@ -81,7 +81,7 @@ void Transform2D::set_scale(const Vector2& scale)
 
 Vector2 Transform2D::get_scale() const
 {
-    return Vector2{ rows[0].length(), rows[1].length() };
+    return Vector2(rows[0].length(), rows[1].length());
 }
 
 void Transform2D::set_rotation(const f32 rads)

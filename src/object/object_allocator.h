@@ -51,29 +51,4 @@ struct ObjectAllocator
     static Object* get_by_id(ObjectID& id);
 };
 
-/*
-* Create an object of the given type.
-* It don't put it in the scene tree, you must explicitly call add_child.
-*/ 
-template<typename T>
-    requires(IsObjectBase<T>)
-[[nodiscard]] inline T* CreateObject()
-{
-    return reinterpret_cast<T*>(
-        ObjectAllocator::allocate_class(
-            T::get_class()
-        )
-    );
-}
-
-
-/*
-* Get the object referenced by the id.
-*/
-template<typename T>
-    requires(IsObjectBase<T>)
-[[nodiscard]] inline T* GetObjectByID(ObjectID id)
-{
-    return reinterpret_cast<T*>(ObjectAllocator::get_by_id(id));
-}
 

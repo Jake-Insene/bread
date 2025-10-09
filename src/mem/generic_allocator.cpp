@@ -13,7 +13,7 @@ namespace mem
     
     void GenericAllocator::destroy()
     {
-        DebugInfo("Allocated pages {}", page_count);
+        DebugInfo("[Memory]: Allocated pages {}", page_count);
       
         for(usize i = 0; i < page_count; i++)
         {
@@ -32,7 +32,7 @@ namespace mem
             }
 
             DebugAssert(page_size_accumulator == page.bytes.len, "allocator corruption detected");
-            DebugInfo("Page at address {} of size {}, with {} headers", page.bytes.ptr(), page.bytes.len, header_count);
+            DebugInfo("[Memory]: Page at address {} of size {}, with {} headers", page.bytes.ptr(), page.bytes.len, header_count);
 #endif
             internal_allocator.free(page.bytes);
         }
@@ -48,7 +48,7 @@ namespace mem
         Page& page = allocated_pages[page_count++];
         page.bytes = internal_allocator.alloc(size, OS::get_page_size());
         page.first_header = nullptr;
-        DebugInfo("[Mem]: Page requested at address {} with size {}", page.bytes.ptr(), page.bytes.len);
+        DebugInfo("[Memory]: Page requested at address {} with size {}", page.bytes.ptr(), page.bytes.len);
         return page;
     }
 

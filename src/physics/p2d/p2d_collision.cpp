@@ -81,7 +81,7 @@ CollisionManifold P2DCollision::polygon_v_polygon(
 	return contact;
 }
 
-void P2DCollision::positional_correction(CollisionManifold& manifold, P2DBody& body_a, P2DBody& body_b)
+void P2DCollision::positional_correction(const CollisionManifold& manifold, P2DBody& body_a, P2DBody& body_b)
 {
 	const f32 correction_percentage = 1.0f;
 
@@ -109,7 +109,7 @@ void P2DCollision::positional_correction(CollisionManifold& manifold, P2DBody& b
 	body_b.target->translate(body_b_movement);
 }
 
-void P2DCollision::resolve_collision(CollisionManifold& manifold, P2DBody& body_a, P2DBody& body_b)
+void P2DCollision::resolve_collision(const CollisionManifold& manifold, P2DBody& body_a, P2DBody& body_b)
 {
 	if (body_a.type != Physics2D::DYNAMIC
 		&& body_b.type != Physics2D::DYNAMIC)

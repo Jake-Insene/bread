@@ -8,7 +8,7 @@
 template<typename T>
 struct HashOfType
 {
-    [[nodiscard]] static constexpr u64 hashfunc(const T& k) { return (u64)k; }
+    [[nodiscard]] static constexpr u64 hashfunc(const T& k) { return u64(k); }
     [[nodiscard]] static constexpr bool compare(const T& k1, const T& k2) { return k1 == k2; }
 };
 

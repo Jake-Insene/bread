@@ -18,7 +18,7 @@ struct P2DCollision
 
 	static CollisionManifold polygon_v_polygon(const P2DShape& shape_a, const P2DShape& shape_b);
 
-	static void positional_correction(CollisionManifold& manifold, P2DBody& body_a, P2DBody& body_b);
-	static void resolve_collision(CollisionManifold& manifold, P2DBody& body_a, P2DBody& body_b);
+	static void positional_correction(const CollisionManifold& manifold, P2DBody& body_a, P2DBody& body_b);
+	static void resolve_collision(const CollisionManifold& manifold, P2DBody& body_a, P2DBody& body_b);
 };
 

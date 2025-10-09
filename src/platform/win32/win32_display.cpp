@@ -39,11 +39,10 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 			|| msg == WM_MBUTTONDOWN;
 
 		// Y positive is up
-		Vector2 pos
-		{
-			(f32)GET_X_LPARAM(lparam),
-			-(f32)GET_Y_LPARAM(lparam)
-		};
+		Vector2 pos = Vector2(
+			f32(GET_X_LPARAM(lparam)),
+			-f32(GET_Y_LPARAM(lparam))
+		);
 
 		InputEventMouseButton event{};
 		event.type = INPUT_EVENT_MOUSE_BUTTON;

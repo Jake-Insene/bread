@@ -12,8 +12,6 @@
 #include "resource/sprite_animation.h"
 #include "resource/tile_set.h"
 
-#define RMDebugInfo(...) DebugInfo("[ResourceManager]: " __VA_ARGS__)
-#define RMFatal(...) Fatal("[ResourceManager]: " __VA_ARGS__)
 
 
 struct ResourceManager
@@ -58,10 +56,13 @@ struct ResourceManager
     [[nodiscard]] static Result<Resource*, Error> _load_font(StringView path);
 };
 
-// Try to load the resource of the given type, can return nullptr
+
+/*
+* Try to load the resource of the given type, can return nullptr
+*/
 template<typename T>
     requires(!IsSame<Resource, T> && IsResourceBase<T>)
-Result<T*, Error> GetResource(StringView path)
+Result<T*, Error> TryGetResource(StringView path)
 {
     Result<Resource*, Error> resource = ResourceManager::load_resource(T::Type, T::Specification, path);
     if (resource)
@@ -72,3 +73,10 @@ Result<T*, Error> GetResource(StringView path)
     return resource.error();
 };
 
+
+template<typename T>
+    requires(!IsSame<Resource, T>&& IsResourceBase<T>)
+T* GetResource(StringView path)
+{
+    return reinterpret_cast<T*>(ResourceManager::load_resource(T::Type, T::Specification, path).value());
+};

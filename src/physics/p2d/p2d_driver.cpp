@@ -490,6 +490,10 @@ void P2DDriver::_step_fixed(f32 dt)
     for (auto area_id : data.active_areas)
     {
         Area& area = _get_area(area_id);
+        // We can't garant that the body still on the scene.
+        if (area.target->has_mark(Object::MARK_QUEUE_FREE))
+            continue;
+
         _area_recompute_tiles(area);
         _check_area_collision(area);
     }
@@ -499,6 +503,10 @@ void P2DDriver::_step_fixed(f32 dt)
     for(auto body_id : data.active_bodies)
     {
         P2DBody& body = _get_body(body_id);
+        // We can't garant that the body still on the scene.
+        if (body.target->has_mark(Object::MARK_QUEUE_FREE))
+            continue;
+
         _move_body(body, dt);
         _body_recompute_tiles(body);
         _check_body_collision(body);
@@ -624,6 +632,11 @@ void P2DDriver::_check_body_collisions_on_tile(P2DBody& body, PhysicsTile& tile)
             continue;
 
         P2DBody& other_body = _get_body(other_body_id);
+
+        // We can't garant that the body still on the scene.
+        if (other_body.target->has_mark(Object::MARK_QUEUE_FREE))
+            continue;
+        
         // Ignore collision between static objects.
         if(body.type == Physics2D::STATIC && other_body.type == Physics2D::STATIC)
             continue;
@@ -648,50 +661,53 @@ void P2DDriver::_check_body_collisions_on_tile(P2DBody& body, PhysicsTile& tile)
             continue;
         }
 
-        body.is_on_floor = manifold.normal.y < 0;
-        body.is_on_ceil = manifold.normal.y > 0;
+        _body_solve_manifold(body, other_body, manifold);
+    }
+}
 
-        other_body.is_on_floor = manifold.normal.y > 0;
-        other_body.is_on_ceil = manifold.normal.y < 0;
+void P2DDriver::_body_solve_manifold(P2DBody& body, P2DBody& other_body, const CollisionManifold& manifold)
+{
+    body.is_on_floor = manifold.normal.y < 0;
+    body.is_on_ceil = manifold.normal.y > 0;
 
-        if (other_body.type == Physics2D::STATIC)
+    other_body.is_on_floor = manifold.normal.y > 0;
+    other_body.is_on_ceil = manifold.normal.y < 0;
+
+    if (other_body.type == Physics2D::STATIC && body.has_pending_static_collision)
+    {
+        if (body.pending_static_collision.manifold.depth < manifold.depth)
         {
-            if(body.has_pending_static_collision)
-            {
-                if(body.pending_static_collision.manifold.depth < manifold.depth)
-                {
-                    body.pending_static_collision = PendingCollision{manifold, other_body.self};
-                }
-            }
-            else
-            {
-                body.has_pending_static_collision = true;
-                body.pending_static_collision = PendingCollision{manifold, other_body.self};
-            }
-        }
-        else
-        {
-            // Resolve non-static immediately
-            CollisionID pair_id = CollisionID{body.self, other_body.self};
-            if (!data.resolved_pairs.has(pair_id))
-            {
-                data.resolved_pairs.insert(pair_id, true);
-                P2DCollision::positional_correction(manifold, body, other_body);
-                P2DCollision::resolve_collision(manifold, body, other_body);
-            }
+            body.pending_static_collision = PendingCollision{ manifold, other_body.self };
         }
 
-        if (body.on_collide.has_func())
-        {
-            data.collision_callbacks_map.insert(
-                CollisionID(body.self, other_body.self),
-                CollisionCallback
-                {
-                    .body = body.self,
-                    .collided = other_body.self,
-                }
-            );
-        }
+        return;
+    }
+    else if (other_body.type == Physics2D::STATIC)
+    {
+        body.has_pending_static_collision = true;
+        body.pending_static_collision = PendingCollision{ manifold, other_body.self };
+        return;
+    }
+
+    // Resolve non-static immediately
+    CollisionID pair_id = CollisionID{ body.self, other_body.self };
+    if (!data.resolved_pairs.has(pair_id))
+    {
+        data.resolved_pairs.insert(pair_id, true);
+        P2DCollision::positional_correction(manifold, body, other_body);
+        P2DCollision::resolve_collision(manifold, body, other_body);
+    }
+
+    if (body.on_collide.has_func())
+    {
+        data.collision_callbacks_map.insert(
+            CollisionID(body.self, other_body.self),
+            CollisionCallback
+            {
+                .body = body.self,
+                .collided = other_body.self,
+            }
+        );
     }
 }
 
@@ -712,6 +728,11 @@ void P2DDriver::_check_area_collision_on_tile(Area& area, PhysicsTile& tile)
     for(auto& body_id : tile.bodies)
     {
         P2DBody& body = _get_body(body_id);
+
+        // We can't garant that the body still on the scene.
+        if (body.target->has_mark(Object::MARK_QUEUE_FREE))
+            continue;
+
         if ((area.residence_mask & body.residence_mask) == 0)
             continue;
 
@@ -726,34 +747,37 @@ void P2DDriver::_check_area_collision_on_tile(Area& area, PhysicsTile& tile)
             collided = manifold.valid;
         }
 
-        if (collided)
-        {
-            area.bodies_inside.insert(
-                body.self,
-                Area::BodyInArea
-                {
-                    .is_inside = true
-                }
-            );
+        _area_handle_collision(area, body, collided);
+    }
+}
 
-            if (area.on_body_enter.has_func() == false)
-                continue;
+void P2DDriver::_area_handle_collision(Area& area, P2DBody& body, bool collided)
+{
+    if (collided)
+    {
+        area.bodies_inside.insert(
+            body.self,
+            Area::BodyInArea
+            {
+                .is_inside = true
+            }
+        );
 
-            area.on_body_enter.call(area._this, body.target);
-        }
-        else
-        {
-            if (area.bodies_inside.has(body.self) == false)
-                continue;
+        if (area.on_body_enter.has_func() == false)
+            return;
 
-            area.bodies_inside.get(body.self).is_inside = false;
-            area.bodies_inside.remove(body.self);
+        area.on_body_enter.call(area._this, body.target);
+    }
+    else
+    {
+        if (area.bodies_inside.has(body.self) == false)
+            return;
 
-            if (area.on_body_exit.has_func() == false)
-                continue;
+        area.bodies_inside.remove(body.self);
+        if (area.on_body_exit.has_func() == false)
+            return;
 
-            area.on_body_exit.call(area._this, body.target);
-        }
+        area.on_body_exit.call(area._this, body.target);
     }
 }
 

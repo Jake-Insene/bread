@@ -13,7 +13,7 @@ void Time::initialize()
 	QueryPerformanceFrequency((LARGE_INTEGER*)&_frequency);
 	QueryPerformanceCounter(&platform_time);
 
-	_program_start = (f64)platform_time.QuadPart / (f64)_frequency;
+	_program_start = f64(platform_time.QuadPart) / f64(_frequency);
 }
 
 void Time::shutdown()
@@ -25,5 +25,5 @@ f64 Time::get_time()
 {
 	LARGE_INTEGER platform_time;
 	QueryPerformanceCounter(&platform_time);
-	return ((f64)platform_time.QuadPart / (f64)_frequency) - _program_start;
+	return (f64(platform_time.QuadPart) / f64(_frequency)) - _program_start;
 }

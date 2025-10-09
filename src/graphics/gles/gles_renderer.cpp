@@ -1,18 +1,17 @@
 #include "graphics/gles/gles_renderer.h"
 
-#include "engine/engine.h"
 #include "graphics/gles/gles_driver.h"
 #include "graphics/gles/gles_memory_allocator.h"
 #include "graphics/gles/gles_utility.h"
 #include "graphics/gles/gles_vtable.h"
-#include "graphics/egl/egl.h"
 #include "graphics/viewport.h"
 #include "math/projection.h"
+
 
 static inline void _vertex_attrib_divisor(GLint index, GLenum type, GLsizei component_count, 
     GLsizei stride, GLsizei offset)
 {
-    gl.glVertexAttribPointer(index, component_count, type, GL_FALSE, stride, (const void*)(u64)offset);
+    gl.glVertexAttribPointer(index, component_count, type, GL_FALSE, stride, (const void*)u64(offset));
     gl.glEnableVertexAttribArray(index);
     gl.glVertexAttribDivisor(index, 1);
 }
@@ -20,7 +19,7 @@ static inline void _vertex_attrib_divisor(GLint index, GLenum type, GLsizei comp
 static inline void _vertex_attrib(GLint index, GLenum type, GLsizei component_count,
     GLsizei stride, GLsizei offset)
 {
-    gl.glVertexAttribPointer(index, component_count, type, GL_FALSE, stride, (const void*)(u64)offset);
+    gl.glVertexAttribPointer(index, component_count, type, GL_FALSE, stride, (const void*)u64(offset));
     gl.glEnableVertexAttribArray(index);
 }
 
@@ -437,10 +436,10 @@ void GLESRenderer::render(Viewport* viewport)
     update_scene_uniform();
 
     gl.glClearColor(
-        (f32)viewport->clear_color.r / 255.f,
-        (f32)viewport->clear_color.g / 255.f,
-        (f32)viewport->clear_color.b / 255.f,
-        (f32)viewport->clear_color.a / 255.f
+        f32(viewport->clear_color.r / 255.f),
+        f32(viewport->clear_color.g / 255.f),
+        f32(viewport->clear_color.b / 255.f),
+        f32(viewport->clear_color.a / 255.f)
     );
     gl.glClear(GL_COLOR_BUFFER_BIT);
 

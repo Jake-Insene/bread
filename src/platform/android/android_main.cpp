@@ -40,7 +40,7 @@ static int32_t engine_handle_input(android_app*, AInputEvent* event)
                 e.pressed = (action == AMOTION_EVENT_ACTION_DOWN
                              || action == AMOTION_EVENT_ACTION_MOVE
                              || action == AMOTION_EVENT_ACTION_POINTER_DOWN);
-                e.pointer = (i32) p;
+                e.pointer = i32(p);
 
                 Engine::handle_input(e);
 
@@ -55,11 +55,11 @@ static int32_t engine_handle_input(android_app*, AInputEvent* event)
         i32 keycode = AKeyEvent_getKeyCode(event);
         if(action == AKEY_EVENT_ACTION_DOWN)
         {
-            Input::data.keys[(i32)MappedKeycodes[keycode]] = KeyState::Pressed;
+            Input::data.keys[i32(MappedKeycodes[keycode])] = KeyState::Pressed;
         }
         else
         {
-            Input::data.keys[(i32)MappedKeycodes[keycode]] = KeyState::Released;
+            Input::data.keys[i32(MappedKeycodes[keycode])] = KeyState::Released;
         }
     }
     default:

@@ -1,6 +1,7 @@
 #include "resource/sound.h"
 
 #include "resource/resource_manager.h"
+#include "resource/resource_manager_internal.h"
 
 
 static void* _dr_alloc(size_t size, void*)

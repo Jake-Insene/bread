@@ -8,6 +8,16 @@
 void Object::_bind_vtable(VTable&)
 {}
 
+Object* Object::_get_by_id(ObjectID id)
+{
+    return ObjectAllocator::get_by_id(id);
+}
+
+Object* Object::create_from_class(const Class* object_klass)
+{
+    return ObjectAllocator::allocate_class(object_klass);
+}
+
 void Object::set_viewport(Viewport* new_vp)
 {
     if (data.viewport == new_vp)
@@ -119,6 +129,7 @@ void Object::queue_free()
         return;
 
     mark(MARK_QUEUE_FREE);
+
     SceneManager::_queue_free(get_parent(), this);
 }
 

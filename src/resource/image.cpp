@@ -2,6 +2,7 @@
 
 #include "io/file.h"
 #include "resource/resource_manager.h"
+#include "resource/resource_manager_internal.h"
 
 #include <external/stb_image.h>
 

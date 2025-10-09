@@ -2,8 +2,10 @@
 
 #include "graphics/graphics.h"
 #include "resource/resource_manager.h"
+#include "resource/resource_manager_internal.h"
 
 #include <external/stb_truetype.h>
+
 
 static void _load_theme(stbtt_fontinfo* font, Font::FontTheme& theme)
 {

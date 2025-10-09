@@ -11,7 +11,6 @@ set(CMAKE_MSVC_RUNTIME_CHECKS OFF)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 if(DEFINED BREAD_ANDROID)
-    message(${ANDROID_ABI})
     string(FIND "${ANDROID_ABI}" "arm64-v8a" IS_ARM)
     if("${IS_ARM}" STREQUAL "-1")
         set(BREAD_TARGET_ARCH ${BREAD_TARGET_ARCH} "X64")

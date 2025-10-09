@@ -18,7 +18,6 @@ static inline void _mutex_unlock(SRWLOCK* srw)
     ReleaseSRWLockExclusive(srw);
 }
 
-
 static inline DWORD WINAPI _thread_handler(void* thread_data)
 {
     Win32OS::ThreadData* data = (Win32OS::ThreadData*)thread_data;
@@ -80,20 +79,24 @@ Slice<u8> Win32OS::map_memory(usize memory_size, OS::MapAccess access)
         break;
     case OS::MapReadWrtie:
     {
-        ptr.items = (u8*)VirtualAllocEx(GetCurrentProcess(),
-            nullptr, aligned_size,
-            MEM_RESERVE | MEM_COMMIT,
-            PAGE_READWRITE
+        ptr.items = reinterpret_cast<u8*>(
+            VirtualAllocEx(GetCurrentProcess(),
+                nullptr, aligned_size,
+                MEM_RESERVE | MEM_COMMIT,
+                PAGE_READWRITE
+            )
         );
         ptr.len = aligned_size;
     }
         break;
     case OS::MapReadWrtieExecute:
     {
-        ptr.items = (u8*)VirtualAllocEx(GetCurrentProcess(),
-            nullptr, aligned_size,
-            MEM_RESERVE | MEM_COMMIT,
-            PAGE_EXECUTE_READWRITE
+        ptr.items = reinterpret_cast<u8*>(
+            VirtualAllocEx(GetCurrentProcess(),
+                nullptr, aligned_size,
+                MEM_RESERVE | MEM_COMMIT,
+                PAGE_EXECUTE_READWRITE
+            )
         );
         ptr.len = aligned_size;
     }
