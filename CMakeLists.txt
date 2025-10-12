@@ -147,6 +147,7 @@ file(GLOB ENGINE_SRC
     src/physics/shape_2d.cpp
 
     # Default 2d physics driver
+    src/physics/p2d/p2d_area.cpp
     src/physics/p2d/p2d_body.cpp
     src/physics/p2d/p2d_collision.cpp
     src/physics/p2d/p2d_driver.cpp

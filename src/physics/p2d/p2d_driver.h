@@ -4,6 +4,7 @@
 #include "collections/free_list.h"
 #include "physics/physics_2d.h"
 
+#include "physics/p2d/p2d_area.h"
 #include "physics/p2d/p2d_body.h"
 #include "physics/p2d/p2d_collision.h"
 #include "physics/p2d/p2d_shape.h"
@@ -19,29 +20,6 @@ struct P2DDriver
     {
         Physics2D::BodyID body;
         Physics2D::BodyID collided;
-    };
-
-    struct [[nodiscard]] Area
-    {
-        Object2D* target;
-        Physics2D::AreaID self;
-        Physics2D::CollisionMask residence_mask;
-
-        void* _this;
-        Physics2D::EventOnBodyEnter on_body_enter;
-        Physics2D::EventOnBodyExit on_body_exit;
-
-        P2DShape shape;
-
-        bool is_active;
-
-        struct BodyInArea
-        {
-            bool is_inside;
-        };
-
-		HashMap<Physics2D::BodyID, BodyInArea> bodies_inside;
-        Array<PhysicsTileCoord> tiles_on;
     };
 
     struct CollisionMaskGroup
@@ -68,7 +46,7 @@ struct P2DDriver
         Array<Physics2D::BodyID> active_bodies;
 
         FreeList<P2DBody, Physics2D::BodyID> current_bodies;
-        FreeList<Area, Physics2D::AreaID> current_areas;
+        FreeList<P2DArea, Physics2D::AreaID> current_areas;
 
         HashMap<CollisionID, CollisionCallback> collision_callbacks_map;
         HashMap<CollisionID, bool> resolved_pairs;
@@ -95,7 +73,7 @@ struct P2DDriver
         return data.current_bodies.get(body_id);
     }
 
-    [[nodiscard]] static Area& _get_area(Physics2D::BodyID area_id)
+    [[nodiscard]] static P2DArea& _get_area(Physics2D::BodyID area_id)
     {
         return data.current_areas.get(area_id);
     }
@@ -116,6 +94,7 @@ struct P2DDriver
     static void body_set_shape(Physics2D::BodyID body_id, const Shape2D& shape);
     static Shape2D body_get_shape(Physics2D::BodyID body_id);
 
+    static void body_set_transform(Physics2D::BodyID body_id, const Transform2D& new_transform);
     static void body_set_type(Physics2D::BodyID body_id, Physics2D::BodyType new_type);
     static void body_set_velocity(Physics2D::BodyID body_id, const Vector2& new_velocity);
     static Vector2 body_get_velocity(Physics2D::BodyID body_id);
@@ -145,6 +124,7 @@ struct P2DDriver
     static void area_set_shape(Physics2D::AreaID area_id, const Shape2D& shape);
     static Shape2D area_get_shape(Physics2D::AreaID area_id);
 
+    static void area_set_transform(Physics2D::AreaID area_id, const Transform2D& new_transform);
     static void area_set_residence_mask(Physics2D::AreaID area_id, Physics2D::CollisionMask mask);
     static Physics2D::CollisionMask area_get_residence_mask(Physics2D::AreaID area_id);
 
@@ -160,7 +140,7 @@ struct P2DDriver
     // Draw routines
 
     static void _handle_debug_draw_body(P2DBody& body);
-    static void _handle_debug_draw_area(Area& area);
+    static void _handle_debug_draw_area(P2DArea& area);
 
     // Body routines
 
@@ -170,9 +150,9 @@ struct P2DDriver
     static void _body_solve_manifold(P2DBody& body, P2DBody& other_body, const CollisionManifold& manifold);
 
     // Area routines
-    static void _check_area_collision(Area& area);
-    static void _check_area_collision_on_tile(Area& area, PhysicsTile& tile);
-    static void _area_handle_collision(Area& area, P2DBody& body, bool collided);
+    static void _check_area_collision(P2DArea& area);
+    static void _check_area_collision_on_tile(P2DArea& area, PhysicsTile& tile);
+    static void _area_handle_collision(P2DArea& area, P2DBody& body, bool collided);
 
     // Collision callbacks
     static void _resolve_collision_callbacks();
@@ -187,6 +167,6 @@ struct P2DDriver
     [[nodiscard]] static PhysicsTileCoord _convert_to_world_tile(const Vector2& point);
 
     static void _body_recompute_tiles(P2DBody& body);
-    static void _area_recompute_tiles(Area& area);
+    static void _area_recompute_tiles(P2DArea& area);
     static PhysicsTile& _get_or_create_tile(PhysicsTileCoord tile_coord);
 };

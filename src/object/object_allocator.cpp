@@ -32,7 +32,7 @@ void ObjectAllocator::shutdown()
 
 Object* ObjectAllocator::allocate_class(const Object::Class* klass)
 {
-    Object* obj = allocate_object(klass);
+    Object* obj = _request_new_object(klass);
     ObjectCallRef(obj, init,
         Object::CreateInfo
         {
@@ -43,9 +43,68 @@ Object* ObjectAllocator::allocate_class(const Object::Class* klass)
     return obj;
 }
 
-Object* ObjectAllocator::allocate_object(const Object::Class* klass)
+void ObjectAllocator::destroy_object(Object* obj)
 {
-    // where it gonna be allocated
+    obj->mark(Object::MARK_DEALLOCATED);
+    ObjectCallRef(obj, deinit);
+    FailOn(obj == nullptr || !obj->id.is_valid(), "Invalid Object");
+    
+    u32 chunk_index = obj->id.chunk();
+    ObjectChunk& chunk = data.chunks[chunk_index];
+    if(chunk.last_free_id != InvalidObjectID)
+    {
+        Object* last_free = _get_by_id_no_alloc(chunk.last_free_id);
+        last_free->id = chunk.last_free_id;
+    }
+    
+    chunk.last_free_id = obj->id;
+}
+
+void ObjectAllocator::allocate_new_block(
+    ObjectBlock& block, usize count, usize object_size
+)
+{
+    block.bytes = data.internal_object_allocator.alloc(object_size * count, object_size);
+    block.count = count;
+}
+
+Object* ObjectAllocator::get_by_id(ObjectID id)
+{
+    FailOn(!id.is_valid(), "Invalid ObjectID");
+    
+    ObjectChunk& chunk = data.chunks[id.chunk()];
+    ObjectBlock& block = chunk.blocks[id.block()];
+
+    if(block.bytes.null())
+    {
+        return nullptr;
+    }
+
+    if(id.slot() >= block.index)
+    {
+        return nullptr;
+    }
+
+    Object* obj = reinterpret_cast<Object*>(block.bytes.add(id.slot() * chunk.object_size).ptr());
+    if(obj->has_mark(Object::MARK_DEALLOCATED))
+    {
+        return nullptr;
+    }
+
+    return obj;
+}
+
+Object* ObjectAllocator::_get_by_id_no_alloc(ObjectID id)
+{
+    ObjectChunk& chunk = data.chunks[id.chunk()];
+    ObjectBlock& block = chunk.blocks[id.block()];
+    Object* obj = reinterpret_cast<Object*>(block.bytes.add(id.slot() * chunk.object_size).ptr());
+    return obj;
+}
+
+Object* ObjectAllocator::_request_new_object(const Object::Class* klass)
+{
+// where it gonna be allocated
     usize chunk_index = math::log2(math::next_pow2(klass->class_size)) - ChunkBase;
     
     ObjectChunk& chunk = data.chunks[chunk_index];
@@ -95,38 +154,7 @@ Object* ObjectAllocator::allocate_object(const Object::Class* klass)
         count_by_block <<= 1;
     }
     
-    FailOn(true, "This should not happened!");
+    DebugInfo("[ObjectAllocator]: Object allocation failed, not enough memory");
     return nullptr;
 }
 
-void ObjectAllocator::destroy_object(Object* obj)
-{
-    ObjectCallRef(obj, deinit);
-    FailOn(obj == nullptr || !obj->id.is_valid(), "Invalid Object");
-    
-    u32 chunk_index = obj->id.chunk();
-    ObjectChunk& chunk = data.chunks[chunk_index];
-    if(chunk.last_free_id != InvalidObjectID)
-    {
-        Object* last_free = get_by_id(chunk.last_free_id);
-        last_free->id = chunk.last_free_id;
-    }
-    
-    chunk.last_free_id = obj->id;
-}
-
-void ObjectAllocator::allocate_new_block(
-    ObjectBlock& block, usize count, usize object_size
-)
-{
-    block.bytes = data.internal_object_allocator.alloc(object_size * count, object_size);
-    block.count = count;
-}
-
-Object* ObjectAllocator::get_by_id(ObjectID& id)
-{
-    FailOn(!id.is_valid(), "Invalid ObjectID");
-    
-    ObjectChunk& chunk = data.chunks[id.chunk()];
-    return (Object*)(chunk.blocks[id.block()].bytes.add(id.slot() * chunk.object_size).ptr());
-}

@@ -118,3 +118,27 @@ Vector2 Transform2D::get_column(usize n) const
         return Vector2(rows[0].y, rows[1].y);
     }
 }
+
+Transform2D Transform2D::inverse() const
+{
+    const f32 det = determinant();
+    if (det < 0.0001f)
+    {
+        return Transform2D();
+    }
+
+    const f32 inv_det = 1.f / det;
+
+    // 2x2 inverse
+    Vector2 i0(rows[1].y * inv_det, -rows[0].y * inv_det);
+    Vector2 i1(-rows[1].x * inv_det, rows[0].x * inv_det);
+
+    // Inverse translation
+    Vector2 pos = rows[2];
+    Vector2 i2(
+        -(pos.x * i0.x + pos.y * i1.x),
+        -(pos.x * i0.y + pos.y * i1.y)
+    );
+
+    return Transform2D(i0, i1, i2);
+}

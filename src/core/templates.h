@@ -202,6 +202,9 @@ struct TypeIdentityT
 template<typename T>
 using TypeIdentity = TypeIdentityT<T>::Type;
 
+template<typename Base, typename T>
+concept IsBaseOf = requires(T* t) { static_cast<Base*>(t); };
+
 
 template<typename Fn>
 struct IsMemberFunctionT

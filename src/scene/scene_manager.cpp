@@ -128,7 +128,7 @@ void SceneManager::step()
     Transform2D camera_transform = Transform2D();
     if (data.current_camera)
     {
-        camera_transform = data.current_camera->get_camera_transform();
+        camera_transform = data.current_camera->get_camera_transform(true);
     }
     get_main_viewport().set_scene_transform(camera_transform);
 
@@ -206,7 +206,9 @@ void SceneManager::scene_handle_input(const InputEvent& event)
     if (!data.current_scene->has_mark(Object::MARK_EVENT))
         return;
 
-    if (event.type == INPUT_EVENT_TOUCH)
+    switch (event.type)
+    {
+    case INPUT_EVENT_TOUCH:
     {
         auto& et = event.get<InputEventTouch>();
         InputEventTouch new_event = et;
@@ -217,7 +219,7 @@ void SceneManager::scene_handle_input(const InputEvent& event)
         if (CanvasObject* c = _find_canvas_in_pos(new_event.position))
         {
             data.touched_focus[et.pointer] = c;
-            ObjectCallRef(c, event, new_event);
+            ObjectCallRef(c, gui_event, new_event);
         }
         else
         {
@@ -226,14 +228,15 @@ void SceneManager::scene_handle_input(const InputEvent& event)
             {
                 // point_is_in will be always false
                 new_event.pressed = false;
-                ObjectCallRef(c, event, new_event);
+                ObjectCallRef(c, gui_event, new_event);
             }
             data.touched_focus[et.pointer] = nullptr;
         }
 
         ObjectCallRef(data.current_scene, event, new_event);
     }
-    else if (event.type == INPUT_EVENT_MOUSE_BUTTON)
+    break;
+    case INPUT_EVENT_MOUSE_BUTTON:
     {
         auto& et = event.get<InputEventMouseButton>();
         InputEventMouseButton new_event = et;
@@ -243,7 +246,7 @@ void SceneManager::scene_handle_input(const InputEvent& event)
         if (CanvasObject* c = _find_canvas_in_pos(new_event.position))
         {
             data.touched_focus[0] = c;
-            ObjectCallRef(c, event, new_event);
+            ObjectCallRef(c, gui_event, new_event);
         }
         else
         {
@@ -252,12 +255,14 @@ void SceneManager::scene_handle_input(const InputEvent& event)
             {
                 // point_is_in will be always false
                 new_event.pressed = false;
-                ObjectCallRef(c, event, new_event);
+                ObjectCallRef(c, gui_event, new_event);
             }
             data.touched_focus[0] = nullptr;
         }
 
         ObjectCallRef(data.current_scene, event, new_event);
+    }
+    break;
     }
 
     data.current_scene->handle_event(event);

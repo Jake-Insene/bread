@@ -69,9 +69,11 @@ void P2DBody::set_shape(const P2DShape& new_shape)
 	compute_inertia();
 }
 
-const P2DShape& P2DBody::get_shape() const
+void P2DBody::set_transform(const Transform2D& new_transform)
 {
-	return data.shape;
+	data.transform = new_transform;
+	data.shape_transformed = data.shape;
+	data.shape_transformed.apply_transform(new_transform);
 }
 
 void P2DBody::step(f32 dt)

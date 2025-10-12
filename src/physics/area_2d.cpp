@@ -3,6 +3,11 @@
 #include "physics/body_2d.h"
 
 
+void Area2D::_bind_vtable(Area2D::VTable& vtable)
+{
+    BindVTable(vtable, transform_changed, &Area2D::transform_changed);
+}
+
 void Area2D::init(const CreateInfo&)
 {
     data.area_id = Physics2D::create_area(this);
@@ -25,6 +30,11 @@ void Area2D::enter()
 
 void Area2D::exit()
 {}
+
+void Area2D::transform_changed()
+{
+    Physics2D::area_set_transform(data.area_id, get_global_transform());
+}
 
 void Area2D::set_shape(const Shape2D& shape)
 {

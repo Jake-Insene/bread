@@ -1,6 +1,11 @@
 #include "physics/body_2d.h"
 
 
+void Body2D::_bind_vtable(Object2D::VTable& vtable)
+{
+    BindVTable(vtable, transform_changed, &Body2D::transform_changed);
+}
+
 void Body2D::init(const CreateInfo&)
 {
     data.body_id = Physics2D::create_body(this);
@@ -19,7 +24,11 @@ void Body2D::enter()
 {}
 
 void Body2D::exit()
+{}
+
+void Body2D::transform_changed()
 {
+    Physics2D::body_set_transform(data.body_id, get_global_transform());
 }
 
 void Body2D::set_type(Body2D::BodyType new_type)

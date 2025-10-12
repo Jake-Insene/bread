@@ -9,6 +9,8 @@ struct Body2D : Object2D
 {
     OBJECT(Body2D, Object2D);
 
+    static void _bind_vtable(Object2D::VTable& vtable);
+
     using BodyType = Physics2D::BodyType;
     using CollisionMask = Physics2D::CollisionMask;
     
@@ -35,6 +37,8 @@ struct Body2D : Object2D
     
     void enter();
     void exit();
+
+    void transform_changed();
     
     void set_type(Body2D::BodyType new_type);
     Body2D::BodyType get_type() const { return data.type;}

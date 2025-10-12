@@ -1,0 +1,42 @@
+#pragma once
+#include "collections/array.h"
+#include "physics/physics_2d.h"
+
+#include "physics/p2d/p2d_shape.h"
+#include "physics/p2d/p2d_types.h"
+
+struct [[nodiscard]] P2DArea
+{
+    struct InternalData
+    {
+        P2DShape shape;
+        P2DShape shape_transformed;
+        Transform2D transform;
+    };
+
+    InternalData data;
+
+    Object2D* target;
+    Physics2D::AreaID self;
+    Physics2D::CollisionMask residence_mask;
+
+    void* _this;
+    Physics2D::EventOnBodyEnter on_body_enter;
+    Physics2D::EventOnBodyExit on_body_exit;
+
+    bool is_active;
+
+    struct BodyInArea
+    {
+        bool is_inside;
+    };
+
+    HashMap<Physics2D::BodyID, BodyInArea> bodies_inside;
+    Array<PhysicsTileCoord> tiles_on;
+
+    void set_shape(const P2DShape& new_shape);
+    P2DShape get_shape() const { return data.shape; }
+    P2DShape get_shape_transformed() const { return data.shape_transformed; }
+    void set_transform(const Transform2D& new_transform);
+    Transform2D get_transform() const { return data.transform; }
+};

@@ -74,12 +74,12 @@ void AnimatedSprite2D::render()
 	);
 }
 
-void AnimatedSprite2D::play(StringView anim)
+void AnimatedSprite2D::play(StringView animation_name)
 {
-	if (!animation || !animation->has_animation(anim))
+	if (!animation || !animation->has_animation(animation_name))
 		return;
 
-	if (data.current_animation.equals(anim))
+	if (data.current_animation.equals(animation_name))
 	{
 		if (data.playing)
 			return;
@@ -88,8 +88,8 @@ void AnimatedSprite2D::play(StringView anim)
 	data.playing = true;
 	data.frame = 0;
 
-	data.current_animation.set(anim);
-	data.remain = animation->get_frame(anim, 0).duration;
+	data.current_animation.set(animation_name);
+	data.remain = animation->get_frame(animation_name, 0).duration;
 	mark(MARK_INTERNAL_UPDATE);
 }
 

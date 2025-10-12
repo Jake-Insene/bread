@@ -31,9 +31,9 @@ struct Button : CanvasObject
     void init(const CreateInfo& info);
     
     void render();
-    
-    void event(const InputEvent& e);
 
+    void gui_event(const InputEvent& e);
+    
     // CanvasObject
     bool is_inside(const Vector2& point) const;
     Rect2D get_rect() const;

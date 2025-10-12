@@ -9,6 +9,7 @@
 
 struct Object;
 struct Object2D;
+struct Transform2D;
 
 
 struct Physics2D
@@ -77,6 +78,7 @@ struct Physics2D
         VTFunc(void, body_set_shape, BodyID, const Shape2D&);
         VTFunc(Shape2D, body_get_shape, BodyID);
 
+        VTFunc(void, body_set_transform, BodyID, const Transform2D&);
         VTFunc(void, body_set_type, BodyID, BodyType);
         VTFunc(void, body_set_velocity, BodyID, const Vector2&);
         VTFunc(Vector2, body_get_velocity, BodyID);
@@ -104,6 +106,7 @@ struct Physics2D
         VTFunc(void, area_set_shape, AreaID, const Shape2D&);
         VTFunc(Shape2D, area_get_shape, AreaID);
 
+        VTFunc(void, area_set_transform, AreaID, const Transform2D&);
         VTFunc(void, area_set_residence_mask, AreaID, CollisionMask);
         VTFunc(CollisionMask, area_get_residence_mask, AreaID);
 
@@ -137,6 +140,7 @@ struct Physics2D
     VTFuncDefArg2S(body_set_shape, BodyID, const Shape2D&);
     VTFuncDefArg1RetS(Shape2D, body_get_shape, BodyID);
 
+    VTFuncDefArg2S(body_set_transform, BodyID, const Transform2D&);
     VTFuncDefArg2S(body_set_type, BodyID, BodyType);
     VTFuncDefArg2S(body_set_velocity, BodyID, const Vector2&);
     VTFuncDefArg1RetS(Vector2, body_get_velocity, BodyID);
@@ -164,6 +168,7 @@ struct Physics2D
     VTFuncDefArg2S(area_set_shape, AreaID, const Shape2D&);
     VTFuncDefArg1RetS(Shape2D, area_get_shape, AreaID);
 
+    VTFuncDefArg2S(area_set_transform, AreaID, const Transform2D&);
     VTFuncDefArg2S(area_set_residence_mask, AreaID, CollisionMask);
     VTFuncDefArg1RetS(CollisionMask, area_get_residence_mask, AreaID);
     VTFuncDefArg3S(area_set_on_body_enter, AreaID, void*, EventOnBodyEnter);

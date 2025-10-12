@@ -3,6 +3,11 @@
 #include "graphics/viewport.h"
 
 
+void TileMap::_bind_vtable(TileMap::VTable& vtable)
+{
+	BindVTable(vtable, transform_changed, &TileMap::transform_changed);
+}
+
 void TileMap::init(const CreateInfo&)
 {
 	mark(MARK_RENDER);
@@ -59,6 +64,14 @@ void TileMap::render()
 	}
 }
 
+void TileMap::transform_changed()
+{
+	for (auto body_id : data.bodies)
+	{
+		Physics2D::body_set_transform(body_id, get_global_transform());
+	}
+}
+
 void TileMap::set_tile_set(TileSet* new_tile_set)
 {
 	data.tile_set = new_tile_set;
@@ -84,6 +97,7 @@ void TileMap::set_tile_set(TileSet* new_tile_set)
 
 		tile_shape.translate(position * tile_size);
 		Physics2D::body_set_shape(body_id, tile_shape);
+		Physics2D::body_set_transform(body_id, get_global_transform());
 	}
 
 	DebugInfo("TileMap({}): Creating {} shapes", (void*)usize(id.id), shape_count);

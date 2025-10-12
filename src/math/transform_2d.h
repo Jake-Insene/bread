@@ -49,4 +49,6 @@ struct [[nodiscard]] Transform2D
 
     [[nodiscard]] f32 determinant() const;
     Vector2 get_column(usize n) const;
+
+    Transform2D inverse() const;
 };

@@ -23,7 +23,9 @@ struct [[nodiscard]] P2DBody
         f32 bounce;
 
         P2DShape shape;
-    };
+        P2DShape shape_transformed;
+        Transform2D transform;
+    } data;
 
     Object2D* target;
     Physics2D::BodyID self;
@@ -33,8 +35,6 @@ struct [[nodiscard]] P2DBody
 
     void* _this;
     Physics2D::EventOnCollide on_collide;
-
-    InternalData data;
 
     bool fixed_rotation;
     bool is_on_floor;
@@ -74,7 +74,10 @@ struct [[nodiscard]] P2DBody
     [[nodiscard]] f32 get_bounce() const { return data.bounce; }
 
     void set_shape(const P2DShape& new_shape);
-    const P2DShape& get_shape() const;
+    const P2DShape& get_shape() const { return data.shape; }
+    const P2DShape& get_shape_transformed() const { return data.shape_transformed; }
+    void set_transform(const Transform2D& new_transform);
+    const Transform2D& get_transform() const { return data.transform; }
 
     void step(f32 dt);
     void integrate(f32 dt);

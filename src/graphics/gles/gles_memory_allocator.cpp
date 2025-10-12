@@ -391,21 +391,20 @@ Vector2I GLESMemoryAllocator::render_target_get_size(RenderTargetID rt_id)
 
 void GLESMemoryAllocator::render_target_set_size(RenderTargetID rt_id, const Vector2I& new_size)
 {
-    // ignore backbuffer modifications
+    // Ignore backbuffer modifications
+    GLESRenderTarget& rt = render_target_get(rt_id);
+    rt.size = new_size;
+
     if (rt_id == RenderTargetID(0))
         return;
-
-    GLESRenderTarget& rt = render_target_get(rt_id);
 
     usize old_byte_size = rt.size.width * rt.size.height * _get_format_size(rt.format);
     data.allocated_bytes -= old_byte_size;
     texture_allocate_memory(rt.color_buffer, GL_TEXTURE_2D, new_size, rt.format, GL_RGBA, {});
 
-        gl.glBindFramebuffer(GL_FRAMEBUFFER, rt.framebuffer);
-        gl.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rt.color_buffer, 0);
-        gl.glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    rt.size = new_size;
+    gl.glBindFramebuffer(GL_FRAMEBUFFER, rt.framebuffer);
+    gl.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rt.color_buffer, 0);
+    gl.glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 GLID GLESMemoryAllocator::render_target_get_handle(RenderTargetID rt_id)

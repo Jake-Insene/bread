@@ -1,5 +1,7 @@
 #include "graphics/viewport.h"
 
+#include "input/input.h"
+
 
 Viewport Viewport::create_from_render_target(const mem::Allocator& allocator, RenderTarget rt)
 {
@@ -60,7 +62,19 @@ void Viewport::set_size(const Vector2I& new_size)
 
 Vector2I Viewport::get_size() const
 {
-	return rt.get_size();
+	return viewport_size;
+}
+
+Vector2 Viewport::get_local_mouse_position() const
+{
+    Vector2 mouse_pos = Input::get_mouse_position();
+    // Flip Y to convert from screen coordinates (Y down) to local coordinates (Y up)
+    Vector2 flipped_mouse = Vector2(mouse_pos.x, -mouse_pos.y);
+    // Apply inverse scene transform to convert to world/local space
+    Transform2D inverse_transform = scene_transform.inverse();
+    Vector2 local_pos = inverse_transform * flipped_mouse;
+	local_pos.y *= -1;
+    return local_pos;
 }
 
 RenderItemID Viewport::create_item(ViewportLayerMask layers)
@@ -114,6 +128,12 @@ void Viewport::item_set_layers(RenderItemID render_item_id, ViewportLayerMask la
 	}
 }
 
+Viewport::ViewportLayerMask Viewport::item_get_layers(RenderItemID render_item_id)
+{
+	RenderItem& item = items.get(render_item_id);
+	return item.layers;
+}
+
 void Viewport::render_item_draw_rect(RenderItemID render_item_id, const Transform2D& transform,
 	const Rect2D& dest_rect, Color color)
 {
@@ -143,13 +163,6 @@ void Viewport::render_item_draw_circle(RenderItemID render_item_id, const Vector
 	circle->center = center;
 	circle->radius = radius;
 	circle->color = color;
-}
-
-
-Viewport::ViewportLayerMask Viewport::item_get_layers(RenderItemID render_item_id)
-{
-	RenderItem& item = items.get(render_item_id);
-	return item.layers;
 }
 
 void Viewport::render_item_draw_sprite(RenderItemID render_item_id, const Transform2D& transform, 

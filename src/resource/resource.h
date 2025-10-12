@@ -1,4 +1,6 @@
 #pragma once
+#include "collections/error.h"
+#include "collections/result.h"
 #include "collections/string.h"
 
 
@@ -48,12 +50,40 @@ static constexpr ResourceTypeSpecification _construct_from_flags(usize flags, St
 */
 struct Resource
 {
-    static constexpr bool IsResource = true;
-
     RESOURCE(
         RESOURCE_UNKNOWN,
         NoResourceFlags, 
         ResourceExtensions(""));
+
+    
+    static Result<Resource*, Error> _load_resource(ResourceType type, ResourceTypeSpecification spec, StringView path);
+
+    /*
+    * Try to load the resource of the given type, can return nullptr
+    */
+    template<typename T>
+        requires(!IsSame<Resource, T> && IsBaseOf<Resource, T>)
+    [[nodiscard]] static Result<T*, Error> try_load(StringView path)
+    {
+        Result<Resource*, Error> resource = _load_resource(T::Type, T::Specification, path);
+        if (resource)
+        {
+            return reinterpret_cast<T*>(resource.value());
+        }
+
+        return resource.error();
+    };
+
+
+    /*
+    * Load the resource of the given type, can return nullptr.
+    */
+    template<typename T>
+        requires(!IsSame<Resource, T>&& IsBaseOf<Resource, T>)
+    [[nodiscard]] static T* load(StringView path)
+    {
+        return reinterpret_cast<T*>(_load_resource(T::Type, T::Specification, path).value());
+    };
     
     ResourceType type;
     String path;
@@ -62,8 +92,4 @@ struct Resource
     void destroy();
 };
 
-template<typename T>
-concept IsResourceBase = requires
-{
-    T::IsResource;
-};
+

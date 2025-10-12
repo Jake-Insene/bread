@@ -1,9 +1,7 @@
 #include "resource/resource_manager.h"
 
-#include "debug/debug.h"
 #include "graphics/graphics.h"
 #include "io/file.h"
-#include "os/os.h"
 #include "resource/resource_manager_internal.h"
 
 #include <external/stb_image.h>
@@ -15,11 +13,11 @@ void ResourceManager::initialize(mem::Allocator& allocator)
 
     stbi_set_flip_vertically_on_load(true);
     data.resources = StringMap<Resource*>::with_size(
-        data.allocator, 4
+        data.allocator, 128
     );
     
     data.cached_images = HashMap<Image*, Texture*>::with_size(
-        data.allocator, 4
+        data.allocator, 128
     );
 }
 

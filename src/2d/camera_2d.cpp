@@ -17,19 +17,19 @@ void Camera2D::exit()
     }
 }
 
-void Camera2D::set_enable(bool _enable)
+void Camera2D::set_enable(bool enable)
 {
-    if (data.enable != _enable && has_mark(MARK_IN_SCENE))
+    if (data.enable == enable && !has_mark(MARK_IN_SCENE))
+        return;
+
+    data.enable = enable;
+    if (data.enable)
     {
-        data.enable = _enable;
-        if(data.enable)
-        {
-            SceneManager::set_camera_2d(this);
-        }
+        SceneManager::set_camera_2d(this);
     }
 }
 
-Transform2D Camera2D::get_camera_transform()
+Transform2D Camera2D::get_camera_transform(bool update)
 {
     const Transform2D camera_transform = get_global_transform();
     const Vector2 camera_scale = camera_transform.get_scale();
@@ -41,6 +41,9 @@ Transform2D Camera2D::get_camera_transform()
     {
     case POSITION_TOP_LEFT:
     {
+        if (!update)
+            break;
+
         if (smooth_position)
         {
             data.old_pos.x = math::lerp(data.old_pos.x, camera_position.x, camera_speed.x * dt);
@@ -54,6 +57,9 @@ Transform2D Camera2D::get_camera_transform()
         break;
     case POSITION_CENTERED:
     {
+        if (!update)
+            break;
+
         const Vector2 display_size = Vector2(SceneManager::get_viewport_size());
         Vector2 centered_pos = camera_position;
         centered_pos -= (Vector2(display_size.x, -display_size.y) * 0.5);

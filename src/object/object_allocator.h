@@ -48,7 +48,10 @@ struct ObjectAllocator
         ObjectBlock& block, usize count, usize object_size
     );
     
-    static Object* get_by_id(ObjectID& id);
+    static Object* get_by_id(ObjectID id);
+
+    static Object* _get_by_id_no_alloc(ObjectID id);
+    static Object* _request_new_object(const Object::Class* klass);
 };
 
 

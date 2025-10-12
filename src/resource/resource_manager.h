@@ -1,7 +1,6 @@
 #pragma once
 #include "collections/error.h"
 #include "collections/hash_map.h"
-#include "collections/result.h"
 #include "collections/string_map.h"
 #include "graphics/structs.h"
 #include "mem/allocator.h"
@@ -57,26 +56,3 @@ struct ResourceManager
 };
 
 
-/*
-* Try to load the resource of the given type, can return nullptr
-*/
-template<typename T>
-    requires(!IsSame<Resource, T> && IsResourceBase<T>)
-Result<T*, Error> TryGetResource(StringView path)
-{
-    Result<Resource*, Error> resource = ResourceManager::load_resource(T::Type, T::Specification, path);
-    if (resource)
-    {
-        return reinterpret_cast<T*>(resource.value());
-    }
-
-    return resource.error();
-};
-
-
-template<typename T>
-    requires(!IsSame<Resource, T>&& IsResourceBase<T>)
-T* GetResource(StringView path)
-{
-    return reinterpret_cast<T*>(ResourceManager::load_resource(T::Type, T::Specification, path).value());
-};

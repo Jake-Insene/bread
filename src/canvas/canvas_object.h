@@ -15,6 +15,7 @@ struct CanvasObject : Object
     OBJECT(CanvasObject, Object);
     DefineVTable(Object)
     {
+        Event<void(CanvasObject::*)(const InputEvent&), false> gui_event;
         Event<bool(CanvasObject::*)(const Vector2&) const, false> is_inside;
         Event<Rect2D(CanvasObject::*)() const, false> get_rect;
     };
@@ -37,6 +38,13 @@ struct CanvasObject : Object
 
     void enter();
     void exit();
+
+    /*
+    * Handle GUI input, it is activated by the SceneManager when a input event interacts with the obejct.
+    * 
+    * @param event Contains information about the input that triggers the call.
+    */
+    void gui_event(const InputEvent& event) Function(FunctionNormal) {}
     
     RenderItemID get_render_item() { return data.render_item; }
 
@@ -56,11 +64,15 @@ struct CanvasObject : Object
     Transform2D get_global_transform() const;
 
     /*
-    * Return true is the given position is inside of the CanvasObject.
     * @param pos A world position vector.
+    * 
+    * @return True is the given position is inside of the CanvasObject.
     */
-    bool is_inside(const Vector2& point) const;
+    bool is_inside(const Vector2& point) const Function(FunctionNormal);
 
+    /*
+    * @return A Rect that cantins all the object and its children.
+    */
     Rect2D get_rect() const;
 
     void draw_canvas_element(const Transform2D& transform, TextureID texture, const Rect2D& rect,

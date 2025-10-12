@@ -115,12 +115,10 @@ void P2DCollision::resolve_collision(const CollisionManifold& manifold, P2DBody&
 		&& body_b.type != Physics2D::DYNAMIC)
 		return;
 
-	const Vector2 local_centroid_a = body_a.get_shape().get_centroid();
-	const Vector2 world_centroid_a = body_a.target->get_global_transform() * local_centroid_a;
+	const Vector2 world_centroid_a = body_a.get_shape_transformed().get_centroid();
 	const Vector2 penetration_to_centeroid_a = manifold.point - world_centroid_a;
 
-	const Vector2 local_centroid_b = body_b.get_shape().get_centroid();
-	const Vector2 world_centroid_b = body_b.target->get_global_transform() * local_centroid_b;
+	const Vector2 world_centroid_b = body_b.get_shape_transformed().get_centroid();
 	const Vector2 penetration_to_centeroid_b = manifold.point - world_centroid_b;
 
 	const Vector2 angular_velocity_penetration_centeroid_a = Vector2(

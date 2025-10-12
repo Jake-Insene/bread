@@ -5,6 +5,12 @@
 #include "2d/camera_2d.h"
 
 
+
+void Object2D::_bind_vtable(Object2D::VTable& vtable)
+{
+    BindVTable(vtable, transform_changed, &Object2D::transform_changed);
+}
+
 void Object2D::init(const CreateInfo&)
 {
     mark(MARK_2D);
@@ -20,7 +26,10 @@ void Object2D::exit()
     get_viewport()->destroy_item(data.render_item);
 }
 
-void Object2D::set_position(Vector2 new_pos)
+void Object2D::transform_changed()
+{}
+
+void Object2D::set_position(const Vector2& new_pos)
 {
     data.pos_cache = new_pos;
     data.transform.set_position(new_pos);
@@ -32,14 +41,14 @@ Vector2 Object2D::get_position() const
     return data.pos_cache;
 }
 
-void Object2D::translate(Vector2 t)
+void Object2D::translate(const Vector2& translation)
 {
-    data.pos_cache += t;
-    data.transform.translate(t);
+    data.pos_cache += translation;
+    data.transform.translate(translation);
     _update_transform();
 }
 
-void Object2D::set_scale(Vector2 new_scale)
+void Object2D::set_scale(const Vector2& new_scale)
 {
     if (data.scale_cache == new_scale)
         return;
@@ -54,7 +63,7 @@ Vector2 Object2D::get_scale() const
     return data.scale_cache;
 }
 
-void Object2D::set_rotation(f32 new_rot)
+void Object2D::set_rotation(const f32 new_rot)
 {
     if (data.rot_cache == new_rot)
         return;
@@ -87,31 +96,6 @@ Transform2D Object2D::get_global_transform() const
     return data.global_transform_cache;
 }
 
-Vector2 Object2D::get_local_mouse_position() const
-{
-    // TODO: fix this
-    const Camera2D* cam = SceneManager::get_camera_2d();
-    const Vector2 viewport_size = Vector2(SceneManager::get_viewport_size());
-    const Vector2 screen_pos = Input::get_mouse_position();
-    Vector2 local_pos = Vector2(screen_pos);
-
-    if (cam)
-    {
-        Camera2D::PositionMode mode = cam->get_position_mode();
-        switch (mode)
-        {
-        case Camera2D::POSITION_CENTERED:
-            local_pos += Vector2(-viewport_size.x, viewport_size.y) * 0.5f;
-            return cam->get_global_transform() * local_pos;
-        default:
-            return cam->get_global_transform() * local_pos;
-        }
-
-    }
-
-    return local_pos;
-}
-
 void Object2D::draw_sprite(const Transform2D& transform, TextureID texture, const Rect2D& rect, 
     const Rect2D& src_rect, Color mod_color, u32 flags)
 {
@@ -131,6 +115,8 @@ void Object2D::_update_transform()
             child->_update_transform();
         }
     }
+
+    ObjectCall(transform_changed);
 }
 
 Transform2D Object2D::_make_global_transform() const

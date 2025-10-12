@@ -11,6 +11,8 @@ struct Area2D : Object2D
 {
     OBJECT(Area2D, Object2D);
 
+    static void _bind_vtable(Area2D::VTable& vtable);
+
     using CollisionMask = Physics2D::CollisionMask;
 
     struct InternalData
@@ -28,6 +30,8 @@ struct Area2D : Object2D
 
     void enter();
     void exit();
+
+    void transform_changed();
 
     void set_shape(const Shape2D& shape);
     Shape2D get_shape();

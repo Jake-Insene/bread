@@ -126,8 +126,6 @@ using MarkName = u64;
 */
 struct Object
 {
-    static constexpr bool IsObject = true;
-
     struct CreateInfo
     {
         mem::Allocator allocator;
@@ -190,8 +188,11 @@ struct Object
         return &klass;
     }
 
+    static Object* _get_by_id(ObjectID id) Function(FunctionInternal);
+
     /*
     * @param Object Object to check.
+    * 
     * @return True if the object is a subclass of T, false otherwise.
     */
     template<typename T>
@@ -209,10 +210,9 @@ struct Object
         return false;
     }
 
-    static Object* _get_by_id(ObjectID id);
-
     /*
     * Not safe, direct cast of the object.
+    * 
     * @return The object casted to T, if the object class is not T returns nullptr.
     */
     template<typename T>
@@ -225,9 +225,12 @@ struct Object
 
     /*
     * Create an object of the given type.
-    * It don't put it in the scene tree, you must explicitly call add_child.
+    * It doesn't put it in the scene tree, You must explicitly call add_child.
+    * 
+    * @return The allocated object.
     */ 
     template<typename T>
+        requires(IsBaseOf<Object, T>)
     [[nodiscard]] static T* create()
     {
         return reinterpret_cast<T*>(create_from_class(T::get_class()));
@@ -235,6 +238,8 @@ struct Object
 
     /*
     * Get the object referenced by the id.
+    * 
+    * @return The object that owns the id.
     */
     template<typename T>
     [[nodiscard]] static T* get_by_id(ObjectID id)
@@ -279,6 +284,9 @@ struct Object
 
     ObjectID id{};
     const Class* klass{};
+    /*
+    * The object memory allocator, Use it to allocate memory for the object.
+    */
     mem::Allocator allocator{};
 
     enum
@@ -323,6 +331,11 @@ struct Object
         */
         MARK_QUEUE_FREE,
 
+        /*
+        * The object is deallocated.
+        */
+        MARK_DEALLOCATED,
+
         MARK_COUNT,
     };
 
@@ -339,10 +352,10 @@ struct Object
         Object* parent = nullptr;
         Array<Object*> childs;
 
-        BitField<MARK_COUNT> marks{};
-        BitField<64> bit_groups;
+        BitMask<MARK_COUNT> marks{};
+        BitMask<64> bit_groups{};
 
-        Viewport* viewport;
+        Viewport* viewport = nullptr;
     } data;
 
     void handle_internal_update(f32 dt) Function(FunctionInternal);
@@ -488,11 +501,4 @@ struct Object
     * @param event Contains information about the input that triggers the call.
     */
     void event(const InputEvent& event) RequireMark(MARK_EVENT) Function(FunctionPropagate);
-};
-
-
-template<typename T>
-concept IsObjectBase = requires
-{
-    T::IsObject;
 };

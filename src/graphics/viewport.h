@@ -7,7 +7,7 @@
 
 
 /*
-	Contains a world to render to.
+* Contains a world to render to.
 */
 struct [[nodiscard]] Viewport
 {
@@ -88,8 +88,7 @@ struct [[nodiscard]] Viewport
         // Same as sprite but type is CMD_UI_SPRITE, 
         // the renderer should handle the special case
         struct CommandUISprite : CommandSprite
-        {
-        };
+        {};
 
         RenderItemID self = RenderItemID::InvalidID;
         mem::Allocator allocator;
@@ -178,6 +177,8 @@ struct [[nodiscard]] Viewport
 
     void set_size(const Vector2I& new_size);
     Vector2I get_size() const;
+
+    Vector2 get_local_mouse_position() const;
 
     RenderItemID create_item(ViewportLayerMask layers);
     void destroy_item(RenderItemID render_item_id);

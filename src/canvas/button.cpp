@@ -9,11 +9,12 @@
 void Button::_bind_vtable(VTable& vtable)
 {
     BindVTable(vtable, is_inside, &Button::is_inside);
+    BindVTable(vtable, gui_event, &Button::gui_event);
 }
 
 void Button::init(const CreateInfo&)
 {
-    normal_texture = GetResource<Texture2D>("default/white.png");
+    normal_texture = Resource::load<Texture2D>("default/white.png");
     
     data.current_state = STATE_NORMAL;
 }
@@ -35,7 +36,7 @@ void Button::render()
     );
 }
 
-void Button::event(const InputEvent& e)
+void Button::gui_event(const InputEvent& e)
 {
     if(e.type == INPUT_EVENT_TOUCH)
     {

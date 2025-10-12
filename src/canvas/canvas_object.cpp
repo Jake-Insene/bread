@@ -5,15 +5,14 @@
 
 void CanvasObject::_bind_vtable(CanvasObject::VTable& vtable)
 {
+    BindVTable(vtable, gui_event, &CanvasObject::gui_event);
     BindVTable(vtable, is_inside, &CanvasObject::is_inside);
     BindVTable(vtable, get_rect, &CanvasObject::get_rect);
 };
 
-
 void CanvasObject::init(const CreateInfo&)
 {
     mark(MARK_RENDER);
-    mark(MARK_EVENT);
     mark(MARK_CANVAS);
 }
 
