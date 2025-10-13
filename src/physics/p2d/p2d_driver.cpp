@@ -515,7 +515,7 @@ void P2DDriver::_step_fixed(f32 dt)
 
     data.resolved_pairs.clear();
 
-    for(auto body_id : data.active_bodies)
+    for (auto body_id : data.active_bodies)
     {
         P2DBody& body = _get_body(body_id);
         // We can't garant that the body still on the scene.
@@ -536,8 +536,20 @@ void P2DDriver::_step_fixed(f32 dt)
             P2DBody& other_body = _get_body(body.pending_static_collision.other);
             P2DCollision::positional_correction(body.pending_static_collision.manifold, body, other_body);
             P2DCollision::resolve_collision(body.pending_static_collision.manifold, body, other_body);
+
+            if (body.on_collide.has_func() || other_body.on_collide.has_func())
+            {
+                data.collision_callbacks_map.insert(
+                    CollisionID(body.self, other_body.self),
+                    CollisionCallback
+                    {
+                        .body = body.self,
+                        .collided = other_body.self,
+                    }
+                );
+            }
         }
-     
+
         body.has_pending_static_collision = false;
         body.pending_static_collision = PendingCollision();
         body.moved = false;
@@ -706,7 +718,7 @@ void P2DDriver::_body_solve_manifold(P2DBody& body, P2DBody& other_body, const C
         P2DCollision::resolve_collision(manifold, body, other_body);
     }
 
-    if (body.on_collide.has_func())
+    if (body.on_collide.has_func() || other_body.on_collide.has_func())
     {
         data.collision_callbacks_map.insert(
             CollisionID(body.self, other_body.self),
@@ -793,9 +805,12 @@ void P2DDriver::_resolve_collision_callbacks()
     {
         P2DBody& body = _get_body(value.body);
         P2DBody& collided = _get_body(value.collided);
-        body.on_collide.call(body._this, collided.target);
 
-        if (collided.on_collide.has_func())
+        if (body.on_collide.has_func())
+        {
+            body.on_collide.call(body._this, collided.target);
+        }
+        if(collided.on_collide.has_func())
         {
             collided.on_collide.call(collided._this, body.target);
         }

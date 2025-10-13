@@ -44,7 +44,7 @@ struct CanvasObject : Object
     * 
     * @param event Contains information about the input that triggers the call.
     */
-    void gui_event(const InputEvent& event) Function(FunctionNormal) {}
+    void gui_event(const InputEvent& event) Function(FunctionNormal);
     
     RenderItemID get_render_item() { return data.render_item; }
 

@@ -66,6 +66,7 @@ void P2DBody::set_bounce(f32 new_bounce)
 void P2DBody::set_shape(const P2DShape& new_shape)
 {
 	data.shape = new_shape;
+	data.shape_transformed = data.shape;
 	compute_inertia();
 }
 

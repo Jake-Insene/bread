@@ -69,11 +69,12 @@ Vector2 Viewport::get_local_mouse_position() const
 {
     Vector2 mouse_pos = Input::get_mouse_position();
     // Flip Y to convert from screen coordinates (Y down) to local coordinates (Y up)
-    Vector2 flipped_mouse = Vector2(mouse_pos.x, -mouse_pos.y);
+    Vector2 flipped_mouse = Vector2(-mouse_pos.x, -mouse_pos.y);
     // Apply inverse scene transform to convert to world/local space
     Transform2D inverse_transform = scene_transform.inverse();
     Vector2 local_pos = inverse_transform * flipped_mouse;
 	local_pos.y *= -1;
+	local_pos.x *= -1;
     return local_pos;
 }
 

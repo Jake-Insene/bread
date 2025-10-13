@@ -111,7 +111,7 @@ Object* ObjectAllocator::_request_new_object(const Object::Class* klass)
     if(chunk.last_free_id != InvalidObjectID)
     {
         ObjectID copied_id = chunk.last_free_id;
-        Object* obj = get_by_id(copied_id);
+        Object* obj = _get_by_id_no_alloc(copied_id);
         if(obj->id != chunk.last_free_id)
         {
             chunk.last_free_id = obj->id;

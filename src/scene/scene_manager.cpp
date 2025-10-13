@@ -263,6 +263,8 @@ void SceneManager::scene_handle_input(const InputEvent& event)
         ObjectCallRef(data.current_scene, event, new_event);
     }
     break;
+    default:
+    break;
     }
 
     data.current_scene->handle_event(event);

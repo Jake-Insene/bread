@@ -1,5 +1,6 @@
 #include "canvas/canvas_object.h"
 
+#include "input/input.h"
 #include "scene/scene_manager.h"
 
 
@@ -30,6 +31,8 @@ void CanvasObject::exit()
 {
     get_viewport()->destroy_item(data.render_item);
 }
+
+void CanvasObject::gui_event(const InputEvent&) {}
 
 void CanvasObject::set_position(Vector2 new_pos)
 {
