@@ -45,7 +45,7 @@ void TileMap::render()
 		TileSet::TileData& tile_data = tiles_data[tile.data_index];
 		Vector2 tile_position = Vector2(tile_data.texture_position);
 
-		Rect2D src_rect{ tile_position, tile_size };
+		Rect2D src_rect = Rect2D(tile_position, tile_size);
 
 		Transform2D tile_transform = base_transform * Transform2D(
 			Vector2(1, 0),

@@ -119,6 +119,8 @@ struct [[nodiscard]] Viewport
 
             DebugAssert(offset < command_buffer.len, "command buffer full!");
             T* new_cmd = reinterpret_cast<T*>(command_buffer.add(offset).ptr());
+            allocator.construct(new_cmd);
+
             usize cmd_offset = usize(new_cmd) - usize(begin());
             offset += sizeof(T);
             new_cmd->next = offset;

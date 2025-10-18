@@ -2,12 +2,11 @@
 #include "collections/array.h"
 #include "collections/hash_map.h"
 #include "collections/free_list.h"
+#include "graphics/graphics_types.h"
 #include "physics/physics_2d.h"
 
 #include "physics/p2d/p2d_area.h"
 #include "physics/p2d/p2d_body.h"
-#include "physics/p2d/p2d_collision.h"
-#include "physics/p2d/p2d_shape.h"
 #include "physics/p2d/p2d_types.h"
 
 
@@ -57,6 +56,7 @@ struct P2DDriver
 
         f32 fixed_step;
         f32 accumulator;
+        RenderItemID grid_item;
     };
 
     static inline InternalData data;

@@ -5,9 +5,9 @@ P2DShape P2DShape::from_shape_2d(const Shape2D& shape)
 {
     P2DShape pshape = {};
     
-    pshape.vertices[0] =shape.vertices[0];
+    pshape.vertices[0] = shape.vertices[0];
     pshape.vertices[1] = shape.vertices[1];
-    pshape.vertices[2] =shape.vertices[2];
+    pshape.vertices[2] = shape.vertices[2];
     pshape.vertices[3] = shape.vertices[3];
 
     pshape._calc_aabb();
@@ -150,10 +150,10 @@ void P2DShape::_calc_area()
 
 void P2DShape::_calc_centroid()
 {
-    const f32 abs_area = area;
+    // Use signed area to keep the centroid calculation correct
     centroid = Vector2();
     
-    if (abs_area == 0.f)
+    if (area == 0.f)
     {
         return;
     }
@@ -166,12 +166,13 @@ void P2DShape::_calc_centroid()
 
         const f32 v1_v2_x = v1.x + v2.x;
         const f32 v1_v2_y = v1.y + v2.y;
+
         const f32 v1_v2 = v1.x * v2.y - v2.x * v1.y;
 
         centroid.x += v1_v2_x * v1_v2;
         centroid.y += v1_v2_y * v1_v2;
     }
 
-    centroid /= (6.f * abs_area);
+    centroid /= (6.f * area);
 }
 

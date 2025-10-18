@@ -45,11 +45,12 @@ void Engine::initialize()
     data.main_window = Window(Display::window_create());
 
     Audio::initialize(allocator, Audio::DEFAULT_DRIVER);
-    Physics2D::initialize(allocator, Physics2D::DEFAULT_DRIVER);
     Graphics::initialize(allocator);
 
-    ResourceManager::initialize(allocator);
     SceneManager::initialize(allocator);
+    Physics2D::initialize(allocator, Physics2D::DEFAULT_DRIVER);
+
+    ResourceManager::initialize(allocator);
 
     Engine::get_main_window().set_size(__configuration__.viewport_size);
     SceneManager::set_keep_viewport(__configuration__.keep_viewport);
@@ -65,10 +66,11 @@ void Engine::initialize()
 void Engine::shutdown()
 {
     SceneManager::shutdown();
+    Physics2D::shutdown();
+
     ResourceManager::shutdown();
 
     Graphics::shutdown();
-    Physics2D::shutdown();
     Audio::shutdown();
 
     Display::shutdown();

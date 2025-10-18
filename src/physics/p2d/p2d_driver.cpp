@@ -2,8 +2,12 @@
 
 #include "2d/object_2d.h"
 #include "graphics/viewport.h"
-#include "physics/p2d/p2d_types.h"
 #include "physics/physics_2d.h"
+#include "physics/p2d/p2d_types.h"
+#include "physics/p2d/p2d_collision.h"
+#include "physics/p2d/p2d_body.h"
+#include "physics/p2d/p2d_shape.h"
+#include "scene/scene_manager.h"
 
 
 
@@ -91,10 +95,14 @@ void P2DDriver::initialize(const mem::Allocator& allocator)
 
     data.fixed_step = Physics2D::get_property("/fixed_step").get<f32>();
     data.accumulator = 0.0f;
+
+    data.grid_item = SceneManager::get_main_viewport().create_item(Viewport::VIEWPORT_LAYER_DEFAULT);
 }
 
 void P2DDriver::shutdown()
 {
+    SceneManager::get_main_viewport().destroy_item(data.grid_item);
+
     for (usize i = 0; i < Physics2D::MAX_COLLISION_MASKS; i++)
     {
         data.mask_groups[i].bodies.destroy();
@@ -140,22 +148,20 @@ void P2DDriver::step(f32 dt)
         _handle_debug_draw_area(area);
     }
 
-    if (data.debug_draw)
-    {
-        P2DBody& first_body = _get_body(data.active_bodies[0]);
-        Viewport* viewport = first_body.target->get_viewport();
-        for (auto& entry : data.world_tiles)
-        {
-            PhysicsTileCoord coord = entry.second.coord;
+    if (!data.debug_draw)
+        return;
 
-            const f32 ts = f32(_get_tile_size());
-            Vector2 min = Vector2((coord.x ) * ts, (coord.y) * ts);
-            Vector2 max = min + Vector2(ts, ts);
-            viewport->render_item_draw_line(first_body.target->get_render_item(), Vector2(min.x, min.y), Vector2(max.x, min.y), Color(128,128,128,255));
-            viewport->render_item_draw_line(first_body.target->get_render_item(), Vector2(max.x, min.y), Vector2(max.x, max.y), Color(128,128,128,255));
-            viewport->render_item_draw_line(first_body.target->get_render_item(), Vector2(max.x, max.y), Vector2(min.x, max.y), Color(128,128,128,255));
-            viewport->render_item_draw_line(first_body.target->get_render_item(), Vector2(min.x, max.y), Vector2(min.x, min.y), Color(128,128,128,255));
-        }
+    for (auto& entry : data.world_tiles)
+    {
+        PhysicsTileCoord coord = entry.second.coord;
+
+        const f32 ts = f32(_get_tile_size());
+        Vector2 min = Vector2((coord.x) * ts, (coord.y) * ts);
+        Vector2 max = min + Vector2(ts, ts);
+        SceneManager::get_main_viewport().render_item_draw_line(data.grid_item, Vector2(min.x, min.y), Vector2(max.x, min.y), Color(128, 128, 128, 255));
+        SceneManager::get_main_viewport().render_item_draw_line(data.grid_item, Vector2(max.x, min.y), Vector2(max.x, max.y), Color(128, 128, 128, 255));
+        SceneManager::get_main_viewport().render_item_draw_line(data.grid_item, Vector2(max.x, max.y), Vector2(min.x, max.y), Color(128, 128, 128, 255));
+        SceneManager::get_main_viewport().render_item_draw_line(data.grid_item, Vector2(min.x, max.y), Vector2(min.x, min.y), Color(128, 128, 128, 255));
     }
 }
 
@@ -440,8 +446,8 @@ Shape2D P2DDriver::area_get_shape(Physics2D::AreaID area_id)
 
 void P2DDriver::area_set_transform(Physics2D::AreaID area_id, const Transform2D& new_transform)
 {
-    P2DArea& body = _get_area(area_id);
-    body.set_transform(new_transform);
+    P2DArea& area = _get_area(area_id);
+    area.set_transform(new_transform);
 }
 
 void P2DDriver::area_set_residence_mask(Physics2D::AreaID area_id, Physics2D::CollisionMask mask)
@@ -553,7 +559,7 @@ void P2DDriver::_handle_debug_draw_body(P2DBody& body)
             point1, point2, Color(255, 0, 0, 255)
         );
     }
-
+    
     body.target->get_viewport()->render_item_draw_circle(
         body.target->get_render_item(),
         shape.get_centroid(), 1.f, Color(255, 0, 0, 255)

@@ -4,6 +4,7 @@
 void P2DArea::set_shape(const P2DShape& new_shape)
 {
 	data.shape = new_shape;
+	data.shape_transformed = new_shape;
 }
 
 void P2DArea::set_transform(const Transform2D& new_transform)

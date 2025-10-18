@@ -178,6 +178,20 @@ union [[nodiscard]] Vector2T
 
     constexpr Vector2T normalized() const
     {
+        if(x == 0 && y == 0)
+        {
+            return Vector2T(0);
+        }
+        else if(x == 0)
+        {
+            return Vector2T(0, y / math::abs(y));
+        }
+        else if(y == 0)
+        {
+            return Vector2T(x / math::abs(x), 0);
+        }
+
+
 #if BREAD_ENABLE_INTRISICS
         T x1 = x;
         T y1 = y;

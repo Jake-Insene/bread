@@ -137,7 +137,6 @@ elseif(WIN32)
         src/platform/win32/win32_main.cpp
         src/platform/win32/win32_math.cpp
         src/platform/win32/win32_os.cpp
-        src/platform/win32/win32_time.cpp
     )
     set(PLATFORM_LIBRARIES opengl32 xaudio2)
 endif()

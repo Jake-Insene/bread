@@ -4,8 +4,6 @@
 
 struct [[nodiscard]] Semaphore
 {
-    static constexpr usize MaxValue = MaxValue<usize>;
-    
     OS::SemaphoreID id;
     
     static Semaphore create(usize initial_value);

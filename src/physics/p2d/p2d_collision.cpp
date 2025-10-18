@@ -104,8 +104,14 @@ void P2DCollision::positional_correction(const CollisionManifold& manifold, P2DB
 	const Vector2 body_a_movement = correction_vector * inv_mass_a * -1;
 	const Vector2 body_b_movement = correction_vector * inv_mass_b;
 
-	body_a.target->translate(body_a_movement);
-	body_b.target->translate(body_b_movement);
+	if (body_a_movement != Vector2())
+	{
+		body_a.target->translate(body_a_movement);
+	}
+	if (body_b_movement != Vector2())
+	{
+		body_b.target->translate(body_b_movement);
+	}
 }
 
 void P2DCollision::resolve_collision(const CollisionManifold& manifold, P2DBody& body_a, P2DBody& body_b)

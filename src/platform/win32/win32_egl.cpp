@@ -2,15 +2,17 @@
 
 #include "graphics/gles/gles_vtable.h"
 #include "engine/engine.h"
+#include <minwindef.h>
 
 
 static inline HMODULE gl_lib = nullptr;
 
-static inline Opaque get_proc_address(const char* name)
+
+static inline GLESFuncGeneric get_proc_address(const char* name)
 {
-	Opaque proc = (Opaque)GetProcAddress(gl_lib, name);
+	GLESFuncGeneric proc = reinterpret_cast<GLESFuncGeneric>(GetProcAddress(gl_lib, name));
 	if (proc == NULL)
-		return (Opaque)wglGetProcAddress(name);
+		return reinterpret_cast<GLESFuncGeneric>(wglGetProcAddress(name));
 	return proc;
 }
 
