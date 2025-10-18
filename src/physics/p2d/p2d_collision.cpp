@@ -1,7 +1,6 @@
 #include "physics/p2d/p2d_collision.h"
 
 #include "2d/object_2d.h"
-#include "math/values.h"
 
 
 
@@ -31,7 +30,7 @@ P2DCollision::SupportPoint P2DCollision::find_support_point(const Vector2& norma
 CollisionManifold P2DCollision::get_contact_point(const P2DShape& shape_a, const P2DShape& shape_b)
 {
 	CollisionManifold contact = {};
-	f32 minimum_penetration_depth = math::MaxValue<f32>;
+	f32 minimum_penetration_depth = MaxValue<f32>;
 
 	for (usize i = 0; i < 4; i++)
 	{

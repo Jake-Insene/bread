@@ -6,11 +6,11 @@
 
 static inline HMODULE gl_lib = nullptr;
 
-static inline void* get_proc_address(const char* name)
+static inline Opaque get_proc_address(const char* name)
 {
-	void* proc = (void*)GetProcAddress(gl_lib, name);
+	Opaque proc = (Opaque)GetProcAddress(gl_lib, name);
 	if (proc == NULL)
-		return (void*)wglGetProcAddress(name);
+		return (Opaque)wglGetProcAddress(name);
 	return proc;
 }
 
@@ -32,7 +32,7 @@ void Win32EGL::initialize(const mem::Allocator&)
 {
 	platform_get_proc = &get_proc_address;
    
-	data.current_window = (HWND)Engine::data.main_window.get_native_handle();
+	data.current_window = Engine::get_main_window().get_native_handle().cast<HWND>();
 	data.device_context = GetDC(Win32EGL::data.current_window);
 
 	gl_lib = LoadLibraryA("opengl32.dll");

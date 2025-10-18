@@ -20,6 +20,11 @@ void OS::shutdown()
 	PlatformOS::shutdown();
 }
 
+f64 OS::get_time()
+{
+	return PlatformOS::get_time();
+}
+
 void OS::exit(u64 code)
 {
 	PlatformOS::exit(code);
@@ -40,7 +45,7 @@ void OS::unmap_memory(Slice<u8> memory)
 	PlatformOS::unmap_memory(memory);
 }
 
-OS::ThreadID OS::thread_create(ThreadFn fn, void* arg)
+OS::ThreadID OS::thread_create(ThreadFn fn, Opaque arg)
 {
 	return PlatformOS::thread_create(fn, arg);
 }

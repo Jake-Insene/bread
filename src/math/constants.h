@@ -6,9 +6,18 @@ namespace math
 {
 
 template<typename T>
-constexpr T PI = T(3.1415926535);
+inline constexpr T PI = T(3.1415926535);
 
 template<typename T>
-constexpr T PI2 = PI<T> / T(2);
+inline constexpr T PI2 = T(2.0) * PI<T>;
+
+template<typename T>
+inline constexpr T PI_HALF = PI<T> * T(0.5);
+
+template<typename T>
+inline constexpr T ONE_PI = T(1.0) / PI<T>;
+
+template<typename T>
+inline constexpr T ONE_PI2 = T(1.0) / PI2<T>;
 
 }

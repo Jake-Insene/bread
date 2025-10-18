@@ -59,7 +59,7 @@ void AndroidOS::unmap_memory(Slice<u8> memory)
     munmap(memory.items, memory.len);
 }
 
-OS::ThreadID AndroidOS::thread_create(OS::ThreadFn fn, void* arg)
+OS::ThreadID AndroidOS::thread_create(OS::ThreadFn fn, Opaque arg)
 {
     return OS::ThreadID::InvalidID;
 }

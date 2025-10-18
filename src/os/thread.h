@@ -5,7 +5,7 @@ struct [[nodiscard]] Thread
 {
 	OS::ThreadID id;
 
-	static Thread create(OS::ThreadFn fn, void* arg);
+	static Thread create(OS::ThreadFn fn, Opaque arg);
 
 	void destroy() const;
 
@@ -16,7 +16,7 @@ struct [[nodiscard]] Thread
 struct [[nodiscard]] ScopedThread
 {
 	Thread thread;
-	ScopedThread(OS::ThreadFn fn, void* arg)
+	ScopedThread(OS::ThreadFn fn, Opaque arg)
 		: thread(Thread::create(fn, arg))
 	{}
 	~ScopedThread()

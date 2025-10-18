@@ -1,7 +1,10 @@
 #pragma once
 #include "core/types.h"
 
-template<typename T = u64>
+/*
+* Use to create custom ID types.
+*/
+template<typename T>
 struct [[nodiscard]] ID
 {
     static constexpr T InvalidID = T(-1);
@@ -9,9 +12,11 @@ struct [[nodiscard]] ID
     T id;
     
     constexpr ID() : id(InvalidID) {}
-    constexpr ID(T _id) : id(_id) {}
+    constexpr ID(T id_value) : id(id_value) {}
     
     [[nodiscard]] constexpr operator T() const { return id; }
     [[nodiscard]] constexpr operator T&() { return id; }
+
+    [[nodiscard]] constexpr bool is_valid() const { return InvalidID; }
 };
 

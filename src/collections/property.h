@@ -51,7 +51,7 @@ union [[nodiscard]] PropertyStorage
 	i64 i;
 	u64 u;
 	double f;
-	void* p;
+	Opaque pointer;
 	Vector2 v;
 
 	constexpr PropertyStorage() {}

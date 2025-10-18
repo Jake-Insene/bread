@@ -94,9 +94,9 @@ io::Writer String::writer()
 {
     io::Writer writer = {};
     writer.self = this;
-    writer.write_fn = [](void* self, const Slice<const u8> bytes) -> void
+    writer.write_fn = [](Opaque self, const Slice<const u8> bytes) -> void
         {
-            String* str = (String*)self;
+            String* str = self.cast<String*>();
             str->add(StringView((const char*)bytes.ptr(), bytes.len));
         };
     return writer;

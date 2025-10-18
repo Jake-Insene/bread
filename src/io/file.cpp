@@ -8,9 +8,9 @@ io::Writer File::writer()
 {
     io::Writer writer = {};
     writer.self = this;
-    writer.write_fn = [](void* self, const Slice<const u8> bytes) -> void
+    writer.write_fn = [](Opaque self, const Slice<const u8> bytes) -> void
     {
-        File* file = (File*)self;
+        File* file = self.cast<File*>();
         file->write(bytes);
     };
     return writer;

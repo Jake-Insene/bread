@@ -20,7 +20,7 @@ struct [[nodiscard]] P2DArea
     Physics2D::AreaID self;
     Physics2D::CollisionMask residence_mask;
 
-    void* _this;
+    Opaque _this;
     Physics2D::EventOnBodyEnter on_body_enter;
     Physics2D::EventOnBodyExit on_body_exit;
 

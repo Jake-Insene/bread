@@ -14,9 +14,9 @@ constexpr T atan2_approx(T y, T x)
     if (x == T(0.0))
     {
         if (y > T(0.0))
-            return PI2<T>;
+            return PI_HALF<T>;
         if (y < T(0.0))
-            return -PI2<T>;
+            return -PI_HALF<T>;
         return 0.0f;
     }
 
@@ -36,7 +36,7 @@ constexpr T atan2_approx(T y, T x)
     }
     else
     {
-        atan = PI2<T> - z / (z * z + T(0.28));
+        atan = PI_HALF<T> - z / (z * z + T(0.28));
         if (y < T(0.0))
             return atan - PI<T>;
     }

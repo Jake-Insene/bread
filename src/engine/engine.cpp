@@ -37,8 +37,6 @@ void Engine::initialize()
     // Going to the assets folder, crash is intended
     FailOn(OS::set_current_directory("assets") == false, "assets directory not found")
 
-    Time::initialize();
-
     ObjectAllocator::initialize();
 
     Display::initialize(allocator);
@@ -75,8 +73,6 @@ void Engine::shutdown()
 
     Display::shutdown();
     ObjectAllocator::shutdown();
-
-    Time::shutdown();
 
     data.main_queue.destroy();
 

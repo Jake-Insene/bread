@@ -14,3 +14,14 @@ using f64 = double;
 
 using usize = u64;
 using isize = i64;
+
+
+/*
+* Checking type sizes.
+*/
+static_assert(sizeof(i8) == 1 && sizeof(u8) == 1);
+static_assert(sizeof(i16) == 2 && sizeof(u16) == 2);
+static_assert(sizeof(i32) == 4 && sizeof(u32) == 4);
+static_assert(sizeof(i64) == 8 && sizeof(u64) == 8);
+static_assert(sizeof(f32) == 4);
+static_assert(sizeof(f64) == 8);

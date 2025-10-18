@@ -3,7 +3,6 @@
 #include "engine/engine.h"
 #include "graphics/graphics.h"
 #include "input/input.h"
-#include "math/values.h"
 #include "scene/scene_manager.h"
 
 
@@ -14,7 +13,7 @@ static inline Win32Display::WindowData& _get_window_data(Display::WindowID id)
 
 static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-	WindowID window_id = GetWindowLongPtrA(handle, GWLP_USERDATA) & math::MaxValue<Display::WindowID>;
+	WindowID window_id = (GetWindowLongPtrA(handle, GWLP_USERDATA)) & MaxValue<WindowID>;
 
 	switch (msg)
 	{
@@ -188,7 +187,7 @@ void Display::window_set_size(Display::WindowID wid, const Vector2I& new_size)
 	);
 }
 
-void* Display::window_get_native_handle(Display::WindowID wid)
+Opaque Display::window_get_native_handle(Display::WindowID wid)
 {
 	Win32Display::WindowData& window_data = _get_window_data(wid);
 	return (void*)window_data.handle;

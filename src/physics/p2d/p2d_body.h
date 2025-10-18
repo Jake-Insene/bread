@@ -33,7 +33,7 @@ struct [[nodiscard]] P2DBody
     Physics2D::CollisionMask residence_mask;
     Physics2D::CollisionMask collision_mask;
 
-    void* _this;
+    Opaque _this;
     Physics2D::EventOnCollide on_collide;
 
     bool fixed_rotation;
@@ -41,9 +41,6 @@ struct [[nodiscard]] P2DBody
     bool is_on_ceil;
     bool moved;
     
-    bool has_pending_static_collision;
-    PendingCollision pending_static_collision;
-
     Array<PhysicsTileCoord> tiles_on;
 
     void add_force(const Vector2& force);

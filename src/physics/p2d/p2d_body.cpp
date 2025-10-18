@@ -26,6 +26,8 @@ Vector2 P2DBody::get_velocity() const
 
 void P2DBody::set_angular_velocity(f32 new_angular_velocity)
 {
+	if(fixed_rotation)
+		return;
 	data.angular_velocity = new_angular_velocity;
 }
 

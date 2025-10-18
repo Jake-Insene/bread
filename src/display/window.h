@@ -12,5 +12,5 @@ struct Window
 
     void set_size(const Vector2I& new_size) const;
     Vector2I get_size() const;
-    void* get_native_handle() const;
+    Opaque get_native_handle() const;
 };

@@ -20,7 +20,7 @@ struct Display
         VTFunc(WindowID, window_create);
         VTFunc(Vector2I, window_get_size, WindowID);
         VTFunc(void, window_set_size, WindowID, const Vector2I&);
-        VTFunc(void*, window_get_native_handle, WindowID);
+        VTFunc(Opaque, window_get_native_handle, WindowID);
     };
 
     struct InternalData
@@ -39,5 +39,5 @@ struct Display
     static WindowID window_create();
     static Vector2I window_get_size(WindowID window_id);
     static void window_set_size(WindowID window_id, const Vector2I& new_size);
-    static void* window_get_native_handle(WindowID window_id);
+    static Opaque window_get_native_handle(WindowID window_id);
 };

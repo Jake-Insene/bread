@@ -1,6 +1,4 @@
 #include "platform/win32/win32_os.h"
-#include "math/values.h"
-#include <winnt.h>
 
 
 static inline void _mutex_lock(SRWLOCK* srw)
@@ -38,6 +36,13 @@ static inline DWORD WINAPI _thread_handler(void* thread_data)
 
 void Win32OS::initialize(const mem::Allocator& allocator)
 {
+    // For get_time()
+    LARGE_INTEGER platform_time;
+    QueryPerformanceFrequency((LARGE_INTEGER*)&data.frequency);
+    QueryPerformanceCounter(&platform_time);
+
+    data.program_start = f64(platform_time.QuadPart) / f64(data.frequency);
+
     data.threads = FreeList<ThreadData,OS::ThreadID>::with_size(allocator, InitialThreadCount);
     data.mutexes = FreeList<MutexData, OS::MutexID>::with_size(allocator, InitialMutexCount);
 
@@ -54,6 +59,13 @@ void Win32OS::shutdown()
 {
     data.mutexes.destroy();
     data.threads.destroy();
+}
+
+f64 Win32OS::get_time()
+{
+    LARGE_INTEGER platform_time;
+    QueryPerformanceCounter(&platform_time);
+    return (f64(platform_time.QuadPart) / f64(data.frequency)) - data.program_start;
 }
 
 void Win32OS::exit(u64 code)
@@ -111,7 +123,7 @@ void Win32OS::unmap_memory(Slice<u8> memory)
     VirtualFreeEx(GetCurrentProcess(), memory.items, 0, MEM_RELEASE);
 }
 
-OS::ThreadID Win32OS::thread_create(OS::ThreadFn fn, void* arg)
+OS::ThreadID Win32OS::thread_create(OS::ThreadFn fn, Opaque arg)
 {
     OS::ThreadID tid = thread_data_allocate();
     ThreadData& thread_data = thread_data_get(tid);
@@ -214,7 +226,7 @@ OS::SemaphoreID Win32OS::semaphore_create(usize initial_value)
     OS::SemaphoreID sid = semaphore_data_allocate();
     SemaphoreData& semaphore_data = semaphore_data_get(sid);
     
-    semaphore_data.handle = CreateSemaphoreA(nullptr, LONG(initial_value), math::MaxValue<i32>, nullptr);
+    semaphore_data.handle = CreateSemaphoreA(nullptr, LONG(initial_value), MaxValue<i32>, nullptr);
     DebugAssert(semaphore_data.handle != nullptr, "can't create a new semaphore");
 
     return sid;

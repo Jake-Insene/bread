@@ -1,6 +1,5 @@
 #include "scene/scene_manager.h"
 
-#include "core/time.h"
 #include "debug/debug.h"
 #include "debug/profiler.h"
 #include "engine/engine.h"
@@ -21,7 +20,7 @@ void SceneManager::initialize(const mem::Allocator& allocator)
     data.current_scene = nullptr;
     data.current_camera = nullptr;
     
-    data.last_time = f32(Time::get_time());
+    data.last_time = f32(OS::get_time());
     data.time_acum = 0;
     data.delta_time = 0;
     
@@ -82,7 +81,7 @@ void SceneManager::step()
 
     _handle_change_scene();
 
-    f32 current = f32(Time::get_time());
+    f32 current = f32(OS::get_time());
     data.delta_time = current - data.last_time;
     data.last_time = current;
 

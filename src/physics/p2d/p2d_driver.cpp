@@ -181,7 +181,6 @@ Physics2D::BodyID P2DDriver::create_body(Object2D* object)
     new_body.compute_inertia();
     new_body.set_velocity(Vector2());
     new_body.set_angular_velocity(0.f);
-    new_body.has_pending_static_collision = false;
     new_body.set_transform(Transform2D());
 
     new_body.tiles_on = Array<PhysicsTileCoord>::with_size(get_allocator(), 4);
@@ -417,7 +416,7 @@ Physics2D::CollisionMask P2DDriver::body_get_collision_mask(Physics2D::BodyID bo
     return _get_body(body_id).collision_mask;
 }
 
-void P2DDriver::body_set_on_collide(Physics2D::BodyID body_id, void* _this, Physics2D::EventOnCollide on_collide)
+void P2DDriver::body_set_on_collide(Physics2D::BodyID body_id, Opaque _this, Physics2D::EventOnCollide on_collide)
 {
     P2DBody& body = _get_body(body_id);
     body._this = _this;
@@ -466,14 +465,14 @@ Physics2D::CollisionMask P2DDriver::area_get_residence_mask(Physics2D::AreaID ar
     return area.residence_mask;
 }
 
-void P2DDriver::area_set_on_body_enter(Physics2D::AreaID area_id, void* _this, Physics2D::EventOnBodyEnter on_body_enter)
+void P2DDriver::area_set_on_body_enter(Physics2D::AreaID area_id, Opaque _this, Physics2D::EventOnBodyEnter on_body_enter)
 {
     P2DArea& area = _get_area(area_id);
     area._this = _this;
     area.on_body_enter = on_body_enter;
 }
 
-void P2DDriver::area_set_on_body_exit(Physics2D::AreaID area_id, void* _this, Physics2D::EventOnBodyExit on_body_exit)
+void P2DDriver::area_set_on_body_exit(Physics2D::AreaID area_id, Opaque _this, Physics2D::EventOnBodyExit on_body_exit)
 {
     P2DArea& area = _get_area(area_id);
     area._this = _this;
@@ -531,27 +530,6 @@ void P2DDriver::_step_fixed(f32 dt)
     for (auto body_id : data.active_bodies)
     {
         P2DBody& body = _get_body(body_id);
-        if (body.has_pending_static_collision)
-        {
-            P2DBody& other_body = _get_body(body.pending_static_collision.other);
-            P2DCollision::positional_correction(body.pending_static_collision.manifold, body, other_body);
-            P2DCollision::resolve_collision(body.pending_static_collision.manifold, body, other_body);
-
-            if (body.on_collide.has_func() || other_body.on_collide.has_func())
-            {
-                data.collision_callbacks_map.insert(
-                    CollisionID(body.self, other_body.self),
-                    CollisionCallback
-                    {
-                        .body = body.self,
-                        .collided = other_body.self,
-                    }
-                );
-            }
-        }
-
-        body.has_pending_static_collision = false;
-        body.pending_static_collision = PendingCollision();
         body.moved = false;
     }
 
@@ -631,7 +609,6 @@ void P2DDriver::_move_body(P2DBody& body, f32 dt)
 
     body.is_on_floor = false;
     body.is_on_ceil = false;
-    body.has_pending_static_collision = false;
 }
 
 void P2DDriver::_check_body_collision(P2DBody& body)
@@ -687,29 +664,16 @@ void P2DDriver::_check_body_collisions_on_tile(P2DBody& body, PhysicsTile& tile)
 
 void P2DDriver::_body_solve_manifold(P2DBody& body, P2DBody& other_body, const CollisionManifold& manifold)
 {
-    body.is_on_floor = manifold.normal.y < 0;
-    body.is_on_ceil = manifold.normal.y > 0;
+    if (!body.is_on_floor)
+        body.is_on_floor = manifold.normal.y < 0;
+    if (!body.is_on_ceil)
+        body.is_on_ceil = manifold.normal.y > 0;
 
-    other_body.is_on_floor = manifold.normal.y > 0;
-    other_body.is_on_ceil = manifold.normal.y < 0;
+    if (!other_body.is_on_floor)
+        other_body.is_on_floor = manifold.normal.y < 0;
+    if (!other_body.is_on_ceil)
+        other_body.is_on_ceil = manifold.normal.y > 0;
 
-    if (other_body.type == Physics2D::STATIC && body.has_pending_static_collision)
-    {
-        if (body.pending_static_collision.manifold.depth < manifold.depth)
-        {
-            body.pending_static_collision = PendingCollision{ manifold, other_body.self };
-        }
-
-        return;
-    }
-    else if (other_body.type == Physics2D::STATIC)
-    {
-        body.has_pending_static_collision = true;
-        body.pending_static_collision = PendingCollision{ manifold, other_body.self };
-        return;
-    }
-
-    // Resolve non-static immediately
     CollisionID pair_id = CollisionID{ body.self, other_body.self };
     if (!data.resolved_pairs.has(pair_id))
     {

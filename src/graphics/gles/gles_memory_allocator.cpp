@@ -2,7 +2,6 @@
 
 #include "debug/debug.h"
 #include "graphics/gles/gles_vtable.h"
-#include "math/values.h"
 
 static inline usize _get_format_size(GLenum internal_format)
 {
@@ -130,7 +129,7 @@ void GLESMemoryAllocator::shutdown()
 GLESMemoryAllocator::GLESBuffer& GLESMemoryAllocator::buffer_allocate()
 {
     GLESBuffer& buffer = data.buffers.add(GLESBuffer());
-    buffer.self_id = data.buffers.count - 1 & math::MaxValue<ResourceID>;
+    buffer.self_id = (data.buffers.count - 1) & MaxValue<ResourceID>;
     return buffer;
 }
 

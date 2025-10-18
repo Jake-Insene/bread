@@ -2,11 +2,8 @@
 #include "core/templates.h"
 
 
-namespace math
-{
-
 template<typename T>
-static constexpr T MinValue = 0;
+inline constexpr T MinValue = 0;
 
 template<>
 inline constexpr i8 MinValue<i8> = 0x80 - 1;
@@ -18,7 +15,7 @@ template<>
 inline constexpr i64 MinValue<i64> = 0x80000000'00000000 - 1;
 
 template<typename T>
-static constexpr T MaxValue = T(~0);
+inline constexpr T MaxValue = T(~0);
 
 template<>
 inline constexpr i8 MaxValue<i8> = 0x7F;
@@ -32,5 +29,3 @@ inline constexpr i64 MaxValue<i64> = 0x7FFFFFFF'FFFFFFFF;
 template<>
 // Not too extact
 inline constexpr f32 MaxValue<f32> = 3.4028235E38f;
-
-}

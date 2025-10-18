@@ -6,15 +6,15 @@
 #if defined(BREAD_ANDROID)
 inline EGLAPI __eglMustCastToProperFunctionPointerType (*platform_get_proc)(const char* name) = nullptr;
 #elif defined(BREAD_WIN32)
-inline void* (*platform_get_proc)(const char* name) = nullptr;
+inline Opaque(*platform_get_proc)(const char* name) = nullptr;
 #endif 
 
 #define EGL_REQUIRED_LOAD(name) \
-    gl.name = (decltype(gl.name))platform_get_proc(#name); \
+    gl.name = platform_get_proc(#name).cast<decltype(gl.name)>(); \
     FailOn(gl.name == nullptr, "Couldn't load the function {}", StringView(#name));
 
 #define EGL_NOT_REQUIRED_LOAD(name) \
-    gl.name = (decltype(gl.name))platform_get_proc(#name);
+    gl.name = platform_get_proc(#name).cast<decltype(gl.name)>();
 
 struct GLESVTable
 {

@@ -15,7 +15,7 @@ Vector2I Window::get_size() const
     return Display::window_get_size(window_id);
 }
 
-void* Window::get_native_handle() const
+Opaque Window::get_native_handle() const
 {
     return Display::window_get_native_handle(window_id);
 }

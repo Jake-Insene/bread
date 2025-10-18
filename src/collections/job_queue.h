@@ -8,8 +8,8 @@ struct [[nodiscard]] JobQueue
 {
 	struct JobInfo
 	{
-		void(*func)(void* arg);
-		void* arg;
+		void(*func)(Opaque arg);
+		Opaque arg;
 	};
 
 	mem::Allocator allocator;
@@ -30,7 +30,7 @@ struct [[nodiscard]] JobQueue
 
 		JobInfo job =
 		{
-			.func = [](void* arg) { (*reinterpret_cast<Fn*>(arg))(); },
+			.func = [](Opaque arg) { (*arg.cast<Fn*>())(); },
 			.arg = fn_mem,
 		};
 

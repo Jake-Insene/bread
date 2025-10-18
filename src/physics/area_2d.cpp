@@ -52,9 +52,9 @@ void Area2D::set_residence_mask(CollisionMask mask)
     Physics2D::area_set_residence_mask(data.area_id, mask);
 }
 
-void Area2D::_on_body_enter(void* _this, Object2D* obj)
+void Area2D::_on_body_enter(Opaque _this, Object2D* obj)
 {
-    Area2D* area = (Area2D*)_this;
+    Area2D* area = _this.cast<Area2D*>();
 
     if (area->on_body_enter.has_func() == false)
         return;
@@ -62,9 +62,9 @@ void Area2D::_on_body_enter(void* _this, Object2D* obj)
     area->on_body_enter.call(Object::cast<Body2D>(obj));
 }
 
-void Area2D::_on_body_exit(void* _this, Object2D* obj)
+void Area2D::_on_body_exit(Opaque _this, Object2D* obj)
 {
-    Area2D* area = (Area2D*)_this;
+    Area2D* area = _this.cast<Area2D*>();
 
     if (area->on_body_exit.has_func() == false)
         return;

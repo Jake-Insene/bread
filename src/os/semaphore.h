@@ -1,11 +1,10 @@
 #pragma once
-#include "math/values.h"
 #include "os/os.h"
 
 
 struct [[nodiscard]] Semaphore
 {
-    static constexpr usize MaxValue = math::MaxValue<usize>;
+    static constexpr usize MaxValue = MaxValue<usize>;
     
     OS::SemaphoreID id;
     

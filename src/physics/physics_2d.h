@@ -59,9 +59,9 @@ struct Physics2D
     };
 
     using CollisionMask = u32;
-    using EventOnCollide = Event<void(*)(void*, Object2D*)>;
-    using EventOnBodyEnter = Event<void(*)(void*, Object2D*)>;
-    using EventOnBodyExit = Event<void(*)(void*, Object2D*)>;
+    using EventOnCollide = Event<void(*)(Opaque, Object2D*)>;
+    using EventOnBodyEnter = Event<void(*)(Opaque, Object2D*)>;
+    using EventOnBodyExit = Event<void(*)(Opaque, Object2D*)>;
 
     struct VTable
     {
@@ -101,7 +101,7 @@ struct Physics2D
         VTFunc(CollisionMask, body_get_residence_mask, BodyID);
         VTFunc(void, body_set_collision_mask, BodyID, CollisionMask);
         VTFunc(CollisionMask, body_get_collision_mask, BodyID);
-        VTFunc(void, body_set_on_collide, BodyID, void*, EventOnCollide);
+        VTFunc(void, body_set_on_collide, BodyID, Opaque, EventOnCollide);
 
         VTFunc(void, area_set_shape, AreaID, const Shape2D&);
         VTFunc(Shape2D, area_get_shape, AreaID);
@@ -110,8 +110,8 @@ struct Physics2D
         VTFunc(void, area_set_residence_mask, AreaID, CollisionMask);
         VTFunc(CollisionMask, area_get_residence_mask, AreaID);
 
-        VTFunc(void, area_set_on_body_enter, AreaID, void*, EventOnBodyEnter);
-        VTFunc(void, area_set_on_body_exit, AreaID, void*, EventOnBodyExit);
+        VTFunc(void, area_set_on_body_enter, AreaID, Opaque, EventOnBodyEnter);
+        VTFunc(void, area_set_on_body_exit, AreaID, Opaque, EventOnBodyExit);
 
         // Internal
         VTFunc(void, property_change, StringView, PropertyValue);
@@ -163,7 +163,7 @@ struct Physics2D
     VTFuncDefArg1RetS(CollisionMask, body_get_residence_mask, BodyID);
     VTFuncDefArg2S(body_set_collision_mask, BodyID, CollisionMask);
     VTFuncDefArg1RetS(CollisionMask, body_get_collision_mask, BodyID);
-    VTFuncDefArg3S(body_set_on_collide, BodyID, void*, EventOnCollide);
+    VTFuncDefArg3S(body_set_on_collide, BodyID, Opaque, EventOnCollide);
 
     VTFuncDefArg2S(area_set_shape, AreaID, const Shape2D&);
     VTFuncDefArg1RetS(Shape2D, area_get_shape, AreaID);
@@ -171,8 +171,8 @@ struct Physics2D
     VTFuncDefArg2S(area_set_transform, AreaID, const Transform2D&);
     VTFuncDefArg2S(area_set_residence_mask, AreaID, CollisionMask);
     VTFuncDefArg1RetS(CollisionMask, area_get_residence_mask, AreaID);
-    VTFuncDefArg3S(area_set_on_body_enter, AreaID, void*, EventOnBodyEnter);
-    VTFuncDefArg3S(area_set_on_body_exit, AreaID, void*, EventOnBodyExit);
+    VTFuncDefArg3S(area_set_on_body_enter, AreaID, Opaque, EventOnBodyEnter);
+    VTFuncDefArg3S(area_set_on_body_exit, AreaID, Opaque, EventOnBodyExit);
 
     // Properties
 

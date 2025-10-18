@@ -25,7 +25,7 @@ void Display::window_set_size(Display::WindowID, const Vector2I&)
 {
 }
 
-void* Display::window_get_native_handle(Display::WindowID)
+Opaque Display::window_get_native_handle(Display::WindowID)
 {
     return AndroidEngine::data.app->window;
 }
