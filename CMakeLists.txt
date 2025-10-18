@@ -1,32 +1,5 @@
 project("bread")
 
-# Configuration variables
-set(BREAD_BUILD_DEFINITIONS "BREAD" "_HAS_EXCEPTIONS=0")
-set(BREAD_COMPILE_OPTIONS "")
-set(BREAD_LINK_OPTIONS "")
-set(BREAD_EXE_LINK_OPTIONS "")
-
-set(BREAD_DEBUG_DEFINITIONS "-DDEBUG -DSHOW_DEBUG_INFO -DENABLE_DEBUG_OPTIONS")
-set(CMAKE_MSVC_RUNTIME_CHECKS OFF)
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-
-if(DEFINED BREAD_ANDROID)
-    string(FIND "${ANDROID_ABI}" "arm64-v8a" IS_ARM)
-    if("${IS_ARM}" STREQUAL "-1")
-        set(BREAD_TARGET_ARCH ${BREAD_TARGET_ARCH} "X64")
-    else()
-        set(BREAD_TARGET_ARCH ${BREAD_TARGET_ARCH} "ARM64")
-    endif()
-endif()
-
-# Target Arch
-if("${BREAD_TARGET_ARCH}" STREQUAL "X64")
-    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "BREAD_ENABLE_INTRISICS" "BREAD_X64")
-elseif("${BREAD_TARGET_ARCH}" STREQUAL "ARM64")
-    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "BREAD_ENABLE_INTRISICS" "BREAD_ARM64")
-endif()
-
-# Compiler
 if(MSVC)
     foreach(flag_var
         CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG
@@ -38,44 +11,7 @@ if(MSVC)
         string(REPLACE "/EHsc" "" ${flag_var} "${${flag_var}}")
         set(${flag_var} "${${flag_var}}" CACHE STRING "" FORCE)
     endforeach()
-
-    set(
-        BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} 
-        "/W3" "/Oi" "/Zl" "/GS-" "/GR-" "/EHs-" "/EHc-" "/Zc:threadSafeInit-" "/Zc:preprocessor"
-        # Some warnings needs to be treated as error because we eliminated the compiler runtime,
-        # so now is more easy to create bugs.
-        "/we4701" "/we4700" "/we4101" "/we4703" "/we4189"
-    )
-    set(BREAD_LINK_OPTIONS ${BREAD_LINK_OPTIONS} "/NODEFAULTLIB")
-    set(BREAD_EXE_LINK_OPTIONS ${BREAD_EXE_LINK_OPTIONS} "/NODEFAULTLIB" "/ENTRY:WinMain")
-    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_MSVC")
-else()
-    if("${BREAD_TARGET_ARCH}" STREQUAL "X64")
-        set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} "-msse4.1")
-    endif()
-    set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS}
-        "-fno-rtti" "-fno-exceptions" "-Wall" "-Wextra"
-    )
-    
-    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_CLANG")
 endif()
-
-# Build type
-if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} ${BREAD_DEBUG_DEFINITIONS})
-elseif(${CMAKE_BUILD_TYPE} STREQUAL "Release")
-    if(NOT MSVC)
-        set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} "-O3" "-ffast-math")
-    endif()
-    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DRELEASE")
-elseif(${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
-    if(NOT MSVC)
-        set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} "-O3" "-ffast-math")
-    endif()
-    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} ${BREAD_DEBUG_DEFINITIONS})
-endif()
-
-set(BREAD_MSVC_RUNTIME_LIBRARY ${BREAD_MSVC_RUNTIME_LIBRARY})
 
 # Dependencies
 # External sources
@@ -189,7 +125,6 @@ if(ANDROID)
 
         ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c
     )
-    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_ANDROID")
     set(PLATFORM_LIBRARIES GLESv3 EGL android log)
 elseif(WIN32)
     file(GLOB PLATFORM_SRC
@@ -204,7 +139,6 @@ elseif(WIN32)
         src/platform/win32/win32_os.cpp
         src/platform/win32/win32_time.cpp
     )
-    set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_WIN32")
     set(PLATFORM_LIBRARIES opengl32 xaudio2)
 endif()
 
@@ -239,7 +173,3 @@ target_link_libraries(
     ${PLATFORM_LIBRARIES}
 )
 
-set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} PARENT_SCOPE)
-set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} PARENT_SCOPE)
-set(BREAD_LINK_OPTIONS ${BREAD_LINK_OPTIONS} PARENT_SCOPE)
-set(BREAD_EXE_LINK_OPTIONS ${BREAD_EXE_LINK_OPTIONS} PARENT_SCOPE)
