@@ -3,16 +3,12 @@
 
 Shape2D Shape2D::make_box(const Vector2& size)
 {
-    return Shape2D
-    {
-        .vertices =
-        {
-            Vector2(-size.x, size.y),
-            Vector2(size.x, size.y),
-            Vector2(size.x, -size.y),
-            Vector2(-size.x, -size.y),
-        }
-    };
+    Shape2D box = {};
+    box.vertices[0] = Vector2(-size.x, size.y);
+    box.vertices[1] = Vector2(size.x, size.y);
+    box.vertices[2] = Vector2(size.x, -size.y);
+    box.vertices[3] = Vector2(-size.x, -size.y);
+    return box;
 }
 
 void Shape2D::translate(const Vector2& translation)

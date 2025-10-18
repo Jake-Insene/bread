@@ -50,9 +50,9 @@
     }
 
 #define OBJECT(name, base, ...)\
-    static Opaque _get_bind_vtable()\
+    static void* _get_bind_vtable()\
     {\
-        return *reinterpret_cast<Opaque*>(&name::_bind_vtable);\
+        return reinterpret_cast<void*>(&name::_bind_vtable);\
     }\
     static void _try_bind_vtable(name::VTable& vtable)\
     {\
@@ -155,7 +155,7 @@ struct Object
         VTable* vtable;
     };
 
-    static Opaque _get_bind_vtable() { return *reinterpret_cast<Opaque*>(&Object::_bind_vtable); }
+    static void* _get_bind_vtable() { return reinterpret_cast<void*>(&Object::_bind_vtable); }
 
     static void _try_bind_vtable(VTable&) {}
     static void _bind_vtable(VTable&);
