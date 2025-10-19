@@ -153,6 +153,7 @@ struct P2DDriver
     static void _check_area_collision(P2DArea& area);
     static void _check_area_collision_on_tile(P2DArea& area, PhysicsTile& tile);
     static void _area_handle_collision(P2DArea& area, P2DBody& body, bool collided);
+    static void _check_area_bodies_still_inside(P2DArea& area);
 
     // Collision callbacks
     static void _resolve_collision_callbacks();

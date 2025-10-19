@@ -136,13 +136,13 @@ void P2DDriver::step(f32 dt)
         data.accumulator -= data.fixed_step;
     }
 
-    for (auto body_id : data.active_bodies)
+    for (Physics2D::BodyID body_id : data.active_bodies)
     {
         P2DBody& body = _get_body(body_id);
         _handle_debug_draw_body(body);
     }
 
-    for (auto area_id : data.active_areas)
+    for (Physics2D::AreaID area_id : data.active_areas)
     {
         P2DArea& area = _get_area(area_id);
         _handle_debug_draw_area(area);
@@ -202,12 +202,29 @@ void P2DDriver::destroy_body(Physics2D::BodyID body_id)
     data.active_bodies.remove_equal(body_id);
 
     // Removeing from a tile
-    for (auto& tile_id : body.tiles_on)
+    for (PhysicsTileCoord tile_id : body.tiles_on)
     {
         PhysicsTile& tile = _get_or_create_tile(tile_id);
         tile.bodies.remove_equal(body.self);
     }
     body.tiles_on.destroy();
+
+    // Removeing from an area
+    for (PhysicsTileCoord tile_id : body.tiles_on)
+    {
+        PhysicsTile& tile = _get_or_create_tile(tile_id);
+        for(Physics2D::AreaID area_id : tile.areas)
+        {
+            P2DArea& area = _get_area(area_id);
+            if(!area.bodies_inside.has(body.self))
+                continue;
+
+            if(area.on_body_exit.has_func())
+                area.on_body_exit.call(area._this, body.target);
+            
+            area.bodies_inside.remove(body.self);
+        }
+    }
 
     data.current_bodies.remove(body_id);
 }
@@ -225,6 +242,7 @@ Physics2D::AreaID P2DDriver::create_area(Object2D* object)
     new_area.set_shape(P2DShape());
     new_area.bodies_inside = HashMap<Physics2D::BodyID, P2DArea::BodyInArea>::with_size(get_allocator(), 4);
     new_area.tiles_on = Array<PhysicsTileCoord>::with_size(get_allocator(), 4);
+    new_area.check_counter = 0;
 
     return id;
 }
@@ -232,9 +250,24 @@ Physics2D::AreaID P2DDriver::create_area(Object2D* object)
 void P2DDriver::destroy_area(Physics2D::AreaID area_id)
 {
     P2DArea& area = _get_area(area_id);
-    area.bodies_inside.destroy();
     _disable_area(area_id);
+
+    // Removeing from a tile
+    for (PhysicsTileCoord tile_id : area.tiles_on)
+    {
+        PhysicsTile& tile = _get_or_create_tile(tile_id);
+        tile.areas.remove_equal(area.self);
+    }
     area.tiles_on.destroy();
+
+    // Exiting bodies
+    for (auto [key, value] : area.bodies_inside)
+    {
+        P2DBody& body = _get_body(key);
+        if(area.on_body_exit.has_func())
+            area.on_body_exit.call(area._this, body.target);
+    }
+    area.bodies_inside.destroy();
 
     data.current_areas.remove(area_id);
 }
@@ -507,20 +540,22 @@ void P2DDriver::property_change(StringView property_name, PropertyValue new_valu
 
 void P2DDriver::_step_fixed(f32 dt)
 {
-    for (auto area_id : data.active_areas)
+    for (Physics2D::AreaID area_id : data.active_areas)
     {
         P2DArea& area = _get_area(area_id);
+        area.check_counter++;
         // We can't garant that the body still on the scene.
         if (area.target->has_mark(Object::MARK_QUEUE_FREE))
             continue;
 
         _area_recompute_tiles(area);
         _check_area_collision(area);
+        _check_area_bodies_still_inside(area);
     }
 
     data.resolved_pairs.clear();
 
-    for (auto body_id : data.active_bodies)
+    for (Physics2D::BodyID body_id : data.active_bodies)
     {
         P2DBody& body = _get_body(body_id);
         // We can't garant that the body still on the scene.
@@ -533,7 +568,7 @@ void P2DDriver::_step_fixed(f32 dt)
     }
 
     // Resolve pending static collisions
-    for (auto body_id : data.active_bodies)
+    for (Physics2D::BodyID body_id : data.active_bodies)
     {
         P2DBody& body = _get_body(body_id);
         body.moved = false;
@@ -714,7 +749,7 @@ void P2DDriver::_check_area_collision_on_tile(P2DArea& area, PhysicsTile& tile)
 {
     const P2DShape& area_shape = area.get_shape_transformed();
 
-    for(auto& body_id : tile.bodies)
+    for(auto body_id : tile.bodies)
     {
         P2DBody& body = _get_body(body_id);
 
@@ -741,33 +776,56 @@ void P2DDriver::_check_area_collision_on_tile(P2DArea& area, PhysicsTile& tile)
 
 void P2DDriver::_area_handle_collision(P2DArea& area, P2DBody& body, bool collided)
 {
-    if (collided)
+    // Is already inside
+    bool has_body = area.bodies_inside.has(body.self);
+
+    if(has_body && !collided)
     {
-        area.bodies_inside.insert(
-            body.self,
-            P2DArea::BodyInArea
-            {
-                .is_inside = true
-            }
-        );
-
-        if (area.on_body_enter.has_func() == false)
-            return;
-
-        area.on_body_enter.call(area._this, body.target);
-    }
-    else
-    {
-        if (area.bodies_inside.has(body.self) == false)
-            return;
-
         area.bodies_inside.remove(body.self);
-        if (area.on_body_exit.has_func() == false)
-            return;
+        if (area.on_body_exit.has_func())
+            area.on_body_exit.call(area._this, body.target);
+        return;
+    }
+    else if(has_body && collided)
+    {
+        P2DArea::BodyInArea& body_in_area = area.bodies_inside.get(body.self);
+        body_in_area.check_counter = area.check_counter;
+        return;
+    }
 
-        area.on_body_exit.call(area._this, body.target);
+    if(!collided)
+        return;
+
+    area.bodies_inside.insert(
+        body.self,
+        P2DArea::BodyInArea
+        {
+            .is_inside = true,
+            .check_counter = area.check_counter,
+        }
+    );
+    
+    if (area.on_body_enter.has_func() == false)
+        return;
+    
+    area.on_body_enter.call(area._this, body.target);
+}
+
+void P2DDriver::_check_area_bodies_still_inside(P2DArea& area)
+{
+    for(auto [key, value] : area.bodies_inside)
+    {
+        P2DBody& body = _get_body(key);
+        if(value.check_counter != area.check_counter)
+        {
+            area.bodies_inside.remove(key);
+            if (area.on_body_exit.has_func())
+                area.on_body_exit.call(area._this, body.target);
+        }
     }
 }
+
+
 
 void P2DDriver::_resolve_collision_callbacks()
 {
@@ -841,7 +899,7 @@ PhysicsTileCoord P2DDriver::_convert_to_world_tile(const Vector2& point)
 void P2DDriver::_body_recompute_tiles(P2DBody& body)
 {
     // Removing from old tiles
-    for (auto& tile_id : body.tiles_on)
+    for (PhysicsTileCoord tile_id : body.tiles_on)
     {
         PhysicsTile& tile = _get_or_create_tile(tile_id);
         tile.bodies.remove_equal(body.self);

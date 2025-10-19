@@ -1,8 +1,6 @@
 #include "2d/object_2d.h"
 
-#include "input/input.h"
-#include "scene/scene_manager.h"
-#include "2d/camera_2d.h"
+#include "graphics/viewport.h"
 
 
 
@@ -19,6 +17,9 @@ void Object2D::init(const CreateInfo&)
 void Object2D::enter()
 {
     data.render_item = get_viewport()->create_item(Viewport::VIEWPORT_LAYER_DEFAULT);
+    // The parent may not be at the center at this moment so we need to compute the transform as fast as posible to
+    // render the object at the correct position or sync the physics engine with the object's transform.
+    _update_transform();
 }
 
 void Object2D::exit()

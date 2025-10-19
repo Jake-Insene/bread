@@ -29,10 +29,12 @@ struct [[nodiscard]] P2DArea
     struct BodyInArea
     {
         bool is_inside;
+        i64 check_counter;
     };
 
     HashMap<Physics2D::BodyID, BodyInArea> bodies_inside;
     Array<PhysicsTileCoord> tiles_on;
+    i64 check_counter;
 
     void set_shape(const P2DShape& new_shape);
     P2DShape get_shape() const { return data.shape; }
