@@ -1,5 +1,8 @@
 #include "object/object_allocator.h"
 
+#include "debug/fail.h"
+
+
 void ObjectAllocator::initialize()
 {
     data.object_allocator = {};
@@ -154,7 +157,7 @@ Object* ObjectAllocator::_request_new_object(const Object::Class* klass)
         count_by_block <<= 1;
     }
     
-    DebugInfo("[ObjectAllocator]: Object allocation failed, not enough memory");
+    Log::debug("[ObjectAllocator]: Object allocation failed, not enough memory");
     return nullptr;
 }
 

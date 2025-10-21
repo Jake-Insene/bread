@@ -1,4 +1,6 @@
 #pragma once
+#include "log/log.h"
+
 
 #define Fatal(...) Log::error(__VA_ARGS__); Debug::breakpoint();
 
@@ -9,4 +11,3 @@
     }
 
 
-#include "log/log.h"

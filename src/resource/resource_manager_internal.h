@@ -3,5 +3,5 @@
 #include "debug/debug.h"
 
 
-#define RMDebugInfo(...) DebugInfo("[ResourceManager]: " __VA_ARGS__)
+#define RMDebugInfo(...) Log::debug("[ResourceManager]: " __VA_ARGS__)
 #define RMFatal(...) Fatal("[ResourceManager]: " __VA_ARGS__)

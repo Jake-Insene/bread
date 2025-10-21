@@ -11,7 +11,7 @@ static void _load_theme(stbtt_fontinfo* font, Font::FontTheme& theme)
 {
     for (u32 glyph_index = 27; glyph_index < Font::MinimumGlyphCount; glyph_index++)
     {
-        Font::Glyph& glyph = theme.glyphs[glyph_index];
+        Font::Glyph& glyph = theme.glyphs.get(glyph_index);
         if (glyph_index == ' ')
             continue;
 
@@ -54,9 +54,9 @@ void Font::destroy()
 {
 	Resource::destroy();
     
-    for (auto& theme : data.themes)
+    for (auto& theme : data.themes.iter())
     {
-        for (auto& glyph : theme.glyphs)
+        for (auto& glyph : theme.glyphs.iter())
         {
             if (glyph.char_texture == InvalidResource)
                 continue;
@@ -101,7 +101,7 @@ Error Font::load(StringView file_path)
 
 const Font::FontTheme& Font::get_font_theme(i32 font_size)
 {
-    for (auto& theme : data.themes)
+    for (auto& theme : data.themes.iter())
     {
         if (theme.font_size == font_size)
             return theme;

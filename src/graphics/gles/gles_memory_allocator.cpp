@@ -114,7 +114,7 @@ void GLESMemoryAllocator::shutdown()
     );
 
     // Unload graphics resources.
-    for (auto& buffer : data.buffers)
+    for (auto& buffer : data.buffers.iter())
     {
         buffer_free(buffer.self_id);
     }
@@ -339,7 +339,7 @@ void GLESMemoryAllocator::render_target_bind_texture(GLID render_target, GLID te
 GLESMemoryAllocator::GLESBuffer& GLESMemoryAllocator::buffer_get(ResourceID buffer_id)
 {
     DebugAssert(buffer_id.id < data.buffers.count, "invalid buffer id");
-    return data.buffers[buffer_id];
+    return data.buffers.get(buffer_id);
 }
 
 GLESMemoryAllocator::GLESTexture& GLESMemoryAllocator::texture_get(TextureID tex_id)

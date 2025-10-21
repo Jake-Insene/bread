@@ -166,11 +166,6 @@ union [[nodiscard]] Vector2T
 		return x == v.x && y == v.y;
     }
     
-    constexpr bool operator!=(const Vector2T& v) const
-    {
-        return x != v.x || y != v.y;
-    }
-
     constexpr T length() const
     {
         return math::sqrt(x * x + y * y);
@@ -243,8 +238,16 @@ union [[nodiscard]] Vector2T
 using Vector2 = Vector2T<f32>;
 using Vector2I = Vector2T<i32>;
 
+namespace io
+{
+struct Writer;
+}
+
 namespace fmt
 {
+
+template<typename T>
+void format_custom(const io::Writer& writer, const T& v);
 
 template<>
 void format_custom<Vector2>(const io::Writer& writer, const Vector2& v);

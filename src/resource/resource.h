@@ -2,6 +2,7 @@
 #include "collections/error.h"
 #include "collections/result.h"
 #include "collections/string.h"
+#include "collections/string_view.h"
 
 
 enum ResourceType

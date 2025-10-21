@@ -1,5 +1,7 @@
 #include "platform/win32/win32_os.h"
 
+#include "debug/fail.h"
+
 
 static inline void _mutex_lock(SRWLOCK* srw)
 {

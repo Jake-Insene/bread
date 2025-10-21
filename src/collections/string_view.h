@@ -2,18 +2,6 @@
 #include "collections/slice.h"
 
 
-template<typename T>
-inline constexpr usize __string_len(const T* str)
-{
-    usize len = 0;
-    while(*str++)
-    {
-        len++;
-    }
-            
-    return len;
-}
-
 struct [[nodiscard]] StringView : Slice<const char>
 {
     constexpr StringView() : Slice(nullptr, 0) {}

@@ -1,11 +1,13 @@
 #pragma once
 #include "audio/audio.h"
 #include "collections/free_list.h"
+#include "debug/fail.h"
+#include "log/log.h"
 #include "platform/platform_header.h"
 
 
+#define XAudio2DebugInfo(...) Log::debug("[XAudio2Driver]: " __VA_ARGS__)
 #define XAudio2Fatal(...) Fatal("[XAudio2Driver]: " __VA_ARGS__)
-#define XAudio2DebugInfo(...) DebugInfo("[XAudio2Driver]: " __VA_ARGS__)
 
 
 struct XAudio2Driver

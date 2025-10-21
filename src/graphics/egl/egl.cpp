@@ -1,5 +1,6 @@
 #include "graphics/egl/egl.h"
 
+#include "collections/string_view.h"
 #include "graphics/gles/gles_vtable.h"
 
 

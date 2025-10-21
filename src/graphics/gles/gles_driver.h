@@ -1,10 +1,11 @@
 #pragma once
 #include "collections/array.h"
 #include "graphics/graphics.h"
+#include "log/log.h"
 #include "platform/platform_header.h"
 #include "resource/image.h"
 
-#define GLESDebugInfo(...) DebugInfo("[GLESDriver]: " __VA_ARGS__)
+#define GLESDebugInfo(...) Log::debug("[GLESDriver]: " __VA_ARGS__)
 
 
 struct GLESDriver

@@ -1,8 +1,12 @@
 #pragma once
+#include "core/types.h"
+
 
 struct Debug
 {
-    
+    static void assert_info(const char* file_path, usize file_path_len,
+        usize line, const char* msg, usize msg_len);
+
     [[noreturn]] static void breakpoint()
     {
 #if defined(BREAD_MSVC)
@@ -14,10 +18,3 @@ struct Debug
     
 };
 
-#if defined(SHOW_DEBUG_INFO)
-#define DebugInfo(...) Log::info(__VA_ARGS__)
-#else
-#define DebugInfo(...)
-#endif
-
-#include "log/log.h"

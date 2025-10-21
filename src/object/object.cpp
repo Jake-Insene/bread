@@ -25,7 +25,7 @@ void Object::set_viewport(Viewport* new_vp)
 
     for (usize i = 0; i < data.childs.count; i++)
     {
-        data.childs[i]->set_viewport(new_vp);
+        data.childs.get(i)->set_viewport(new_vp);
     }
 
     data.viewport = new_vp;
@@ -35,7 +35,7 @@ void Object::handle_internal_update(f32 dt)
 {
     for (usize i = 0; i < data.childs.count; i++)
     {
-        data.childs[i]->handle_internal_update(dt);
+        data.childs.get(i)->handle_internal_update(dt);
     }
     
     if(has_mark(MARK_INTERNAL_UPDATE))
@@ -48,7 +48,7 @@ void Object::handle_update(f32 dt)
 {
     for (usize i = 0; i < data.childs.count; i++)
     {
-        data.childs[i]->handle_update(dt);
+        data.childs.get(i)->handle_update(dt);
     }
     
     if(has_mark(MARK_UPDATE))
@@ -61,7 +61,7 @@ void Object::handle_render()
 {
     for (usize i = 0; i < data.childs.count; i++)
     {
-        data.childs[i]->handle_render();
+        data.childs.get(i)->handle_render();
     }
     
     if(has_mark(MARK_RENDER))
@@ -74,7 +74,7 @@ void Object::handle_event(const InputEvent& event)
 {
     for (usize i = 0; i < data.childs.count; i++)
     {
-        data.childs[i]->handle_event(event);
+        data.childs.get(i)->handle_event(event);
     }
 
     if (has_mark(MARK_EVENT))
@@ -118,7 +118,7 @@ void Object::add_child(Object* request_child)
 
 void Object::remove_child(Object* child)
 {
-    data.childs.remove_equal(child);
+    data.childs.remove_it(data.childs.iter().find(child));
     ObjectCallRef(child, exit);
     ObjectAllocator::destroy_object(child);
 }
@@ -147,7 +147,7 @@ void Object::deinit()
 {
     data.name.destroy();
     
-    for(auto& child : data.childs)
+    for(Object* child : data.childs.iter())
     {
         ObjectAllocator::destroy_object(child);
     }
@@ -161,7 +161,7 @@ void Object::enter()
     // and add_child() when the parent is already into the scene.
     mark(MARK_IN_SCENE);
 
-    for(auto& child : data.childs)
+    for(Object* child : data.childs.iter())
     {
         child->set_viewport(get_viewport());
         ObjectCallRef(child, enter);
@@ -171,7 +171,7 @@ void Object::enter()
 void Object::exit()
 {
     data.marks.clear();
-    for(auto child : data.childs)
+    for(Object* child : data.childs.iter())
     {
         ObjectCallRef(child, exit);
     }

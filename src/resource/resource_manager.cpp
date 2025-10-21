@@ -66,13 +66,13 @@ void ResourceManager::shutdown()
         );
     }
     
-    for(auto& it : data.cached_images)
+    for(auto& [image, texture] : data.cached_images.iter())
     {
-        if(it.second)
+        if(texture)
         {
-            it.second->destroy();
+            texture->destroy();
             data.allocator.free(
-                mem::to_bytes(Slice<Texture>(it.second, 1))
+                mem::to_bytes(Slice<Texture>(texture, 1))
             );
         }
     }

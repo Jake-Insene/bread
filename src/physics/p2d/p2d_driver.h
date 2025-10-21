@@ -21,12 +21,6 @@ struct P2DDriver
         Physics2D::BodyID collided;
     };
 
-    struct CollisionMaskGroup
-    {
-        bool active;
-        Array<Physics2D::BodyID> bodies;
-    };
-
     struct PhysicsTile
     {
         PhysicsTileCoord coord;
@@ -40,7 +34,6 @@ struct P2DDriver
 
         Vector2 gravity;
 
-        CollisionMaskGroup mask_groups[Physics2D::MAX_COLLISION_MASKS];
         Array<Physics2D::AreaID> active_areas;
         Array<Physics2D::BodyID> active_bodies;
 
@@ -159,9 +152,6 @@ struct P2DDriver
     static void _resolve_collision_callbacks();
 
     // Utilities
-    static void _mask_group_add(Physics2D::BodyID body_id, usize group_index);
-    static void _mask_group_remove(Physics2D::BodyID body_id, usize group_index);
-
     static void _active_area(Physics2D::AreaID area_id);
     static void _disable_area(Physics2D::AreaID area_id);
 

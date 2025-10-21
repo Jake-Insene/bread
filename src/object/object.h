@@ -4,6 +4,7 @@
 #include "collections/event.h"
 #include "collections/hash_map.h"
 #include "collections/string.h"
+#include "collections/string_view.h"
 #include "object/object_id.h"
 
 
@@ -438,7 +439,7 @@ struct Object
     * 
     * @param index The index of the child to get.
     */
-    Object* get_child(usize index) { return data.childs[index]; }
+    Object* get_child(usize index) { return data.childs.get(index); }
 
     /*
     * Perform a safe free of the object, deleting it at the end of the frame.

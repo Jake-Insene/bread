@@ -447,7 +447,7 @@ void GLESRenderer::render(Viewport* viewport)
     auto ot = viewport->get_order_table();
     for (auto& layer : ot.layers)
     {
-        for (auto item_id : layer.items)
+        for (auto item_id : layer.items.iter())
         {
             auto& item = viewport->items.get(item_id);
             _render_item_draw(item);

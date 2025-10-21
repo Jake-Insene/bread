@@ -1,5 +1,7 @@
 #include "math/vec2.h"
 
+#include "fmt/fmt.h"
+
 
 namespace fmt
 {

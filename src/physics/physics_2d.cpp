@@ -1,5 +1,6 @@
 #include "physics/physics_2d.h"
 
+#include "debug/fail.h"
 #include "physics/p2d/p2d_driver.h"
 
 

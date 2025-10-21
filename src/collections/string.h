@@ -34,7 +34,7 @@ struct [[nodiscard]] String
     void resize(usize new_size);
 
     template<typename T>
-    void set(const T arg)
+    void set(T arg)
     {
         if constexpr (IsSame<RemoveReference<T>, StringView>)
         {

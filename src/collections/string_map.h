@@ -1,5 +1,5 @@
 #pragma once
-#include "collections/string.h"
+#include "collections/string_view.h"
 #include "collections/pair.h"
 #include "debug/assertion.h"
 #include "mem/allocator.h"
@@ -327,7 +327,7 @@ struct [[nodiscard]] StringMap
         (void)_find_entry(hash, pos);
         if (_find_entry(hash, pos) == false)
         {
-            FailOn(true, "the item don't exists!");
+            DebugAssert(false, "the item don't exists!");
         }
 
         MapEntry* entry = entries[pos];

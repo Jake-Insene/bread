@@ -1,16 +1,15 @@
 #pragma once
+#include "debug/debug.h"
 
 
 #if defined(DEBUG)
-#define DebugAssert(cond, ...) \
+#define DebugAssert(cond, msg, ...) \
     if(!(cond))\
     {\
-        Log::error(__FILE__ ":" MakeString(__LINE__) ": " __VA_ARGS__);\
+        Debug::assert_info(__FILE__, sizeof(__FILE__), __LINE__, msg, sizeof(msg));\
         Debug::breakpoint();\
     }
 #else
-#define DebugAssert(cond, ...)
+#define DebugAssert(...)
 #endif
 
-#include "debug/debug.h"
-#include "log/log.h"

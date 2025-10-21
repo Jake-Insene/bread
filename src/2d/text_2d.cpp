@@ -30,7 +30,7 @@ void Text2D::render()
 	for (usize i = 0; i < text.count; i++)
 	{
 		char character = text.get(i);
-		const Font::Glyph& glyph = font_theme.glyphs[character];
+		const Font::Glyph& glyph = font_theme.glyphs.get(character);
 		const Vector2 advance = Vector2(glyph.advance) * scale;
 
 		if (character == ' ' || character == '\0')

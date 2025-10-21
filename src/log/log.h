@@ -18,6 +18,14 @@ struct Log
 
     template<typename... TArgs>
     static void info(const fmt::FormatString<TypeIdentity<TArgs>...> fmt, TArgs... args);
+
+    template<typename... TArgs>
+    static void debug(const fmt::FormatString<TypeIdentity<TArgs>...> fmt, TArgs... args)
+    {
+#if DEBUG
+        info(fmt, args...);
+#endif
+    }
 };
 
 #include "fmt/fmt.h"

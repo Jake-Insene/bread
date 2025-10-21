@@ -1,22 +1,67 @@
 #pragma once
-#include "core/types.h"
+#include "collections/base_iterator.h"
 #include "mem/allocator.h"
 #include "mem/utils.h"
 
 
 /*
+* Used to iterate over an array.
+*/
+template<typename T>
+struct [[nodiscard]] ArrayIterator : BaseIterator<ArrayIterator<T>, T>
+{
+    using Type = T;
+
+    T* base;
+    usize extend;
+    
+    ArrayIterator(T* base, usize extend) : base(base), extend(extend) {}
+
+    T& operator*() const { return *base; }
+    T* operator->() const { return base; }
+
+    ArrayIterator& operator++()
+    {
+        base++;
+        extend--;
+        return *this;
+    }
+
+    ArrayIterator& operator--()
+    {
+        base--;
+        extend++;
+        return *this;
+    }
+
+    [[nodiscard]] bool operator==(const ArrayIterator& it) const
+    {
+        return base == it.base && extend == it.extend;
+    }
+
+    ArrayIterator begin() const { return *this; }
+    ArrayIterator end() const { return ArrayIterator(base + extend, 0); }
+
+    [[nodiscard]] usize distance(const ArrayIterator& it) const
+    {
+        return (extend - it.extend);
+    }
+};
+
+
+/*
 * A collection of linear memory that contains items of type T.
-* You can add/remove or clear it.
+* You can add/remove/modify items and clear it.
 */
 template<typename T>
 struct [[nodiscard]] Array
 {
     static constexpr usize DefaultCapacity = 4;
-    
+
     mem::Allocator allocator = {};
     Slice<T> items = {};
     usize count = 0;
-    
+
     static Array with_allocator(const mem::Allocator& allocator)
     {
         return Array
@@ -26,7 +71,7 @@ struct [[nodiscard]] Array
             .count = 0,
         };
     }
-    
+
     static Array with_size(const mem::Allocator& allocator, const usize size)
     {
         return Array
@@ -49,7 +94,7 @@ struct [[nodiscard]] Array
         mem::copy(array.items, items);
         return array;
     }
-    
+
     template<typename... TList>
     static constexpr Array from_list(const mem::Allocator& allocator, const TList... list)
     {
@@ -69,28 +114,16 @@ struct [[nodiscard]] Array
 
     void destroy()
     {
-        if(items.ptr())
+        if (items.ptr())
         {
             allocator.free(mem::to_bytes(items));
         }
     }
-    
-    [[nodiscard]] constexpr T& operator[](const usize index)
+
+    ArrayIterator<T> iter() const
     {
-        DebugAssert(index < count, "index out of range");
-        return items[index];
+        return ArrayIterator<T>(items.items, count);
     }
-    
-    [[nodiscard]] constexpr const T& operator[](const usize index) const
-    {
-        DebugAssert(index < count, "index out of range");
-        return items[index];
-    }
-    
-    [[nodiscard]] constexpr T* begin() { return items.items; }
-    [[nodiscard]] constexpr const T* begin() const { return items.items; }
-    [[nodiscard]] constexpr T* end() { return items.items + count; }
-    [[nodiscard]] constexpr const T* end() const { return items.items + count; }
     
     [[nodiscard]] bool is_empty() const { return count == 0; }
     
@@ -123,6 +156,13 @@ struct [[nodiscard]] Array
             items.len = new_cap;
             allocator.construct_array(items.add(count));
         }
+    }
+
+    template<typename Self>
+    [[nodiscard]] auto& get(this Self& self, usize index)
+    {
+        DebugAssert(index < self.count, "index out of range");
+        return self.items[index];
     }
     
     [[nodiscard]] T& add(const T& item)
@@ -160,18 +200,16 @@ struct [[nodiscard]] Array
         }
     }
 
-    void remove_equal(const T& item)
+    void remove_it(const ArrayIterator<T>& it)
     {
-        for (usize i = 0; i < count; i++)
+        if (it == iter().end())
         {
-            if (items[i] == item)
-            {
-                remove(i);
-                return;
-            }
+            return;
         }
+
+        remove(iter().distance(it));
     }
-    
+
     void resize(const usize new_size)
     {
         ensure_capacity(new_size);
@@ -183,7 +221,6 @@ struct [[nodiscard]] Array
         count = 0;
     }
     
-    Slice<T> slice() { return Slice(items.items, count); }
-    Slice<T> slice() const { return Slice(items.items, count); }
-    Slice<T> get_slice(usize start, usize num) const { return Slice(items.items + start, num); }
+    template<typename Self>
+    Slice<T> slice(this Self& self) { return self.items.slice(self.count); }
 };

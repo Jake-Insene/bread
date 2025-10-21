@@ -40,27 +40,26 @@ namespace mem
     
 }
 
-#include "debug/fail.h"
+#include "debug/assertion.h"
 #include "collections/slice.h"
 #include "mem/utils.h"
 
 inline Slice<u8> mem::Allocator::alloc(usize size, usize alignment) const
 {
-    FailOn(self == nullptr, "self is null");
+    DebugAssert(self != nullptr, "self is null");
     Slice<u8> ptr = (self->*vtable.alloc)(size, alignment);
     return ptr;
 }
 
 inline bool mem::Allocator::realloc(Slice<u8> ptr, usize new_size, usize alignment) const
 {
-    FailOn(self == nullptr, "self is null");
+    DebugAssert(self != nullptr, "self is null");
     return (self->*vtable.realloc)(ptr, new_size, alignment);
 }
 
 inline void mem::Allocator::free(Slice<u8> ptr) const
 {
-    FailOn(self == nullptr, "self is null");
-    
+    DebugAssert(self != nullptr, "self is null");
     (self->*vtable.free)(ptr);
 }
 

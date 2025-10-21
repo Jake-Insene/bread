@@ -1,5 +1,6 @@
 #include "graphics/gles/gles_utility.h"
 
+#include "debug/fail.h"
 #include "graphics/gles/gles_driver.h"
 #include "graphics/gles/gles_vtable.h"
 #include "io/file.h"

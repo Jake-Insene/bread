@@ -124,6 +124,11 @@ union [[nodiscard]] Vector4T
         w /= v;
         return *this;
     }
+
+    constexpr bool operator==(const Vector4T& v)
+    {
+        return x == v.x && y == v.y && z == v.z && w == v.w;
+    }
     
     constexpr T length() const
     {

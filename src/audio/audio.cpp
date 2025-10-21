@@ -1,5 +1,6 @@
 #include "audio/audio.h"
 
+#include "debug/fail.h"
 
 
 #if defined(BREAD_WIN32)

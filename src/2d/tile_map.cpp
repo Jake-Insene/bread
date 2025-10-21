@@ -1,6 +1,7 @@
 #include "2d/tile_map.h"
 
 #include "graphics/viewport.h"
+#include "log/log.h"
 
 
 void TileMap::_bind_vtable(TileMap::VTable& vtable)
@@ -17,11 +18,7 @@ void TileMap::init(const CreateInfo&)
 
 void TileMap::deinit()
 {
-	for (auto body_id : data.bodies)
-	{
-		Physics2D::destroy_body(body_id);
-	}
-
+	data.bodies.iter().for_each(Physics2D::destroy_body);
 	data.bodies.destroy();
 }
 
@@ -66,10 +63,10 @@ void TileMap::render()
 
 void TileMap::transform_changed()
 {
-	for (auto body_id : data.bodies)
-	{
+	data.bodies.iter().for_each([&] (Physics2D::BodyID body_id)
+	{ 
 		Physics2D::body_set_transform(body_id, get_global_transform());
-	}
+	});
 }
 
 void TileMap::set_tile_set(TileSet* new_tile_set)
@@ -100,7 +97,7 @@ void TileMap::set_tile_set(TileSet* new_tile_set)
 		Physics2D::body_set_transform(body_id, get_global_transform());
 	}
 
-	DebugInfo("TileMap({}): Creating {} shapes", (void*)usize(id.id), shape_count);
+	Log::debug("TileMap({}): Creating {} shapes", (void*)usize(id.id), shape_count);
 }
 
 

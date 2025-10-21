@@ -8,13 +8,13 @@ struct Slice;
 namespace mem
 {
     template<typename T>
-    inline Slice<u8> to_bytes(const Slice<T>& items);
+    inline Slice<u8> to_bytes(const Slice<T> items);
 
     template<typename T>
-    inline Slice<const u8> to_const_bytes(const Slice<T>& items);
+    inline Slice<const u8> to_const_bytes(const Slice<T> items);
     
     template<typename T>
-    inline Slice<T> from_bytes(const Slice<u8>& bytes);
+    inline Slice<T> from_bytes(const Slice<u8> bytes);
     
     template<typename T>
     constexpr T align_up(T value, T alignment)
@@ -32,10 +32,10 @@ namespace mem
     constexpr bool compare(Slice<const T> src1, Slice<const T> src2);
 
     template<typename T>
-    inline void copy(Slice<T> dest, const Slice<const T>& src);
+    inline void copy(Slice<T> dest, const Slice<const T> src);
 
     template<typename T>
-    inline void copy(Slice<T> dest, const Slice<T>& src);
+    inline void copy(Slice<T> dest, const Slice<T> src);
 
     template<typename T>
     inline void set(Slice<T> dest, const T value);
@@ -50,7 +50,7 @@ namespace mem
 {
 
 template<typename T>
-inline Slice<u8> to_bytes(const Slice<T>& items)
+inline Slice<u8> to_bytes(const Slice<T> items)
 {
     return Slice<u8>(
         (u8*)items.items,
@@ -59,7 +59,7 @@ inline Slice<u8> to_bytes(const Slice<T>& items)
 }
 
 template<typename T>
-inline Slice<const u8> to_const_bytes(const Slice<T>& items)
+inline Slice<const u8> to_const_bytes(const Slice<T> items)
 {
     return Slice<const u8>(
         (const u8*)items.items,
@@ -68,7 +68,7 @@ inline Slice<const u8> to_const_bytes(const Slice<T>& items)
 }
 
 template<typename T>
-inline Slice<T> from_bytes(const Slice<u8>& bytes)
+inline Slice<T> from_bytes(const Slice<u8> bytes)
 {
     return Slice<T>
     {
@@ -99,7 +99,7 @@ constexpr bool compare(Slice<const T> src1, Slice<const T> src2)
 void _copy(Slice<u8> dest, Slice<const u8> src);
 
 template<typename T>
-inline void copy(Slice<T> dest, const Slice<const T>& src)
+inline void copy(Slice<T> dest, const Slice<const T> src)
 {
     DebugAssert(dest.len >= src.len, "invalid destination");
 #if BREAD_ENABLE_INTRISICS
@@ -113,7 +113,7 @@ inline void copy(Slice<T> dest, const Slice<const T>& src)
 }
 
 template<typename T>
-inline void copy(Slice<T> dest, const Slice<T>& src)
+inline void copy(Slice<T> dest, const Slice<T> src)
 {
     DebugAssert(dest.len >= src.len, "invalid destination");
 #if BREAD_ENABLE_INTRISICS

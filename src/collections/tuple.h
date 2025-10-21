@@ -5,12 +5,10 @@
 template<typename... TArgs>
 struct Tuple {};
 
-
 template<>
 struct [[nodiscard]] Tuple<>
 {
 };
-
 
 template<typename T, typename... TArgs>
 struct [[nodiscard]] Tuple<T, TArgs...> : Tuple<TArgs...>

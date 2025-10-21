@@ -1,5 +1,6 @@
 #pragma once
 #include "core/header.h"
+#include "debug/fail.h"
 #include "mem/allocator.h"
 #include "math/vec2.h"
 

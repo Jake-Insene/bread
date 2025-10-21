@@ -1,12 +1,13 @@
 #include "scene/scene_manager.h"
 
+#include "2d/camera_2d.h"
+#include "canvas/canvas_object.h"
 #include "debug/debug.h"
 #include "debug/profiler.h"
 #include "engine/engine.h"
 #include "graphics/viewport.h"
-#include "canvas/canvas_object.h"
 #include "input/input.h"
-#include "2d/camera_2d.h"
+#include "log/log.h"
 #include "object/object_allocator.h"
 #include "physics/physics_2d.h"
 
@@ -156,7 +157,7 @@ void SceneManager::step()
 
     data.fps_acum++;
 
-    for (auto& it : data.queue_frees)
+    for (auto& it : data.queue_frees.iter())
     {
         it.second.parent->remove_child(it.second.child);
     }
@@ -217,19 +218,19 @@ void SceneManager::scene_handle_input(const InputEvent& event)
         data.touched_focus.resize(et.pointer + 1);
         if (CanvasObject* c = _find_canvas_in_pos(new_event.position))
         {
-            data.touched_focus[et.pointer] = c;
+            data.touched_focus.get(et.pointer) = c;
             ObjectCallRef(c, gui_event, new_event);
         }
         else
         {
-            c = data.touched_focus[et.pointer];
+            c = data.touched_focus.get(et.pointer);
             if (c)
             {
                 // point_is_in will be always false
                 new_event.pressed = false;
                 ObjectCallRef(c, gui_event, new_event);
             }
-            data.touched_focus[et.pointer] = nullptr;
+            data.touched_focus.get(et.pointer) = nullptr;
         }
 
         ObjectCallRef(data.current_scene, event, new_event);
@@ -244,19 +245,19 @@ void SceneManager::scene_handle_input(const InputEvent& event)
         new_event.position = _screen_make_local_to_canvas(et.position);
         if (CanvasObject* c = _find_canvas_in_pos(new_event.position))
         {
-            data.touched_focus[0] = c;
+            data.touched_focus.get(0) = c;
             ObjectCallRef(c, gui_event, new_event);
         }
         else
         {
-            c = data.touched_focus[0];
+            c = data.touched_focus.get(0);
             if (c)
             {
                 // point_is_in will be always false
                 new_event.pressed = false;
                 ObjectCallRef(c, gui_event, new_event);
             }
-            data.touched_focus[0] = nullptr;
+            data.touched_focus.get(0) = nullptr;
         }
 
         ObjectCallRef(data.current_scene, event, new_event);
@@ -273,7 +274,7 @@ void SceneManager::_try_clear_root_canvas()
 {
     for (usize i = 0; i < data.root_canvas.count; i++)
     {
-        CanvasObject* gui_root = data.root_canvas[i];
+        CanvasObject* gui_root = data.root_canvas.get(i);
 
         if (gui_root == nullptr || !gui_root->has_mark(Object::MARK_QUEUE_FREE))
             continue;
@@ -312,7 +313,7 @@ Vector2 SceneManager::_screen_make_local_to_canvas(const Vector2& pos)
 
 CanvasObject* SceneManager::_find_canvas_in_pos(const Vector2& pos)
 {
-    for(auto& c : data.root_canvas)
+    for(CanvasObject* c : data.root_canvas.iter())
     {
         if(ObjectCallRef(c, is_inside, pos))
         {

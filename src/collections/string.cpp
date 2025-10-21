@@ -1,6 +1,8 @@
 #include "collections/string.h"
+
 #include "collections/string_view.h"
 #include "collections/string_utility.h"
+#include "io/writer.h"
 
 
 String String::with_allocator(mem::Allocator allocator)

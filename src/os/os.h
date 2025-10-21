@@ -1,7 +1,6 @@
 #pragma once
 #include "collections/string.h"
-#include "core/id.h"
-#include "core/vtable.h"
+#include "core/header.h"
 
 
 struct OS

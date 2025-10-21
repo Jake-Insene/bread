@@ -38,9 +38,9 @@ void Viewport::destroy()
 
 void Viewport::reset_commands()
 {
-	for (auto& layer : order_table.layers)
+	for (ViewportLayer& layer : order_table.layers)
 	{
-		for (auto& item_id : layer.items)
+		for (RenderItemID item_id : layer.items.iter())
 		{
 			RenderItem& item = items.get(item_id);
 			item.reset();
@@ -124,7 +124,7 @@ void Viewport::item_set_layers(RenderItemID render_item_id, ViewportLayerMask la
 		}
 		else if(old_layers & layer_mask)
 		{
-			vp_layer.items.remove_equal(render_item_id);
+			vp_layer.items.remove_it(vp_layer.items.iter().find(render_item_id));
 		}
 	}
 }

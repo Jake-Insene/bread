@@ -1,5 +1,7 @@
 #include "os/os.h"
 
+#include "collections/string_view.h"
+
 
 #if BREAD_WIN32
 #include "platform/win32/win32_os.h"

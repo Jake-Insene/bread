@@ -13,10 +13,9 @@ struct [[nodiscard]] ID
     
     constexpr ID() : id(InvalidID) {}
     constexpr ID(T id_value) : id(id_value) {}
-    
-    [[nodiscard]] constexpr operator T() const { return id; }
-    [[nodiscard]] constexpr operator T&() { return id; }
 
-    [[nodiscard]] constexpr bool is_valid() const { return InvalidID; }
+    [[nodiscard]] constexpr operator T() const { return id; }
+    
+    [[nodiscard]] constexpr bool is_valid() const { return id != InvalidID; }
 };
 
