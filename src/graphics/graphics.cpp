@@ -55,6 +55,16 @@ void Graphics::destroy_render_target(RenderTargetID rt_id)
 	GraphicsDriver::destroy_render_target(rt_id);
 }
 
+MaterialID Graphics::create_material(const MaterialCreateInfo& create_info)
+{
+	return GraphicsDriver::create_material(create_info);
+}
+
+void Graphics::destroy_material(MaterialID material_id)
+{
+	GraphicsDriver::destroy_material(material_id);
+}
+
 RenderTargetID Graphics::get_main_render_target()
 {
 	return GraphicsDriver::get_main_render_target();
@@ -78,5 +88,15 @@ void Graphics::render_target_set_size(RenderTargetID rt_id, const Vector2I& new_
 Vector2I Graphics::render_target_get_size(RenderTargetID rt_id)
 {
 	return GraphicsDriver::render_target_get_size(rt_id);
+}
+
+void Graphics::material_compile_from_file(MaterialID material_id, StringView path, StringView defines)
+{
+	GraphicsDriver::material_compile_from_file(material_id, path, defines);
+}
+
+void Graphics::material_compile_from_source(MaterialID material_id, StringView source, StringView defines)
+{
+	GraphicsDriver::material_compile_from_source(material_id, source, defines);
 }
 

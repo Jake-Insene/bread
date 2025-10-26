@@ -14,11 +14,11 @@ struct [[nodiscard]] FreeList
     {
         if constexpr (IsSame<SlotID, u64>)
         {
-            return 0xEEFFEEFF'EEFFEEFFULL;
+            return SlotID(0xEEFFEEFF'EEFFEEFFULL);
         }
         else
         {
-            return 0xEEFFEEFFU;
+            return SlotID(0xEEFFEEFFU);
         }
     }
 
@@ -39,7 +39,7 @@ struct [[nodiscard]] FreeList
         };
     }
 
-    static FreeList with_size(const mem::Allocator& allocator, const SlotID size)
+    static FreeList with_size(const mem::Allocator& allocator, usize size)
     {
         return FreeList
         {

@@ -4,11 +4,11 @@
 
 
 /*
-    Contains a texture to render to.
+* Contains a texture to render to.
 */
 struct [[nodiscard]] RenderTarget
 {
-    RenderTargetID render_target_id;
+    RenderTargetID render_target_id = RenderTargetID();
     
     static RenderTarget get_main_render_target();
     static RenderTarget create(Vector2I size);

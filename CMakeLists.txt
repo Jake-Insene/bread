@@ -49,6 +49,8 @@ file(GLOB ENGINE_SRC
 
     src/graphics/egl/egl.cpp
     src/graphics/graphics.cpp
+    src/graphics/material.cpp
+    src/graphics/render_manager.cpp
     src/graphics/render_target.cpp
     src/graphics/viewport.cpp
 
@@ -105,8 +107,8 @@ file(GLOB ENGINE_SRC
 
 file(GLOB GLES_RENDERER_SRC
     src/graphics/gles/gles_driver.cpp
+    src/graphics/gles/gles_material_manager.cpp
     src/graphics/gles/gles_memory_allocator.cpp
-    src/graphics/gles/gles_utility.cpp
     src/graphics/gles/gles_renderer.cpp
 )
 

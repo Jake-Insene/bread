@@ -14,7 +14,7 @@ thread_local u8 StdoutBuffer[4096] = {};
 thread_local usize StdoutBufferCounter = 0;
 
 
-Slice<u8> File::read_all(mem::Allocator& allocator, StringView path)
+Slice<u8> File::read_all(const mem::Allocator& allocator, StringView path)
 {
     char tmp[256] = {};
     Slice<char> tmp_slice = Slice(tmp);

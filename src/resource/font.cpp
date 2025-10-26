@@ -58,7 +58,7 @@ void Font::destroy()
     {
         for (auto& glyph : theme.glyphs.iter())
         {
-            if (glyph.char_texture == InvalidResource)
+            if (glyph.char_texture == ResourceID())
                 continue;
 
             Graphics::destroy_texture(glyph.char_texture);

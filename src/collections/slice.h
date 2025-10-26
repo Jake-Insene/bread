@@ -3,6 +3,7 @@
 #include "core/templates.h"
 
 
+
 /*
 * Contains a collection of T elements,
 * T The type of the elements in the slice.
@@ -10,6 +11,8 @@
 template<typename T>
 struct [[nodiscard]] Slice
 {
+    using Type = T;
+
     T* items;
     usize len;
     
@@ -89,3 +92,5 @@ constexpr Slice<T> Slice<T>::slice(usize count) const
     DebugAssert(count <= len, "items out of range");
     return Slice<T>(items, count);
 }
+
+

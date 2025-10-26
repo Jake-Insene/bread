@@ -2,6 +2,7 @@
 #include "core/id.h"
 
 
-using ResourceID = ID<u32>;
+struct __ResourceTag {};
 
-static constexpr ResourceID InvalidResource = ResourceID::InvalidID;
+using ResourceID = ID<u32, __ResourceTag>;
+

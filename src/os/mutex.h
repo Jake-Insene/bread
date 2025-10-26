@@ -15,19 +15,3 @@ struct [[nodiscard]] Mutex
     void unlock();
 };
 
-struct ScopedMutex
-{
-    Mutex mutex;
-
-    ScopedMutex()
-        : mutex(Mutex::create())
-    {
-        mutex.lock();
-    }
-
-    ~ScopedMutex()
-    {
-        mutex.unlock();
-        mutex.destroy();
-    }
-};

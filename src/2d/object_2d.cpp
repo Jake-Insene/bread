@@ -1,6 +1,6 @@
 #include "2d/object_2d.h"
 
-#include "graphics/viewport.h"
+#include "graphics/render_manager.h"
 
 
 
@@ -9,23 +9,48 @@ void Object2D::_bind_vtable(Object2D::VTable& vtable)
     BindVTable(vtable, transform_changed, &Object2D::transform_changed);
 }
 
+void Object2D::set_material(MaterialID new_material)
+{
+    RenderManager::item_set_material(get_render_item(), new_material);
+}
+
+MaterialID Object2D::get_material()
+{
+    return RenderManager::item_get_material(get_render_item());
+}
+
 void Object2D::init(const CreateInfo&)
 {
     mark(MARK_2D);
+    data.render_item = RenderManager::create_item();
+}
+
+void Object2D::deinit()
+{
+    RenderManager::destroy_item(data.render_item);
 }
 
 void Object2D::enter()
 {
-    data.render_item = get_viewport()->create_item(Viewport::VIEWPORT_LAYER_DEFAULT);
+    Object* parent = get_parent();
+    if (parent)
+    {
+        Object2D* parent_2d = cast<Object2D>(get_parent());
+        if (parent_2d)
+        {
+            RenderManager::item_set_parent(
+                get_render_item(), parent_2d->get_render_item()
+            );
+        }
+    }
+
     // The parent may not be at the center at this moment so we need to compute the transform as fast as posible to
     // render the object at the correct position or sync the physics engine with the object's transform.
     _update_transform();
 }
 
 void Object2D::exit()
-{
-    get_viewport()->destroy_item(data.render_item);
-}
+{}
 
 void Object2D::transform_changed()
 {}
@@ -100,9 +125,9 @@ Transform2D Object2D::get_global_transform() const
 void Object2D::draw_sprite(const Transform2D& transform, TextureID texture, const Rect2D& rect, 
     const Rect2D& src_rect, Color mod_color, u32 flags)
 {
-    get_viewport()->render_item_draw_sprite(
+    RenderManager::render_item_draw_sprite(
         get_render_item(), transform, texture, rect, src_rect, 
-        mod_color, Viewport::RenderFlags(flags)
+        mod_color, RenderManager::RenderFlags(flags)
     );
 }
 

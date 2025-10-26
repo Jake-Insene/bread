@@ -96,7 +96,7 @@ struct InputEvent
     template<typename T>
     const T& get() const
     {
-        return reinterpret_cast<const T&>(*this);
+        return *reinterpret_cast<const T*>(this);
     }
 };
 

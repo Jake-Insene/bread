@@ -1,6 +1,7 @@
 #pragma once
 #include "core/templates.h"
 
+
 struct StringView;
 struct String;
 
@@ -14,12 +15,13 @@ enum class FormatType
 	Bool,
 	Signed,
 	Unsigned,
-	Float,
-	Double,
+	Float32,
+	Float64,
 	Pointer,
 	String,
 	StringView,
-	CChars,
+	CString,
+	Slice
 };
 
 template<typename T>
@@ -28,47 +30,53 @@ struct FormatArgument
 	FormatType type;
 };
 
-
 template<typename T>
-inline constexpr FormatType __GetFormatType = ConditionalValue<
-	FormatType,
-	IsSame<T, bool>,
-	FormatType::Bool,
-	
-	ConditionalValue<
-	FormatType,
-	IsSigned<T>,
-	FormatType::Signed,
+constexpr FormatType __GetFormatType()
+{
+	using TypeNoCR = RemoveConst<RemoveReference<T>>;
 
-	ConditionalValue < FormatType,
-	IsUnsigned<T>,
-	FormatType::Unsigned,
+	if constexpr (IsSame<T, bool>)
+	{
+		return FormatType::Bool;
+	}
+	else if constexpr (IsSigned<T>)
+	{
+		return FormatType::Signed;
+	}
+	else if constexpr (IsUnsigned<T>)
+	{
+		return FormatType::Unsigned;
+	}
+	else if constexpr (IsSame<T, f32>)
+	{
+		return FormatType::Float32;
+	}
+	else if constexpr (IsSame<T, f64>)
+	{
+		return FormatType::Float64;
+	}
+	else if constexpr (IsPointer<T> && !IsAnyOf<T, const char*, char*>)
+	{
+		return FormatType::Pointer;
+	}
+	else if constexpr (IsSame<T, String>)
+	{
+		return FormatType::String;
+	}
+	else if constexpr (IsSame<T, StringView>)
+	{
+		return FormatType::StringView;
+	}
+	else if constexpr (IsArrayOf<TypeNoCR, char>)
+	{
+		return FormatType::CString;
+	}
+	else if constexpr (IsSlice<T>)
+	{
+		return FormatType::Slice;
+	}
 
-	ConditionalValue < FormatType,
-	IsAnyOf<T, f32>,
-	FormatType::Float,
-
-	ConditionalValue < FormatType,
-	IsAnyOf<T, f64, long double>,
-	FormatType::Double,
-
-	ConditionalValue<FormatType,
-	IsPointer<T> && !IsAnyOf<T, const char*, char*>,
-	FormatType::Pointer,
-
-	ConditionalValue<FormatType,
-	IsAnyOf<T, StringView>,
-	FormatType::StringView,
-
-	ConditionalValue<FormatType,
-	IsAnyOf<T, String>,
-	FormatType::String,
-
-	ConditionalValue<FormatType,
-	IsAnyOf<T, const char*, char*>,
-	FormatType::CChars,
-
-	FormatType::Unknown
-	>>>>>>>>>;
+	return FormatType::Unknown;
+}
 
 }

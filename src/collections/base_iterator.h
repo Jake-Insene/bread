@@ -40,4 +40,18 @@ struct [[nodiscard]] BaseIterator
 			}
 		}
 	}
+
+	template<typename Fn>
+	Iterator& transform(Fn op)
+	{
+		Iterator& iterable = static_cast<Iterator&>(*this);
+
+		for (auto it = iterable.begin(); it != iterable.end(); ++it)
+		{
+			*it = op(*it);
+		}
+
+		return iterable;
+	}
+
 };

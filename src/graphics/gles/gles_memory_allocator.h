@@ -3,14 +3,18 @@
 #include "graphics/gles/gles_driver.h"
 #include "resource/resource_id.h"
 
-using GLID = u32;
-
 
 struct GLESMemoryAllocator
 {
+    enum UpdateMemoryHint
+    {
+        UMHNone = 0,
+        UMHWriteOnly,
+    };
+
     struct GLESBuffer
     {
-        ResourceID self_id;
+        ResourceID self;
         GLID buffer;
         usize size;
         GLenum target;
@@ -19,8 +23,8 @@ struct GLESMemoryAllocator
 
     struct GLESTexture
     {
-        Image* image;
         TextureID self;
+        Image* image;
         GLID texture;
 
         // texture
@@ -34,7 +38,7 @@ struct GLESMemoryAllocator
 
     struct GLESRenderTarget
     {
-        ResourceID self_id;
+        RenderTargetID self;
         GLID framebuffer;
         GLID color_buffer;
         GLenum format;
@@ -50,12 +54,6 @@ struct GLESMemoryAllocator
         Array<GLESBuffer> buffers;
         FreeList<GLESTexture, TextureID> textures;
         FreeList<GLESRenderTarget, RenderTargetID> render_targets;
-    };
-
-    enum UpdateMemoryHint
-    {
-        UMHNone = 0,
-        UMHWriteOnly,
     };
 
     static inline InternalData data;

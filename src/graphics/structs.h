@@ -30,8 +30,6 @@ struct RenderTargetCreateInfo
     Vector2I size;
 };
 
-struct ViewportCreateInfo
-{
-    Vector2I size;
-};
+struct MaterialCreateInfo
+{};
 

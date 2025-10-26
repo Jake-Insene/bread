@@ -17,7 +17,7 @@ struct Area2D : Object2D
 
     struct InternalData
     {
-        Physics2D::AreaID area_id = Physics2D::AreaID::InvalidID;
+        Physics2D::AreaID area_id = Physics2D::AreaID();
 
         CollisionMask residence_mask = Physics2D::DEFAULT_COLLISION_MASK;
     } data;

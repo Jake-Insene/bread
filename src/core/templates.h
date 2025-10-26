@@ -147,6 +147,55 @@ inline constexpr bool IsPointer<T* volatile> = true;
 template<typename T>
 inline constexpr bool IsPointer<T* const volatile> = true;
 
+template<typename T>
+inline constexpr bool IsArray = false;
+
+template<typename T>
+inline constexpr bool IsArray<T[]> = true;
+
+template<typename T, usize N>
+inline constexpr bool IsArray<T[N]> = true;
+
+template<typename T>
+inline constexpr bool IsArray<T(&)[]> = true;
+
+template<typename T, usize N>
+inline constexpr bool IsArray<T(&)[N]> = true;
+
+template<typename T, typename ItemType>
+inline constexpr bool IsArrayOf = false;
+
+template<typename T, typename ItemType>
+inline constexpr bool IsArrayOf<T[], ItemType> = IsSame<RemoveConst<T>, ItemType>;
+
+template<typename T, typename ItemType, usize N>
+inline constexpr bool IsArrayOf<T[N], ItemType> = IsSame<RemoveConst<T>, ItemType>;
+
+template<typename T, typename ItemType>
+inline constexpr bool IsArrayOf<T(&)[], ItemType> = IsSame<RemoveConst<T>, ItemType>;
+
+template<typename T, typename ItemType, usize N>
+inline constexpr bool IsArrayOf<T(&)[N], ItemType> = IsSame<RemoveConst<T>, ItemType>;
+
+template<typename T>
+struct Slice;
+
+template<typename T>
+inline constexpr bool IsSlice = false;
+
+template<typename T>
+inline constexpr bool IsSlice<Slice<T>> = true;
+
+// Type Information
+template<typename T>
+inline constexpr usize Extent = 0;
+
+template<typename T>
+inline constexpr usize Extent<T[]> = 0;
+
+template<typename T, usize N>
+inline constexpr usize Extent<T[N]> = N;
+
 // Value Checking
 template<typename T, T Value1, T Value2>
 inline constexpr bool IsSameValue = false;
@@ -189,10 +238,14 @@ struct ConditionalValueT<T, false, ValueTrue, ValueFalse>
 template<typename T, bool Cond, T ValueTrue, T ValueFalse>
 inline constexpr T ConditionalValue = ConditionalValueT<T, Cond, ValueTrue, ValueFalse>::Value;
 
+// Type convertion
 template<typename T>
 using MakeUnsigned = Conditional<sizeof(T) == 1, u8, Conditional<sizeof(T) == 2, u16, Conditional<sizeof(T) == 4, u32, u64>>>;
 
+template<typename T>
+using MakeSigned = Conditional<sizeof(T) == 1, i8, Conditional<sizeof(T) == 2, i16, Conditional<sizeof(T) == 4, i32, i64>>>;
 
+// Identity
 template<typename T>
 struct TypeIdentityT
 {
@@ -202,10 +255,11 @@ struct TypeIdentityT
 template<typename T>
 using TypeIdentity = TypeIdentityT<T>::Type;
 
+// OOP
 template<typename Base, typename T>
-concept IsBaseOf = requires(T* t) { static_cast<Base*>(t); };
+concept IsBaseOf = requires(T& t) { static_cast<Base&>(t); };
 
-
+// Function Utility
 template<typename Fn>
 struct IsMemberFunctionT
 {
@@ -259,6 +313,24 @@ struct FunctionDecomposed : FunctionDecomposed<decltype(&T::operator())> {};
 template<typename... TArgs>
 constexpr void Unused(TArgs...) {}
 
+template<typename T>
+[[nodiscard]] constexpr T&& Forward(RemoveReference<T>& arg)
+{
+    return static_cast<T&&>(arg);
+}
+
+template<typename T>
+[[nodiscard]] constexpr T&& Forward(RemoveReference<T>&& arg)
+{
+    return static_cast<T&&>(arg);
+}
+
+template<typename T>
+[[nodiscard]] constexpr RemoveReference<T>&& Move(T&& arg)
+{
+    return static_cast<RemoveReference<T>&&>(arg);
+}
+
 template<typename... TArgs>
 constexpr usize GetArgumentCount()
 {
@@ -266,28 +338,15 @@ constexpr usize GetArgumentCount()
 }
 
 template<usize N, typename T, typename... TArgs>
-constexpr auto GetArgument(T first, TArgs... args)
+constexpr auto&& GetArgument(T&& first, TArgs&&... args)
 {
     if constexpr (N == 0)
     {
         Unused(args...);
-        return TypeIdentity<T>(first);
+        return Move(first);
     }
     else
     {
-        return GetArgument<N - 1, TArgs...>(args...);
+        return GetArgument<N - 1, TArgs...>(Forward<TArgs>(args)...);
     }
 }
-
-template<typename T>
-[[nodiscard]] constexpr T&& Forward(RemoveReference<T>& arg)
-{
-    return arg;
-}
-
-template<typename T>
-[[nodiscard]] constexpr T&& Forward(RemoveReference<T>&& arg)
-{
-    return arg;
-}
-

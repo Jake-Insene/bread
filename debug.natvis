@@ -53,6 +53,7 @@
 
 	<Type Name="String">
 		<DisplayString>{chars.items,[count]na}</DisplayString>
+		<StringView>chars.items,[count]na</StringView>
 	</Type>
 
 	<Type Name="StringMap&lt;*&gt;">

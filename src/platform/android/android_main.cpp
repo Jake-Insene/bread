@@ -8,6 +8,7 @@ struct SaveState
 {
     bool saved = false;
 };
+
 SaveState save_state = {};
 
 bool running = true;

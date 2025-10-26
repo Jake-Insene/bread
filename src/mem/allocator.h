@@ -75,7 +75,7 @@ Slice<T> mem::Allocator::array(usize count) const
 template<typename T>
 constexpr void mem::Allocator::construct_array(Slice<T> array) const
 {
-    ::new(array.ptr()) T[array.len]{};
+    ::new(array.ptr()) T[array.len]();
 }
 
 template<typename T, typename... TArgs>

@@ -61,7 +61,7 @@ void AndroidOS::unmap_memory(Slice<u8> memory)
 
 OS::ThreadID AndroidOS::thread_create(OS::ThreadFn fn, Opaque arg)
 {
-    return OS::ThreadID::InvalidID;
+    return OS::ThreadID();
 }
 
 void AndroidOS::thread_destroy(OS::ThreadID tid)
@@ -84,7 +84,7 @@ StringView AndroidOS::thread_get_name(OS::ThreadID tid)
 
 OS::MutexID AndroidOS::mutex_create()
 {
-    return OS::MutexID::InvalidID;
+    return OS::MutexID();
 }
 
 void AndroidOS::mutex_destroy(OS::MutexID mid)
@@ -107,7 +107,7 @@ void AndroidOS::mutex_unlock(OS::MutexID mid)
 
 OS::SemaphoreID AndroidOS::semaphore_create(usize initial_value)
 {
-    return OS::SemaphoreID::InvalidID;
+    return OS::SemaphoreID();
 }
 
 void AndroidOS::semaphore_destroy(OS::SemaphoreID sid)

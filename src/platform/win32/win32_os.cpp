@@ -47,6 +47,7 @@ void Win32OS::initialize(const mem::Allocator& allocator)
 
     data.threads = FreeList<ThreadData,OS::ThreadID>::with_size(allocator, InitialThreadCount);
     data.mutexes = FreeList<MutexData, OS::MutexID>::with_size(allocator, InitialMutexCount);
+    data.semaphores = FreeList<SemaphoreData, OS::SemaphoreID>::with_size(allocator, InitialSemaphoreCount);
 
     // First data thread is reserved for main thread
     OS::ThreadID main_thread = thread_data_allocate();
@@ -61,6 +62,7 @@ void Win32OS::shutdown()
 {
     data.mutexes.destroy();
     data.threads.destroy();
+    data.semaphores.destroy();
 }
 
 f64 Win32OS::get_time()
@@ -152,6 +154,7 @@ OS::ThreadID Win32OS::thread_create(OS::ThreadFn fn, Opaque arg)
 void Win32OS::thread_destroy(OS::ThreadID tid)
 {
     FailOn(thread_join(tid) == false, "Couldn't join the thread {}", tid.id);
+
     ThreadData& thread_data = thread_data_get(tid);
     CloseHandle((HANDLE)thread_data.handle);
  

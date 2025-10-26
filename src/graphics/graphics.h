@@ -1,5 +1,5 @@
 #pragma once
-#include "core/header.h"
+#include "collections/string_view.h"
 #include "mem/allocator.h"
 #include "graphics/structs.h"
 #include "graphics/graphics_types.h"
@@ -25,6 +25,8 @@ struct Graphics
     static void destroy_texture(TextureID tex_id);
     static RenderTargetID create_render_target(const RenderTargetCreateInfo& create_info);
     static void destroy_render_target(RenderTargetID rt_id);
+    static MaterialID create_material(const MaterialCreateInfo& create_info);
+    static void destroy_material(MaterialID material_id);
 
     static RenderTargetID get_main_render_target();
 
@@ -33,5 +35,8 @@ struct Graphics
 
     static void render_target_set_size(RenderTargetID rt_id, const Vector2I& new_size);
     static Vector2I render_target_get_size(RenderTargetID rt_id);
+
+    static void material_compile_from_file(MaterialID material_id, StringView path, StringView defines);
+    static void material_compile_from_source(MaterialID material_id, StringView source, StringView defines);
 };
 

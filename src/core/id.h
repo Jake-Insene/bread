@@ -1,18 +1,20 @@
 #pragma once
 #include "core/types.h"
+#include "core/values.h"
 
 /*
 * Use to create custom ID types.
 */
-template<typename T>
+template<typename T, typename Tag>
 struct [[nodiscard]] ID
 {
-    static constexpr T InvalidID = T(-1);
+    static constexpr T InvalidID = MaxValue<T>;
     
     T id;
     
     constexpr ID() : id(InvalidID) {}
-    constexpr ID(T id_value) : id(id_value) {}
+    constexpr explicit ID(T id_value) : id(id_value) {}
+    constexpr ID(const ID& other_id) : id(other_id.id) {}
 
     [[nodiscard]] constexpr operator T() const { return id; }
     

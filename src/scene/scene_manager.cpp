@@ -6,6 +6,7 @@
 #include "debug/profiler.h"
 #include "engine/engine.h"
 #include "graphics/viewport.h"
+#include "graphics/render_manager.h"
 #include "input/input.h"
 #include "log/log.h"
 #include "object/object_allocator.h"
@@ -145,7 +146,7 @@ void SceneManager::step()
         );
 
         Graphics::render(&get_main_viewport());
-        get_main_viewport().reset_commands();
+        RenderManager::reset_commands();
     }
 
     {

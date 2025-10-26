@@ -1,13 +1,12 @@
 #include "physics/p2d/p2d_driver.h"
 
 #include "2d/object_2d.h"
-#include "graphics/viewport.h"
+#include "graphics/render_manager.h"
 #include "physics/physics_2d.h"
 #include "physics/p2d/p2d_types.h"
 #include "physics/p2d/p2d_collision.h"
 #include "physics/p2d/p2d_body.h"
 #include "physics/p2d/p2d_shape.h"
-#include "scene/scene_manager.h"
 
 
 
@@ -90,12 +89,12 @@ void P2DDriver::initialize(const mem::Allocator& allocator)
     data.fixed_step = Physics2D::get_property("/fixed_step").get<f32>();
     data.accumulator = 0.0f;
 
-    data.grid_item = SceneManager::get_main_viewport().create_item(Viewport::VIEWPORT_LAYER_DEFAULT);
+    data.grid_item = RenderManager::create_item();
 }
 
 void P2DDriver::shutdown()
 {
-    SceneManager::get_main_viewport().destroy_item(data.grid_item);
+    RenderManager::destroy_item(data.grid_item);
 
     data.active_areas.destroy();
     data.active_bodies.destroy();
@@ -144,10 +143,10 @@ void P2DDriver::step(f32 dt)
         const f32 ts = f32(_get_tile_size());
         Vector2 min = Vector2((coord.x) * ts, (coord.y) * ts);
         Vector2 max = min + Vector2(ts, ts);
-        SceneManager::get_main_viewport().render_item_draw_line(data.grid_item, Vector2(min.x, min.y), Vector2(max.x, min.y), Color(128, 128, 128, 255));
-        SceneManager::get_main_viewport().render_item_draw_line(data.grid_item, Vector2(max.x, min.y), Vector2(max.x, max.y), Color(128, 128, 128, 255));
-        SceneManager::get_main_viewport().render_item_draw_line(data.grid_item, Vector2(max.x, max.y), Vector2(min.x, max.y), Color(128, 128, 128, 255));
-        SceneManager::get_main_viewport().render_item_draw_line(data.grid_item, Vector2(min.x, max.y), Vector2(min.x, min.y), Color(128, 128, 128, 255));
+        RenderManager::render_item_draw_line(data.grid_item, Vector2(min.x, min.y), Vector2(max.x, min.y), Color(128, 128, 128, 255));
+        RenderManager::render_item_draw_line(data.grid_item, Vector2(max.x, min.y), Vector2(max.x, max.y), Color(128, 128, 128, 255));
+        RenderManager::render_item_draw_line(data.grid_item, Vector2(max.x, max.y), Vector2(min.x, max.y), Color(128, 128, 128, 255));
+        RenderManager::render_item_draw_line(data.grid_item, Vector2(min.x, max.y), Vector2(min.x, min.y), Color(128, 128, 128, 255));
     }
 }
 
@@ -558,23 +557,23 @@ void P2DDriver::_handle_debug_draw_body(P2DBody& body)
         Vector2 point1 = shape.vertices[i];
         Vector2 point2 = shape.vertices[(i + 1) % 4];
 
-        body.target->get_viewport()->render_item_draw_line(
+        RenderManager::render_item_draw_line(
             body.target->get_render_item(),
             point1, point2, Color(255, 0, 0, 255)
         );
     }
     
-    body.target->get_viewport()->render_item_draw_circle(
+    RenderManager::render_item_draw_circle(
         body.target->get_render_item(),
         shape.get_centroid(), 1.f, Color(255, 0, 0, 255)
     );
 
-    body.target->get_viewport()->render_item_draw_circle(
+    RenderManager::render_item_draw_circle(
         body.target->get_render_item(),
         shape.aabb.min, 1.f, Color(0, 255, 0, 255)
     );
 
-    body.target->get_viewport()->render_item_draw_circle(
+    RenderManager::render_item_draw_circle(
         body.target->get_render_item(),
         shape.aabb.max, 1.f, Color(0, 0, 255, 255)
     );
@@ -592,13 +591,13 @@ void P2DDriver::_handle_debug_draw_area(P2DArea& area)
         Vector2 point1 = shape.vertices[i];
         Vector2 point2 = shape.vertices[(i + 1) % 4];
 
-        area.target->get_viewport()->render_item_draw_line(
+        RenderManager::render_item_draw_line(
             area.target->get_render_item(),
             point1, point2, Color(0, 0, 255, 255)
         );
     }
 
-    area.target->get_viewport()->render_item_draw_circle(
+    RenderManager::render_item_draw_circle(
         area.target->get_render_item(),
         shape.get_centroid(), 1.f, Color(255, 0, 0, 255)
     );

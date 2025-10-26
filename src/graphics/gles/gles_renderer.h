@@ -1,6 +1,6 @@
 #pragma once
 #include "graphics/gles/gles_memory_allocator.h"
-#include "graphics/viewport.h"
+#include "graphics/render_manager.h"
 #include "math/vec4.h"
 #include "math/mat4.h"
 
@@ -10,6 +10,9 @@
         sizeof(type) <= (MaxInstanceAttributeCount * sizeof(Vector4)),\
         #type " is greater than 16 32-bit floating vec4!"\
     );
+
+
+struct Viewport;
 
 struct GLESRenderer
 {
@@ -26,7 +29,7 @@ struct GLESRenderer
 
     static constexpr u32 MaxInstancesPerBatch = 128;
     static constexpr u32 MaxPrimitivePointsPerBatch = 128 * 8;
-    static constexpr u32 MaxPrimitiveCirclesPerBatch = 128 * 4;
+    static constexpr u32 MaxCirclesPerBatch = 128 * 4;
     
     struct SpriteInstance
     {
@@ -48,7 +51,7 @@ struct GLESRenderer
     static constexpr usize SpriteInstanceAttribCount = 5;
     CheckInstanceSize(SpriteInstance);
 
-    struct UISpriteInstance
+    struct SpriteUIInstance
     {
         // attrib 0
         Vector2 transform_0;
@@ -66,7 +69,7 @@ struct GLESRenderer
         u32 padding[3];
     };
     static constexpr usize CanvasElementInstanceAttribCount = 5;
-    CheckInstanceSize(UISpriteInstance);
+    CheckInstanceSize(SpriteUIInstance);
 
     struct QuadInstance
     {
@@ -108,13 +111,13 @@ struct GLESRenderer
     {
         Mat4 viewport_transform;
         Mat4 scene_transform;
+        f32 time;
     };
     
     struct SpriteBatch
     {
         GLID vao;
         GLID instance_buffer_object;
-        GLID program;
         
         u32 count;
         i32 texture_index;
@@ -124,25 +127,23 @@ struct GLESRenderer
         Slice<SpriteInstance> instances;
     };
 
-    struct UISpriteBatch
+    struct SpriteUIBatch
     {
         GLID vao;
         GLID instance_buffer_object;
-        GLID program;
 
         u32 count;
         i32 texture_index;
 
         GLID texture_units[MaxInstancesPerBatch];
 
-        Slice<UISpriteInstance> instances;
+        Slice<SpriteUIInstance> instances;
     };
     
     struct QuadBatch
     {
         GLID vao;
         GLID instance_buffer_object;
-        GLID program;
         
         u32 count;
         
@@ -153,7 +154,6 @@ struct GLESRenderer
     {
         GLID vao;
         GLID instance_buffer_object;
-        GLID program;
 
         u32 count;
 
@@ -164,7 +164,6 @@ struct GLESRenderer
     {
         GLID vao;
         GLID instance_buffer_object;
-        GLID program;
 
         u32 count;
 
@@ -183,8 +182,15 @@ struct GLESRenderer
         GLID global_quad_ibo;
         i32 usable_texture_units;
         
+        GLID sprite_program;
+        GLID sprite_ui_program;
+        GLID quad_program;
+        GLID lines_program;
+        GLID circles_program;
+        GLID item_program;
+        
         SpriteBatch sprite_batch;
-        UISpriteBatch ui_sprite_batch;
+        SpriteUIBatch sprite_ui_batch;
         QuadBatch quad_batch;
         PrimitivePointBatch primitive_batch;
         PrimitiveCircleBatch primitive_circle_batch;
@@ -215,12 +221,13 @@ struct GLESRenderer
     static void update_scene_uniform();
 
     static void end_sprite_batch();
-    static void end_ui_sprite_batch();
+    static void end_sprite_ui_batch();
     static void end_quad_batch();
-    static void end_primitive_batch();
-    static void end_primitive_circle_batch();
+    static void end_lines_batch();
+    static void end_circles_batch();
 
     static void render(Viewport* viewport);
 
-    static void _render_item_draw(Viewport::RenderItem& item);
+    static void _render_item_draw(RenderManager::RenderItem& item);
+
 };

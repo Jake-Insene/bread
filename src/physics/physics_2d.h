@@ -14,6 +14,9 @@ struct Transform2D;
 
 struct Physics2D
 {
+    struct __BodyTag {};
+    struct __AreaTag {};
+
     enum DriverType
     {
         UNKNOWN_DRIVER = 0,
@@ -23,8 +26,8 @@ struct Physics2D
         DEFAULT_DRIVER = P2D,
     };
 
-    using BodyID = ID<u32>;
-    using AreaID = ID<u32>;
+    using BodyID = ID<u32, __BodyTag>;
+    using AreaID = ID<u32, __AreaTag>;
 
     enum BodyType
     {

@@ -5,6 +5,10 @@
 
 struct OS
 {
+    struct __ThreadTag {};
+    struct __MutexTag {};
+    struct __SemaphoreTag {};
+
     enum MapAccess
     {
         MapUnknown = 0,
@@ -12,12 +16,12 @@ struct OS
         MapReadWrtieExecute,
     };
 
-    using ThreadID = ID<u32>;
+    using ThreadID = ID<u32, __ThreadTag>;
     using ThreadFn = void(*)(Opaque);
 
-    using MutexID = ID<u32>;
+    using MutexID = ID<u32, __MutexTag>;
 
-    using SemaphoreID = ID<u32>;
+    using SemaphoreID = ID<u32, __SemaphoreTag>;
 
     static void initialize(const mem::Allocator& allocator);
     static void shutdown();

@@ -7,6 +7,8 @@
 
 #define GLESDebugInfo(...) Log::debug("[GLESDriver]: " __VA_ARGS__)
 
+using GLID = u32;
+
 
 struct GLESDriver
 {   
@@ -41,6 +43,8 @@ struct GLESDriver
     static void destroy_texture(TextureID tex_id);
     static RenderTargetID create_render_target(const RenderTargetCreateInfo& create_info);
     static void destroy_render_target(RenderTargetID rt_id);
+    static MaterialID create_material(const MaterialCreateInfo& create_info);
+    static void destroy_material(MaterialID material_id);
 
     static RenderTargetID get_main_render_target();
 
@@ -49,6 +53,9 @@ struct GLESDriver
 
     static void render_target_set_size(RenderTargetID rt_id, const Vector2I& new_size);
     static Vector2I render_target_get_size(RenderTargetID rt_id);
+
+    static void material_compile_from_file(MaterialID material_id, StringView path, StringView defines);
+    static void material_compile_from_source(MaterialID material_id, StringView source, StringView defines);
 
     static void _init_context();
 };

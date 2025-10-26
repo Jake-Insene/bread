@@ -224,3 +224,4 @@ struct [[nodiscard]] Array
     template<typename Self>
     Slice<T> slice(this Self& self) { return self.items.slice(self.count); }
 };
+

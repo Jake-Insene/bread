@@ -5,7 +5,7 @@
 #include "platform/platform_header.h"
 
 
-Slice<u8> File::read_all(mem::Allocator& allocator, StringView path)
+Slice<u8> File::read_all(const mem::Allocator& allocator, StringView path)
 {
     char tmp[256] = {};
     mem::copy(Slice(tmp), path);

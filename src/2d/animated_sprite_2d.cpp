@@ -1,6 +1,6 @@
 #include "2d/animated_sprite_2d.h"
 
-#include "graphics/viewport.h"
+#include "graphics/render_manager.h"
 
 
 void AnimatedSprite2D::init(const CreateInfo&)
@@ -56,11 +56,11 @@ void AnimatedSprite2D::render()
 	u32 flags = 0;
 	if (flip_h)
 	{
-		flags |= Viewport::RENDER_FLAG_FLIP_H;
+		flags |= RenderManager::RENDER_FLAG_FLIP_H;
 	}
 	if (flip_v)
 	{
-		flags |= Viewport::RENDER_FLAG_FLIP_V;
+		flags |= RenderManager::RENDER_FLAG_FLIP_V;
 	}
 
 	if (centered)

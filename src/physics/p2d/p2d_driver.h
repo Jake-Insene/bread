@@ -66,7 +66,7 @@ struct P2DDriver
         return data.current_bodies.get(body_id);
     }
 
-    [[nodiscard]] static P2DArea& _get_area(Physics2D::BodyID area_id)
+    [[nodiscard]] static P2DArea& _get_area(Physics2D::AreaID area_id)
     {
         return data.current_areas.get(area_id);
     }

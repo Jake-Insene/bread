@@ -1,11 +1,12 @@
 #include "graphics/gles/gles_renderer.h"
 
 #include "graphics/gles/gles_driver.h"
+#include "graphics/gles/gles_material_manager.h"
 #include "graphics/gles/gles_memory_allocator.h"
-#include "graphics/gles/gles_utility.h"
 #include "graphics/gles/gles_vtable.h"
 #include "graphics/viewport.h"
 #include "math/projection.h"
+#include "scene/scene_manager.h"
 
 
 static inline void _vertex_attrib_divisor(GLint index, GLenum type, GLsizei component_count, 
@@ -40,6 +41,24 @@ void GLESRenderer::initialize(mem::Allocator allocator)
 
     data.usable_texture_units = 16;
 
+    data.sprite_program = GLESMaterialManager::material_get_program(
+        GLESMaterialManager::get_sprite_material()
+    );
+    data.sprite_ui_program = GLESMaterialManager::material_get_program(
+        GLESMaterialManager::get_sprite_ui_material()
+    );
+    data.quad_program = GLESMaterialManager::material_get_program(
+        GLESMaterialManager::get_quad_material()
+    );
+    data.lines_program = GLESMaterialManager::material_get_program(
+        GLESMaterialManager::get_lines_material()
+    );
+    data.circles_program = GLESMaterialManager::material_get_program(
+        GLESMaterialManager::get_circles_material()
+    );
+
+    data.item_program = 0;
+
     // Sprite batch
     {
         data.sprite_batch = {};
@@ -61,33 +80,29 @@ void GLESRenderer::initialize(mem::Allocator allocator)
         }
 
         gl.glBindVertexArray(0);
-        
-        data.sprite_batch.program = gles::compile_program("shaders/batch.gles.glsl", "#define SPRITE");
     }
 
     // UI sprite batch
     {
-        data.ui_sprite_batch = {};
+        data.sprite_ui_batch = {};
 
-        gl.glGenVertexArrays(1, &data.ui_sprite_batch.vao);
-        data.ui_sprite_batch.instance_buffer_object = GLESMemoryAllocator::buffer_allocate_handle();
-        gl.glBindVertexArray(data.ui_sprite_batch.vao);
+        gl.glGenVertexArrays(1, &data.sprite_ui_batch.vao);
+        data.sprite_ui_batch.instance_buffer_object = GLESMemoryAllocator::buffer_allocate_handle();
+        gl.glBindVertexArray(data.sprite_ui_batch.vao);
 
         GLESMemoryAllocator::buffer_fill_memory(
-            data.ui_sprite_batch.instance_buffer_object, Slice<const u8>(nullptr, sizeof(UISpriteInstance) * MaxInstancesPerBatch),
+            data.sprite_ui_batch.instance_buffer_object, Slice<const u8>(nullptr, sizeof(SpriteUIInstance) * MaxInstancesPerBatch),
             GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW
         );
-        data.ui_sprite_batch.instances = allocator.array<UISpriteInstance>(MaxInstancesPerBatch);
+        data.sprite_ui_batch.instances = allocator.array<SpriteUIInstance>(MaxInstancesPerBatch);
 
-        gl.glBindBuffer(GL_ARRAY_BUFFER, data.ui_sprite_batch.instance_buffer_object);
+        gl.glBindBuffer(GL_ARRAY_BUFFER, data.sprite_ui_batch.instance_buffer_object);
         for (u32 i = 0; i < CanvasElementInstanceAttribCount; i++)
         {
-            _vertex_attrib_divisor(i, GL_FLOAT, 4, sizeof(UISpriteInstance), i * sizeof(Vector4));
+            _vertex_attrib_divisor(i, GL_FLOAT, 4, sizeof(SpriteUIInstance), i * sizeof(Vector4));
         }
 
         gl.glBindVertexArray(0);
-
-        data.ui_sprite_batch.program = gles::compile_program("shaders/batch.gles.glsl", "#define SPRITE\n#define UI_SPRITE");
     }
     
     // Quad batch
@@ -111,11 +126,9 @@ void GLESRenderer::initialize(mem::Allocator allocator)
         }
 
         gl.glBindVertexArray(0);
-        
-        data.quad_batch.program = gles::compile_program("shaders/batch.gles.glsl", "#define QUAD");
     }
 
-    // Primitive batch
+    // Lines batch
     {
         data.primitive_batch = {};
 
@@ -137,8 +150,6 @@ void GLESRenderer::initialize(mem::Allocator allocator)
         }
 
         gl.glBindVertexArray(0);
-
-        data.primitive_batch.program = gles::compile_program("shaders/batch.gles.glsl", "#define PRIMITIVE");
     }
 
     // Primitive circle batch
@@ -151,10 +162,10 @@ void GLESRenderer::initialize(mem::Allocator allocator)
 
         GLESMemoryAllocator::buffer_fill_memory(
             data.primitive_circle_batch.instance_buffer_object,
-            Slice<const u8>(nullptr, sizeof(PrimitiveCircle) * MaxPrimitiveCirclesPerBatch),
+            Slice<const u8>(nullptr, sizeof(PrimitiveCircle) * MaxCirclesPerBatch),
             GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW
         );
-        data.primitive_circle_batch.primitives = data.allocator.array<PrimitiveCircle>(MaxPrimitiveCirclesPerBatch);
+        data.primitive_circle_batch.primitives = data.allocator.array<PrimitiveCircle>(MaxCirclesPerBatch);
 
         gl.glBindBuffer(GL_ARRAY_BUFFER, data.primitive_circle_batch.instance_buffer_object);
         for (u32 i = 0; i < PrimitiveCircleAttribCount; i++)
@@ -163,8 +174,6 @@ void GLESRenderer::initialize(mem::Allocator allocator)
         }
 
         gl.glBindVertexArray(0);
-
-        data.primitive_circle_batch.program = gles::compile_program("shaders/batch.gles.glsl", "#define CIRCLE");
     }
 
     data.scene_data_ubo = GLESMemoryAllocator::buffer_allocate_handle();
@@ -192,7 +201,6 @@ void GLESRenderer::shutdown()
             data.sprite_batch.instance_buffer_object, sizeof(SpriteInstance) * MaxInstancesPerBatch
         );
         gl.glDeleteVertexArrays(1, &data.sprite_batch.vao);
-        gl.glDeleteProgram(data.sprite_batch.program);
         
         data.allocator.free(mem::to_bytes(data.sprite_batch.instances));
     }
@@ -200,12 +208,11 @@ void GLESRenderer::shutdown()
     // Canvas element batch
     {
         GLESMemoryAllocator::buffer_deallocate_handle(
-            data.ui_sprite_batch.instance_buffer_object, sizeof(UISpriteInstance) * MaxInstancesPerBatch
+            data.sprite_ui_batch.instance_buffer_object, sizeof(SpriteUIInstance) * MaxInstancesPerBatch
         );
-        gl.glDeleteVertexArrays(1, &data.ui_sprite_batch.vao);
-        gl.glDeleteProgram(data.ui_sprite_batch.program);
+        gl.glDeleteVertexArrays(1, &data.sprite_ui_batch.vao);
 
-        data.allocator.free(mem::to_bytes(data.ui_sprite_batch.instances));
+        data.allocator.free(mem::to_bytes(data.sprite_ui_batch.instances));
     }
     
     // Quad batch
@@ -214,7 +221,6 @@ void GLESRenderer::shutdown()
             data.quad_batch.instance_buffer_object, sizeof(QuadInstance) * MaxInstancesPerBatch
         );
         gl.glDeleteVertexArrays(1, &data.quad_batch.vao);
-        gl.glDeleteProgram(data.quad_batch.program);
         
         data.allocator.free(mem::to_bytes(data.quad_batch.instances));
     }
@@ -225,7 +231,6 @@ void GLESRenderer::shutdown()
             data.primitive_batch.instance_buffer_object, sizeof(PrimitivePoint) * MaxPrimitivePointsPerBatch
         );
         gl.glDeleteVertexArrays(1, &data.primitive_batch.vao);
-        gl.glDeleteProgram(data.primitive_batch.program);
 
         data.allocator.free(mem::to_bytes(data.primitive_batch.primitives));
     }
@@ -233,10 +238,9 @@ void GLESRenderer::shutdown()
     // Primitive circle batch
     {
         GLESMemoryAllocator::buffer_deallocate_handle(
-            data.primitive_circle_batch.instance_buffer_object, sizeof(PrimitiveCircle) * MaxPrimitiveCirclesPerBatch
+            data.primitive_circle_batch.instance_buffer_object, sizeof(PrimitiveCircle) * MaxCirclesPerBatch
         );
         gl.glDeleteVertexArrays(1, &data.primitive_circle_batch.vao);
-        gl.glDeleteProgram(data.primitive_circle_batch.program);
 
         data.allocator.free(mem::to_bytes(data.primitive_circle_batch.primitives));
     }
@@ -284,7 +288,14 @@ void GLESRenderer::end_sprite_batch()
     data.debug.draw_call_count++;
 #endif
 
-    bind_program(data.sprite_batch.program);
+    if (data.item_program != 0)
+    {
+        gl.glUseProgram(data.item_program);
+    }
+    else
+    {
+        gl.glUseProgram(data.sprite_program);
+    }
     bind_scene_buffer();
     
     gl.glBindVertexArray(data.sprite_batch.vao);
@@ -307,33 +318,33 @@ void GLESRenderer::end_sprite_batch()
     data.sprite_batch.texture_index = 0;
 }
 
-void GLESRenderer::end_ui_sprite_batch()
+void GLESRenderer::end_sprite_ui_batch()
 {
 #if SHOW_DEBUG_INFO
     data.debug.draw_call_count++;
 #endif
 
-    bind_program(data.ui_sprite_batch.program);
+    gl.glUseProgram(data.sprite_ui_program);
     bind_scene_buffer();
 
-    gl.glBindVertexArray(data.ui_sprite_batch.vao);
+    gl.glBindVertexArray(data.sprite_ui_batch.vao);
     gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.global_quad_ibo);
     GLESMemoryAllocator::buffer_bind_and_update_memory(
-        data.ui_sprite_batch.instance_buffer_object, 0, 
-        mem::to_const_bytes(data.ui_sprite_batch.instances.slice(data.ui_sprite_batch.count)),
+        data.sprite_ui_batch.instance_buffer_object, 0, 
+        mem::to_const_bytes(data.sprite_ui_batch.instances.slice(data.sprite_ui_batch.count)),
         GL_ARRAY_BUFFER, 
         GLESMemoryAllocator::UMHWriteOnly
     );
 
-    for (i32 i = 0; i < GLESRenderer::data.ui_sprite_batch.texture_index; i++)
+    for (i32 i = 0; i < GLESRenderer::data.sprite_ui_batch.texture_index; i++)
     {
         gl.glActiveTexture(GL_TEXTURE0 + i);
-        gl.glBindTexture(GL_TEXTURE_2D, data.ui_sprite_batch.texture_units[i]);
+        gl.glBindTexture(GL_TEXTURE_2D, data.sprite_ui_batch.texture_units[i]);
     }
 
-    gl.glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, nullptr, (GLsizei)data.ui_sprite_batch.count);
-    data.ui_sprite_batch.count = 0;
-    data.ui_sprite_batch.texture_index = 0;
+    gl.glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, nullptr, (GLsizei)data.sprite_ui_batch.count);
+    data.sprite_ui_batch.count = 0;
+    data.sprite_ui_batch.texture_index = 0;
 }
 
 void GLESRenderer::end_quad_batch()
@@ -342,7 +353,7 @@ void GLESRenderer::end_quad_batch()
     data.debug.draw_call_count++;
 #endif
 
-    bind_program(data.quad_batch.program);
+    gl.glUseProgram(data.quad_program);
     bind_scene_buffer();
     
     gl.glBindVertexArray(data.quad_batch.vao);
@@ -358,13 +369,13 @@ void GLESRenderer::end_quad_batch()
     data.quad_batch.count = 0;
 }
 
-void GLESRenderer::end_primitive_batch()
+void GLESRenderer::end_lines_batch()
 {
 #if SHOW_DEBUG_INFO
     data.debug.draw_call_count++;
 #endif
 
-    bind_program(data.primitive_batch.program);
+    gl.glUseProgram(data.lines_program);
     bind_scene_buffer();
 
     gl.glBindVertexArray(data.primitive_batch.vao);
@@ -379,13 +390,13 @@ void GLESRenderer::end_primitive_batch()
     data.primitive_batch.count = 0;
 }
 
-void GLESRenderer::end_primitive_circle_batch()
+void GLESRenderer::end_circles_batch()
 {
 #if SHOW_DEBUG_INFO
     data.debug.draw_call_count++;
 #endif
 
-    bind_program(data.primitive_circle_batch.program);
+    gl.glUseProgram(data.circles_program);
     bind_scene_buffer();
 
     gl.glBindVertexArray(data.primitive_circle_batch.vao);
@@ -403,6 +414,8 @@ void GLESRenderer::end_primitive_circle_batch()
 
 void GLESRenderer::render(Viewport* viewport)
 {
+    data.scene_data.time += SceneManager::get_delta_time();
+    data.scene_data_ubo_update = true;
 #if SHOW_DEBUG_INFO
     data.debug.draw_call_count = 0;
 #endif
@@ -443,40 +456,14 @@ void GLESRenderer::render(Viewport* viewport)
     );
     gl.glClear(GL_COLOR_BUFFER_BIT);
 
-
-    auto ot = viewport->get_order_table();
+    auto& ot = RenderManager::get_order_table();
     for (auto& layer : ot.layers)
     {
         for (auto item_id : layer.items.iter())
         {
-            auto& item = viewport->items.get(item_id);
+            auto& item = RenderManager::_get_item(item_id);
             _render_item_draw(item);
         }
-    }
-
-    if(data.sprite_batch.count > 0)
-    {
-        end_sprite_batch();
-    }
-
-    if(data.quad_batch.count > 0)
-    {
-        end_quad_batch();
-    }
-
-    if(data.primitive_batch.count > 0)
-    {
-        end_primitive_batch();
-    }
-
-    if (data.primitive_circle_batch.count > 0)
-    {
-        end_primitive_circle_batch();
-    }
-
-    if (data.ui_sprite_batch.count > 0)
-    {
-        end_ui_sprite_batch();
     }
 
     data.state.frame_index ^= 1;
@@ -489,16 +476,21 @@ void GLESRenderer::render(Viewport* viewport)
     }
 }
 
-void GLESRenderer::_render_item_draw(Viewport::RenderItem& item)
+void GLESRenderer::_render_item_draw(RenderManager::RenderItem& item)
 {
-    Viewport::RenderItem::Command* cmd = item.begin();
+    if (item.material != MaterialID())
+    {
+        data.item_program = GLESMaterialManager::material_get_program(item.material);
+    }
+
+    RenderManager::RenderItem::Command* cmd = item.begin();
     for (; cmd != item.end(); cmd = item.get_command_at(cmd->next))
     {
         switch (cmd->type)
         {
-        case Viewport::RenderItem::CMD_RECT:
+        case RenderManager::RenderItem::CMD_RECT:
         {
-            auto rect = reinterpret_cast<Viewport::RenderItem::CommandRect*>(cmd);
+            auto rect = reinterpret_cast<RenderManager::RenderItem::CommandRect*>(cmd);
             if (data.quad_batch.count >= MaxInstancesPerBatch)
             {
                 end_quad_batch();
@@ -516,12 +508,12 @@ void GLESRenderer::_render_item_draw(Viewport::RenderItem& item)
             data.quad_batch.count++;
         }
         break;
-        case Viewport::RenderItem::CMD_LINE:
+        case RenderManager::RenderItem::CMD_LINE:
         {
-            auto line = reinterpret_cast<Viewport::RenderItem::CommandLine*>(cmd);
+            auto line = reinterpret_cast<RenderManager::RenderItem::CommandLine*>(cmd);
             if (data.primitive_batch.count >= MaxPrimitivePointsPerBatch)
             {
-                end_primitive_batch();
+                end_lines_batch();
             }
 
             u32 index = data.primitive_batch.count;
@@ -537,12 +529,12 @@ void GLESRenderer::_render_item_draw(Viewport::RenderItem& item)
             data.primitive_batch.count += 2;
         }
         break;
-        case Viewport::RenderItem::CMD_CIRCLE:
+        case RenderManager::RenderItem::CMD_CIRCLE:
         {
-            auto circle = reinterpret_cast<Viewport::RenderItem::CommandCircle*>(cmd);
-            if (data.primitive_circle_batch.count >= MaxPrimitiveCirclesPerBatch)
+            auto circle = reinterpret_cast<RenderManager::RenderItem::CommandCircle*>(cmd);
+            if (data.primitive_circle_batch.count >= MaxCirclesPerBatch)
             {
-                end_primitive_circle_batch();
+                end_circles_batch();
             }
 
             u32 index = data.primitive_circle_batch.count;
@@ -554,9 +546,9 @@ void GLESRenderer::_render_item_draw(Viewport::RenderItem& item)
             data.primitive_circle_batch.count++;
         }
         break;
-        case Viewport::RenderItem::CMD_SPRITE:
+        case RenderManager::RenderItem::CMD_SPRITE:
         {
-            auto sprite = reinterpret_cast<Viewport::RenderItem::CommandSprite*>(cmd);
+            auto sprite = reinterpret_cast<RenderManager::RenderItem::CommandSprite*>(cmd);
 
             if (data.sprite_batch.count >= MaxInstancesPerBatch ||
                 data.sprite_batch.texture_index >= data.usable_texture_units)
@@ -593,17 +585,17 @@ void GLESRenderer::_render_item_draw(Viewport::RenderItem& item)
             data.sprite_batch.instances[index].unit = tex_unit;
 
             data.sprite_batch.instances[index].flags = 0;
-            if (sprite->flags & Viewport::RENDER_FLAG_FLIP_H)
+            if (sprite->flags & RenderManager::RENDER_FLAG_FLIP_H)
             {
                 data.sprite_batch.instances[index].flags |= FLAG_FLIP_H;
             }
 
-            if (sprite->flags & Viewport::RENDER_FLAG_FLIP_V)
+            if (sprite->flags & RenderManager::RENDER_FLAG_FLIP_V)
             {
                 data.sprite_batch.instances[index].flags |= FLAG_FLIP_V;
             }
 
-            if (sprite->flags & Viewport::RENDER_FLAG_FONT_CHAR)
+            if (sprite->flags & RenderManager::RENDER_FLAG_FONT_CHAR)
             {
                 data.sprite_batch.instances[index].flags |= FLAG_FONT_CHAR;
             }
@@ -624,23 +616,23 @@ void GLESRenderer::_render_item_draw(Viewport::RenderItem& item)
             data.sprite_batch.count++;
         }
         break;
-        case Viewport::RenderItem::CMD_UI_SPRITE:
+        case RenderManager::RenderItem::CMD_UI_SPRITE:
         {
-            auto ui_sprite = reinterpret_cast<Viewport::RenderItem::CommandUISprite*>(cmd);
+            auto ui_sprite = reinterpret_cast<RenderManager::RenderItem::CommandUISprite*>(cmd);
 
-            if (data.ui_sprite_batch.count >= MaxInstancesPerBatch ||
-                data.ui_sprite_batch.texture_index >= data.usable_texture_units)
+            if (data.sprite_ui_batch.count >= MaxInstancesPerBatch ||
+                data.sprite_ui_batch.texture_index >= data.usable_texture_units)
             {
-                end_ui_sprite_batch();
+                end_sprite_ui_batch();
             }
 
 
             GLID tex = GLESMemoryAllocator::texture_get_handle(ui_sprite->texture);
 
             GLID tex_unit = GLID(-1);
-            for (i32 t = 0; t < data.ui_sprite_batch.texture_index; t++)
+            for (i32 t = 0; t < data.sprite_ui_batch.texture_index; t++)
             {
-                if (data.ui_sprite_batch.texture_units[t] == tex)
+                if (data.sprite_ui_batch.texture_units[t] == tex)
                 {
                     tex_unit = t;
                     break;
@@ -649,54 +641,81 @@ void GLESRenderer::_render_item_draw(Viewport::RenderItem& item)
 
             if (tex_unit == GLID(-1))
             {
-                tex_unit = data.ui_sprite_batch.texture_index;
-                data.ui_sprite_batch.texture_units[data.ui_sprite_batch.texture_index] = tex;
-                data.ui_sprite_batch.texture_index++;
+                tex_unit = data.sprite_ui_batch.texture_index;
+                data.sprite_ui_batch.texture_units[data.sprite_ui_batch.texture_index] = tex;
+                data.sprite_ui_batch.texture_index++;
             }
 
-            u32 index = data.ui_sprite_batch.count;
+            u32 index = data.sprite_ui_batch.count;
 
-            data.ui_sprite_batch.instances[index].transform_0 = ui_sprite->transform.get_column(0);
-            data.ui_sprite_batch.instances[index].transform_1 = ui_sprite->transform.get_column(1);
-            data.ui_sprite_batch.instances[index].transform_2 = ui_sprite->transform[2];
+            data.sprite_ui_batch.instances[index].transform_0 = ui_sprite->transform.get_column(0);
+            data.sprite_ui_batch.instances[index].transform_1 = ui_sprite->transform.get_column(1);
+            data.sprite_ui_batch.instances[index].transform_2 = ui_sprite->transform[2];
 
-            data.ui_sprite_batch.instances[index].unit = tex_unit;
+            data.sprite_ui_batch.instances[index].unit = tex_unit;
 
-            data.ui_sprite_batch.instances[index].flags = 0;
-            if (ui_sprite->flags & Viewport::RENDER_FLAG_FLIP_H)
+            data.sprite_ui_batch.instances[index].flags = 0;
+            if (ui_sprite->flags & RenderManager::RENDER_FLAG_FLIP_H)
             {
-                data.ui_sprite_batch.instances[index].flags |= FLAG_FLIP_H;
+                data.sprite_ui_batch.instances[index].flags |= FLAG_FLIP_H;
             }
 
-            if (ui_sprite->flags & Viewport::RENDER_FLAG_FLIP_V)
+            if (ui_sprite->flags & RenderManager::RENDER_FLAG_FLIP_V)
             {
-                data.ui_sprite_batch.instances[index].flags |= FLAG_FLIP_V;
+                data.sprite_ui_batch.instances[index].flags |= FLAG_FLIP_V;
             }
 
-            if (ui_sprite->flags & Viewport::RENDER_FLAG_FONT_CHAR)
+            if (ui_sprite->flags & RenderManager::RENDER_FLAG_FONT_CHAR)
             {
-                data.ui_sprite_batch.instances[index].flags |= FLAG_FONT_CHAR;
+                data.sprite_ui_batch.instances[index].flags |= FLAG_FONT_CHAR;
             }
 
             Vector2 texture_extent = Vector2(
                 GLESMemoryAllocator::texture_get_size(ui_sprite->texture)
             );
 
-            data.ui_sprite_batch.instances[index].rect = ui_sprite->rect;
+            data.sprite_ui_batch.instances[index].rect = ui_sprite->rect;
 
-            data.ui_sprite_batch.instances[index].src_rect = Rect2D(
+            data.sprite_ui_batch.instances[index].src_rect = Rect2D(
                 ui_sprite->src_rect.position / texture_extent,
                 (ui_sprite->src_rect.position + ui_sprite->src_rect.size) / texture_extent
             );
 
-            data.ui_sprite_batch.instances[index].color = ui_sprite->mod_color;
+            data.sprite_ui_batch.instances[index].color = ui_sprite->mod_color;
 
-            data.ui_sprite_batch.count++;
+            data.sprite_ui_batch.count++;
         }
         break;
         default:
             break;
         }
     }
+
+    if (data.sprite_batch.count > 0)
+    {
+        end_sprite_batch();
+    }
+
+    if (data.quad_batch.count > 0)
+    {
+        end_quad_batch();
+    }
+
+    if (data.primitive_batch.count > 0)
+    {
+        end_lines_batch();
+    }
+
+    if (data.primitive_circle_batch.count > 0)
+    {
+        end_circles_batch();
+    }
+
+    if (data.sprite_ui_batch.count > 0)
+    {
+        end_sprite_ui_batch();
+    }
+
+    data.item_program = 0;
 }
 

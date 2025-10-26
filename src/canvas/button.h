@@ -1,6 +1,7 @@
 #pragma once
 #include "canvas/canvas_object.h"
-#include "resource/texture.h"
+
+struct Texture;
 
 
 struct Button : CanvasObject

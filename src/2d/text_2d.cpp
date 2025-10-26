@@ -1,6 +1,6 @@
 #include "2d/text_2d.h"
 
-#include "graphics/viewport.h"
+#include "graphics/render_manager.h"
 
 
 void Text2D::init(const CreateInfo&)
@@ -49,7 +49,9 @@ void Text2D::render()
 		draw_sprite(
 			transform, id,
 			Rect2D(Vector2(), extent), Rect2D(Vector2(), extent),
-			color, Viewport::RENDER_FLAG_FLIP_V | Viewport::RENDER_FLAG_FONT_CHAR
+			color, 
+			RenderManager::RENDER_FLAG_FLIP_V 
+			| RenderManager::RENDER_FLAG_FONT_CHAR
 		);
 
 		transform.translate(

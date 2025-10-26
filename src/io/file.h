@@ -27,7 +27,7 @@ struct File
 
     usize handle;
 
-    static Slice<u8> read_all(mem::Allocator& allocator, StringView path);
+    static Slice<u8> read_all(const mem::Allocator& allocator, StringView path);
 
     static File get_stderr();
     static File get_stdout();

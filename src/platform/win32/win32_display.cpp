@@ -13,7 +13,9 @@ static inline Win32Display::WindowData& _get_window_data(Display::WindowID id)
 
 static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-	WindowID window_id = (GetWindowLongPtrA(handle, GWLP_USERDATA)) & MaxValue<WindowID>;
+	WindowID window_id = WindowID(
+		GetWindowLongPtrA(handle, GWLP_USERDATA) & MaxValue<WindowID>
+	);
 
 	switch (msg)
 	{
@@ -101,7 +103,8 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 	case WM_MOUSEMOVE:
 	{
 		Vector2 screen_space_position = Vector2(
-			f32(GET_X_LPARAM(lparam)), -f32(GET_Y_LPARAM(lparam))
+			f32(GET_X_LPARAM(lparam)),
+			-f32(GET_Y_LPARAM(lparam))
 		);
 		Input::data.mouse_position = SceneManager::_screen_make_local_to_canvas(screen_space_position);
 	}

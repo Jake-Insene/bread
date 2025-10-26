@@ -13,7 +13,7 @@ void Display::shutdown()
 
 Display::WindowID Display::window_create()
 {
-    return Display::WindowID::InvalidID;
+    return Display::WindowID();
 }
 
 Vector2I Display::window_get_size(Display::WindowID)

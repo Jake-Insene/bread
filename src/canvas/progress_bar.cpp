@@ -1,7 +1,7 @@
 #include "canvas/progress_bar.h"
 
-#include "graphics/viewport.h"
-#include "resource/resource_manager.h"
+#include "graphics/render_manager.h"
+#include "resource/texture.h"
 
 
 void ProgressBar::init(const CreateInfo&)
@@ -37,7 +37,7 @@ void ProgressBar::render()
     Rect2D fill_src_rect = Rect2D(Vector2(0, 0), fill_texture_extent);
     draw_canvas_element(
         transform, data.fill_texture->texture_id, Rect2D(Vector2(), draw_size), fill_src_rect, 
-        fill_color, Viewport::RENDER_FLAG_NONE
+        fill_color, RenderManager::RENDER_FLAG_NONE
     );
 
     // Background
@@ -48,7 +48,7 @@ void ProgressBar::render()
     Rect2D bg_src_rect = Rect2D(Vector2(0, 0), bg_texture_extent);
     draw_canvas_element(
         transform, data.bg_texture->texture_id, Rect2D(Vector2(), size), bg_src_rect,
-        bg_color, Viewport::RENDER_FLAG_NONE
+        bg_color, RenderManager::RENDER_FLAG_NONE
     );
 }
 

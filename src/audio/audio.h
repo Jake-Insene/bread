@@ -5,6 +5,8 @@
 
 struct Audio
 {
+    struct __SourceVoiceTag {};
+
     enum DriverType
     {
         DRIVER_UNKNOWN = 0,
@@ -14,7 +16,7 @@ struct Audio
         DEFAULT_DRIVER = XAUDIO2,
     };
 
-    using SourceVoiceID = ID<u32>;
+    using SourceVoiceID = ID<u32, __SourceVoiceTag>;
 
     struct VTable
     {

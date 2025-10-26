@@ -1,7 +1,7 @@
 #include "canvas/canvas_sprite.h"
 
-#include "graphics/viewport.h"
-#include "resource/resource_manager.h"
+#include "graphics/render_manager.h"
+#include "resource/texture.h"
 
 
 void CanvasSprite::init(const CreateInfo&)
@@ -14,22 +14,21 @@ void CanvasSprite::render()
     if (data.texture == nullptr)
         return;
 
-    const Vector2 extent = Vector2(data.texture->get_size());
-    u32 flags = Viewport::RENDER_FLAG_NONE;
+    u32 flags = RenderManager::RENDER_FLAG_NONE;
    
     if (flip_h)
     {
-        flags |= Viewport::RENDER_FLAG_FLIP_H;
+        flags |= RenderManager::RENDER_FLAG_FLIP_H;
     }
    
     if (flip_v)
     {
-        flags |= Viewport::RENDER_FLAG_FLIP_V;
+        flags |= RenderManager::RENDER_FLAG_FLIP_V;
     }
 
     draw_canvas_element(
         get_global_transform(), get_texture()->texture_id,
-        Rect2D(Vector2(), extent), src_rect, color,
+        Rect2D(Vector2(), get_size()), src_rect, color,
         flags
     );
 }

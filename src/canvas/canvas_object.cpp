@@ -1,5 +1,6 @@
 #include "canvas/canvas_object.h"
 
+#include "graphics/render_manager.h"
 #include "input/input.h"
 #include "scene/scene_manager.h"
 
@@ -15,6 +16,13 @@ void CanvasObject::init(const CreateInfo&)
 {
     mark(MARK_RENDER);
     mark(MARK_CANVAS);
+
+    data.render_item = RenderManager::create_item();
+}
+
+void CanvasObject::deinit()
+{
+    RenderManager::destroy_item(data.render_item);
 }
 
 void CanvasObject::enter()
@@ -24,13 +32,18 @@ void CanvasObject::enter()
         SceneManager::_add_root_canvas(this);
     }
 
-    data.render_item = get_viewport()->create_item(Viewport::VIEWPORT_LAYER_DEFAULT);
+    CanvasObject* parent_canvas = cast<CanvasObject>(get_parent());
+    if (parent_canvas)
+    {
+
+        RenderManager::item_set_parent(
+            get_render_item(), parent_canvas->get_render_item()
+        );
+    }
 }
 
 void CanvasObject::exit()
-{
-    get_viewport()->destroy_item(data.render_item);
-}
+{}
 
 void CanvasObject::gui_event(const InputEvent&) {}
 
@@ -109,8 +122,8 @@ Rect2D CanvasObject::get_rect() const
 void CanvasObject::draw_canvas_element(const Transform2D& transform, TextureID texture, const Rect2D& rect, 
     const Rect2D& src_rect, Color mod_color, u32 flags)
 {
-    get_viewport()->render_item_draw_ui_sprite(
+    RenderManager::render_item_draw_ui_sprite(
         get_render_item(), transform, texture, rect,
-        src_rect, mod_color, Viewport::RenderFlags(flags)
+        src_rect, mod_color, RenderManager::RenderFlags(flags)
     );
 }

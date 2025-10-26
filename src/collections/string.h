@@ -1,4 +1,6 @@
 #pragma once
+#include "collections/string_view.h"
+#include "core/templates.h"
 #include "mem/allocator.h"
 #include "mem/utils.h"
 
@@ -34,23 +36,28 @@ struct [[nodiscard]] String
     void resize(usize new_size);
 
     template<typename T>
-    void set(T arg)
+    void set(T&& arg)
     {
-        if constexpr (IsSame<RemoveReference<T>, StringView>)
+        using TypeNoCR = RemoveConst<RemoveReference<T>>;
+        if constexpr (IsSame<TypeNoCR, StringView>)
         {
             _set_str_view(arg);
         }
-        else if constexpr (IsSame<RemoveConstPointer<T>, char>)
+        else if constexpr (IsArrayOf<T, char>)
         {
-            _set_str_view(StringView(arg, __string_len(arg)));
+            _set_str_view(arg);
         }
-        else if constexpr (IsInteger<T> && IsSigned<T>)
+        else if constexpr (IsInteger<TypeNoCR> && IsSigned<TypeNoCR>)
         {
             _set_from_signed(arg);
         }
-        else if constexpr (IsInteger<T> && IsUnsigned<T>)
+        else if constexpr (IsInteger<TypeNoCR> && IsUnsigned<TypeNoCR>)
         {
             _set_from_unsigned(arg);
+        }
+        else if constexpr (IsFloatingPoint<TypeNoCR>)
+        {
+            _set_from_float(arg);
         }
         else
         {
@@ -59,23 +66,28 @@ struct [[nodiscard]] String
     }
 
     template<typename T>
-    void add(const T arg)
+    void add(T&& arg)
     {
-        if constexpr (IsSame<RemoveReference<T>, StringView>)
+        using TypeNoCR = RemoveConst<RemoveReference<T>>;
+        if constexpr (IsSame<TypeNoCR, StringView>)
         {
             _add_str_view(arg);
         }
-        else if constexpr (IsSame<RemoveConstPointer<T>, char>)
+        else if constexpr (IsArrayOf<T, char>)
         {
-            _add_str_view(StringView(arg, __string_len(arg)));
+            _add_str_view(arg);
         }
-        else if constexpr (IsInteger<T> && IsSigned<T>)
+        else if constexpr (IsInteger<TypeNoCR> && IsSigned<TypeNoCR>)
         {
             _add_from_signed(arg);
         }
-        else if constexpr (IsInteger<T> && IsUnsigned<T>)
+        else if constexpr (IsInteger<TypeNoCR> && IsUnsigned<TypeNoCR>)
         {
             _add_from_unsigned(arg);
+        }
+        else if constexpr (IsFloatingPoint<TypeNoCR>)
+        {
+            _add_from_float(arg);
         }
         else
         {
@@ -93,9 +105,11 @@ struct [[nodiscard]] String
     void _set_str_view(StringView str);
     void _set_from_signed(i64 integer);
     void _set_from_unsigned(u64 integer);
+    void _set_from_float(f64 fp);
 
     void _add_str_view(StringView str);
     void _add_from_signed(i64 integer);
     void _add_from_unsigned(u64 integer);
+    void _add_from_float(f64 fp);
 };
 

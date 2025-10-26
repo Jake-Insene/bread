@@ -16,7 +16,7 @@ struct Body2D : Object2D
     
     struct InternalData
     {
-        Physics2D::BodyID body_id = Physics2D::BodyID::InvalidID;
+        Physics2D::BodyID body_id = Physics2D::BodyID();
         BodyType type = BodyType::UNKNOWN;
         
         f32 mass = 1.f;

@@ -23,6 +23,7 @@ struct Object2D : Object
     struct InternalData
     {
         RenderItemID render_item;
+
         Transform2D transform{};
         Transform2D global_transform_cache{};
         Vector2 pos_cache = Vector2(0, 0);
@@ -31,7 +32,8 @@ struct Object2D : Object
         f32 rot_cache = 0.f;
     } data;
     
-    void init(const CreateInfo& info);
+    void init(const CreateInfo&);
+    void deinit();
     void enter();
     void exit();
 
@@ -47,6 +49,9 @@ struct Object2D : Object
     {
         return data.render_item;
     }
+
+    void set_material(MaterialID new_material);
+    MaterialID get_material();
 
     /*
     * Set the object current position.

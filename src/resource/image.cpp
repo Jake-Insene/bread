@@ -65,8 +65,8 @@ void Image::unload()
     if (!pixels.null())
     {
         ResourceManager::get_allocator().free(pixels);
-        pixels = {};
-        size = {};
+        pixels = Slice<u8>(nullptr, 0);
+        size = Vector2I();
         format = Image::FORMAT_UNKNOWN;
     }
 }

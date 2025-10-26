@@ -3,6 +3,7 @@
 #include "audio/audio.h"
 #include "display/display.h"
 #include "graphics/graphics.h"
+#include "graphics/render_manager.h"
 #include "graphics/egl/egl.h"
 #include "log/log.h"
 #include "object/object_allocator.h"
@@ -46,6 +47,7 @@ void Engine::initialize()
 
     Audio::initialize(allocator, Audio::DEFAULT_DRIVER);
     Graphics::initialize(allocator);
+    RenderManager::initialize(allocator);
 
     SceneManager::initialize(allocator);
     Physics2D::initialize(allocator, Physics2D::DEFAULT_DRIVER);
@@ -70,6 +72,7 @@ void Engine::shutdown()
 
     ResourceManager::shutdown();
 
+    RenderManager::shutdown();
     Graphics::shutdown();
     Audio::shutdown();
 

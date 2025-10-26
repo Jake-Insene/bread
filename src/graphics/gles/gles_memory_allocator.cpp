@@ -97,7 +97,7 @@ void GLESMemoryAllocator::initialize(const mem::Allocator& allocator)
     data.allocator = allocator;
 
     data.buffers = Array<GLESBuffer>::with_size(allocator, 4);
-    data.textures = FreeList<GLESTexture, ResourceID>::with_size(allocator, 4);
+    data.textures = FreeList<GLESTexture, TextureID>::with_size(allocator, 4);
     data.render_targets = FreeList<GLESRenderTarget, RenderTargetID>::with_size(allocator, 4);
 
     // Allocating the backbuffer we should present this instead of a intermediate backbuffer.
@@ -116,7 +116,7 @@ void GLESMemoryAllocator::shutdown()
     // Unload graphics resources.
     for (auto& buffer : data.buffers.iter())
     {
-        buffer_free(buffer.self_id);
+        buffer_free(buffer.self);
     }
 
     data.buffers.destroy();
@@ -129,7 +129,7 @@ void GLESMemoryAllocator::shutdown()
 GLESMemoryAllocator::GLESBuffer& GLESMemoryAllocator::buffer_allocate()
 {
     GLESBuffer& buffer = data.buffers.add(GLESBuffer());
-    buffer.self_id = (data.buffers.count - 1) & MaxValue<ResourceID>;
+    buffer.self = ResourceID((data.buffers.count - 1) & MaxValue<ResourceID>);
     return buffer;
 }
 
@@ -287,7 +287,7 @@ GLESMemoryAllocator::GLESRenderTarget& GLESMemoryAllocator::render_target_alloca
 {
     RenderTargetID rt_id = data.render_targets.add(GLESRenderTarget());
     GLESRenderTarget& rt = render_target_get(rt_id);
-    rt.self_id = rt_id;
+    rt.self = rt_id;
     return rt;
 
 }
@@ -323,7 +323,7 @@ RenderTargetID GLESMemoryAllocator::allocate_render_target_from_info(const Rende
     rt.framebuffer = render_target_allocate_handle();
     render_target_bind_texture(rt.framebuffer, rt.color_buffer);
 
-    return rt.self_id;
+    return rt.self;
 }
 
 void GLESMemoryAllocator::render_target_bind_texture(GLID render_target, GLID texture)

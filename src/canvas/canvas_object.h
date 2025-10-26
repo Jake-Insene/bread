@@ -35,6 +35,7 @@ struct CanvasObject : Object
     } data;
     
     void init(const CreateInfo&);
+    void deinit();
 
     void enter();
     void exit();

@@ -123,8 +123,17 @@ void String::_set_from_unsigned(u64 integer)
     set(StringView((char*)(result.result + result.begin), result.len));
 }
 
+void String::_set_from_float(f64 fp)
+{
+    StringResult result = StringUtility::fp_to_string(fp, 2);
+    set(StringView((char*)(result.result + result.begin), result.len));
+}
+
 void String::_add_str_view(StringView str)
 {
+    if (str.len == 0)
+        return;
+
     usize old_count = count;
     resize(count + str.len);
     mem::copy(chars.add(old_count), str);
@@ -139,6 +148,12 @@ void String::_add_from_signed(i64 integer)
 void String::_add_from_unsigned(u64 integer)
 {
     StringResult result = StringUtility::integer_to_string(integer, 10);
+    add(StringView((char*)(result.result + result.begin), result.len));
+}
+
+void String::_add_from_float(f64 fp)
+{
+    StringResult result = StringUtility::fp_to_string(fp, 2);
     add(StringView((char*)(result.result + result.begin), result.len));
 }
 

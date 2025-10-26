@@ -110,13 +110,10 @@ void XAudio2Driver::source_voice_play(Audio::SourceVoiceID sv_id)
 	SourceVoice& sv = _get_source_voice(sv_id);
 	sv.is_playing = true;
 
-	XAUDIO2_BUFFER buffer =
-	{
-		.Flags = XAUDIO2_END_OF_STREAM,
-		.AudioBytes = (UINT32)sv.buffer.len,
-		.pAudioData = sv.buffer.ptr(),
-		.PlayBegin = 0,
-	};
+	XAUDIO2_BUFFER buffer = {};
+	buffer.Flags = XAUDIO2_END_OF_STREAM;
+	buffer.AudioBytes = (UINT32)sv.buffer.len;
+	buffer.pAudioData = sv.buffer.ptr();
 
 	sv.sv_xaudio->SubmitSourceBuffer(&buffer);
 	sv.sv_xaudio->Start(0);
@@ -128,13 +125,10 @@ void XAudio2Driver::source_voice_keep_playing(Audio::SourceVoiceID sv_id)
 
 	if (sv.callback->state == VOICE_STATE_STREAM_END)
 	{
-		XAUDIO2_BUFFER buffer =
-		{
-			.Flags = XAUDIO2_END_OF_STREAM,
-			.AudioBytes = (UINT32)sv.buffer.len,
-			.pAudioData = sv.buffer.ptr(),
-			.PlayBegin = 0,
-		};
+		XAUDIO2_BUFFER buffer = {};
+		buffer.Flags = XAUDIO2_END_OF_STREAM;
+		buffer.AudioBytes = (UINT32)sv.buffer.len;
+		buffer.pAudioData = sv.buffer.ptr();
 
 		sv.sv_xaudio->SubmitSourceBuffer(&buffer);
 		sv.callback->state = VOICE_STATE_UNKNOWN;

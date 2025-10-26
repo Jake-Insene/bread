@@ -1,9 +1,9 @@
 #include "canvas/button.h"
 
-#include "graphics/viewport.h"
+#include "graphics/render_manager.h"
 #include "input/input.h"
 #include "math/rect_2d.h"
-#include "resource/resource_manager.h"
+#include "resource/texture.h"
 
 
 void Button::_bind_vtable(VTable& vtable)
@@ -32,7 +32,8 @@ void Button::render()
     draw_canvas_element(
         get_global_transform(), current_texture->texture_id, Rect2D(Vector2(), get_size()), 
         Rect2D(Vector2(), texture_extent),
-        Color(255, 255, 255, 255), Viewport::RENDER_FLAG_NONE
+        Color(255, 255, 255, 255), 
+        RenderManager::RENDER_FLAG_NONE
     );
 }
 
