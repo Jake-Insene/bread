@@ -2,6 +2,11 @@
 #include "core/header.h"
 
 
+/*
+* Contains simple routines for iterators.
+* 
+* @param Iterator Must implement begin()/end()
+*/
 template<typename Iterator, typename T>
 struct [[nodiscard]] BaseIterator
 {
@@ -21,14 +26,14 @@ struct [[nodiscard]] BaseIterator
 	}
 
 	template<typename Fn>
-	void for_each(Fn fn)
+	void for_each(Fn&& fn)
 	{
 		using ItFnComplete1 = void(*)(T&, usize);
 		using ItFnComplete2 = void(*)(const T&, usize);
 		
 		const Iterator& it = static_cast<const Iterator&>(*this);
 		usize index = 0;
-		for (auto& item : it)
+		for (auto&& item : it)
 		{
 			if constexpr (IsAnyOf<Fn, ItFnComplete1, ItFnComplete2>)
 			{
@@ -42,7 +47,7 @@ struct [[nodiscard]] BaseIterator
 	}
 
 	template<typename Fn>
-	Iterator& transform(Fn op)
+	Iterator& transform(Fn&& op)
 	{
 		Iterator& iterable = static_cast<Iterator&>(*this);
 

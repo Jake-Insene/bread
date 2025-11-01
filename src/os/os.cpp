@@ -47,7 +47,7 @@ void OS::unmap_memory(Slice<u8> memory)
 	PlatformOS::unmap_memory(memory);
 }
 
-OS::ThreadID OS::thread_create(ThreadFn fn, Opaque arg)
+OS::ThreadID OS::thread_create(ThreadFn fn, Opaque* arg)
 {
 	return PlatformOS::thread_create(fn, arg);
 }

@@ -3,7 +3,7 @@
 #include "os/os.h"
 
 
-Thread Thread::create(OS::ThreadFn fn, Opaque arg)
+Thread Thread::create(OS::ThreadFn fn, Opaque* arg)
 {
     return Thread
     {

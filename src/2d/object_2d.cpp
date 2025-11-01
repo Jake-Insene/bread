@@ -1,6 +1,7 @@
 #include "2d/object_2d.h"
 
 #include "graphics/render_manager.h"
+#include "resource/material.h"
 
 
 
@@ -9,14 +10,15 @@ void Object2D::_bind_vtable(Object2D::VTable& vtable)
     BindVTable(vtable, transform_changed, &Object2D::transform_changed);
 }
 
-void Object2D::set_material(MaterialID new_material)
+void Object2D::set_material(Material* new_material)
 {
-    RenderManager::item_set_material(get_render_item(), new_material);
+    data.material = new_material;
+    RenderManager::item_set_material(get_render_item(), new_material->material_id);
 }
 
-MaterialID Object2D::get_material()
+Material* Object2D::get_material()
 {
-    return RenderManager::item_get_material(get_render_item());
+    return data.material;
 }
 
 void Object2D::init(const CreateInfo&)

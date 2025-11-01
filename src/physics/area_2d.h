@@ -39,6 +39,6 @@ struct Area2D : Object2D
     void set_residence_mask(CollisionMask mask);
     [[nodiscard]] CollisionMask get_residence_mask() const { return data.residence_mask; }
 
-    static void _on_body_enter(Opaque _this, Object2D* obj);
-    static void _on_body_exit(Opaque _this, Object2D* obj);
+    static void _on_body_enter(Opaque* _this, Object2D* obj);
+    static void _on_body_exit(Opaque* _this, Object2D* obj);
 };

@@ -2,6 +2,7 @@
 
 #include "debug/fail.h"
 #include "log/log.h"
+#include "mem/utils.h"
 #include "os/os.h"
 
 
@@ -56,6 +57,7 @@ namespace mem
 
     void GenericAllocator::check_integrity()
     {
+#if DEBUG
         for (usize i = 0; i < page_count; i++)
         {
             usize page_size_accumulator = 0;
@@ -69,6 +71,7 @@ namespace mem
 
             DebugAssert(page_size_accumulator == page.bytes.len, "allocator corruption");
         }
+#endif
     }
     
     Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
@@ -140,9 +143,7 @@ namespace mem
                                 if (allocated_mem->next)
                                     allocated_mem->next->prev = allocated_mem;
 
-#if DEBUG
                                 check_integrity();
-#endif
                             }
                             else
                             {
@@ -176,9 +177,8 @@ namespace mem
                         }
 
                         allocated_mem->tags |= Allocated;
-#if DEBUG
                         check_integrity();
-#endif
+
                         return Slice<u8>
                         {
                             aligned_base,
@@ -225,9 +225,9 @@ namespace mem
                 allocation_header->next = fill_header;
             }
         }
-#if DEBUG
+
         check_integrity();
-#endif
+
         return Slice<u8>
         {
             aligned_mem,
@@ -242,11 +242,9 @@ namespace mem
         Header* header = get_header(ptr);
         DebugAssert(header->tags & Allocated, "the given block is already free.");
 
-#if DEBUG
         check_integrity();
-#endif
 
-        if(header->len >= new_size)
+        if(mem::align_up(new_size, alignment) <= header->len)
             return true;
 
         return false;
@@ -283,9 +281,7 @@ namespace mem
             header = header->next;
         }
 
-#if DEBUG
         check_integrity();
-#endif
     }
         
     Allocator GenericAllocator::allocator()

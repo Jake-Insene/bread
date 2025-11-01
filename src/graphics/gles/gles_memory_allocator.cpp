@@ -174,16 +174,43 @@ void GLESMemoryAllocator::buffer_bind_and_update_memory(GLID buffer, usize offse
 {
     gl.glBindBuffer(target, buffer);
 
-    if (umh == UMHWriteOnly)
+#if BREAD_WIN32
+    constexpr GLbitfield mask = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
+#elif BREAD_ANDROID
+    constexpr GLbitfield mask = GL_MAP_WRITE_BIT;
+#endif
+
+    switch (umh)
     {
-        void* dest_ptr = gl.glMapBufferRange(target, offset, mem.len, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-        Slice<u8> dest = Slice{ (u8*)dest_ptr, mem.len };
+    case UMHNone:
+        gl.glBufferSubData(target, offset, mem.len, mem.ptr());
+        break;
+    case UMHWriteOnly:
+    {
+        u8* dest_ptr = reinterpret_cast<u8*>(
+            gl.glMapBufferRange(
+                target, offset, mem.len,
+                mask
+            )
+            );
+        Slice<u8> dest = Slice{ dest_ptr, mem.len };
         mem::copy(dest, mem);
         gl.glUnmapBuffer(target);
     }
-    else
+        break;
+    case UMHWriteOnlyUnsynchronized:
     {
-        gl.glBufferSubData(target, offset, mem.len, mem.ptr());
+        u8* dest_ptr = reinterpret_cast<u8*>(
+            gl.glMapBufferRange(
+                target, offset, mem.len,
+                mask | GL_MAP_UNSYNCHRONIZED_BIT
+            )
+            );
+        Slice<u8> dest = Slice{ dest_ptr, mem.len };
+        mem::copy(dest, mem);
+        gl.glUnmapBuffer(target);
+    }
+        break;
     }
 }
 

@@ -77,5 +77,5 @@ struct Body2D : Object2D
     void set_collision_mask(CollisionMask mask);
     [[nodiscard]] CollisionMask get_collision_mask() const { return data.collision_mask; }
 
-    static void _on_body_collide(Opaque _this, Object2D* obj);
+    static void _on_body_collide(Opaque* _this, Object2D* obj);
 };

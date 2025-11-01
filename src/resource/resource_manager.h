@@ -4,13 +4,13 @@
 #include "collections/string_map.h"
 #include "graphics/structs.h"
 #include "mem/allocator.h"
-#include "resource/font.h"
-#include "resource/image.h"
-#include "resource/texture.h"
-#include "resource/sound.h"
-#include "resource/sprite_animation.h"
-#include "resource/tile_set.h"
+#include "resource/resource.h"
 
+
+struct Image;
+struct SpriteAnimation;
+struct TileSet;
+struct Texture;
 
 
 struct ResourceManager
@@ -53,6 +53,7 @@ struct ResourceManager
     [[nodiscard]] static Result<Resource*, Error> _load_texture_2d(StringView path, const TextureLoadInfo& load_info);
     [[nodiscard]] static Result<Resource*, Error> _load_sound(StringView path);
     [[nodiscard]] static Result<Resource*, Error> _load_font(StringView path);
+    [[nodiscard]] static Result<Resource*, Error> _load_material(StringView path);
 };
 
 

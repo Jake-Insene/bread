@@ -1,6 +1,5 @@
 #define Input(N) layout(location = N) in
 #define Output(N) layout(location = N) out
-#define InputOutput(N) layout(location = N) inout
 
 // Common Uniform Data
 layout(std140, binding = 0) uniform SceneUniform

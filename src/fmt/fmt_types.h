@@ -35,35 +35,35 @@ constexpr FormatType __GetFormatType()
 {
 	using TypeNoCR = RemoveConst<RemoveReference<T>>;
 
-	if constexpr (IsSame<T, bool>)
+	if constexpr (IsSame<TypeNoCR, bool>)
 	{
 		return FormatType::Bool;
 	}
-	else if constexpr (IsSigned<T>)
+	else if constexpr (IsSigned<TypeNoCR>)
 	{
 		return FormatType::Signed;
 	}
-	else if constexpr (IsUnsigned<T>)
+	else if constexpr (IsUnsigned<TypeNoCR>)
 	{
 		return FormatType::Unsigned;
 	}
-	else if constexpr (IsSame<T, f32>)
+	else if constexpr (IsSame<TypeNoCR, f32>)
 	{
 		return FormatType::Float32;
 	}
-	else if constexpr (IsSame<T, f64>)
+	else if constexpr (IsSame<TypeNoCR, f64>)
 	{
 		return FormatType::Float64;
 	}
-	else if constexpr (IsPointer<T> && !IsAnyOf<T, const char*, char*>)
+	else if constexpr (IsPointer<TypeNoCR>)
 	{
 		return FormatType::Pointer;
 	}
-	else if constexpr (IsSame<T, String>)
+	else if constexpr (IsSame<TypeNoCR, String>)
 	{
 		return FormatType::String;
 	}
-	else if constexpr (IsSame<T, StringView>)
+	else if constexpr (IsSame<TypeNoCR, StringView>)
 	{
 		return FormatType::StringView;
 	}
@@ -71,7 +71,7 @@ constexpr FormatType __GetFormatType()
 	{
 		return FormatType::CString;
 	}
-	else if constexpr (IsSlice<T>)
+	else if constexpr (IsSlice<TypeNoCR>)
 	{
 		return FormatType::Slice;
 	}

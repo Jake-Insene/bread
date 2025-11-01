@@ -34,7 +34,7 @@ void Win32EGL::initialize(const mem::Allocator&)
 {
 	platform_get_proc = &get_proc_address;
    
-	data.current_window = Engine::get_main_window().get_native_handle().cast<HWND>();
+	data.current_window = reinterpret_cast<HWND>(Engine::get_main_window().get_native_handle());
 	data.device_context = GetDC(Win32EGL::data.current_window);
 
 	gl_lib = LoadLibraryA("opengl32.dll");
@@ -62,7 +62,7 @@ void Win32EGL::initialize(const mem::Allocator&)
 	wglMakeCurrent(data.device_context, tmp_ctx);
 
 	wgl.wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
-
+	
 	int attribs[] =
 	{
 		WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
@@ -70,10 +70,12 @@ void Win32EGL::initialize(const mem::Allocator&)
 		WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
 #if DEBUG
 		WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_DEBUG_BIT_ARB,
+#else
+		WGL_CONTEXT_OPENGL_NO_ERROR_ARB, GL_TRUE,
 #endif
 		0
 	};
-
+	
 	HGLRC real_context = wgl.wglCreateContextAttribsARB(data.device_context, 0, attribs);
 	DebugAssert(real_context, "couldn't create the OpenGL context");
 

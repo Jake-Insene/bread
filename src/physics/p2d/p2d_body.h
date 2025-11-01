@@ -33,7 +33,7 @@ struct [[nodiscard]] P2DBody
     Physics2D::CollisionMask residence_mask;
     Physics2D::CollisionMask collision_mask;
 
-    Opaque _this;
+    Opaque* _this;
     Physics2D::EventOnCollide on_collide;
 
     bool fixed_rotation;

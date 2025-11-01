@@ -3,6 +3,13 @@
 #include "graphics/graphics.h"
 #include "io/file.h"
 #include "resource/resource_manager_internal.h"
+#include "resource/font.h"
+#include "resource/image.h"
+#include "resource/material.h"
+#include "resource/texture.h"
+#include "resource/sound.h"
+#include "resource/sprite_animation.h"
+#include "resource/tile_set.h"
 
 #include <external/stb_image.h>
 
@@ -57,6 +64,12 @@ void ResourceManager::shutdown()
             ts->destroy();
         }
         break;
+        case RESOURCE_MATERIAL:
+        {
+            Material* ma = (Material*)it.second;
+            ma->destroy();
+        }
+            break;
         default:
             break;
         }
@@ -116,6 +129,11 @@ Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
         return MakeError(ResourceNotFound);
     }
     break;
+    case RESOURCE_MATERIAL:
+    {
+        return _load_material(path);
+    }
+        break;
     default:
         break;
     }
@@ -215,7 +233,7 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
     }
     else
     {
-        RMDebugInfo("Loading the texture '{}'...", path);
+        RMDebugInfo("Loading texture '{}'...", path);
         tex = _create_resource<Texture2D>();
         tex->path.set(path);
         
@@ -232,7 +250,6 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
         Graphics::texture_set_image(tex->texture_id, image);
 
         data.cached_images.insert(image, tex);
-        RMDebugInfo("'{}' was loaded correctly.", path);
     }
     
     return tex;
@@ -272,5 +289,23 @@ Result<Resource*, Error> ResourceManager::_load_font(StringView path)
 
     (void)place_resource(path, new_font);
     return new_font;
+}
+
+Result<Resource*, Error> ResourceManager::_load_material(StringView path)
+{
+    if (data.resources.has(path))
+    {
+        return (Material*)data.resources.get(path);
+    }
+
+    Material* new_material = _create_resource<Material>();
+    Error load_result = new_material->load_from_file(path, "");
+    if (!load_result)
+    {
+        return load_result;
+    }
+
+    (void)place_resource(path, new_material);
+    return new_material;
 }
 

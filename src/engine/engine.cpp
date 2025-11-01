@@ -29,6 +29,9 @@ void Engine::initialize()
     data.allocator = {};
     auto allocator = data.allocator.allocator();
 
+    // Initilizing the core components
+    Log::debug("[Engine]: Initializing...");
+
     // To use thread and mutexes.
     OS::initialize(allocator);
 

@@ -18,6 +18,9 @@ enum ErrorCode : usize
 	InvalidResourceType,
 
 	ImageCorrupted,
+
+	// Graphics
+	MaterialCompilationFail,
 };
 
 

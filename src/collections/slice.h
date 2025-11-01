@@ -1,6 +1,7 @@
 #pragma once
 #include "core/types.h"
 #include "core/templates.h"
+#include "debug/assertion.h"
 
 
 
@@ -36,8 +37,12 @@ struct [[nodiscard]] Slice
         return *this;
     }
     
-    [[nodiscard]] constexpr T& operator[](const usize index);
-    [[nodiscard]] constexpr const T& operator[](const usize index) const;
+    template<typename Self>
+    [[nodiscard]] constexpr auto& operator[](this Self& self, const usize index)
+    {
+        DebugAssert(index < self.len, "index out of range");
+        return self.items[index];
+    }
 
     [[nodiscard]] constexpr T* begin() { return items; }
     [[nodiscard]] constexpr T* begin() const { return items; }
@@ -50,47 +55,22 @@ struct [[nodiscard]] Slice
 
     [[nodiscard]] constexpr bool null() const { return items == nullptr; }
 
-    constexpr Slice<T> add(const usize offset) const;
-    constexpr Slice<T> sub(const usize offset) const;
+    constexpr Slice<T> add(const usize offset) const
+    {
+        DebugAssert(ptr() && ((len - offset) > 0 || (len - offset) <= len), "invalid offset");
+        return Slice(items + offset, len - offset);
+    }
 
-    constexpr Slice<T> slice(usize count) const;
+    constexpr Slice<T> sub(const usize offset) const
+    {
+        DebugAssert(ptr() && ((len + offset) >= len), "invalid offset");
+        return Slice(items - offset, len + offset);
+    }
+
+    constexpr Slice<T> slice(usize count) const
+    {
+        DebugAssert(count <= len, "items out of range");
+        return Slice<T>(items, count);
+    }
 };
-
-#include "debug/assertion.h"
-
-template<typename T>
-[[nodiscard]] constexpr T& Slice<T>::operator[](const usize index)
-{
-    DebugAssert(index < len, "index out of range");
-    return items[index];
-}
-
-template<typename T>
-[[nodiscard]] constexpr const T& Slice<T>::operator[](const usize index) const
-{
-    DebugAssert(index < len, "index out of range");
-    return items[index];
-}
-
-template<typename T>
-constexpr Slice<T> Slice<T>::add(const usize offset) const
-{
-    DebugAssert(ptr() && ((len - offset) > 0 || (len - offset) <= len), "invalid offset");
-    return Slice(items + offset, len - offset);
-}
-
-template<typename T>
-constexpr Slice<T> Slice<T>::sub(const usize offset) const
-{
-    DebugAssert(ptr() && ((len + offset) >= len), "invalid offset");
-    return Slice(items - offset, len + offset);
-}
-
-template<typename T>
-constexpr Slice<T> Slice<T>::slice(usize count) const
-{
-    DebugAssert(count <= len, "items out of range");
-    return Slice<T>(items, count);
-}
-
 

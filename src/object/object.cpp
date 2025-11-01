@@ -118,7 +118,7 @@ void Object::add_child(Object* request_child)
 
 void Object::remove_child(Object* child)
 {
-    data.childs.remove_it(data.childs.iter().find(child));
+    data.childs.remove(child);
     ObjectCallRef(child, exit);
     ObjectAllocator::destroy_object(child);
 }

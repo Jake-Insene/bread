@@ -17,11 +17,11 @@ static void _load_theme(stbtt_fontinfo* font, Font::FontTheme& theme)
 
         i32 width;
         i32 height;
-        Opaque bitmap = stbtt_GetCodepointBitmap(
+        Opaque* bitmap = reinterpret_cast<Opaque*>(stbtt_GetCodepointBitmap(
             font, 0.f, stbtt_ScaleForPixelHeight(font, f32(theme.font_size)), (int)glyph_index, &width, &height, 0, 0
-        );
+        ));
 
-        auto pixels = Slice(bitmap.cast<u8*>(), width * height);
+        auto pixels = Slice(bitmap->cast<u8*>(), width * height);
 
         glyph.char_texture = Graphics::create_texture(
             TextureCreateInfo
@@ -37,7 +37,7 @@ static void _load_theme(stbtt_fontinfo* font, Font::FontTheme& theme)
         
         glyph.advance.x = width;
         glyph.advance.y = height;
-        stbtt_FreeBitmap(bitmap.cast<u8*>(), nullptr);
+        stbtt_FreeBitmap(bitmap->cast<u8*>(), nullptr);
     }
 }
 

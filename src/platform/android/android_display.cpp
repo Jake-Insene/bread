@@ -25,9 +25,9 @@ void Display::window_set_size(Display::WindowID, const Vector2I&)
 {
 }
 
-Opaque Display::window_get_native_handle(Display::WindowID)
+MemoryAddress Display::window_get_native_handle(Display::WindowID)
 {
-    return AndroidEngine::data.app->window;
+    return reinterpret_cast<MemoryAddress>(AndroidEngine::data.app->window);
 }
 
 void AndroidDisplay::update_native_size(Vector2I new_size)

@@ -16,6 +16,7 @@ enum ResourceType
     RESOURCE_FONT,
     RESOURCE_SPRITE_ANIMATION,
     RESOURCE_TILE_SET,
+    RESOURCE_MATERIAL,
  };
 
 struct ResourceTypeSpecification

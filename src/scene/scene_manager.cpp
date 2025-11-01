@@ -2,9 +2,9 @@
 
 #include "2d/camera_2d.h"
 #include "canvas/canvas_object.h"
-#include "debug/debug.h"
 #include "debug/profiler.h"
 #include "engine/engine.h"
+#include "graphics/graphics.h"
 #include "graphics/viewport.h"
 #include "graphics/render_manager.h"
 #include "input/input.h"
@@ -280,7 +280,7 @@ void SceneManager::_try_clear_root_canvas()
         if (gui_root == nullptr || !gui_root->has_mark(Object::MARK_QUEUE_FREE))
             continue;
 
-        data.root_canvas.remove(i);
+        data.root_canvas.remove_at(i);
         i--;
     }
 }

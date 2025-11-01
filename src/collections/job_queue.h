@@ -9,8 +9,8 @@ struct [[nodiscard]] JobQueue
 {
 	struct JobInfo
 	{
-		void(*func)(Opaque arg);
-		Opaque arg;
+		void(*func)(Opaque* arg);
+		Opaque* arg;
 	};
 
 	mem::Allocator allocator;
@@ -31,8 +31,8 @@ struct [[nodiscard]] JobQueue
 
 		JobInfo job =
 		{
-			.func = [](Opaque arg) { (*arg.cast<Fn*>())(); },
-			.arg = fn_mem,
+			.func = [](Opaque* arg) { (*arg->cast<Fn*>())(); },
+			.arg = reinterpret_cast<Opaque*>(fn_mem),
 		};
 
 		mutex.lock();

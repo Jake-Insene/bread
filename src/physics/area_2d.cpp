@@ -13,11 +13,11 @@ void Area2D::init(const CreateInfo&)
     data.area_id = Physics2D::create_area(this);
     Physics2D::EventOnBodyEnter event_on_body_enter;
     event_on_body_enter.bind(&_on_body_enter);
-    Physics2D::area_set_on_body_enter(data.area_id, this, event_on_body_enter);
+    Physics2D::area_set_on_body_enter(data.area_id, reinterpret_cast<Opaque*>(this), event_on_body_enter);
 
     Physics2D::EventOnBodyExit event_on_body_exit;
     event_on_body_exit.bind(&_on_body_exit);
-    Physics2D::area_set_on_body_exit(data.area_id, this, event_on_body_exit);
+    Physics2D::area_set_on_body_exit(data.area_id, reinterpret_cast<Opaque*>(this), event_on_body_exit);
 }
 
 void Area2D::deinit()
@@ -52,9 +52,9 @@ void Area2D::set_residence_mask(CollisionMask mask)
     Physics2D::area_set_residence_mask(data.area_id, mask);
 }
 
-void Area2D::_on_body_enter(Opaque _this, Object2D* obj)
+void Area2D::_on_body_enter(Opaque* _this, Object2D* obj)
 {
-    Area2D* area = _this.cast<Area2D*>();
+    Area2D* area = _this->cast<Area2D*>();
 
     if (area->on_body_enter.has_func() == false)
         return;
@@ -62,9 +62,9 @@ void Area2D::_on_body_enter(Opaque _this, Object2D* obj)
     area->on_body_enter.call(Object::cast<Body2D>(obj));
 }
 
-void Area2D::_on_body_exit(Opaque _this, Object2D* obj)
+void Area2D::_on_body_exit(Opaque* _this, Object2D* obj)
 {
-    Area2D* area = _this.cast<Area2D*>();
+    Area2D* area = _this->cast<Area2D*>();
 
     if (area->on_body_exit.has_func() == false)
         return;

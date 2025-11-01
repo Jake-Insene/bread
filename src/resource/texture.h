@@ -1,8 +1,8 @@
 #pragma once
 #include "resource/resource.h"
-#include "resource/resource_id.h"
-#include "graphics/graphics.h"
+#include "graphics/graphics_types.h"
 #include "math/vec2.h"
+
 
 // A group of pixels allocated in the gpu.
 struct Texture : Resource

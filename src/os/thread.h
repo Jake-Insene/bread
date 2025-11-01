@@ -5,7 +5,7 @@ struct [[nodiscard]] Thread
 {
 	OS::ThreadID id;
 
-	static Thread create(OS::ThreadFn fn, Opaque arg);
+	static Thread create(OS::ThreadFn fn, Opaque* arg);
 
 	void destroy() const;
 

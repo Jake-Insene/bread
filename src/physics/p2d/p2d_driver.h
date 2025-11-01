@@ -111,7 +111,7 @@ struct P2DDriver
     static Physics2D::CollisionMask body_get_residence_mask(Physics2D::BodyID body_id);
     static void body_set_collision_mask(Physics2D::BodyID body_id, Physics2D::CollisionMask mask);
     static Physics2D::CollisionMask body_get_collision_mask(Physics2D::BodyID body_id);
-    static void body_set_on_collide(Physics2D::BodyID body_id, Opaque _this, Physics2D::EventOnCollide on_collide);
+    static void body_set_on_collide(Physics2D::BodyID body_id, Opaque* _this, Physics2D::EventOnCollide on_collide);
 
     // Area
     static void area_set_shape(Physics2D::AreaID area_id, const Shape2D& shape);
@@ -121,8 +121,8 @@ struct P2DDriver
     static void area_set_residence_mask(Physics2D::AreaID area_id, Physics2D::CollisionMask mask);
     static Physics2D::CollisionMask area_get_residence_mask(Physics2D::AreaID area_id);
 
-    static void area_set_on_body_enter(Physics2D::AreaID area_id, Opaque _this, Physics2D::EventOnBodyEnter on_body_enter);
-    static void area_set_on_body_exit(Physics2D::AreaID area_id, Opaque _this, Physics2D::EventOnBodyExit on_body_exit);
+    static void area_set_on_body_enter(Physics2D::AreaID area_id, Opaque* _this, Physics2D::EventOnBodyEnter on_body_enter);
+    static void area_set_on_body_exit(Physics2D::AreaID area_id, Opaque* _this, Physics2D::EventOnBodyExit on_body_exit);
 
     // Property
     static void property_change(StringView property_name, PropertyValue new_value);

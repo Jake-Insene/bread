@@ -11,6 +11,9 @@ static constexpr EGLint context_attributes_es31[] =
 {
     EGL_CONTEXT_MAJOR_VERSION, 3, // OpenGL ES 3.1
     EGL_CONTEXT_MINOR_VERSION, 1,
+#if !defined(DEBUG)
+    EGL_CONTEXT_OPENGL_NO_ERROR_KHR, EGL_TRUE,
+#endif
     EGL_NONE
 };
 
@@ -18,6 +21,9 @@ static constexpr EGLint context_attributes_es32[] =
 {
     EGL_CONTEXT_MAJOR_VERSION, 3, // OpenGL ES 3.2
     EGL_CONTEXT_MINOR_VERSION, 2,
+#if !defined(DEBUG)
+    EGL_CONTEXT_OPENGL_NO_ERROR_KHR, EGL_TRUE,
+#endif
     EGL_NONE
 };
 
@@ -75,7 +81,7 @@ void AndroidEGL::initialize(const mem::Allocator&)
     EGLint i = 0;
     for (; i < (EGLint)supported_configs.count; i++)
     {
-        auto& cfg = supported_configs[i];
+        auto& cfg = supported_configs.get(i);
         EGLint r, g, b, d, s;
         if (eglGetConfigAttrib(data.display, cfg, EGL_RED_SIZE, &r) &&
             eglGetConfigAttrib(data.display, cfg, EGL_GREEN_SIZE, &g) &&
@@ -84,7 +90,7 @@ void AndroidEGL::initialize(const mem::Allocator&)
             eglGetConfigAttrib(data.display, cfg, EGL_STENCIL_SIZE, &s) &&
             r == 8 && g == 8 && b == 8 && d == 24 && s == 8)
         {
-            data.config = supported_configs[i];
+            data.config = supported_configs.get(i);
             break;
         }
     }

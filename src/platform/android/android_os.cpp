@@ -1,5 +1,7 @@
 #include "platform/android/android_os.h"
-#include "math/values.h"
+
+#include "core/header.h"
+#include "platform/platform_header.h"
 
 
 void AndroidOS::initialize(const mem::Allocator& allocator)
@@ -20,9 +22,15 @@ void AndroidOS::shutdown()
     data.threads.destroy();
 }
 
-void AndroidOS::exit(u64 code)
+f64 AndroidOS::get_time()
 {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec + ts.tv_nsec / 1e9;
 }
+
+void AndroidOS::exit(u64 code)
+{}
 
 usize AndroidOS::get_page_size()
 {
@@ -59,7 +67,7 @@ void AndroidOS::unmap_memory(Slice<u8> memory)
     munmap(memory.items, memory.len);
 }
 
-OS::ThreadID AndroidOS::thread_create(OS::ThreadFn fn, Opaque arg)
+OS::ThreadID AndroidOS::thread_create(OS::ThreadFn fn, Opaque* arg)
 {
     return OS::ThreadID();
 }

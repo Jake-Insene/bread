@@ -3,16 +3,13 @@
 #include "input/input.h"
 
 
-Viewport Viewport::create_from_render_target(const mem::Allocator& allocator, RenderTarget rt)
+Viewport Viewport::create_from_render_target(const mem::Allocator&, RenderTarget rt)
 {
 	Viewport vp = {};
 	vp.rt = rt;
 	vp.viewport_size = Vector2I();
 	vp.clear_color = Color(0, 0, 0, 255);
 	vp.must_sync = false;
-
-	
-
 	return vp;
 }
 

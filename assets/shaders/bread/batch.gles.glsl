@@ -165,7 +165,6 @@ void main()
 
 
 #fragment
-precision mediump float;
 
 #if defined(SPRITE)
 Input(3) flat uint flags;

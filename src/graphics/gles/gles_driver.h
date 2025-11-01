@@ -54,8 +54,7 @@ struct GLESDriver
     static void render_target_set_size(RenderTargetID rt_id, const Vector2I& new_size);
     static Vector2I render_target_get_size(RenderTargetID rt_id);
 
-    static void material_compile_from_file(MaterialID material_id, StringView path, StringView defines);
-    static void material_compile_from_source(MaterialID material_id, StringView source, StringView defines);
+    static Error material_compile_shader(MaterialID material_id, const MaterialCompileInfo& cmp_info);
 
     static void _init_context();
 };

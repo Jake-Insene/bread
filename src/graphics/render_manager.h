@@ -94,10 +94,17 @@ struct RenderManager
 
         RenderItemID self = RenderItemID();
         mem::Allocator allocator;
+        
         RenderItemID parent = RenderItemID();
         Array<RenderItemID> childs;
+        
         RenderLayerMask layers = RenderLayerMask(0);
         MaterialID material;
+
+        // For ordering
+        RenderItemID prev;
+        RenderItemID next;
+        i32 z_index;
 
         Slice<u8> command_buffer = {};
         usize offset = 0;
@@ -126,6 +133,7 @@ struct RenderManager
 
     struct RenderLayer
     {
+
         Array<RenderItemID> items;
     };
 

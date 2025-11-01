@@ -9,6 +9,7 @@
 #include <Windows.h>
 #include <windowsx.h>
 #include <xaudio2.h>
+#include <dbghelp.h>
 
 #undef far
 #undef near

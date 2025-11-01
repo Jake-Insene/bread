@@ -23,7 +23,7 @@ struct AndroidOS
     {
         char name[MaxThreadNameLen];
 
-        Opaque arg;
+        Opaque* arg;
         OS::ThreadFn fn;
 
         ThreadState state;
@@ -55,13 +55,15 @@ struct AndroidOS
     static void initialize(const mem::Allocator& allocator);
     static void shutdown();
 
+    static f64 get_time();
+
     static void exit(u64 code);
     static usize get_page_size();
 
     static Slice<u8> map_memory(usize memory_size, OS::MapAccess access);
     static void unmap_memory(Slice<u8> memory);
 
-    static OS::ThreadID thread_create(OS::ThreadFn fn, Opaque arg);
+    static OS::ThreadID thread_create(OS::ThreadFn fn, Opaque* arg);
     static void thread_destroy(OS::ThreadID tid);
     static bool thread_join(OS::ThreadID tid);
     static void thread_set_name(OS::ThreadID tid, StringView new_name);

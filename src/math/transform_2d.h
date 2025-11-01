@@ -15,22 +15,26 @@ struct [[nodiscard]] Transform2D
 
     static Transform2D with_rotation(const f32 rads);
 
-    Transform2D()
+    constexpr Transform2D()
     {
         rows[0] = Vector2(1, 0);
         rows[1] = Vector2(0, 1);
         rows[2] = Vector2(0, 0);
     }
 
-    Transform2D(const Vector2 xx, const Vector2 yy, const Vector2 zz)
+    constexpr Transform2D(const Vector2 xx, const Vector2 yy, const Vector2 zz)
     {
         rows[0] = xx;
         rows[1] = yy;
         rows[2] = zz;
     }
 
-    Vector2& operator[](usize index);
-    const Vector2& operator[](usize index) const;
+    template<typename Self>
+    constexpr auto& operator[](this Self& self, usize index)
+    {
+        DebugAssert(index < 3, "index can only be 0, 1 or 2");
+        return self.rows[index];
+    }
 
     [[nodiscard]] Transform2D operator*(const Transform2D& t) const;
     [[nodiscard]] Vector2 operator*(const Vector2& t) const;

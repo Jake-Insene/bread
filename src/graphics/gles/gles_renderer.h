@@ -5,17 +5,25 @@
 #include "math/mat4.h"
 
 
-#define CheckInstanceSize(type) \
-    static_assert(\
-        sizeof(type) <= (MaxInstanceAttributeCount * sizeof(Vector4)),\
-        #type " is greater than 16 32-bit floating vec4!"\
-    );
-
 
 struct Viewport;
 
 struct GLESRenderer
 {
+    // Limits get from
+    // https://registry.khronos.org/OpenGL-Refpages/es3/html/glGet.xhtml
+    static constexpr i32 MaxInstanceAttributeCount = 16;
+
+#define CheckInstanceSize(type) \
+    static_assert(\
+        sizeof(type) <= (MaxInstanceAttributeCount * sizeof(Vector4)),\
+        #type " is greater than 16 32-bit floating point vec4!"\
+    );
+
+    static constexpr u32 MaxInstancesPerBatch = 128;
+    static constexpr u32 MaxPrimitivePointsPerBatch = 128 * 8;
+    static constexpr u32 MaxCirclesPerBatch = 128 * 4;
+
     enum BatchFlag
     {
         FLAG_FLIP_H = 0x1U,
@@ -23,13 +31,14 @@ struct GLESRenderer
         FLAG_FONT_CHAR = 0x4U,
     };
 
-    // Limits get from
-    // https://registry.khronos.org/OpenGL-Refpages/es3/html/glGet.xhtml
-    static constexpr i32 MaxInstanceAttributeCount = 16;
-
-    static constexpr u32 MaxInstancesPerBatch = 128;
-    static constexpr u32 MaxPrimitivePointsPerBatch = 128 * 8;
-    static constexpr u32 MaxCirclesPerBatch = 128 * 4;
+    enum BatchType
+    {
+        BATCH_SPRITE,
+        BATCH_SPRITE_UI,
+        BATCH_QUAD,
+        BATCH_LINES,
+        BATCH_CIRCLE,
+    };
     
     struct SpriteInstance
     {
@@ -182,12 +191,13 @@ struct GLESRenderer
         GLID global_quad_ibo;
         i32 usable_texture_units;
         
-        GLID sprite_program;
-        GLID sprite_ui_program;
-        GLID quad_program;
-        GLID lines_program;
-        GLID circles_program;
-        GLID item_program;
+        MaterialID render_material;
+        MaterialID item_material;
+        GLID current_sprite_program;
+        GLID current_sprite_ui_program;
+        GLID current_quad_program;
+        GLID current_lines_program;
+        GLID current_circles_program;
         
         SpriteBatch sprite_batch;
         SpriteUIBatch sprite_ui_batch;
@@ -215,18 +225,19 @@ struct GLESRenderer
     static void shutdown();
 
     static void update_viewport_transform(const Vector2I& viewport_size);
-
-    static void bind_program(GLID program);
-    static void bind_scene_buffer();
-    static void update_scene_uniform();
-
-    static void end_sprite_batch();
-    static void end_sprite_ui_batch();
-    static void end_quad_batch();
-    static void end_lines_batch();
-    static void end_circles_batch();
-
     static void render(Viewport* viewport);
+
+    static void _bind_program(GLID program);
+    static void _bind_scene_buffer();
+    static void _update_scene_uniform();
+
+    static void _end_sprite_batch();
+    static void _end_sprite_ui_batch();
+    static void _end_quad_batch();
+    static void _end_lines_batch();
+    static void _end_circles_batch();
+
+    static void _bind_material();
 
     static void _render_item_draw(RenderManager::RenderItem& item);
 

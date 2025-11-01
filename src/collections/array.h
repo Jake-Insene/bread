@@ -58,8 +58,11 @@ struct [[nodiscard]] Array
 {
     static constexpr usize DefaultCapacity = 4;
 
+    using Type = T;
+    using Iterator = ArrayIterator<Type>;
+
     mem::Allocator allocator = {};
-    Slice<T> items = {};
+    Slice<Type> items = {};
     usize count = 0;
 
     static Array with_allocator(const mem::Allocator& allocator)
@@ -67,7 +70,7 @@ struct [[nodiscard]] Array
         return Array
         {
             .allocator = allocator,
-            .items = allocator.array<T>(DefaultCapacity),
+            .items = allocator.array<Type>(DefaultCapacity),
             .count = 0,
         };
     }
@@ -77,17 +80,17 @@ struct [[nodiscard]] Array
         return Array
         {
             .allocator = allocator,
-            .items = allocator.array<T>(size),
+            .items = allocator.array<Type>(size),
             .count = 0,
         };
     }
 
-    static Array from_items(const mem::Allocator& allocator, Slice<T> items)
+    static Array from_items(const mem::Allocator& allocator, Slice<Type> items)
     {
         Array array =
         {
             .allocator = allocator,
-            .items = allocator.array<T>(items.len),
+            .items = allocator.array<Type>(items.len),
             .count = items.len,
         };
 
@@ -102,7 +105,7 @@ struct [[nodiscard]] Array
         Array array =
         {
             .allocator = allocator,
-            .items = allocator.array<T>(ListLen),
+            .items = allocator.array<Type>(ListLen),
             .count = ListLen,
         };
 
@@ -120,9 +123,9 @@ struct [[nodiscard]] Array
         }
     }
 
-    ArrayIterator<T> iter() const
+    Iterator iter() const
     {
-        return ArrayIterator<T>(items.items, count);
+        return Iterator(items.items, count);
     }
     
     [[nodiscard]] bool is_empty() const { return count == 0; }
@@ -139,10 +142,10 @@ struct [[nodiscard]] Array
         {
             new_cap = required_capacity;
         }
-            
-        if(!allocator.realloc(mem::to_bytes(items), sizeof(T) * new_cap, alignof(T)))
+        
+        if(!allocator.realloc(mem::to_bytes(items), sizeof(Type) * new_cap, alignof(Type)))
         {
-            auto new_items = allocator.array<T>(new_cap);
+            auto new_items = allocator.array<Type>(new_cap);
             if(items.ptr())
             {
                 mem::copy(new_items, items);
@@ -165,28 +168,33 @@ struct [[nodiscard]] Array
         return self.items[index];
     }
     
-    [[nodiscard]] T& add(const T& item)
+    [[nodiscard]] Type& add(const Type& item)
     {
         ensure_capacity(count+1);
         items[count] = item;
         return items[count++];
     }
 
-    void add_slice(Slice<T> new_items)
+    void add_slice(const Slice<Type>& new_items)
     {
         usize _count = count;
         resize(count + new_items.len);
-        Slice<T> dest = items.add(_count);
+        Slice<Type> dest = items.add(_count);
         mem::copy(dest, new_items);
     }
 
-    void replace(Slice<T> new_items)
+    void replace(Slice<Type> new_items)
     {
         resize(new_items.len);
         mem::copy(items, new_items);
     }
 
-    void remove(usize index)
+    Iterator find(const Type& item)
+    {
+        return iter().find(item);
+    }
+
+    void remove_at(usize index)
     {
         DebugAssert(index < count && count != 0, "index out of range");
         if (count == 1)
@@ -200,14 +208,15 @@ struct [[nodiscard]] Array
         }
     }
 
-    void remove_it(const ArrayIterator<T>& it)
+    void remove(const Type& item)
     {
+        auto it = iter().find(item);
         if (it == iter().end())
         {
             return;
         }
 
-        remove(iter().distance(it));
+        remove_at(iter().distance(it));
     }
 
     void resize(const usize new_size)
@@ -222,6 +231,6 @@ struct [[nodiscard]] Array
     }
     
     template<typename Self>
-    Slice<T> slice(this Self& self) { return self.items.slice(self.count); }
+    Slice<Type> slice(this Self& self) { return self.items.slice(self.count); }
 };
 

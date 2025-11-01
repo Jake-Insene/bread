@@ -90,13 +90,8 @@ Vector2I Graphics::render_target_get_size(RenderTargetID rt_id)
 	return GraphicsDriver::render_target_get_size(rt_id);
 }
 
-void Graphics::material_compile_from_file(MaterialID material_id, StringView path, StringView defines)
+Error Graphics::material_compile_shader(MaterialID material_id, const MaterialCompileInfo& cmp_info)
 {
-	GraphicsDriver::material_compile_from_file(material_id, path, defines);
-}
-
-void Graphics::material_compile_from_source(MaterialID material_id, StringView source, StringView defines)
-{
-	GraphicsDriver::material_compile_from_source(material_id, source, defines);
+	return GraphicsDriver::material_compile_shader(material_id, cmp_info);
 }
 

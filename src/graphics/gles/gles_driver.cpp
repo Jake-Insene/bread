@@ -47,9 +47,12 @@ void GLESDriver::initialize(const mem::Allocator& allocator)
     GLESMaterialManager::initialize(allocator);
     
     gl.glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &data.limits.max_texture_units);
+    
     gl.glEnable(GL_BLEND);
     gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     gl.glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    gl.glEnable(GL_CULL_FACE);
 
     _init_context();
 }
@@ -168,25 +171,20 @@ Vector2I GLESDriver::render_target_get_size(RenderTargetID rt_id)
     return GLESMemoryAllocator::render_target_get_size(rt_id);
 }
 
-void GLESDriver::material_compile_from_file(MaterialID material_id, StringView path, StringView defines)
+Error GLESDriver::material_compile_shader(MaterialID material_id, const MaterialCompileInfo& cmp_info)
 {
-    GLESMaterialManager::material_compile_from_file(material_id, path, defines);
-}
-
-void GLESDriver::material_compile_from_source(MaterialID material_id, StringView source, StringView defines)
-{
-    GLESMaterialManager::material_compile_from_source(material_id, source, defines);
+    return GLESMaterialManager::material_compile_shader(material_id, cmp_info);
 }
 
 void GLESDriver::_init_context()
 {
     // Check openGL on the system
     // Debugging
+#if SHOW_DEBUG_INFO
     Vector2I size = Engine::get_main_window().get_size();
 
-#if SHOW_DEBUG_INFO
     GLint opengl_info[] = { GL_VENDOR, GL_RENDERER, GL_VERSION };
-    for (auto name : opengl_info)
+    for (GLint name : opengl_info)
     {
         const char* str = (const char*)gl.glGetString(name);
         StringView info = StringView(str, __string_len(str));

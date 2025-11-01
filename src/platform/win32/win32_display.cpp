@@ -190,10 +190,10 @@ void Display::window_set_size(Display::WindowID wid, const Vector2I& new_size)
 	);
 }
 
-Opaque Display::window_get_native_handle(Display::WindowID wid)
+MemoryAddress Display::window_get_native_handle(Display::WindowID wid)
 {
 	Win32Display::WindowData& window_data = _get_window_data(wid);
-	return (void*)window_data.handle;
+	return MemoryAddress(window_data.handle);
 }
 
 

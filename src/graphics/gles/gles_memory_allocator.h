@@ -10,6 +10,7 @@ struct GLESMemoryAllocator
     {
         UMHNone = 0,
         UMHWriteOnly,
+        UMHWriteOnlyUnsynchronized,
     };
 
     struct GLESBuffer
@@ -68,7 +69,8 @@ struct GLESMemoryAllocator
     static void buffer_deallocate_handle(GLID buffer, usize size);
     static void buffer_fill_memory(GLID buffer, Slice<const u8> mem, GLenum target, GLenum usage);
     static void buffer_update_memory(GLID buffer, usize offset, Slice<const u8> mem, GLenum target);
-    static void buffer_bind_and_update_memory(GLID buffer, usize offset, Slice<const u8> mem, GLenum target, UpdateMemoryHint umh);
+    static void buffer_bind_and_update_memory(GLID buffer, usize offset, 
+        Slice<const u8> mem, GLenum target, UpdateMemoryHint umh);
 
     static GLID buffer_allocate_handle_and_fill(GLESBuffer& buffer, Slice<const u8> mem, 
         GLenum target, GLenum usage);

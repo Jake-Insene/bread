@@ -1,7 +1,8 @@
 #pragma once
-#include "core/types.h"
+#include "collections/string_view.h"
 #include "graphics/enums.h"
 #include "math/vec2.h"
+
 
 struct TextureCreateInfo
 {
@@ -32,4 +33,12 @@ struct RenderTargetCreateInfo
 
 struct MaterialCreateInfo
 {};
+
+struct MaterialCompileInfo
+{
+    StringView source_path;
+    StringView defines;
+    StringView vscode;
+    StringView fscode;
+};
 

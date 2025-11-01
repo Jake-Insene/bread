@@ -18,9 +18,10 @@ static inline void _mutex_unlock(SRWLOCK* srw)
     ReleaseSRWLockExclusive(srw);
 }
 
-static inline DWORD WINAPI _thread_handler(void* thread_data)
+static inline DWORD WINAPI _thread_handler(void* _arg)
 {
-    Win32OS::ThreadData* data = (Win32OS::ThreadData*)thread_data;
+    Opaque* thread_data = reinterpret_cast<Opaque*>(_arg);
+    Win32OS::ThreadData* data = thread_data->cast<Win32OS::ThreadData*>();
 
     _mutex_lock(&data->thread_srw);
     data->state = Win32OS::THREAD_STATE_RUNNING;
@@ -127,7 +128,7 @@ void Win32OS::unmap_memory(Slice<u8> memory)
     VirtualFreeEx(GetCurrentProcess(), memory.items, 0, MEM_RELEASE);
 }
 
-OS::ThreadID Win32OS::thread_create(OS::ThreadFn fn, Opaque arg)
+OS::ThreadID Win32OS::thread_create(OS::ThreadFn fn, Opaque* arg)
 {
     OS::ThreadID tid = thread_data_allocate();
     ThreadData& thread_data = thread_data_get(tid);

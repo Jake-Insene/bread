@@ -8,9 +8,10 @@ struct Slice;
 namespace io
 {
     
-struct Writer : Opaque
+struct Writer
 {
-    void(*write_fn)(Opaque, const Slice<const u8>);
+    Opaque* writable;
+    void(*write_fn)(Opaque*, const Slice<const u8>);
 
     void write(const Slice<const u8> bytes) const;
 };

@@ -24,6 +24,9 @@ struct Log
     {
 #if DEBUG
         info(fmt, Forward<TArgs>(args)...);
+#else
+        (void)fmt;
+        ((void)args, ...);
 #endif
     }
 };

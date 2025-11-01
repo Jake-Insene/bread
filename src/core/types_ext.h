@@ -1,15 +1,22 @@
 #pragma once
+#include "core/types.h"
+
+using MemoryAddress = usize;
 
 
+/*
+* Use it to operate with a object of unknown type.
+* You can't construct a Opaque type, instead you need reinterpret the
+* object pointer as an Opaque type.
+*/
 struct Opaque
 {
-    void* self;
+    Opaque() = delete;
+    Opaque(const Opaque&) = delete;
+    Opaque(Opaque&&) = delete;
 
-    constexpr Opaque() : self(nullptr) {}
-    constexpr Opaque(void* data) : self(data) {}
+    [[nodiscard]] MemoryAddress address() const { return reinterpret_cast<MemoryAddress>(this); }
 
-    [[nodiscard]] constexpr operator void* () { return self; }
-
-    template<typename T>
-    [[nodiscard]] T cast() { return reinterpret_cast<T>(self); };
+    template<typename Type>
+    [[nodiscard]] Type cast() const { return reinterpret_cast<Type>(address()); };
 };

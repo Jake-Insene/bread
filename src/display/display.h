@@ -41,5 +41,5 @@ struct Display
     static WindowID window_create();
     static Vector2I window_get_size(WindowID window_id);
     static void window_set_size(WindowID window_id, const Vector2I& new_size);
-    static Opaque window_get_native_handle(WindowID window_id);
+    static MemoryAddress window_get_native_handle(WindowID window_id);
 };

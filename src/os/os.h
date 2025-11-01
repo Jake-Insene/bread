@@ -17,7 +17,7 @@ struct OS
     };
 
     using ThreadID = ID<u32, __ThreadTag>;
-    using ThreadFn = void(*)(Opaque);
+    using ThreadFn = void(*)(Opaque*);
 
     using MutexID = ID<u32, __MutexTag>;
 
@@ -34,7 +34,7 @@ struct OS
     static Slice<u8> map_memory(usize memory_size, MapAccess access);
     static void unmap_memory(Slice<u8> memory);
 
-    static ThreadID thread_create(ThreadFn fn, Opaque arg);
+    static ThreadID thread_create(ThreadFn fn, Opaque* arg);
     static void thread_destroy(ThreadID tid);
     static bool thread_join(ThreadID tid);
     static void thread_set_name(ThreadID tid, StringView new_name);

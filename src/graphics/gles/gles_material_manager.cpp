@@ -14,7 +14,7 @@ constexpr StringView glsl_version_header =
 #endif
 
 constexpr StringView glsl_vertex_header = "#define VERTEX_SHADER\n";
-constexpr StringView glsl_fragment_header = "#define FRAGMENT_SHADER\n";
+constexpr StringView glsl_fragment_header = "precision mediump float;\n#define FRAGMENT_SHADER\n";
 
 
 enum CompileFlags
@@ -25,13 +25,11 @@ enum CompileFlags
     CompileFlagCustomShader,
 };
 
-struct ShaderCode
-{
-    StringView main_code;
-};
-
 #define ADVANCE(c, text, count) \
     c = text[0]; \
+    text = text.add(count);
+
+#define ADVANCE_NO_C(text, count) \
     text = text.add(count);
 
 static inline void _get_start_end(StringView source, StringView* start, StringView* end, StringView name)
@@ -39,14 +37,13 @@ static inline void _get_start_end(StringView source, StringView* start, StringVi
     StringView current_text = source;
     *start = source;
 
-    char c = 0;
     while (current_text.len != 0)
     {
-        ADVANCE(c, current_text, 1);
+        ADVANCE_NO_C(current_text, 1);
 
         if (current_text.equals(name))
         {
-            ADVANCE(c, current_text, name.len);
+            ADVANCE_NO_C(current_text, name.len);
 
             start->len = (current_text.items - name.len) - start->items;
             end->items = current_text.items;
@@ -54,18 +51,6 @@ static inline void _get_start_end(StringView source, StringView* start, StringVi
     }
 
     end->len = current_text.items - (end->items);
-}
-
-static inline ShaderCode _parse_shader(StringView shader_source)
-{
-    // Keep it simple for now.
-    if (shader_source.null())
-        return ShaderCode();
-
-    return ShaderCode
-    {
-        .main_code = shader_source
-    };
 }
 
 static inline void _parse_gles_shader(const StringView& program, StringView* vsstring, StringView* fsstring)
@@ -114,78 +99,20 @@ static inline void _parse_gles_shader(const StringView& program, StringView* vss
     }
 }
 
-static inline void _parse_program(const StringView& program, ShaderCode* vs, ShaderCode* fs)
-{
-    StringView* current_parsing = nullptr;
-    StringView vsstring = {};
-    StringView fsstring = {};
-    StringView current_text = program;
 
-    char c = 0;
-    while (current_text.len != 0)
-    {
-        ADVANCE(c, current_text, 1);
-        if (c != '#')
-            continue;
-
-        if (current_text.equals("vertex"))
-        {
-            ADVANCE(c, current_text, 6);
-
-            if (current_parsing)
-            {
-                current_parsing->len = (current_text.items - 7) - current_parsing->items;
-            }
-            vsstring.items = current_text.items;
-            current_parsing = &vsstring;
-        }
-        else if (current_text.equals("fragment"))
-        {
-            ADVANCE(c, current_text, 8);
-     
-            if (current_parsing)
-            {
-                current_parsing->len = (current_text.items - 9) - current_parsing->items;
-            }
-            fsstring.items = current_text.items;
-            current_parsing = &fsstring;
-        }
-    }
-
-    if (current_parsing)
-    {
-        current_parsing->len = current_text.items - current_parsing->items;
-    }
-
-    *vs = _parse_shader(vsstring);
-    *fs = _parse_shader(fsstring);
-}
 #undef ADVANCE
+#undef ADVANCE_NO_C
 
-static inline GLID _compile_shaders(StringView path, ShaderCode vscode, 
-    ShaderCode fscode, StringView defines, u32 flags)
+static inline GLID _compile_shader_for(const MaterialCompileInfo& cmp_info, StringView type_defines, 
+    StringView formed_vs, StringView formed_fs)
 {
     auto all_defines = Scoped<String>(GLESMaterialManager::get_allocator());
-    all_defines.add(defines);
-    if (fscode.main_code.ptr())
+    all_defines.add(cmp_info.defines);
+    all_defines.add(type_defines);
+    if (cmp_info.fscode.ptr())
     {
         all_defines.add("\n#define CUSTOM_FRAGMENT\n");
     }
-
-    StringView vssource = GLESMaterialManager::data.vs_batch_shader;
-    StringView fssource = GLESMaterialManager::data.fs_batch_shader;
-
-    auto new_vs_formed_code = Scoped<String>(GLESMaterialManager::get_allocator());
-    StringView vssource_start = {};
-    StringView vssource_end = {};
-    _get_start_end(vssource, &vssource_start, &vssource_end, "#VERTEXCODE");
-    fmt::format<false>(new_vs_formed_code.writer(), "{}{}{}", vssource_start, vscode.main_code, vssource_end);
-
-    StringView fssource_start = {};
-    StringView fssource_end = {};
-    auto new_fs_formed_code = Scoped<String>(GLESMaterialManager::get_allocator());
-    _get_start_end(fssource, &fssource_start, &fssource_end, "#FRAGMENTCODE");
-    fmt::format<false>(new_fs_formed_code.writer(), "{}{}{}", fssource_start, fscode.main_code, fssource_end);
 
     static constexpr i32 SourceCount = 5;
     const char* vs_sources[SourceCount] =
@@ -194,7 +121,7 @@ static inline GLID _compile_shaders(StringView path, ShaderCode vscode,
         (const char*)glsl_vertex_header.ptr(),
         (const char*)GLESMaterialManager::data.glsl_shader_header.ptr(),
         (const char*)all_defines.view().ptr(),
-        (const char*)new_vs_formed_code.view().ptr(),
+        (const char*)formed_vs.ptr(),
     };
 
     GLint vs_lengths[SourceCount] =
@@ -203,7 +130,7 @@ static inline GLID _compile_shaders(StringView path, ShaderCode vscode,
         (GLint)glsl_vertex_header.len,
         (GLint)GLESMaterialManager::data.glsl_shader_header.len,
         (GLint)all_defines.count,
-        (GLint)new_vs_formed_code.count,
+        (GLint)formed_vs.len,
     };
 
     const char* fs_sources[SourceCount] =
@@ -212,7 +139,7 @@ static inline GLID _compile_shaders(StringView path, ShaderCode vscode,
         (const char*)glsl_fragment_header.ptr(),
         (const char*)GLESMaterialManager::data.glsl_shader_header.ptr(),
         (const char*)all_defines.view().ptr(),
-        (const char*)new_fs_formed_code.view().ptr(),
+        (const char*)formed_fs.ptr(),
     };
 
     GLint fs_lengths[SourceCount] =
@@ -221,12 +148,12 @@ static inline GLID _compile_shaders(StringView path, ShaderCode vscode,
         (GLint)glsl_fragment_header.len,
         (GLint)GLESMaterialManager::data.glsl_shader_header.len,
         (GLint)all_defines.count,
-        (GLint)new_fs_formed_code.count,
+        (GLint)formed_fs.len,
     };
 
     i32 status = GL_TRUE;
     char log[512] = {};
-
+    
     GLID vs = gl.glCreateShader(GL_VERTEX_SHADER);
     gl.glShaderSource(vs, SourceCount, vs_sources, vs_lengths);
     gl.glCompileShader(vs);
@@ -238,7 +165,7 @@ static inline GLID _compile_shaders(StringView path, ShaderCode vscode,
         gl.glGetShaderInfoLog(vs, 512, &len, log);
         StringView log_view{ log, (usize)len };
 
-        Fatal("Error compiling the vertex shader: '{}':\n{}", path, log_view);
+        Fatal("Error compiling the vertex shader: '{}':\n{}", cmp_info.source_path, log_view);
     }
 
     GLID fs = gl.glCreateShader(GL_FRAGMENT_SHADER);
@@ -252,7 +179,7 @@ static inline GLID _compile_shaders(StringView path, ShaderCode vscode,
         gl.glGetShaderInfoLog(fs, 512, &len, log);
         StringView log_view{ log, (usize)len };
 
-        Fatal("Error compiling the fragment shader: '{}':\n{}", path, log_view);
+        Fatal("Error compiling the fragment shader: '{}':\n{}", cmp_info.source_path, log_view);
     }
 
     GLID program = gl.glCreateProgram();
@@ -267,7 +194,7 @@ static inline GLID _compile_shaders(StringView path, ShaderCode vscode,
         gl.glGetProgramInfoLog(program, 512, &len, log);
         StringView log_view{ log, (usize)len };
 
-        Fatal("Error linking the shader program: '{}':\n{}", path, log_view);
+        Fatal("Error linking the shader program: '{}':\n{}", cmp_info.source_path, log_view);
     }
 
     gl.glDeleteShader(vs);
@@ -276,42 +203,81 @@ static inline GLID _compile_shaders(StringView path, ShaderCode vscode,
     return program;
 }
 
-static inline GLID _compile_from_source(const StringView& path, const StringView& source, const StringView& defines, CompileFlags flags)
+static inline void _compile_shaders(GLESMaterialManager::GLESMaterial& material, const MaterialCompileInfo& cmp_info)
 {
-    ShaderCode vs = {};
-    ShaderCode fs = {};
-    if (flags & CompileFlagCustomShader)
+    constexpr StringView type_defines[] =
     {
-        _parse_program(source, &vs, &fs);
+        "#define SPRITE\n",
+        "#define SPRITE\n#define SPRITE_UI\n",
+        "#define QUAD\n",
+        "#define PRIMITIVE\n",
+        "#define CIRCLE\n",
+    };
+
+    StringView vssource = GLESMaterialManager::data.vs_batch_shader;
+    StringView fssource = GLESMaterialManager::data.fs_batch_shader;
+
+    auto new_vs_formed_code = Scoped<String>(GLESMaterialManager::get_allocator());
+    StringView vssource_start = {};
+    StringView vssource_end = {};
+    _get_start_end(vssource, &vssource_start, &vssource_end, "#VERTEXCODE");
+    fmt::format<false>(new_vs_formed_code.writer(), "{}{}{}", vssource_start, cmp_info.vscode, vssource_end);
+
+    StringView fssource_start = {};
+    StringView fssource_end = {};
+    auto new_fs_formed_code = Scoped<String>(GLESMaterialManager::get_allocator());
+    _get_start_end(fssource, &fssource_start, &fssource_end, "#FRAGMENTCODE");
+    fmt::format<false>(new_fs_formed_code.writer(), "{}{}{}", fssource_start, cmp_info.fscode, fssource_end);
+
+    GLID programs[] = {0, 0, 0, 0, 0};
+    usize i = 0;
+    for (auto def : type_defines)
+    {
+        GLID program = _compile_shader_for(cmp_info, def, new_vs_formed_code.view(), new_fs_formed_code.view());
+        if (program == GLID(0))
+            return;
+        programs[i++] = program;
     }
 
-    u32 new_flags = CompileFlagNone;
-    if (vs.main_code.ptr())
-    {
-        new_flags |= CompileFlagHasVertex;
-    }
-    if (fs.main_code.ptr())
-    {
-        new_flags |= CompileFlagHasFragment;
-    }
-
-    GLID program = _compile_shaders(
-        path, vs, fs, defines, new_flags
-    );
-    return program;
+    material.sprite_program = programs[0];
+    material.sprite_ui_program = programs[1];
+    material.quad_program = programs[2];
+    material.lines_program = programs[3];
+    material.circles_program = programs[4];
 }
 
-static inline GLID _compile_program(const StringView& program_path, const StringView& defines, CompileFlags flags)
+static inline void _destroy_shaders(GLESMaterialManager::GLESMaterial& material)
 {
-    Slice<u8> program_content = File::read_all(GLESMaterialManager::get_allocator(), program_path);
-    GLID program = _compile_from_source(
-        program_path, mem::from_bytes<char>(program_content), 
-        defines, flags
-    );
-    GLESMaterialManager::get_allocator().free(program_content);
-    return program;
-}
+    if (material.sprite_program != 0)
+    {
+        gl.glDeleteProgram(material.sprite_program);
+        material.sprite_program = 0;
+    }
 
+    if (material.sprite_ui_program != 0)
+    {
+        gl.glDeleteProgram(material.sprite_ui_program);
+        material.sprite_ui_program = 0;
+    }
+
+    if (material.quad_program != 0)
+    {
+        gl.glDeleteProgram(material.quad_program);
+        material.quad_program = 0;
+    }
+
+    if (material.lines_program != 0)
+    {
+        gl.glDeleteProgram(material.lines_program);
+        material.lines_program = 0;
+    }
+
+    if (material.circles_program != 0)
+    {
+        gl.glDeleteProgram(material.circles_program);
+        material.circles_program = 0;
+    }
+}
 
 void GLESMaterialManager::initialize(const mem::Allocator& allocator)
 {
@@ -325,30 +291,16 @@ void GLESMaterialManager::initialize(const mem::Allocator& allocator)
 
 	// Default materials
     {
-        data.sprite_material = create_material({});
-        data.materials.get(data.sprite_material).program = _compile_program("shaders/bread/batch.gles.glsl", "#define SPRITE", CompileFlagNone);
-
-        data.sprite_ui_material = create_material({});
-        data.materials.get(data.sprite_ui_material).program = _compile_program("shaders/bread/batch.gles.glsl", "#define SPRITE\n#define SPRITE_UI", CompileFlagNone);
-
-        data.quad_material = create_material({});
-        data.materials.get(data.quad_material).program = _compile_program("shaders/bread/batch.gles.glsl", "#define QUAD", CompileFlagNone);
-
-        data.lines_material = create_material({});
-        data.materials.get(data.lines_material).program = _compile_program("shaders/bread/batch.gles.glsl", "#define PRIMITIVE", CompileFlagNone);
-
-        data.circles_material = create_material({});
-        data.materials.get(data.circles_material).program = _compile_program("shaders/bread/batch.gles.glsl", "#define CIRCLE", CompileFlagNone);
+        data.render_material = create_material(MaterialCreateInfo());
+        MaterialCompileInfo cmp_info = {};
+        cmp_info.source_path = "__default__";
+        (void)material_compile_shader(data.render_material, cmp_info);
     }
 }
 
 void GLESMaterialManager::shutdown()
 {
-    destroy_material(data.sprite_material);
-    destroy_material(data.sprite_ui_material);
-    destroy_material(data.quad_material);
-    destroy_material(data.lines_material);
-    destroy_material(data.circles_material);
+    destroy_material(data.render_material);
 
     get_allocator().free(data.glsl_shader_header);
     get_allocator().free(data.batch_shader);
@@ -356,59 +308,38 @@ void GLESMaterialManager::shutdown()
 	data.materials.destroy();
 }
 
-MaterialID GLESMaterialManager::create_material(const MaterialCreateInfo& create_info)
+GLESMaterialManager::GLESMaterial& GLESMaterialManager::material_get(MaterialID material_id)
+{
+    GLESMaterial& material = data.materials.get(material_id);
+    return material;
+}
+
+MaterialID GLESMaterialManager::create_material(const MaterialCreateInfo&)
 {
 	MaterialID new_material = data.materials.add(GLESMaterial());
-	GLESMaterial& material = data.materials.get(new_material);
-	material.program = 0;
+    GLESMaterial& material = material_get(new_material);
+    material.sprite_program = 0;
+    material.sprite_ui_program = 0;
+    material.quad_program = 0;
+    material.lines_program = 0;
+    material.circles_program = 0;
 
 	return new_material;
 }
 
 void GLESMaterialManager::destroy_material(MaterialID material_id)
 {
-	GLESMaterial& material = data.materials.get(material_id);
-	if (material.program != 0)
-	{
-		gl.glDeleteProgram(material.program);
-		material.program = 0;
-	}
-
+    GLESMaterial& material = material_get(material_id);
+    _destroy_shaders(material);
 	data.materials.remove(material_id);
 }
 
-void GLESMaterialManager::material_compile_from_file(MaterialID material_id, StringView path, StringView defines)
+Error GLESMaterialManager::material_compile_shader(MaterialID material_id, const MaterialCompileInfo& cmp_info)
 {
-    GLESMaterial& material = data.materials.get(material_id);
+    GLESMaterial& material = material_get(material_id);
+    _destroy_shaders(material);
+    _compile_shaders(material, cmp_info);
 
-    if (material.program != 0)
-    {
-        gl.glDeleteProgram(material.program);
-        material.program = 0;
-    }
-
-    material.program = _compile_program(path, defines, CompileFlagCustomShader);
+    return Ok;
 }
 
-void GLESMaterialManager::material_compile_from_source(MaterialID material_id, StringView source, StringView defines)
-{
-    GLESMaterial& material = data.materials.get(material_id);
-
-    if (material.program != 0)
-    {
-        gl.glDeleteProgram(material.program);
-        material.program = 0;
-    }
-
-    material.program = _compile_from_source(
-        "__source__", source, defines, CompileFlagCustomShader
-    );
-}
-
-GLID GLESMaterialManager::material_get_program(MaterialID material_id)
-{
-    GLESMaterial& material = data.materials.get(material_id);
-    DebugAssert(material.program != 0, "invalid program");
-
-    return material.program;
-}

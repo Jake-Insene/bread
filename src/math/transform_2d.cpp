@@ -1,6 +1,5 @@
 #include "math/transform_2d.h"
 
-
 #include "math/funcs.h"
 
 
@@ -15,20 +14,7 @@ Transform2D Transform2D::with_rotation(const f32 rads)
     );
 }
 
-Vector2& Transform2D::operator[](usize index)
-{
-    DebugAssert(index < 3, "index can only be 0, 1 or 2");
-    return rows[index];
-}
-
-const Vector2& Transform2D::operator[](usize index) const
-{
-    DebugAssert(index < 3, "index can only be 0, 1 or 2");
-    return rows[index];
-}
-
-
-[[nodiscard]] Transform2D Transform2D::operator*(const Transform2D& t) const
+Transform2D Transform2D::operator*(const Transform2D& t) const
 {
     const Vector2 new_pos
     {
@@ -54,7 +40,6 @@ Vector2 Transform2D::operator*(const Vector2& t) const
 
     return new_pos;
 }
-
 
 void Transform2D::set_position(Vector2 position)
 {

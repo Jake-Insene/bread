@@ -23,7 +23,7 @@ struct Win32OS
     {
         char name[MaxThreadNameLen];
 
-        Opaque arg;
+        Opaque* arg;
         OS::ThreadFn fn;
 
         HANDLE handle;
@@ -70,7 +70,7 @@ struct Win32OS
     static Slice<u8> map_memory(usize memory_size, OS::MapAccess access);
     static void unmap_memory(Slice<u8> memory);
 
-    static OS::ThreadID thread_create(OS::ThreadFn fn, Opaque arg);
+    static OS::ThreadID thread_create(OS::ThreadFn fn, Opaque* arg);
     static void thread_destroy(OS::ThreadID tid);
     static bool thread_join(OS::ThreadID tid);
     static void thread_set_name(OS::ThreadID tid, StringView new_name);

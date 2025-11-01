@@ -13,7 +13,7 @@ void Body2D::init(const CreateInfo&)
     Physics2D::EventOnCollide event_on_collide;
     event_on_collide.bind(&_on_body_collide);
 
-    Physics2D::body_set_on_collide(data.body_id, this, event_on_collide);
+    Physics2D::body_set_on_collide(data.body_id, reinterpret_cast<Opaque*>(this), event_on_collide);
 }
 
 void Body2D::deinit()
@@ -131,9 +131,9 @@ void Body2D::set_collision_mask(CollisionMask mask)
     Physics2D::body_set_collision_mask(data.body_id, mask);
 }
 
-void Body2D::_on_body_collide(Opaque _this, Object2D* obj)
+void Body2D::_on_body_collide(Opaque* _this, Object2D* obj)
 {
-    Body2D* body = _this.cast<Body2D*>();
+    Body2D* body = _this->cast<Body2D*>();
 
     if (body->on_collide.has_func() == false)
         return;

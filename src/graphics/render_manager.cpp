@@ -166,7 +166,7 @@ void RenderManager::item_set_layers(RenderItemID render_item_id, RenderLayerMask
 		}
 		else if (old_layers & layer_mask)
 		{
-			render_layer.items.remove_it(render_layer.items.iter().find(render_item_id));
+			render_layer.items.remove(render_item_id);
 		}
 	}
 }

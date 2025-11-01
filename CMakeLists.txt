@@ -49,7 +49,6 @@ file(GLOB ENGINE_SRC
 
     src/graphics/egl/egl.cpp
     src/graphics/graphics.cpp
-    src/graphics/material.cpp
     src/graphics/render_manager.cpp
     src/graphics/render_target.cpp
     src/graphics/viewport.cpp
@@ -95,6 +94,7 @@ file(GLOB ENGINE_SRC
 
     src/resource/font.cpp
     src/resource/image.cpp
+    src/resource/material.cpp
     src/resource/resource.cpp
     src/resource/resource_manager.cpp
     src/resource/sound.cpp
@@ -123,7 +123,6 @@ if(ANDROID)
         src/platform/android/android_main.cpp
         src/platform/android/android_math.cpp
         src/platform/android/android_os.cpp
-        src/platform/android/android_time.cpp
 
         ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c
     )
@@ -140,7 +139,7 @@ elseif(WIN32)
         src/platform/win32/win32_math.cpp
         src/platform/win32/win32_os.cpp
     )
-    set(PLATFORM_LIBRARIES opengl32 xaudio2)
+    set(PLATFORM_LIBRARIES opengl32 xaudio2 dbghelp)
 endif()
 
 set(SOURCE_FILES

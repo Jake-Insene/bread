@@ -1,4 +1,6 @@
 #include "debug/debug.h"
+#include "debug/fail.h"
+#include "log/log.h"
 #include "scene/scene_manager.h"
 #include "platform/android/android_engine.h"
 #include "platform/android/android_mapped_keycodes.h"
@@ -45,7 +47,7 @@ static int32_t engine_handle_input(android_app*, AInputEvent* event)
 
                 Engine::handle_input(e);
 
-                DebugInfo("action pointer: {}, action: {}, pointer: {}", action_pointer, action, p);
+                Log::debug("action pointer: {}, action: {}, pointer: {}", action_pointer, action, p);
             }
         }
     }
@@ -111,19 +113,19 @@ void android_main(android_app* app)
             app->activity->internalDataPath,
             __string_len(app->activity->internalDataPath)
     );
-    DebugInfo("Internal data path: {}", internal_data_path);
+    Log::debug("Internal data path: {}", internal_data_path);
 
     StringView external_data_path = StringView(
             app->activity->externalDataPath,
             __string_len(app->activity->externalDataPath)
     );
-    DebugInfo("External data path: {}", external_data_path);
+    Log::debug("External data path: {}", external_data_path);
 
     StringView obb_path = StringView(
             app->activity->obbPath,
             __string_len(app->activity->obbPath)
     );
-    DebugInfo("Obb path: {}", obb_path);
+    Log::debug("Obb path: {}", obb_path);
 
     AndroidEngine::initialize();
 

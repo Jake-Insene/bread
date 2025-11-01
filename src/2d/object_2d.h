@@ -1,9 +1,12 @@
 #pragma once
-#include "graphics/graphics_types.h"
 #include "object/object.h"
+#include "graphics/graphics_types.h"
 #include "math/color.h"
 #include "math/transform_2d.h"
 #include "math/rect_2d.h"
+
+
+struct Material;
 
 
 /*
@@ -23,6 +26,7 @@ struct Object2D : Object
     struct InternalData
     {
         RenderItemID render_item;
+        Material* material;
 
         Transform2D transform{};
         Transform2D global_transform_cache{};
@@ -50,8 +54,8 @@ struct Object2D : Object
         return data.render_item;
     }
 
-    void set_material(MaterialID new_material);
-    MaterialID get_material();
+    void set_material(Material* new_material);
+    Material* get_material();
 
     /*
     * Set the object current position.

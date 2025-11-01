@@ -27,6 +27,7 @@ struct GLESVTable
     PFNGLENABLEPROC glEnable;
     PFNGLDISABLEPROC glDisable;
     PFNGLBLENDFUNCPROC glBlendFunc;
+    PFNGLCULLFACEPROC glCullFace;
     PFNGLVIEWPORTPROC glViewport;
 
     // Debug only
