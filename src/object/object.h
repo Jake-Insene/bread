@@ -365,12 +365,6 @@ struct Object
     void handle_event(const InputEvent& event) Function(FunctionInternal);
 
     /*
-    * @param mark_name The mark to enable/disable.
-    * @param value Enable/Disable.
-    */
-    void set_mark(MarkName mark_name, bool value);
-
-    /*
 	* @param mark The mark to check.
     * @return True if the mark is enable, false otherwise.
     */
@@ -379,12 +373,12 @@ struct Object
     /*
     * @param mark The mark to enable.
     */
-    void mark(MarkName mark_name) { data.marks.set(mark_name); }
+    void mark(MarkName mark_name);
    
     /*
     * @param mark The mark to disable.
     */
-    void unmark(MarkName mark_name) { data.marks.unset(mark_name); }
+    void unmark(MarkName mark_name);
 
     /*
     * @param group_bit The group bit to set.

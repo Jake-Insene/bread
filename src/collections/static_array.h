@@ -48,16 +48,11 @@ struct [[nodiscard]] StaticArray
         return array;
     }
 
-    [[nodiscard]] constexpr T& operator[](const usize index)
+    template<typename Self>
+    [[nodiscard]] constexpr auto& operator[](this Self& self, const usize index)
     {
-        DebugAssert(index < count, "index out of range");
-        return items[index];
-    }
-
-    [[nodiscard]] constexpr const T& operator[](const usize index) const
-    {
-        DebugAssert(index < count, "index out of range");
-        return items[index];
+        DebugAssert(index < self.count, "index out of range");
+        return self.items[index];
     }
 
     [[nodiscard]] constexpr T* begin() { return items; }

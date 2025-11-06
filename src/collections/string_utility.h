@@ -46,7 +46,7 @@ struct StringUtility
 			{
 				fractional_part *= 10.0f;
 				i32 digit = i32(fractional_part);
-				*it++ = '0' + digit;
+				*it++ = '0' + i8(digit);
 				fractional_part -= digit;
 			}
 		}

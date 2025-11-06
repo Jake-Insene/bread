@@ -25,7 +25,7 @@ Error Image::load(StringView file_path)
 {
     if (File::exists(file_path) == false)
     {
-        RMFatal("Couldn't load the image '{}'", file_path);
+        RMDebugInfo("Couldn't load the font '{}'", file_path);
         return MakeError(FileNotFound);
     }
 

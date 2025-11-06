@@ -12,5 +12,5 @@ struct Material : Resource
     void init();
     void destroy();
 
-    Error load_from_file(StringView path, StringView defines);
+    Error load_from_file(StringView file_path, StringView defines);
 };

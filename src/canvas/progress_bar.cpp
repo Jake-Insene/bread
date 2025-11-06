@@ -35,10 +35,22 @@ void ProgressBar::render()
 
     Vector2 fill_texture_extent = Vector2(data.fill_texture->get_size());
     Rect2D fill_src_rect = Rect2D(Vector2(0, 0), fill_texture_extent);
-    draw_canvas_element(
-        transform, data.fill_texture->texture_id, Rect2D(Vector2(), draw_size), fill_src_rect, 
-        fill_color, RenderManager::RENDER_FLAG_NONE
-    );
+    if(_draw_sprite)
+    {
+        RenderManager::render_item_draw_sprite(
+            get_render_item(), transform, data.fill_texture->texture_id,
+            Rect2D(draw_size / Vector2(2.f, -2.f), draw_size), fill_src_rect,
+            fill_color, RenderManager::RENDER_FLAG_NONE
+        );
+    }
+    else
+    {
+        draw_canvas_element(
+            transform, data.fill_texture->texture_id,
+            Rect2D(draw_size / Vector2(2.f, -2.f), draw_size), fill_src_rect,
+            fill_color, RenderManager::RENDER_FLAG_NONE
+        );
+    }
 
     // Background
     if (data.bg_texture == nullptr)
@@ -46,10 +58,22 @@ void ProgressBar::render()
 
     Vector2 bg_texture_extent = Vector2(data.bg_texture->get_size());
     Rect2D bg_src_rect = Rect2D(Vector2(0, 0), bg_texture_extent);
-    draw_canvas_element(
-        transform, data.bg_texture->texture_id, Rect2D(Vector2(), size), bg_src_rect,
-        bg_color, RenderManager::RENDER_FLAG_NONE
-    );
+    if(_draw_sprite)
+    {
+        RenderManager::render_item_draw_sprite(
+            get_render_item(), transform, data.bg_texture->texture_id, 
+            Rect2D(size / Vector2(2.f, -2.f), size), bg_src_rect,
+            bg_color, RenderManager::RENDER_FLAG_NONE
+        );
+    }
+    else
+    {
+        draw_canvas_element(
+            transform, data.bg_texture->texture_id, 
+            Rect2D(size / Vector2(2.f, -2.f), size), bg_src_rect,
+            bg_color, RenderManager::RENDER_FLAG_NONE
+        );
+    }
 }
 
 void ProgressBar::set_background_texture(Texture2D* new_bg_texture)

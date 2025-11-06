@@ -93,8 +93,14 @@ void SceneManager::step()
         data.fps_counter = data.fps_acum;
         Engine::data.fps = data.fps_counter;
         Log::info(
-            "FPS: {}, Avg Frame Time: {}, IntUp: {}, Up: {}, Phy2D: {}, Ren: {}\n"
-            "DriRen: {}, DriPresent: {}", 
+            "Frame Info: FPS: {}\n"
+            "\tAvg Frame Time: {}\n"
+            "\tInternal Update Time: {}\n"
+            "\tUpdate Time: {}\n"
+            "\tPhysics 2D Time: {}\n"
+            "\tRender Time: {}\n"
+            "\tDriver Render Time: {}\n"
+            "\tDriver Present Time: {}",
             data.fps_counter, data.delta_time, data.debug_time.internal_update_time,
             data.debug_time.update_time, data.debug_time.physics_2d_time, 
             data.debug_time.render_time, data.debug_time.driver_render_time,
@@ -233,8 +239,6 @@ void SceneManager::scene_handle_input(const InputEvent& event)
             }
             data.touched_focus.get(et.pointer) = nullptr;
         }
-
-        ObjectCallRef(data.current_scene, event, new_event);
     }
     break;
     case INPUT_EVENT_MOUSE_BUTTON:
@@ -260,8 +264,6 @@ void SceneManager::scene_handle_input(const InputEvent& event)
             }
             data.touched_focus.get(0) = nullptr;
         }
-
-        ObjectCallRef(data.current_scene, event, new_event);
     }
     break;
     default:

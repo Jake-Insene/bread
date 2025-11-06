@@ -58,6 +58,8 @@ Output(5) flat float radius;
 #define FLAG_FLIP_V 0x2U
 #define FLAG_FONT 0x4U
 
+#VERTEXCODE
+
 void main()
 {
     // Getting Vertex Index
@@ -65,32 +67,34 @@ void main()
     int index = gl_VertexID & 3;
 #endif
 
-    // Top left always
 #if defined(QUAD) || defined(CIRCLE) || defined(SPRITE)
     // Vertex
     // Indices 0, 1, 2, 2, 3, 0
-    // Top left quad
-    // 0 ->  0, -1
-    // 1 ->  1, -1
-    // 2 ->  1,  0
-    // 3 ->  0,  0
-    vec2 vertice = vec2(0, 0);
+    // Centered quad
+    // 0 ->  -0.5, -0.5
+    // 1 ->  0.5, -0.5
+    // 2 ->  0.5,  0.5
+    // 3 ->  -0.5,  0.5
+    vec2 vertice = vec2(0);
     if(index == 0)
     {
-        vertice = vec2(0, -1);
+        vertice = vec2(-0.5, -0.5);
     }
     else if(index == 1)
     {
-        vertice = vec2(1, -1);
+        vertice = vec2(0.5, -0.5);
     }
     else if(index == 2)
     {
-        vertice = vec2(1, 0);
+        vertice = vec2(0.5, 0.5);
+    }
+    else if(index == 3)
+    {
+        vertice = vec2(-0.5, 0.5);
     }
 
 #if defined(CIRCLE)
     // Always centered
-    vertice += vec2(-0.5, 0.5);
     local_position = vertice * 2.0;
     radius = input_radius;
 #endif
@@ -98,11 +102,15 @@ void main()
 
     // Getting vertex extension
 #if defined(QUAD) || defined(SPRITE)
-    vec4 VERTEX = vec4(rect.xy + (vertice.xy * rect.zw), 0, 1);
+    vec4 Vertex = vec4(rect.xy + (vertice.xy * rect.zw), 0, 1);
 #elif defined(PRIMITIVE)
-    vec4 VERTEX = vec4(input_point.x, input_point.y, 0, 1);
+    vec4 Vertex = vec4(input_point.x, input_point.y, 0, 1);
 #elif defined(CIRCLE)
-    vec4 VERTEX = vec4(vertice * 2.0 * input_radius, 0, 1);
+    vec4 Vertex = vec4(vertice * 2.0 * input_radius, 0, 1);
+#endif
+
+#if defined(CUSTOM_VERTEX)
+    Vertex = vertex(Vertex);
 #endif
     
     // Getting UV
@@ -144,25 +152,22 @@ void main()
     // Transforming
 #if defined(QUAD) || defined(SPRITE)
     mat2 matrix_transform = transform;
-    VERTEX.xy = matrix_transform * VERTEX.xy;
-    VERTEX.xy += transform_translation;
+    Vertex.xy = matrix_transform * Vertex.xy;
+    Vertex.xy += transform_translation;
 #elif defined(CIRCLE)
-    VERTEX.xy += input_point;
+    Vertex.xy += input_point;
 #endif
 
 #if !defined(SPRITE_UI)
-    VERTEX = SceneTransform * VERTEX;
+    Vertex = SceneTransform * Vertex;
 #endif
-    VERTEX = ViewportTransform * VERTEX;
+    Vertex = ViewportTransform * Vertex;
 
-#VERTEXCODE
-
-    gl_Position = VERTEX;
+    gl_Position = Vertex;
 
     // Applying color
     Color = unpackUnorm4x8(input_color);
 }
-
 
 #fragment
 
@@ -179,12 +184,14 @@ Input(5) flat float radius;
 #define FLAG_FLIP_V 0x2U
 #define FLAG_FONT 0x4U
 
+#FRAGMENTCODE
+
 void main()
 {
     COLOR = Color;
 
 #if defined(CUSTOM_FRAGMENT)
-#FRAGMENTCODE
+    COLOR = fragment(COLOR);
 #elif defined(SPRITE)
     if(bool(flags & FLAG_FONT))
     {
@@ -194,7 +201,6 @@ void main()
     {
         COLOR *= Sample(UV);
     }
-
 #elif defined(CIRCLE)
     float edge_smoothness = 0.005;
     float dist = distance(vec2(0, 0), local_position);

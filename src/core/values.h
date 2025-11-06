@@ -15,7 +15,7 @@ template<>
 inline constexpr i64 MinValue<i64> = 0x80000000'00000000 - 1;
 
 template<typename T>
-inline constexpr T MaxValue = T(~0);
+inline constexpr T MaxValue = static_cast<T>(~static_cast<T>(0));
 
 template<>
 inline constexpr i8 MaxValue<i8> = 0x7F;

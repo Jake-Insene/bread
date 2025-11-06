@@ -81,11 +81,11 @@ enum class Key
     RightAlt = 0xA5,
 };
 
-enum MouseButton
+enum class MouseButton
 {
-    MOUSE_BUTTON_LEFT = 0,
-    MOUSE_BUTTON_MIDDLE,
-    MOUSE_BUTTON_RIGHT,
+    Left = 0,
+    Middle,
+    Right,
 };
 
 

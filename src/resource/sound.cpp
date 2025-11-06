@@ -55,11 +55,11 @@ Error Sound::load(StringView file_path)
 {
     if (File::exists(file_path) == false)
     {
-        RMFatal("Couldn't load the sound file '{}'", file_path);
+        RMDebugInfo("Couldn't load the font '{}'", file_path);
         return MakeError(FileNotFound);
     }
 
-    auto allocator = ResourceManager::get_allocator();
+    auto& allocator = ResourceManager::get_allocator();
     path.set(file_path);
 
     Slice<u8> content = File::read_all(allocator, file_path);

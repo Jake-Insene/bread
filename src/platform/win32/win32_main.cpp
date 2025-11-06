@@ -4,8 +4,8 @@
 #include "platform/win32/win32_engine.h"
 
 
-#if defined(BREAD_MSVC)
-extern "C" {
+extern "C"
+{
 	int _fltused = 0;
 	__declspec(selectany) unsigned long _tls_index = 0;
 
@@ -14,10 +14,13 @@ extern "C" {
 	#pragma function(memset)
 	extern "C" void* __cdecl memset(void* dest, int c, size_t count)
 	{
-		unsigned char* p = (unsigned char*)dest;
-		while (count--)
+		if(c == 0)
 		{
-			*p++ = (unsigned char)c;
+			PlatformIntricics::setzero(Slice<u8>((u8*)dest, count));
+		}
+		else
+		{
+			mem::set(Slice<u8>((u8*)dest, count), u8(c));
 		}
 		return dest;
 	}
@@ -25,19 +28,16 @@ extern "C" {
 	#pragma function(memcpy)
 	extern "C" void* __cdecl memcpy(void* dest, const void* src, size_t count)
 	{
-		unsigned char* d = (unsigned char*)dest;
-		const unsigned char* s = (const unsigned char*)src;
-		while (count--)
-		{
-			*d++ = *s++;
-		}
+		mem::copy(Slice<u8>((u8*)dest, count), Slice<u8>((u8*)src, count));
 		return dest;
 	}
+
+	#pragma function(strlen)
+	extern "C" usize __cdecl strlen(const char* str)
+	{
+		return __string_len(str);
+	}
 }
-
-#endif
-
-#include <DbgHelp.h>
 
 LONG _exception_handler(EXCEPTION_POINTERS* ep)
 {

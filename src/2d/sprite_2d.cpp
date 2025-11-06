@@ -26,9 +26,9 @@ void Sprite2D::render()
         flags |= RenderManager::RENDER_FLAG_FLIP_V;
     }
 
-    if (centered)
+    if (!centered)
     {
-        rect.position = Vector2(rect.size.x / -2.f, rect.size.y / 2.f);
+        rect.position = Vector2(rect.size.x / 2.f, rect.size.y / -2.f);
     }
 
     draw_sprite(

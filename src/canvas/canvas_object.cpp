@@ -1,5 +1,6 @@
 #include "canvas/canvas_object.h"
 
+#include "2d/object_2d.h"
 #include "graphics/render_manager.h"
 #include "input/input.h"
 #include "scene/scene_manager.h"
@@ -100,8 +101,13 @@ Transform2D CanvasObject::get_global_transform() const
     Object* parent = get_parent();
     if (parent && parent->has_mark(MARK_CANVAS))
     {
-        CanvasObject* p_canvas = (CanvasObject*)parent;
+        CanvasObject* p_canvas = reinterpret_cast<CanvasObject*>(parent);
         return p_canvas->get_global_transform() * data.transform;
+    }
+    else if (parent && parent->has_mark(MARK_2D))
+    {
+        Object2D* p_2d = reinterpret_cast<Object2D*>(parent);
+        return p_2d->get_global_transform() * data.transform;
     }
 
     return data.transform;

@@ -1,6 +1,7 @@
 #pragma once
 #include "object/object.h"
 #include "graphics/graphics_types.h"
+#include "graphics/render_manager.h"
 #include "math/color.h"
 #include "math/transform_2d.h"
 #include "math/rect_2d.h"
@@ -27,6 +28,7 @@ struct Object2D : Object
     {
         RenderItemID render_item;
         Material* material;
+        RenderManager::RenderLayerMask render_layers;
 
         Transform2D transform{};
         Transform2D global_transform_cache{};
@@ -56,6 +58,9 @@ struct Object2D : Object
 
     void set_material(Material* new_material);
     Material* get_material();
+
+    void set_render_layer(RenderManager::RenderLayerMask render_layer);
+    RenderManager::RenderLayerMask get_render_layers();
 
     /*
     * Set the object current position.

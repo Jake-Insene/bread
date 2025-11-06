@@ -1,7 +1,6 @@
 #include "platform/win32/win32_display.h"
 
 #include "engine/engine.h"
-#include "graphics/graphics.h"
 #include "input/input.h"
 #include "scene/scene_manager.h"
 
@@ -21,7 +20,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 	{
 	case WM_DESTROY:
 		PostQuitMessage(0);
-		return true;
+		return 0;
 	case WM_LBUTTONDOWN:
 	case WM_LBUTTONUP:
 	case WM_RBUTTONDOWN:
@@ -29,12 +28,17 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 	case WM_MBUTTONDOWN:
 	case WM_MBUTTONUP:
 	{
-		MouseButton button =
-			(msg == WM_LBUTTONDOWN || msg == WM_LBUTTONUP) ? MOUSE_BUTTON_LEFT
-			: (msg == WM_RBUTTONDOWN || msg == WM_RBUTTONUP) ? MOUSE_BUTTON_RIGHT
-			: MOUSE_BUTTON_MIDDLE;
+		MouseButton button = MouseButton::Middle;
+		if(msg == WM_LBUTTONDOWN || msg == WM_LBUTTONUP)
+		{
+			button = MouseButton::Left;
+		}
+		else if(msg == WM_RBUTTONDOWN || msg == WM_RBUTTONUP)
+		{
+			button = MouseButton::Right;
+		}
 
-		Input::data.mouse_buttons[button] =
+		Input::data.mouse_buttons[i32(button)] =
 			msg == WM_LBUTTONDOWN
 			|| msg == WM_RBUTTONDOWN
 			|| msg == WM_MBUTTONDOWN;
@@ -48,11 +52,11 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		InputEventMouseButton event{};
 		event.type = INPUT_EVENT_MOUSE_BUTTON;
 		event.position = pos;
-		event.pressed = Input::data.mouse_buttons[button];
+		event.pressed = Input::data.mouse_buttons[i32(button)];
 		event.button = button;
 		Engine::handle_input(event);
+		return 0;
 	}
-	break;
 	case WM_SYSKEYDOWN:
 	case WM_SYSKEYUP:
 	case WM_KEYDOWN:
@@ -64,7 +68,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		if (Input::data.keys[wparam] == KeyState::RequestNewState
 			&& (msg == WM_SYSKEYDOWN || msg == WM_KEYDOWN))
 		{
-			break;
+			return 0;
 		}
 
 		// Extended key
@@ -87,6 +91,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		event.key = (Key)wparam;
 
 		Engine::handle_input(event);
+		return 0;
 	}
 	break;
 	case WM_SIZE:
@@ -98,6 +103,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		}
 
 		GetWindowRect(handle, &window_data.window_rect);
+		return 0;
 	}
 	break;
 	case WM_MOUSEMOVE:
@@ -107,6 +113,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 			-f32(GET_Y_LPARAM(lparam))
 		);
 		Input::data.mouse_position = SceneManager::_screen_make_local_to_canvas(screen_space_position);
+		return 0;
 	}
 	break;
 	}

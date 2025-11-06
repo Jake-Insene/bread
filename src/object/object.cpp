@@ -83,12 +83,14 @@ void Object::handle_event(const InputEvent& event)
     }
 }
 
-void Object::set_mark(MarkName mark_name, bool value)
+void Object::mark(MarkName mark_name)
 {
-    if (value)
-        data.marks.set(mark_name);
-    else
-        data.marks.unset(mark_name);
+    data.marks.set(mark_name);
+}
+
+void Object::unmark(MarkName mark_name)
+{
+    data.marks.unset(mark_name);
 }
 
 void Object::set_group(GroupName group_name, bool value)

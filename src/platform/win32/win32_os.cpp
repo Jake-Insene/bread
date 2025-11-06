@@ -34,7 +34,6 @@ static inline DWORD WINAPI _thread_handler(void* _arg)
     _mutex_unlock(&data->thread_srw);
 
     ExitThread(0);
-    return 0;
 }
 
 void Win32OS::initialize(const mem::Allocator& allocator)

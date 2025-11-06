@@ -25,13 +25,13 @@ KeyState Input::get_key_state(Key k)
 
 bool Input::is_mouse_button_pressed(MouseButton button)
 {
-	return data.mouse_buttons[button];
+	return data.mouse_buttons[i32(button)];
 }
 
 bool Input::is_mouse_button_just_pressed(MouseButton button)
 {
-	bool pressed = data.mouse_buttons[button];
-	data.mouse_buttons[button] = false;
+	bool pressed = data.mouse_buttons[i32(button)];
+	data.mouse_buttons[i32(button)] = false;
 	return pressed;
 }
 

@@ -21,6 +21,17 @@ Material* Object2D::get_material()
     return data.material;
 }
 
+void Object2D::set_render_layer(RenderManager::RenderLayerMask render_layers)
+{
+    data.render_layers = render_layers;
+    RenderManager::item_set_layers(get_render_item(), render_layers);
+}
+
+RenderManager::RenderLayerMask Object2D::get_render_layers()
+{
+    return data.render_layers;
+}
+
 void Object2D::init(const CreateInfo&)
 {
     mark(MARK_2D);

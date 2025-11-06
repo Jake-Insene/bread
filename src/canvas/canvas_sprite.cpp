@@ -26,9 +26,14 @@ void CanvasSprite::render()
         flags |= RenderManager::RENDER_FLAG_FLIP_V;
     }
 
+    Vector2 size = get_size();
+    Rect2D rect = Rect2D(
+        size / Vector2(2.f, -2.f), size
+    );
+
     draw_canvas_element(
         get_global_transform(), get_texture()->texture_id,
-        Rect2D(Vector2(), get_size()), src_rect, color,
+        rect, src_rect, color,
         flags
     );
 }

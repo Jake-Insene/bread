@@ -11,16 +11,16 @@ struct FormatString;
 struct Log
 {
     template<typename... TArgs>
-    static void error(const fmt::FormatString<TypeIdentity<TArgs>&&...> fmt, TArgs&&... args);
+    static void error(const fmt::FormatString<TypeIdentity<TArgs>&&...>& fmt, TArgs&&... args);
 
     template<typename... TArgs>
-    static void warning(const fmt::FormatString<TypeIdentity<TArgs>&&...> fmt, TArgs&&... args);
+    static void warning(const fmt::FormatString<TypeIdentity<TArgs>&&...>& fmt, TArgs&&... args);
 
     template<typename... TArgs>
-    static void info(const fmt::FormatString<TypeIdentity<TArgs>&&...> fmt, TArgs&&... args);
+    static void info(const fmt::FormatString<TypeIdentity<TArgs>&&...>& fmt, TArgs&&... args);
 
     template<typename... TArgs>
-    static void debug(const fmt::FormatString<TypeIdentity<TArgs>&&...> fmt, TArgs&&... args)
+    static void debug(const fmt::FormatString<TypeIdentity<TArgs>&&...>& fmt, TArgs&&... args)
     {
 #if DEBUG
         info(fmt, Forward<TArgs>(args)...);
@@ -36,7 +36,7 @@ struct Log
 #include "io/writer.h"
 
 template<typename... TArgs>
-void Log::error(const fmt::FormatString<TypeIdentity<TArgs>&&...> fmt, TArgs&&... args)
+void Log::error(const fmt::FormatString<TypeIdentity<TArgs>&&...>& fmt, TArgs&&... args)
 {
     auto err = File::get_stderr();
     if (err.handle == 0) return;
@@ -47,7 +47,7 @@ void Log::error(const fmt::FormatString<TypeIdentity<TArgs>&&...> fmt, TArgs&&..
 }
 
 template<typename... TArgs>
-void Log::warning(const fmt::FormatString<TypeIdentity<TArgs>&&...> fmt, TArgs&&... args)
+void Log::warning(const fmt::FormatString<TypeIdentity<TArgs>&&...>& fmt, TArgs&&... args)
 {
     auto err = File::get_stderr();
     if (err.handle == 0) return;
@@ -58,7 +58,7 @@ void Log::warning(const fmt::FormatString<TypeIdentity<TArgs>&&...> fmt, TArgs&&
 }
 
 template<typename... TArgs>
-void Log::info(const fmt::FormatString<TypeIdentity<TArgs>&&...> fmt, TArgs&&... args)
+void Log::info(const fmt::FormatString<TypeIdentity<TArgs>&&...>& fmt, TArgs&&... args)
 {
     auto out = File::get_stdout();
     if (out.handle == 0) return;

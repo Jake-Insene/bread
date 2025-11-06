@@ -109,6 +109,10 @@ static inline GLID _compile_shader_for(const MaterialCompileInfo& cmp_info, Stri
     auto all_defines = Scoped<String>(GLESMaterialManager::get_allocator());
     all_defines.add(cmp_info.defines);
     all_defines.add(type_defines);
+    if (cmp_info.vscode.ptr())
+    {
+        all_defines.add("\n#define CUSTOM_VERTEX\n");
+    }
     if (cmp_info.fscode.ptr())
     {
         all_defines.add("\n#define CUSTOM_FRAGMENT\n");

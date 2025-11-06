@@ -8,8 +8,6 @@ Result<Resource*, Error> Resource::_load_resource(ResourceType type, ResourceTyp
     return ResourceManager::load_resource(type, spec, path);
 }
 
-
-
 void Resource::init(ResourceType resource_type)
 {
     type = resource_type;

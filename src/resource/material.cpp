@@ -3,7 +3,7 @@
 #include "graphics/graphics.h"
 #include "io/file.h"
 #include "resource/resource_manager.h"
-
+#include "resource/resource_manager_internal.h"
 
 
 #define ADVANCE(c, text, count) \
@@ -72,13 +72,21 @@ void Material::destroy()
 	Graphics::destroy_material(material_id);
 }
 
-Error Material::load_from_file(StringView path, StringView defines)
+Error Material::load_from_file(StringView file_path, StringView defines)
 {
-	MaterialCompileInfo cmp_info = {};
-	auto allocator = ResourceManager::get_allocator();
+    if (File::exists(file_path) == false)
+    {
+        RMDebugInfo("Couldn't load the font '{}'", file_path);
+        return MakeError(FileNotFound);
+    }
 
-	Slice<u8> bytes = File::read_all(allocator, path);
-	cmp_info.source_path = path;
+    auto& allocator = ResourceManager::get_allocator();
+    path.set(file_path);
+
+	MaterialCompileInfo cmp_info = {};
+
+	Slice<u8> bytes = File::read_all(allocator, file_path);
+	cmp_info.source_path = file_path;
     _parse_program(mem::from_bytes<char>(bytes), &cmp_info.vscode, &cmp_info.fscode);
 	cmp_info.defines = defines;
 

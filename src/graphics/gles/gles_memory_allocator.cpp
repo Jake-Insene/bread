@@ -192,7 +192,7 @@ void GLESMemoryAllocator::buffer_bind_and_update_memory(GLID buffer, usize offse
                 target, offset, mem.len,
                 mask
             )
-            );
+        );
         Slice<u8> dest = Slice{ dest_ptr, mem.len };
         mem::copy(dest, mem);
         gl.glUnmapBuffer(target);

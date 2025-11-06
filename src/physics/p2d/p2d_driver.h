@@ -84,7 +84,7 @@ struct P2DDriver
     static void destroy_area(Physics2D::AreaID area_id);
 
     // Body
-    static void body_set_shape(Physics2D::BodyID body_id, const Shape2D& shape);
+    static void body_set_shape(Physics2D::BodyID body_id, const Shape2D& new_shape);
     static Shape2D body_get_shape(Physics2D::BodyID body_id);
 
     static void body_set_transform(Physics2D::BodyID body_id, const Transform2D& new_transform);
@@ -114,7 +114,7 @@ struct P2DDriver
     static void body_set_on_collide(Physics2D::BodyID body_id, Opaque* _this, Physics2D::EventOnCollide on_collide);
 
     // Area
-    static void area_set_shape(Physics2D::AreaID area_id, const Shape2D& shape);
+    static void area_set_shape(Physics2D::AreaID area_id, const Shape2D& new_shape);
     static Shape2D area_get_shape(Physics2D::AreaID area_id);
 
     static void area_set_transform(Physics2D::AreaID area_id, const Transform2D& new_transform);

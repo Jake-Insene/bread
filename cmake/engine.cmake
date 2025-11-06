@@ -19,6 +19,7 @@ if(DEFINED BREAD_ANDROID)
         set(BREAD_BUILD_TYPE "gamebuild")
     endif()
 endif()
+
 string(TOLOWER ${BREAD_BUILD_TYPE} BUILD_TYPE)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build/lib/${BUILD_TYPE}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build/lib/${BUILD_TYPE}")
@@ -29,6 +30,7 @@ set(BREAD_BUILD_DEFINITIONS "BREAD")
 set(BREAD_COMPILE_OPTIONS "")
 set(BREAD_LINK_OPTIONS "")
 set(BREAD_EXE_LINK_OPTIONS "")
+set(BREAD_EXE_BUILD_OPTIONS "")
 set(BREAD_DEBUG_DEFINITIONS "-DDEBUG -DSHOW_DEBUG_INFO -DENABLE_DEBUG_OPTIONS")
 
 # Detecting target arch
@@ -50,13 +52,11 @@ endif()
 # Configuration per compiler
 if(MSVC)
     set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} 
-        "/W3" "/Oi" "/Zl" "/GS-" "/GR-" "/EHs-" "/EHc-" "/Zc:threadSafeInit-" "/Zc:preprocessor"
+        "/W4" "/Oi" "/Zl" "/GS-" "/GR-" "/EHs-" "/EHc-" "/Zc:threadSafeInit-" "/Zc:preprocessor"
         # Some warnings needs to be treated as error because we eliminated the compiler runtime,
         # so now is more easy to create bugs.
-        "/we4701" "/we4700" "/we4101" "/we4703" "/we4189"
+        "/we4701" "/we4700" "/we4101" "/we4703" "/we4189" "/wd4201"
     )
-    set(BREAD_LINK_OPTIONS ${BREAD_LINK_OPTIONS} "/NODEFAULTLIB")
-    set(BREAD_EXE_LINK_OPTIONS ${BREAD_EXE_LINK_OPTIONS} "/NODEFAULTLIB" "/ENTRY:WinMain")
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_MSVC")
 else()
     if("${BREAD_TARGET_ARCH}" STREQUAL "X64")
@@ -93,6 +93,13 @@ if(ANDROID)
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_ANDROID")
 elseif(WIN32)
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_WIN32")
+    if(MSVC)
+        set(BREAD_LINK_OPTIONS ${BREAD_LINK_OPTIONS} /NODEFAULTLIB)
+        set(BREAD_EXE_LINK_OPTIONS ${BREAD_EXE_LINK_OPTIONS} /NODEFAULTLIB /ENTRY:WinMain)
+    else()
+        set(BREAD_LINK_OPTIONS ${BREAD_LINK_OPTIONS} -nostdlib)
+        set(BREAD_EXE_LINK_OPTIONS ${BREAD_EXE_LINK_OPTIONS} -Wl,/ENTRY:WinMain)
+    endif()
 endif()
 
 # Utility functions
@@ -125,9 +132,9 @@ function(bread_project name)
     endif()
 
     target_compile_definitions(${name} PUBLIC ${BREAD_BUILD_DEFINITIONS})
-    target_compile_options(${name} PUBLIC ${BREAD_COMPILE_OPTIONS})
+    target_compile_options(${name} PUBLIC ${BREAD_COMPILE_OPTIONS} ${BREAD_EXE_BUILD_OPTIONS})
     target_link_options(${name} PUBLIC ${BREAD_EXE_LINK_OPTIONS})
-    
+
     target_include_directories(
         ${name}
         PUBLIC

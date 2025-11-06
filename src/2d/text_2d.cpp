@@ -44,11 +44,11 @@ void Text2D::render()
 			continue;
 		}
 
-		TextureID id = glyph.char_texture;
-		Vector2 extent = Vector2(Graphics::texture_get_size(id));
+		TextureID texture_id = glyph.char_texture;
+		Vector2 extent = Vector2(Graphics::texture_get_size(texture_id));
 		draw_sprite(
-			transform, id,
-			Rect2D(Vector2(), extent), Rect2D(Vector2(), extent),
+			transform, texture_id,
+			Rect2D(extent / Vector2(2.f, -2.f), extent), Rect2D(Vector2(), extent),
 			color, 
 			RenderManager::RENDER_FLAG_FLIP_V 
 			| RenderManager::RENDER_FLAG_FONT_CHAR

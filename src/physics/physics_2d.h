@@ -127,55 +127,54 @@ struct Physics2D
         StringMap<PropertyValue> properties;
     };
 
-    static inline VTable vtable;
     static inline InternalData data{};
 
     static void initialize(const mem::Allocator& allocator, DriverType driver);
     static void shutdown();
-    
-    VTFuncDefArg1S(step, f32);
-    
-    VTFuncDefArg1RetS(BodyID, create_body, Object2D*);
-    VTFuncDefArg1S(destroy_body, BodyID);
-    VTFuncDefArg1RetS(AreaID, create_area, Object2D*);
-    VTFuncDefArg1S(destroy_area, AreaID);
 
-    VTFuncDefArg2S(body_set_shape, BodyID, const Shape2D&);
-    VTFuncDefArg1RetS(Shape2D, body_get_shape, BodyID);
+    static void step(f32 dt);
 
-    VTFuncDefArg2S(body_set_transform, BodyID, const Transform2D&);
-    VTFuncDefArg2S(body_set_type, BodyID, BodyType);
-    VTFuncDefArg2S(body_set_velocity, BodyID, const Vector2&);
-    VTFuncDefArg1RetS(Vector2, body_get_velocity, BodyID);
-    VTFuncDefArg2S(body_set_angular_velocity, BodyID, f32);
-    VTFuncDefArg1RetS(f32, body_get_angular_velocity, BodyID);
-    VTFuncDefArg2S(body_set_mass, BodyID, f32);
-    VTFuncDefArg1RetS(f32, body_get_mass, BodyID);
-    VTFuncDefArg2S(body_set_friction, BodyID, f32);
-    VTFuncDefArg1RetS(f32, body_get_friction, BodyID);
-    VTFuncDefArg2S(body_set_air_friction, BodyID, f32);
-    VTFuncDefArg1RetS(f32, body_get_air_friction, BodyID);
-    VTFuncDefArg2S(body_set_bounce, BodyID, f32);
-    VTFuncDefArg1RetS(f32, body_get_bounce, BodyID);
-    VTFuncDefArg3S(body_apply_force, BodyID, const Vector2&, const Vector2&);
-    VTFuncDefArg3S(body_apply_impulse, BodyID, const Vector2&, const Vector2&);
-    VTFuncDefArg2S(body_set_fixed_rotation, BodyID, bool);
-    VTFuncDefArg1RetS(bool, body_is_on_floor, BodyID);
-    VTFuncDefArg1RetS(bool, body_is_on_ceil, BodyID);
-    VTFuncDefArg2S(body_set_residence_mask, BodyID, CollisionMask);
-    VTFuncDefArg1RetS(CollisionMask, body_get_residence_mask, BodyID);
-    VTFuncDefArg2S(body_set_collision_mask, BodyID, CollisionMask);
-    VTFuncDefArg1RetS(CollisionMask, body_get_collision_mask, BodyID);
-    VTFuncDefArg3S(body_set_on_collide, BodyID, Opaque*, EventOnCollide);
+    static BodyID create_body(Object2D* object);
+    static void destroy_body(BodyID body_id);
+    static AreaID create_area(Object2D* object);
+    static void destroy_area(AreaID area_id);
 
-    VTFuncDefArg2S(area_set_shape, AreaID, const Shape2D&);
-    VTFuncDefArg1RetS(Shape2D, area_get_shape, AreaID);
+    static void body_set_shape(BodyID body_id, const Shape2D& shape);
+    static Shape2D body_get_shape(BodyID body_id);
 
-    VTFuncDefArg2S(area_set_transform, AreaID, const Transform2D&);
-    VTFuncDefArg2S(area_set_residence_mask, AreaID, CollisionMask);
-    VTFuncDefArg1RetS(CollisionMask, area_get_residence_mask, AreaID);
-    VTFuncDefArg3S(area_set_on_body_enter, AreaID, Opaque*, EventOnBodyEnter);
-    VTFuncDefArg3S(area_set_on_body_exit, AreaID, Opaque*, EventOnBodyExit);
+    static void body_set_transform(BodyID body_id, const Transform2D& transform);
+    static void body_set_type(BodyID body_id, BodyType type);
+    static void body_set_velocity(BodyID body_id, const Vector2& velocity);
+    static Vector2 body_get_velocity(BodyID body_id);
+    static void body_set_angular_velocity(BodyID body_id, f32 angular_velocity);
+    static f32 body_get_angular_velocity(BodyID body_id);
+    static void body_set_mass(BodyID body_id, f32 mass);
+    static f32 body_get_mass(BodyID body_id);
+    static void body_set_friction(BodyID body_id, f32 friction);
+    static f32 body_get_friction(BodyID body_id);
+    static void body_set_air_friction(BodyID body_id, f32 air_friction);
+    static f32 body_get_air_friction(BodyID body_id);
+    static void body_set_bounce(BodyID body_id, f32 bounce);
+    static f32 body_get_bounce(BodyID body_id);
+    static void body_apply_force(BodyID body_id, const Vector2& force, const Vector2& position);
+    static void body_apply_impulse(BodyID body_id, const Vector2& impulse, const Vector2& position);
+    static void body_set_fixed_rotation(BodyID body_id, bool fixed_rotation);
+    static bool body_is_on_floor(BodyID body_id);
+    static bool body_is_on_ceil(BodyID body_id);
+    static void body_set_residence_mask(BodyID body_id, CollisionMask mask);
+    static CollisionMask body_get_residence_mask(BodyID body_id);
+    static void body_set_collision_mask(BodyID body_id, CollisionMask mask);
+    static CollisionMask body_get_collision_mask(BodyID body_id);
+    static void body_set_on_collide(BodyID body_id, Opaque* user_data, EventOnCollide event);
+
+    static void area_set_shape(AreaID area_id, const Shape2D& shape);
+    static Shape2D area_get_shape(AreaID area_id);
+
+    static void area_set_transform(AreaID area_id, const Transform2D& transform);
+    static void area_set_residence_mask(AreaID area_id, CollisionMask mask);
+    static CollisionMask area_get_residence_mask(AreaID area_id);
+    static void area_set_on_body_enter(AreaID area_id, Opaque* user_data, EventOnBodyEnter event);
+    static void area_set_on_body_exit(AreaID area_id, Opaque* user_data, EventOnBodyExit event);
 
     // Properties
 

@@ -37,9 +37,10 @@ struct FormatString
 	{
 		FmtInterval intervals[WriteIntervalCount];
 
-		constexpr FmtInterval& operator[](usize index)
+		template<typename Self>
+		constexpr auto& operator[](this Self& self, usize index)
 		{
-			return intervals[index];
+			return self.intervals[index];
 		}
 	};
 	
@@ -116,7 +117,7 @@ struct FormatString
 };
 
 template<bool NewLine, typename... TArgs>
-void format(const io::Writer& writer, FormatString<TypeIdentity<TArgs>&&...> fmt, TArgs&&...);
+void format(const io::Writer& writer, const FormatString<TypeIdentity<TArgs>&&...>& fmt, TArgs&&...);
 
 }
 
@@ -213,7 +214,7 @@ void __format_single_argument(const io::Writer& writer, T&& arg)
 }
 
 template<usize IntervalRemain, typename... TArgs>
-void __format_argument(const io::Writer& writer, const StringView view, fmt::FormatString<TypeIdentity<TArgs>&&...> fmtstring, TArgs&&... args)
+void __format_argument(const io::Writer& writer, const StringView view, const fmt::FormatString<TypeIdentity<TArgs>&&...>& fmtstring, TArgs&&... args)
 {
 	using FString = fmt::FormatString<TypeIdentity<TArgs>...>;
 
@@ -236,7 +237,7 @@ void __format_argument(const io::Writer& writer, const StringView view, fmt::For
 }
 
 template<bool NewLine, typename... TArgs>
-void format(const io::Writer& writer, FormatString<TypeIdentity<TArgs>&&...> fmtstring, TArgs&&... args)
+void format(const io::Writer& writer, const FormatString<TypeIdentity<TArgs>&&...>& fmtstring, TArgs&&... args)
 {
 	using FString = FormatString<TypeIdentity<TArgs>...>;
 	StringView view = fmtstring.view();

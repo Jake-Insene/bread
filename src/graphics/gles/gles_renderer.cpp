@@ -340,7 +340,7 @@ void GLESRenderer::_end_sprite_batch()
         data.sprite_batch.instance_buffer_object, 0, 
         mem::to_const_bytes(data.sprite_batch.instances.slice(data.sprite_batch.count)), 
         GL_ARRAY_BUFFER,
-        GLESMemoryAllocator::UMHWriteOnly
+        GLESMemoryAllocator::UMHWriteOnlyUnsynchronized
     );
 
     for(i32 i = 0; i < GLESRenderer::data.sprite_batch.texture_index; i++)
@@ -369,7 +369,7 @@ void GLESRenderer::_end_sprite_ui_batch()
         data.sprite_ui_batch.instance_buffer_object, 0, 
         mem::to_const_bytes(data.sprite_ui_batch.instances.slice(data.sprite_ui_batch.count)),
         GL_ARRAY_BUFFER, 
-        GLESMemoryAllocator::UMHWriteOnly
+        GLESMemoryAllocator::UMHWriteOnlyUnsynchronized
     );
 
     for (i32 i = 0; i < GLESRenderer::data.sprite_ui_batch.texture_index; i++)
@@ -398,7 +398,7 @@ void GLESRenderer::_end_quad_batch()
         data.quad_batch.instance_buffer_object, 0,
         mem::to_const_bytes(data.quad_batch.instances.slice(data.quad_batch.count)), 
         GL_ARRAY_BUFFER,
-        GLESMemoryAllocator::UMHWriteOnly
+        GLESMemoryAllocator::UMHWriteOnlyUnsynchronized
     );
 
     gl.glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, nullptr, (GLsizei)data.quad_batch.count);
@@ -419,7 +419,7 @@ void GLESRenderer::_end_lines_batch()
         data.primitive_batch.instance_buffer_object, 0,
         mem::to_const_bytes(data.primitive_batch.primitives.slice(data.primitive_batch.count)), 
         GL_ARRAY_BUFFER,
-        GLESMemoryAllocator::UMHWriteOnly
+        GLESMemoryAllocator::UMHWriteOnlyUnsynchronized
     );
 
     gl.glDrawArrays(GL_LINES, 0, (GLsizei)data.primitive_batch.count);
@@ -441,7 +441,7 @@ void GLESRenderer::_end_circles_batch()
         data.primitive_circle_batch.instance_buffer_object, 0,
         mem::to_const_bytes(data.primitive_circle_batch.primitives.slice(data.primitive_circle_batch.count)),
         GL_ARRAY_BUFFER,
-        GLESMemoryAllocator::UMHWriteOnly
+        GLESMemoryAllocator::UMHWriteOnlyUnsynchronized
     );
 
     gl.glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, nullptr, (GLsizei)data.primitive_circle_batch.count);
@@ -682,6 +682,11 @@ void GLESRenderer::_render_item_draw(RenderManager::RenderItem& item)
         _end_sprite_batch();
     }
 
+    if (data.sprite_ui_batch.count > 0)
+    {
+        _end_sprite_ui_batch();
+    }
+
     if (data.quad_batch.count > 0)
     {
         _end_quad_batch();
@@ -695,11 +700,6 @@ void GLESRenderer::_render_item_draw(RenderManager::RenderItem& item)
     if (data.primitive_circle_batch.count > 0)
     {
         _end_circles_batch();
-    }
-
-    if (data.sprite_ui_batch.count > 0)
-    {
-        _end_sprite_ui_batch();
     }
 
     data.item_material = MaterialID();

@@ -28,9 +28,14 @@ void Button::render()
     if (current_texture == nullptr)
         return;
 
+    Vector2 size = get_size();
+    Rect2D rect = Rect2D(
+        size / Vector2(2.f, -2.f), size
+    );
     Vector2 texture_extent = Vector2(current_texture->get_size());
     draw_canvas_element(
-        get_global_transform(), current_texture->texture_id, Rect2D(Vector2(), get_size()), 
+        get_global_transform(), current_texture->texture_id,
+        rect,
         Rect2D(Vector2(), texture_extent),
         Color(255, 255, 255, 255), 
         RenderManager::RENDER_FLAG_NONE
@@ -47,7 +52,7 @@ void Button::gui_event(const InputEvent& e)
 	else if (e.type == INPUT_EVENT_MOUSE_BUTTON)
 	{
 		const auto& em = e.get<InputEventMouseButton>();
-        if(em.button == MOUSE_BUTTON_LEFT && em.pressed)
+        if(em.button == MouseButton::Left && em.pressed)
         {
             data.current_state = is_inside(em.position) ? STATE_PRESSED : STATE_NORMAL;
         }

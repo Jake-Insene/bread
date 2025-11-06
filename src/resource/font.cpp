@@ -7,36 +7,52 @@
 #include <external/stb_truetype.h>
 
 
+static inline bool _is_valid_glyph(u32 glyph_index)
+{
+    if (glyph_index == ' ' || glyph_index == '\0'
+        || glyph_index == '\n')
+        return false;
+
+    return true;
+}
+
+
 static void _load_theme(stbtt_fontinfo* font, Font::FontTheme& theme)
 {
-    for (u32 glyph_index = 27; glyph_index < Font::MinimumGlyphCount; glyph_index++)
+    for (u32 glyph_index = 0; glyph_index < Font::MinimumGlyphCount; glyph_index++)
     {
         Font::Glyph& glyph = theme.glyphs.get(glyph_index);
-        if (glyph_index == ' ')
-            continue;
-
+        
         i32 width;
         i32 height;
         Opaque* bitmap = reinterpret_cast<Opaque*>(stbtt_GetCodepointBitmap(
             font, 0.f, stbtt_ScaleForPixelHeight(font, f32(theme.font_size)), (int)glyph_index, &width, &height, 0, 0
         ));
-
-        auto pixels = Slice(bitmap->cast<u8*>(), width * height);
-
-        glyph.char_texture = Graphics::create_texture(
-            TextureCreateInfo
-            {
-                .type = TEXTURE_2D,
-                .format = TEXTURE_FORMAT_R8,
-                .min_filter = TEXTURE_FILTER_NEAREST,
-                .mag_filter = TEXTURE_FILTER_NEAREST,
-                .size = Vector2I(width, height),
-                .pixels = pixels,
-            }
-        );
-        
         glyph.advance.x = width;
         glyph.advance.y = height;
+
+        if (glyph_index == ' ')
+        {
+            stbtt_FreeBitmap(bitmap->cast<u8*>(), nullptr);
+            continue;
+        }
+
+        auto pixels = Slice(bitmap->cast<u8*>(), width * height);
+        if (_is_valid_glyph(glyph_index))
+        {
+            glyph.char_texture = Graphics::create_texture(
+                TextureCreateInfo
+                {
+                    .type = TEXTURE_2D,
+                    .format = TEXTURE_FORMAT_R8,
+                    .min_filter = TEXTURE_FILTER_NEAREST,
+                    .mag_filter = TEXTURE_FILTER_NEAREST,
+                    .size = Vector2I(width, height),
+                    .pixels = pixels,
+                }
+            );
+        }
+        
         stbtt_FreeBitmap(bitmap->cast<u8*>(), nullptr);
     }
 }
@@ -45,7 +61,7 @@ static void _load_theme(stbtt_fontinfo* font, Font::FontTheme& theme)
 void Font::init()
 {
     Resource::init(RESOURCE_FONT);
-    auto allocator = ResourceManager::get_allocator();
+    auto& allocator = ResourceManager::get_allocator();
     data.themes = Array<FontTheme>::with_allocator(allocator);
 }
 
@@ -75,11 +91,11 @@ Error Font::load(StringView file_path)
 {
     if (File::exists(file_path) == false)
     {
-        RMFatal("Couldn't load the font '{}'", file_path);
+        RMDebugInfo("Couldn't load the font '{}'", file_path);
         return MakeError(FileNotFound);
     }
 
-    auto allocator = ResourceManager::get_allocator();
+    auto& allocator = ResourceManager::get_allocator();
     path.set(file_path);
 
     Slice<u8> content = File::read_all(allocator, file_path);
@@ -112,7 +128,7 @@ const Font::FontTheme& Font::get_font_theme(i32 font_size)
 
 const Font::FontTheme& Font::_theme_with_size(i32 font_size)
 {
-    auto allocator = ResourceManager::get_allocator();
+    auto& allocator = ResourceManager::get_allocator();
     Slice<u8> content = File::read_all(allocator, path.view());
 
     stbtt_fontinfo font;

@@ -28,7 +28,7 @@ void Label::render()
 	for (usize i = 0; i < text.count; i++)
 	{
 		char character = text.get(i);
-		const Font::Glyph& glyph = font_theme.glyphs.get(character);
+		const Font::Glyph& glyph = font_theme.glyphs.get(u8(character));
 		const Vector2 advance = Vector2(glyph.advance) * scale;
 
 		if (character == ' ' || character == '\0')
@@ -42,11 +42,12 @@ void Label::render()
 			continue;
 		}
 
-		TextureID id = glyph.char_texture;
-		Vector2 extent = Vector2(Graphics::texture_get_size(id));
+		TextureID texture_id = glyph.char_texture;
+		Vector2 extent = Vector2(Graphics::texture_get_size(texture_id));
 		
 		draw_canvas_element(
-			transform, id, Rect2D(Vector2(), extent), Rect2D(Vector2(), extent),
+			transform, texture_id, 
+			Rect2D(extent/Vector2(2.f, -2.f), extent), Rect2D(Vector2(), extent),
 			get_color(), 
 			RenderManager::RENDER_FLAG_FLIP_V 
 			| RenderManager::RENDER_FLAG_FONT_CHAR
