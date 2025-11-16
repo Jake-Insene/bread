@@ -47,7 +47,7 @@ void Label::render()
 		
 		draw_canvas_element(
 			transform, texture_id, 
-			Rect2D(extent/Vector2(2.f, -2.f), extent), Rect2D(Vector2(), extent),
+			Rect2D(Vector2(), extent), Rect2D(Vector2(), extent),
 			get_color(), 
 			RenderManager::RENDER_FLAG_FLIP_V 
 			| RenderManager::RENDER_FLAG_FONT_CHAR

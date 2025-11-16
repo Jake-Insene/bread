@@ -1,11 +1,60 @@
 #pragma once
 #include "core/types.h"
+#include "collections/base_iterator.h"
 #include "mem/utils.h"
 
+
+
+/*
+* Used to iterate over an static array.
+*/
+template<typename T>
+struct [[nodiscard]] StaticArrayIterator : BaseIterator<StaticArrayIterator<T>, T>
+{
+    using Type = T;
+
+    T* base;
+    usize extent;
+
+    constexpr StaticArrayIterator(T* base, usize extent) : base(base), extent(extent) {}
+
+    constexpr T& operator*() const { return *base; }
+    constexpr T* operator->() const { return base; }
+
+    constexpr StaticArrayIterator& operator++()
+    {
+        base++;
+        extent--;
+        return *this;
+    }
+
+    constexpr StaticArrayIterator& operator--()
+    {
+        base--;
+        extent++;
+        return *this;
+    }
+
+    [[nodiscard]] constexpr bool operator==(const StaticArrayIterator& it) const
+    {
+        return base == it.base && extent == it.extent;
+    }
+
+    constexpr StaticArrayIterator begin() const { return *this; }
+    constexpr StaticArrayIterator end() const { return StaticArrayIterator(base + extent, 0); }
+
+    [[nodiscard]] usize distance(const StaticArrayIterator& it) const
+    {
+        return (extent - it.extent);
+    }
+};
 
 template<typename T, usize N>
 struct [[nodiscard]] StaticArray
 {
+    using Type = T;
+    using Iterator = StaticArrayIterator<Type>;
+
     T items[N];
     usize count;
 
@@ -32,12 +81,13 @@ struct [[nodiscard]] StaticArray
     }
 
     template<typename... TList>
-    static constexpr StaticArray from_list(const TList... list)
+    static constexpr StaticArray from_list(TList&&... list)
     {
         static constexpr usize ListLen = sizeof...(list);
         DebugAssert(N >= ListLen, "Static Array size is too small for the provided items");
         StaticArray array =
         {
+            .items = {},
             .count = ListLen,
         };
 
@@ -49,18 +99,19 @@ struct [[nodiscard]] StaticArray
     }
 
     template<typename Self>
-    [[nodiscard]] constexpr auto& operator[](this Self& self, const usize index)
+    constexpr Iterator iter(this Self& self)
+    {
+        return Iterator(self.items, self.count);
+    }
+
+    [[nodiscard]] constexpr bool is_empty() const { return count == 0; }
+
+    template<typename Self>
+    [[nodiscard]] constexpr auto& get(this Self& self, usize index)
     {
         DebugAssert(index < self.count, "index out of range");
         return self.items[index];
     }
-
-    [[nodiscard]] constexpr T* begin() { return items; }
-    [[nodiscard]] constexpr const T* begin() const { return items; }
-    [[nodiscard]] constexpr T* end() { return items + count; }
-    [[nodiscard]] constexpr const T* end() const { return items + count; }
-
-    // funcs
 
     [[nodiscard]] constexpr T& add(const T& item)
     {

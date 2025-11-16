@@ -359,9 +359,6 @@ struct Object
         Viewport* viewport = nullptr;
     } data;
 
-    void handle_internal_update(f32 dt) Function(FunctionInternal);
-    void handle_update(f32 dt) Function(FunctionInternal);
-    void handle_render() Function(FunctionInternal);
     void handle_event(const InputEvent& event) Function(FunctionInternal);
 
     /*

@@ -1,8 +1,11 @@
 #pragma once
 #include "collections/job_queue.h"
 #include "display/window.h"
-#include "resource/texture.h"
 #include "mem/generic_allocator.h"
+#include "resource/texture.h"
+#include "resource/sprite_animation.h"
+#include "resource/resource_manager.h"
+
 
 // Application configuration
 #define EngineConfiguration(...) EngineConfiguration __configuration__ = {__VA_ARGS__};

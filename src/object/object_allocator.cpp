@@ -19,6 +19,8 @@ void ObjectAllocator::initialize()
 
 void ObjectAllocator::shutdown()
 {
+    FailOn(data.allocated != 0, "objects were not deallocated!");
+
     for(ObjectChunk& chunk : data.chunks)
     {
         for(ObjectBlock& block : chunk.blocks)
@@ -36,6 +38,8 @@ void ObjectAllocator::shutdown()
 Object* ObjectAllocator::allocate_class(const Object::Class* klass)
 {
     Object* obj = _request_new_object(klass);
+    data.allocated++;
+
     ObjectCallRef(obj, init,
         Object::CreateInfo
         {
@@ -49,6 +53,8 @@ Object* ObjectAllocator::allocate_class(const Object::Class* klass)
 void ObjectAllocator::destroy_object(Object* obj)
 {
     obj->mark(Object::MARK_DEALLOCATED);
+    data.allocated--;
+
     ObjectCallRef(obj, deinit);
     FailOn(obj == nullptr || !obj->id.is_valid(), "Invalid Object");
     

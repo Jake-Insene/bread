@@ -26,7 +26,6 @@ struct ProgressBar : CanvasObject
     Color bg_color{ 255, 255, 255, 255 };
     Color fill_color{ 255, 255, 255, 255 };
     f32 update_speed = 1;
-    bool _draw_sprite = false;
 
     void init(const CreateInfo&);
 

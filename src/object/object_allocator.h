@@ -31,6 +31,7 @@ struct ObjectAllocator
         ObjectChunk chunks[MaxObjectChunks];
         mem::PageAllocator internal_object_allocator;
         mem::GenericAllocator object_allocator;
+        usize allocated;
     };
     
     static inline InternalData data;

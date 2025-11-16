@@ -21,6 +21,12 @@ struct CanvasObject : Object
     };
     
     static void _bind_vtable(CanvasObject::VTable& vtable);
+
+    enum RenderMode
+    {
+        CANVAS,
+        WORLD,
+    };
     
     struct InternalData
     {
@@ -32,6 +38,8 @@ struct CanvasObject : Object
         f32 rot_cache = 0.f;
 
         Vector2 size_cache;
+
+        RenderMode render_mode = CANVAS;
     } data;
     
     void init(const CreateInfo&);
@@ -63,6 +71,9 @@ struct CanvasObject : Object
     
     Transform2D get_transform() const;
     Transform2D get_global_transform() const;
+
+    void set_render_mode(RenderMode new_rm);
+    RenderMode get_render_mode();
 
     /*
     * @param pos A world position vector.

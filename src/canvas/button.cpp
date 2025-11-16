@@ -29,13 +29,10 @@ void Button::render()
         return;
 
     Vector2 size = get_size();
-    Rect2D rect = Rect2D(
-        size / Vector2(2.f, -2.f), size
-    );
     Vector2 texture_extent = Vector2(current_texture->get_size());
     draw_canvas_element(
         get_global_transform(), current_texture->texture_id,
-        rect,
+        Rect2D(Vector2(), size),
         Rect2D(Vector2(), texture_extent),
         Color(255, 255, 255, 255), 
         RenderManager::RENDER_FLAG_NONE

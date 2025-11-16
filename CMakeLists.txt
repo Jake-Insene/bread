@@ -25,7 +25,6 @@ file(GLOB ENGINE_SRC
     src/2d/camera_2d.cpp
     src/2d/object_2d.cpp
     src/2d/sprite_2d.cpp
-    src/2d/text_2d.cpp
     src/2d/tile_map.cpp
 
     src/audio/audio.cpp

@@ -10,7 +10,7 @@
 template<typename Iterator, typename T>
 struct [[nodiscard]] BaseIterator
 {
-	Iterator find(const T& item_requested) const
+	constexpr Iterator find(const T& item_requested) const
 	{
 		const Iterator& iterable = static_cast<const Iterator&>(*this);
 
@@ -26,7 +26,7 @@ struct [[nodiscard]] BaseIterator
 	}
 
 	template<typename Fn>
-	void for_each(Fn&& fn)
+	constexpr Iterator& for_each(Fn&& fn)
 	{
 		using ItFnComplete1 = void(*)(T&, usize);
 		using ItFnComplete2 = void(*)(const T&, usize);
@@ -44,10 +44,12 @@ struct [[nodiscard]] BaseIterator
 				fn(item);
 			}
 		}
+
+		return static_cast<Iterator&>(*this);
 	}
 
 	template<typename Fn>
-	Iterator& transform(Fn&& op)
+	constexpr Iterator& transform(Fn&& op)
 	{
 		Iterator& iterable = static_cast<Iterator&>(*this);
 

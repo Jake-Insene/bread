@@ -28,7 +28,7 @@ void CanvasSprite::render()
 
     Vector2 size = get_size();
     Rect2D rect = Rect2D(
-        size / Vector2(2.f, -2.f), size
+        Vector2(), size
     );
 
     draw_canvas_element(

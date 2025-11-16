@@ -13,9 +13,9 @@ struct [[nodiscard]] ArrayIterator : BaseIterator<ArrayIterator<T>, T>
     using Type = T;
 
     T* base;
-    usize extend;
+    usize extent;
     
-    ArrayIterator(T* base, usize extend) : base(base), extend(extend) {}
+    ArrayIterator(T* base, usize extent) : base(base), extent(extent) {}
 
     T& operator*() const { return *base; }
     T* operator->() const { return base; }
@@ -23,28 +23,28 @@ struct [[nodiscard]] ArrayIterator : BaseIterator<ArrayIterator<T>, T>
     ArrayIterator& operator++()
     {
         base++;
-        extend--;
+        extent--;
         return *this;
     }
 
     ArrayIterator& operator--()
     {
         base--;
-        extend++;
+        extent++;
         return *this;
     }
 
     [[nodiscard]] bool operator==(const ArrayIterator& it) const
     {
-        return base == it.base && extend == it.extend;
+        return base == it.base && extent == it.extent;
     }
 
     ArrayIterator begin() const { return *this; }
-    ArrayIterator end() const { return ArrayIterator(base + extend, 0); }
+    ArrayIterator end() const { return ArrayIterator(base + extent, 0); }
 
     [[nodiscard]] usize distance(const ArrayIterator& it) const
     {
-        return (extend - it.extend);
+        return (extent - it.extent);
     }
 };
 
@@ -123,9 +123,10 @@ struct [[nodiscard]] Array
         }
     }
 
-    Iterator iter() const
+    template<typename Self>
+    Iterator iter(this Self& self)
     {
-        return Iterator(items.items, count);
+        return Iterator(self.items.items, self.count);
     }
     
     [[nodiscard]] bool is_empty() const { return count == 0; }
@@ -197,15 +198,14 @@ struct [[nodiscard]] Array
     void remove_at(usize index)
     {
         DebugAssert(index < count && count != 0, "index out of range");
-        if (count == 1)
+        if (count == 1 || index == count - 1)
         {
             count--;
+            return;
         }
-        else
-        {
-            count--;
-            mem::copy(items.add(index), items.add(index + 1));
-        }
+     
+        count--;
+        mem::copy(items.add(index), items.add(index + 1));
     }
 
     void remove(const Type& item)

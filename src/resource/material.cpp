@@ -69,6 +69,8 @@ void Material::init()
 
 void Material::destroy()
 {
+    Resource::destroy();
+
 	Graphics::destroy_material(material_id);
 }
 

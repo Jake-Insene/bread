@@ -70,31 +70,31 @@ void main()
 #if defined(QUAD) || defined(CIRCLE) || defined(SPRITE)
     // Vertex
     // Indices 0, 1, 2, 2, 3, 0
-    // Centered quad
-    // 0 ->  -0.5, -0.5
-    // 1 ->  0.5, -0.5
-    // 2 ->  0.5,  0.5
-    // 3 ->  -0.5,  0.5
+    // 0 ->  0, -1
+    // 1 ->  1, -1
+    // 2 ->  1,  0
+    // 3 ->  0,  0
     vec2 vertice = vec2(0);
     if(index == 0)
     {
-        vertice = vec2(-0.5, -0.5);
+        vertice = vec2(0, -1);
     }
     else if(index == 1)
     {
-        vertice = vec2(0.5, -0.5);
+        vertice = vec2(1, -1);
     }
     else if(index == 2)
     {
-        vertice = vec2(0.5, 0.5);
+        vertice = vec2(1, 0);
     }
     else if(index == 3)
     {
-        vertice = vec2(-0.5, 0.5);
+        vertice = vec2(0, 0);
     }
 
 #if defined(CIRCLE)
     // Always centered
+    vertice += vec2(-0.5, 0.5);
     local_position = vertice * 2.0;
     radius = input_radius;
 #endif

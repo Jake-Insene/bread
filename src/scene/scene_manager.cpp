@@ -41,6 +41,22 @@ void SceneManager::initialize(const mem::Allocator& allocator)
     data.touched_focus.resize(1);
 
     data.queue_frees = HashMap<ObjectID, QueueFreeInfo>::with_size(allocator, 4);
+
+    data.int_update_list = Array<Object*>::with_size(
+        data.allocator, 4
+    );
+
+    data.update_list = Array<Object*>::with_size(
+        data.allocator, 4
+    );
+
+    data.render_list = Array<Object*>::with_size(
+        data.allocator, 4
+    );
+
+    data.objects_mark_changed = Array<MarkChangedInfo>::with_size(
+        data.allocator, 4
+    );
 }
 
 void SceneManager::shutdown()
@@ -51,9 +67,16 @@ void SceneManager::shutdown()
         ObjectAllocator::destroy_object(data.current_scene);
     }
 
+    data.objects_mark_changed.destroy();
+
+    data.render_list.destroy();
+    data.update_list.destroy();
+    data.int_update_list.destroy();
+
+    data.queue_frees.destroy();
     data.touched_focus.destroy();
     data.root_canvas.destroy();
-    data.queue_frees.destroy();
+
 
     data.main_viewport.destroy();
 }
@@ -115,14 +138,22 @@ void SceneManager::step()
         PROFILE_SCOPE(
             data.debug_time.internal_update_time = duration;
         );
-        data.current_scene->handle_internal_update(data.delta_time);
+     
+        for (Object* object : data.int_update_list.iter())
+        {
+            ObjectCallRef(object, internal_update, data.delta_time);
+        }
     }
 
     {
         PROFILE_SCOPE(
             data.debug_time.update_time = duration;
         );
-        data.current_scene->handle_update(data.delta_time);
+
+        for (Object* object : data.update_list.iter())
+        {
+            ObjectCallRef(object, update, data.delta_time);
+        }
     }
 
     {
@@ -143,7 +174,11 @@ void SceneManager::step()
         PROFILE_SCOPE(
             data.debug_time.render_time = duration;
         );
-        data.current_scene->handle_render();
+
+        for (Object* object : data.render_list.iter())
+        {
+            ObjectCallRef(object, render);
+        }
     }
 
     {
@@ -164,9 +199,11 @@ void SceneManager::step()
 
     data.fps_acum++;
 
-    for (auto& it : data.queue_frees.iter())
+    _handle_object_mark_changed();
+    for (auto& [object_id, queue_info] : data.queue_frees.iter())
     {
-        it.second.parent->remove_child(it.second.child);
+        _remove_object_from_list(queue_info.child);
+        queue_info.parent->remove_child(queue_info.child);
     }
 
     data.queue_frees.clear();
@@ -332,15 +369,104 @@ void SceneManager::_add_root_canvas(CanvasObject* c)
     (void)data.root_canvas.add(c);
 }
 
+void SceneManager::_remove_object_from_list(Object* object)
+{
+    for (usize i = 0; i < object->get_child_count(); i++)
+    {
+        Object* child = object->get_child(i);
+        _remove_object_from_list(child);
+    }
+
+    data.int_update_list.remove(object);
+    data.update_list.remove(object);
+    data.render_list.remove(object);
+}
+
+void SceneManager::_handle_object_mark_changed()
+{
+    for (MarkChangedInfo& mark_changed : data.objects_mark_changed.iter())
+    {
+        switch (mark_changed.mark_name)
+        {
+        case Object::MARK_INTERNAL_UPDATE:
+        {
+            if (!mark_changed.marked)
+            {
+                data.int_update_list.remove(mark_changed.object);
+                break;
+            }
+
+            if (data.int_update_list.find(mark_changed.object) ==
+                data.int_update_list.iter().end())
+            {
+                (void)data.int_update_list.add(mark_changed.object);
+            }
+        }
+        break;
+        case Object::MARK_UPDATE:
+        {
+            if (!mark_changed.marked)
+            {
+                data.update_list.remove(mark_changed.object);
+                break;
+            }
+
+            if (data.update_list.find(mark_changed.object) ==
+                data.update_list.iter().end())
+            {
+                (void)data.update_list.add(mark_changed.object);
+            }
+        }
+        break;
+        case Object::MARK_RENDER:
+        {
+            if (!mark_changed.marked)
+            {
+                data.render_list.remove(mark_changed.object);
+                break;
+            }
+
+            if (data.render_list.find(mark_changed.object) ==
+                data.render_list.iter().end())
+            {
+                (void)data.render_list.add(mark_changed.object);
+            }
+        }
+        break;
+        }
+    }
+
+    if(data.objects_mark_changed.count)
+    {
+        data.objects_mark_changed.clear();
+    }
+}
+
 void SceneManager::_queue_free(Object* parent, Object* child)
 {
-    if(parent)
-    {
-        (void)data.queue_frees.insert(child->id, QueueFreeInfo(parent, child));
-    }
-    else
-    {
-        ObjectAllocator::destroy_object(child);
-    }
+    (void)data.queue_frees.insert(
+        child->id, 
+        QueueFreeInfo
+        {
+            .parent = parent,
+            .child = child
+        }
+    );
+
+    _update_object_mark(Object::MARK_INTERNAL_UPDATE, child, false);
+    _update_object_mark(Object::MARK_UPDATE, child, false);
+    _update_object_mark(Object::MARK_RENDER, child, false);
+}
+
+void SceneManager::_update_object_mark(MarkName mark_name, Object* object, bool marked)
+{
+    (void)data.objects_mark_changed.add(
+        MarkChangedInfo
+        {
+            .mark_name = mark_name,
+            .object = object,
+            .marked = marked,
+        }
+    );
 }
 

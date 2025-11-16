@@ -31,45 +31,6 @@ void Object::set_viewport(Viewport* new_vp)
     data.viewport = new_vp;
 }
 
-void Object::handle_internal_update(f32 dt)
-{
-    for (usize i = 0; i < data.childs.count; i++)
-    {
-        data.childs.get(i)->handle_internal_update(dt);
-    }
-    
-    if(has_mark(MARK_INTERNAL_UPDATE))
-    {
-        ObjectCall(internal_update, dt);
-    }
-}
-
-void Object::handle_update(f32 dt)
-{
-    for (usize i = 0; i < data.childs.count; i++)
-    {
-        data.childs.get(i)->handle_update(dt);
-    }
-    
-    if(has_mark(MARK_UPDATE))
-    {
-        ObjectCall(update, dt);
-    }
-}
-
-void Object::handle_render()
-{
-    for (usize i = 0; i < data.childs.count; i++)
-    {
-        data.childs.get(i)->handle_render();
-    }
-    
-    if(has_mark(MARK_RENDER))
-    {
-        ObjectCall(render);
-    }
-}
-
 void Object::handle_event(const InputEvent& event)
 {
     for (usize i = 0; i < data.childs.count; i++)
@@ -85,11 +46,33 @@ void Object::handle_event(const InputEvent& event)
 
 void Object::mark(MarkName mark_name)
 {
+    switch (mark_name)
+    {
+    case MARK_INTERNAL_UPDATE:
+    case MARK_UPDATE:
+    case MARK_RENDER:
+        SceneManager::_update_object_mark(mark_name, this, true);
+        break;
+    default:
+        break;
+    }
+
     data.marks.set(mark_name);
 }
 
 void Object::unmark(MarkName mark_name)
 {
+    switch (mark_name)
+    {
+    case MARK_INTERNAL_UPDATE:
+    case MARK_UPDATE:
+    case MARK_RENDER:
+        SceneManager::_update_object_mark(mark_name, this, false);
+        break;
+    default:
+        break;
+    }
+
     data.marks.unset(mark_name);
 }
 
@@ -121,7 +104,11 @@ void Object::add_child(Object* request_child)
 void Object::remove_child(Object* child)
 {
     data.childs.remove(child);
-    ObjectCallRef(child, exit);
+    if (has_mark(MARK_IN_SCENE))
+    {
+        ObjectCallRef(child, exit);
+    }
+
     ObjectAllocator::destroy_object(child);
 }
 

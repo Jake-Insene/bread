@@ -8,10 +8,10 @@ struct Slice;
 namespace mem
 {
     template<typename T>
-    inline Slice<u8> to_bytes(const Slice<T> items);
+    inline Slice<u8> to_bytes(const Slice<T>& items);
 
     template<typename T>
-    inline Slice<const u8> to_const_bytes(const Slice<T> items);
+    inline Slice<const u8> to_const_bytes(const Slice<T>& items);
     
     template<typename T>
     inline Slice<T> from_bytes(const Slice<u8> bytes);
@@ -32,10 +32,10 @@ namespace mem
     constexpr bool compare(Slice<const T> src1, Slice<const T> src2);
 
     template<typename T>
-    inline void copy(Slice<T> dest, const Slice<const T> src);
+    constexpr void copy(Slice<T> dest, const Slice<T>& src);
 
     template<typename T>
-    inline void copy(Slice<T> dest, const Slice<T> src);
+    constexpr void copy(Slice<T> dest, const Slice<const T>& src);
 
     template<typename T>
     inline void set(Slice<T> dest, const T value);
@@ -50,7 +50,7 @@ namespace mem
 {
 
 template<typename T>
-inline Slice<u8> to_bytes(const Slice<T> items)
+inline Slice<u8> to_bytes(const Slice<T>& items)
 {
     return Slice<u8>(
         (u8*)items.items,
@@ -59,7 +59,7 @@ inline Slice<u8> to_bytes(const Slice<T> items)
 }
 
 template<typename T>
-inline Slice<const u8> to_const_bytes(const Slice<T> items)
+inline Slice<const u8> to_const_bytes(const Slice<T>& items)
 {
     return Slice<const u8>(
         (const u8*)items.items,
@@ -99,31 +99,36 @@ constexpr bool compare(Slice<const T> src1, Slice<const T> src2)
 void _copy(Slice<u8> dest, Slice<const u8> src);
 
 template<typename T>
-inline void copy(Slice<T> dest, const Slice<const T> src)
+constexpr void _copy_impl(Slice<T> dest, const Slice<const T>& src)
 {
     DebugAssert(dest.len >= src.len, "invalid destination");
 #if BREAD_ENABLE_INTRISICS
-    _copy(to_bytes(dest), to_const_bytes(src));
-#else
-    for (usize i = 0; i < src.len; i++)
+    if !consteval
     {
-        dest[i] = src[i];
+        Slice<u8> dest_bytes = to_bytes(dest);
+        _copy(dest_bytes, to_const_bytes(src));
+        return;
     }
+    else
 #endif
+    {
+        for (usize i = 0; i < src.len; i++)
+        {
+            dest[i] = src[i];
+        }
+    }
 }
 
 template<typename T>
-inline void copy(Slice<T> dest, const Slice<T> src)
+constexpr void copy(Slice<T> dest, const Slice<T>& src)
 {
-    DebugAssert(dest.len >= src.len, "invalid destination");
-#if BREAD_ENABLE_INTRISICS
-    _copy(to_bytes(dest), to_const_bytes(src));
-#else
-    for (usize i = 0; i < src.len; i++)
-    {
-        dest[i] = src[i];
-    }
-#endif
+    _copy_impl<T>(dest, Slice<const T>(src));
+}
+
+template<typename T>
+constexpr void copy(Slice<T> dest, const Slice<const T>& src)
+{
+    _copy_impl<T>(dest, src);
 }
 
 void _set_zero(Slice<u8> dest);
@@ -134,7 +139,8 @@ inline void set(Slice<T> dest, const T value)
 #if BREAD_ENABLE_INTRISICS
     if (value == T(0)) // for floating point values it works
     {
-        _set_zero(to_bytes(dest));
+        Slice<u8> dest_bytes = to_bytes(dest);
+        _set_zero(dest_bytes);
         return;
     }
 #endif

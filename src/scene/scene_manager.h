@@ -19,6 +19,13 @@ struct SceneManager
         Object* child;
     };
 
+    struct MarkChangedInfo
+    {
+        MarkName mark_name;
+        Object* object;
+        bool marked;
+    };
+
     struct InternalData
     {
         mem::Allocator allocator;
@@ -57,6 +64,10 @@ struct SceneManager
         Array<CanvasObject*> root_canvas;
         Array<CanvasObject*> touched_focus;
         HashMap<ObjectID, QueueFreeInfo> queue_frees;
+        Array<Object*> int_update_list;
+        Array<Object*> update_list;
+        Array<Object*> render_list;
+        Array<MarkChangedInfo> objects_mark_changed;
     };
     
     static inline InternalData data;
@@ -96,5 +107,8 @@ struct SceneManager
 
     static void _add_root_canvas(CanvasObject* c);
     
+    static void _remove_object_from_list(Object* object);
+    static void _handle_object_mark_changed();
     static void _queue_free(Object* parent, Object* child);
+    static void _update_object_mark(MarkName mark_name, Object* object, bool marked);
 };

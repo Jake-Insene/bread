@@ -36,7 +36,7 @@ struct [[nodiscard]] Slice
         len = slice.len;
         return *this;
     }
-    
+
     template<typename Self>
     [[nodiscard]] constexpr auto& operator[](this Self& self, const usize index)
     {

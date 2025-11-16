@@ -99,18 +99,39 @@ Transform2D CanvasObject::get_transform() const
 Transform2D CanvasObject::get_global_transform() const
 {
     Object* parent = get_parent();
-    if (parent && parent->has_mark(MARK_CANVAS))
+
+    switch (data.render_mode)
     {
-        CanvasObject* p_canvas = reinterpret_cast<CanvasObject*>(parent);
-        return p_canvas->get_global_transform() * data.transform;
-    }
-    else if (parent && parent->has_mark(MARK_2D))
-    {
-        Object2D* p_2d = reinterpret_cast<Object2D*>(parent);
-        return p_2d->get_global_transform() * data.transform;
+    case CANVAS:
+        if (parent && parent->has_mark(MARK_CANVAS))
+        {
+            CanvasObject* p_canvas = reinterpret_cast<CanvasObject*>(parent);
+            return p_canvas->get_global_transform() * data.transform;
+        }
+        break;
+    case WORLD:
+        if (parent && parent->has_mark(MARK_2D))
+        {
+            Object2D* p_2d = reinterpret_cast<Object2D*>(parent);
+            return p_2d->get_global_transform() * data.transform;
+        }
+        break;
     }
 
     return data.transform;
+}
+
+void CanvasObject::set_render_mode(RenderMode new_rm)
+{
+    if (data.render_mode == new_rm)
+        return;
+
+    data.render_mode = new_rm;
+}
+
+CanvasObject::RenderMode CanvasObject::get_render_mode()
+{
+    return data.render_mode;
 }
 
 
@@ -128,8 +149,23 @@ Rect2D CanvasObject::get_rect() const
 void CanvasObject::draw_canvas_element(const Transform2D& transform, TextureID texture, const Rect2D& rect, 
     const Rect2D& src_rect, Color mod_color, u32 flags)
 {
-    RenderManager::render_item_draw_ui_sprite(
-        get_render_item(), transform, texture, rect,
-        src_rect, mod_color, RenderManager::RenderFlags(flags)
-    );
+    switch (data.render_mode)
+    {
+    case CANVAS:
+    {
+        RenderManager::render_item_draw_ui_sprite(
+            get_render_item(), transform, texture, rect,
+            src_rect, mod_color, RenderManager::RenderFlags(flags)
+        );
+    }
+        break;
+    case WORLD:
+    {
+        RenderManager::render_item_draw_sprite(
+            get_render_item(), transform, texture, rect,
+            src_rect, mod_color, RenderManager::RenderFlags(flags)
+        );
+    }
+        break;
+    }
 }
