@@ -32,8 +32,6 @@ struct Camera2D : Object2D
     */
     bool smooth_position;
 
-    void init(const CreateInfo& info);
-
     void enter();
     void exit();
 

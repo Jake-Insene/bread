@@ -1,7 +1,7 @@
 #include "collections/job_queue.h"
 
 
-JobQueue JobQueue::create(const mem::Allocator& allocator)
+JobQueue JobQueue::with_allocator(const mem::Allocator& allocator)
 {
 	return JobQueue
 	{
@@ -11,7 +11,7 @@ JobQueue JobQueue::create(const mem::Allocator& allocator)
 	};
 }
 
-JobQueue JobQueue::create_with_size(const mem::Allocator& allocator, usize initial_size)
+JobQueue JobQueue::with_size(const mem::Allocator& allocator, usize initial_size)
 {
 	return JobQueue
 	{

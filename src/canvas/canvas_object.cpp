@@ -15,9 +15,6 @@ void CanvasObject::_bind_vtable(CanvasObject::VTable& vtable)
 
 void CanvasObject::init(const CreateInfo&)
 {
-    mark(MARK_RENDER);
-    mark(MARK_CANVAS);
-
     data.render_item = RenderManager::create_item();
 }
 

@@ -94,13 +94,28 @@
         return &klass;\
     }\
     \
-    OBJECT_FUNCV_ARG1(name, base, init, const CreateInfo&)\
+    void(Object::*get_init()) (const CreateInfo&)\
+    {\
+        return (void(Object::*)(const CreateInfo&))&name::init;\
+    }\
+    void initv(const CreateInfo& _0)\
+    {\
+        base::initv(_0);\
+        for(const MarkName& m : name::ClassMarks) { mark(m); }\
+        if(name::get_init() != base::get_init())\
+        {\
+            name::init(_0);\
+        }\
+    }\
     OBJECT_RFUNCV(name, base, deinit)\
     OBJECT_FUNCV(name, base, enter)\
     OBJECT_FUNCV(name, base, exit)\
     OBJECT_FUNCV_ARG1(name, base, internal_update, f32)\
     OBJECT_FUNCV_ARG1(name, base, event, const InputEvent&)\
     
+
+#define MARKS(...) static constexpr MarkName ClassMarks[] = {__VA_ARGS__};
+
     
 // Don't use VTableCall because it reference the member vtable that
 // is not in an object.
@@ -127,6 +142,80 @@ using MarkName = u64;
 */
 struct Object
 {
+    enum
+    {
+        /*
+        * Default mark, only serves as a place holder.
+        */
+        MARK_DEFAULT,
+
+        /*
+        * The object has internal behaviour that needs to be preserved.
+        */
+        MARK_INTERNAL_UPDATE,
+
+        /*
+        * The object has unique behaviour, can overrided by its derived classes.
+        */
+        MARK_UPDATE,
+
+        /*
+        * The object has rendering behaviour, can overrided by its derived classes.
+        */
+        MARK_RENDER,
+
+        /*
+        * Input devices can interact with the object.
+        */
+        MARK_EVENT,
+
+        /*
+        * The object is in the main scene.
+        */
+        MARK_IN_SCENE,
+
+        /*
+        * The object is a 2D world element.
+        */
+        MARK_2D,
+
+        /*
+        * The object is a 2D world element.
+        */
+        MARK_CANVAS,
+
+        /*
+        * The object was marked to be deleted at the end of the frame.
+        */
+        MARK_QUEUE_FREE,
+
+        /*
+        * The object is deallocated.
+        */
+        MARK_DEALLOCATED,
+
+        MARK_COUNT,
+    };
+
+    /*
+    * As soon as you can see struct/clases in the engine are always public,
+    * this is a design pattern, to expose public read/write data you can
+    * create member function or let the user acces directly to them, for private
+    * data you should use a 'data' field, this way you separate public from private data members
+    * in a visual way.
+    */
+    struct InternalData
+    {
+        String name{}; // necessary?
+        Object* parent = nullptr;
+        Array<Object*> childs;
+
+        BitMask<MARK_COUNT> marks{};
+        BitMask<64> bit_groups{};
+
+        Viewport* viewport = nullptr;
+    } data;
+
     struct CreateInfo
     {
         mem::Allocator allocator;
@@ -155,6 +244,8 @@ struct Object
         usize class_size;
         VTable* vtable;
     };
+
+    static constexpr MarkName ClassMarks[] = { MARK_DEFAULT };
 
     static void* _get_bind_vtable() { return reinterpret_cast<void*>(&Object::_bind_vtable); }
 
@@ -289,75 +380,6 @@ struct Object
     * The object memory allocator, Use it to allocate memory for the object.
     */
     mem::Allocator allocator{};
-
-    enum
-    {
-        /*
-        * The object has internal behaviour that needs to be preserved.
-        */
-        MARK_INTERNAL_UPDATE,
-        
-        /*
-        * The object has unique behaviour, can overrided by its derived classes.
-        */
-        MARK_UPDATE,
-
-        /*
-        * The object has rendering behaviour, can overrided by its derived classes.
-        */
-        MARK_RENDER,
-
-        /*
-        * Input devices can interact with the object.
-        */
-        MARK_EVENT,
-
-        /*
-        * The object is in the main scene.
-        */
-        MARK_IN_SCENE,
-
-        /*
-        * The object is a 2D world element.
-        */
-        MARK_2D,
-
-        /*
-        * The object is a 2D world element.
-        */
-        MARK_CANVAS,
-
-        /*
-        * The object was marked to be deleted at the end of the frame.
-        */
-        MARK_QUEUE_FREE,
-
-        /*
-        * The object is deallocated.
-        */
-        MARK_DEALLOCATED,
-
-        MARK_COUNT,
-    };
-
-    /*
-    * As soon as you can see struct/clases in the engine are always public,
-    * this is a design pattern, to expose public read/write data you can
-    * create member function or let the user acces directly to them, for private
-    * data you should use a 'data' field, this way you separate public from private data members
-    * in a visual way.
-    */
-    struct InternalData
-    {
-        String name{}; // necessary?
-        Object* parent = nullptr;
-        Array<Object*> childs;
-
-        BitMask<MARK_COUNT> marks{};
-        BitMask<64> bit_groups{};
-
-        Viewport* viewport = nullptr;
-    } data;
 
     void handle_event(const InputEvent& event) Function(FunctionInternal);
 

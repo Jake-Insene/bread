@@ -1,10 +1,6 @@
 #include "object/timer.h"
 
 
-void Timer::init(const CreateInfo&)
-{
-}
-
 void Timer::enter()
 {
     data.acumulator = 0;

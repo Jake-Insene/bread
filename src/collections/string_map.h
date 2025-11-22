@@ -373,8 +373,6 @@ struct [[nodiscard]] StringMap
         first = last = nullptr;
     }
     
-    // String map utilities
-
     // FNV-1a
     static u64 hashfunc(StringView key)
     {

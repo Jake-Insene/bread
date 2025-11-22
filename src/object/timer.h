@@ -25,8 +25,6 @@ struct Timer : Object
     */
     Event<void(Object::*)()> timeout;
 
-    void init(const CreateInfo&);
-    
     void enter();
     void internal_update(f32 dt);
 

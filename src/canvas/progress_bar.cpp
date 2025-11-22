@@ -4,12 +4,6 @@
 #include "resource/texture.h"
 
 
-void ProgressBar::init(const CreateInfo&)
-{
-    mark(MARK_RENDER);
-    mark(MARK_INTERNAL_UPDATE);
-}
-
 void ProgressBar::internal_update(f32 dt)
 {
     data.value = math::move_to(data.value, data.current_value, update_speed * dt);

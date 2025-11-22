@@ -1,11 +1,13 @@
 #pragma once
 #include "2d/object_2d.h"
-#include "resource/sprite_animation.h"
+
+struct SpriteAnimation;
 
 
 struct AnimatedSprite2D : Object2D
 {
 	OBJECT(AnimatedSprite2D, Object2D);
+    MARKS(MARK_RENDER);
 
     struct InternalData
     {

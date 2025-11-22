@@ -8,6 +8,7 @@ struct Texture2D;
 struct ProgressBar : CanvasObject
 {
 	OBJECT(ProgressBar, CanvasObject);
+    MARKS(MARK_RENDER, MARK_INTERNAL_UPDATE);
 
     static constexpr f32 DefaultMin = 0.f;
     static constexpr f32 DefaultMax = 100.f;
@@ -26,8 +27,6 @@ struct ProgressBar : CanvasObject
     Color bg_color{ 255, 255, 255, 255 };
     Color fill_color{ 255, 255, 255, 255 };
     f32 update_speed = 1;
-
-    void init(const CreateInfo&);
 
     void internal_update(f32 dt);
     void render();

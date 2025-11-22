@@ -1,11 +1,11 @@
 #include "2d/animated_sprite_2d.h"
 
 #include "graphics/render_manager.h"
+#include "resource/sprite_animation.h"
 
 
 void AnimatedSprite2D::init(const CreateInfo&)
 {
-	mark(MARK_RENDER);
 	data.current_animation = String::with_allocator(allocator);
 }
 

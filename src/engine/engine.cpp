@@ -35,7 +35,7 @@ void Engine::initialize()
     // To use thread and mutexes.
     OS::initialize(allocator);
 
-    data.main_queue = JobQueue::create_with_size(allocator, DefaultMainQueueSize);
+    data.main_queue = JobQueue::with_size(allocator, DefaultMainQueueSize);
     data.fps = 60;
 
     // Going to the assets folder, crash is intended

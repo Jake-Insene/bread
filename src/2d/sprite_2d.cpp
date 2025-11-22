@@ -3,11 +3,6 @@
 #include "graphics/render_manager.h"
 
 
-void Sprite2D::init(const CreateInfo&)
-{
-    mark(MARK_RENDER);
-}
-
 void Sprite2D::render()
 {
     if (data.texture == nullptr)

@@ -17,6 +17,8 @@ struct Material;
 struct Object2D : Object
 {
     OBJECT(Object2D, Object);
+    MARKS(MARK_2D);
+
     DefineVTable(Object)
     {
         Event<void(Object2D::*)(), false> transform_changed;

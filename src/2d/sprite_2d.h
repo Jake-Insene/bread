@@ -8,6 +8,7 @@
 struct Sprite2D : Object2D
 {
     OBJECT(Sprite2D, Object2D);
+    MARKS(MARK_RENDER);
 
     struct InternalData
     {
@@ -36,8 +37,6 @@ struct Sprite2D : Object2D
     */
     bool flip_v = false;
     
-    void init(const CreateInfo&);
-
     void render();
 
     /*

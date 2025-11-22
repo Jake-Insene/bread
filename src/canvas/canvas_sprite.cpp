@@ -4,11 +4,6 @@
 #include "resource/texture.h"
 
 
-void CanvasSprite::init(const CreateInfo&)
-{
-    mark(MARK_RENDER);
-}
-
 void CanvasSprite::render()
 {
     if (data.texture == nullptr)

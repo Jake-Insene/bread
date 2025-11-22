@@ -6,6 +6,7 @@
 struct AudioPlayer : Object
 {
     OBJECT(AudioPlayer, Object);
+    MARKS(MARK_INTERNAL_UPDATE);
 
     struct InternalData
     {
@@ -15,8 +16,6 @@ struct AudioPlayer : Object
         bool playing;
         bool loop = false;
     } data;
-
-    void init(const CreateInfo&);
 
     void enter();
     void internal_update(f32 dt);

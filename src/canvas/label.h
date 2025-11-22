@@ -6,6 +6,7 @@
 struct Label : CanvasObject
 {
 	OBJECT(Label, CanvasObject);
+    MARKS(MARK_RENDER);
 
 	struct InternalData
 	{

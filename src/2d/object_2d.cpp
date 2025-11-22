@@ -34,7 +34,6 @@ RenderManager::RenderLayerMask Object2D::get_render_layers()
 
 void Object2D::init(const CreateInfo&)
 {
-    mark(MARK_2D);
     data.render_item = RenderManager::create_item();
 }
 

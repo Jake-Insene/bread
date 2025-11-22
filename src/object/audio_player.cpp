@@ -3,11 +3,6 @@
 #include "audio/audio.h"
 
 
-void AudioPlayer::init(const CreateInfo&)
-{
-    mark(MARK_INTERNAL_UPDATE);
-}
-
 void AudioPlayer::enter()
 {
 }

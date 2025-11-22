@@ -8,6 +8,7 @@ struct Texture2D;
 struct CanvasSprite : CanvasObject
 {
     OBJECT(CanvasSprite, CanvasObject);
+    MARKS(MARK_RENDER);
 
     struct InternalData
     {
@@ -18,8 +19,6 @@ struct CanvasSprite : CanvasObject
     Rect2D src_rect{};
     bool flip_h = false;
     bool flip_v = false;
-
-    void init(const CreateInfo&);
 
     void render();
 

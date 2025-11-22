@@ -7,6 +7,7 @@ struct Texture;
 struct Button : CanvasObject
 {
     OBJECT(Button, CanvasObject);
+    MARKS(MARK_RENDER);
     
     static void _bind_vtable(VTable& vtable);
 

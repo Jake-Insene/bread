@@ -1,6 +1,5 @@
 #include "2d/tile_map.h"
 
-#include "graphics/viewport.h"
 #include "log/log.h"
 
 
@@ -11,8 +10,6 @@ void TileMap::_bind_vtable(TileMap::VTable& vtable)
 
 void TileMap::init(const CreateInfo&)
 {
-	mark(MARK_RENDER);
-
 	data.bodies = Array<Physics2D::BodyID>::with_size(allocator, 4);
 }
 

@@ -7,6 +7,7 @@
 struct TileMap : Object2D
 {
 	OBJECT(TileMap, Object2D);
+    MARKS(MARK_RENDER);
 
 	static void _bind_vtable(TileMap::VTable& vtable);
 

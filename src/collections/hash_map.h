@@ -125,6 +125,115 @@ struct [[nodiscard]] HashMap
             entries = {};
         }
     }
+
+    // non user funcs
+    
+    [[nodiscard]] bool _find_entry(const u64 hash, const K& k, usize& pos) const
+    {
+        u64 i = hash & (entries.len - 1);
+        usize dist = 0;
+
+        while (true)
+        {
+            if (dist >= entries.len)
+            {
+                return false;
+            }
+
+            if (entries[i] != nullptr && entries[i]->hash == hash && HashOfType<K>::compare(k, entries[i]->kv.first))
+            {
+                pos = i;
+                return true;
+            }
+
+            dist++;
+            i++;
+            if (i == entries.len)
+            {
+                i = 0;
+            }
+        }
+    }
+
+    [[nodiscard]] MapEntry* _insert_or_replace(const K& k, const V& value)
+    {
+        if (count >= entries.len)
+        {
+            resize(entries.len << 1);
+        }
+        else if (entries.len == 0)
+        {
+            resize(DefaultCapacity);
+        }
+
+        u64 hash = HashOfType<K>::hashfunc(k);
+        usize pos = InvalidPos;
+        if (_find_entry(hash, k, pos))
+        {
+            entries[pos]->kv.second = value;
+            return entries[pos];
+        }
+        else
+        {
+            usize i = hash & (entries.len - 1);
+            while (true)
+            {
+                if (entries[i] == nullptr)
+                {
+                    MapEntry* entry = mem::from_bytes<MapEntry>(allocator.alloc(sizeof(MapEntry), alignof(MapEntry))).ptr();
+                    entry->hash = hash;
+                    entry->kv = KeyValue(k, value);
+                    entry->prev = nullptr;
+                    entry->next = nullptr;
+
+                    entries[i] = entry;
+                    if (first == nullptr)
+                    {
+                        first = entry;
+                        last = entry;
+                    }
+                    else
+                    {
+                        last->next = entry;
+                        entry->prev = last;
+                        last = entry;
+                    }
+
+                    count++;
+                    return entry;
+                }
+                else if (entries[i]->hash == InvalidHash)
+                {
+                    MapEntry* entry = entries[i];
+                    entry->hash = hash;
+                    entry->kv = KeyValue(k, value);
+                    entry->prev = nullptr;
+                    entry->next = nullptr;
+
+                    if (first == nullptr)
+                    {
+                        first = entry;
+                        last = entry;
+                    }
+                    else
+                    {
+                        last->next = entry;
+                        entry->prev = last;
+                        last = entry;
+                    }
+
+                    count++;
+                    return entry;
+                }
+
+                i++;
+                if (i == entries.len)
+                {
+                    i = 0;
+                }
+            }
+        }
+    }
     
     Iterator iter() const { return Iterator(first); }
 
@@ -243,112 +352,5 @@ struct [[nodiscard]] HashMap
 
         count = 0;
         first = last = nullptr;
-    }
-
-    [[nodiscard]] bool _find_entry(const u64 hash, const K& k, usize& pos) const
-    {
-        u64 i = hash & (entries.len - 1);
-        usize dist = 0;
-
-        while (true)
-        {
-            if (dist >= entries.len)
-            {
-                return false;
-            }
-
-            if (entries[i] != nullptr && entries[i]->hash == hash && HashOfType<K>::compare(k, entries[i]->kv.first))
-            {
-                pos = i;
-                return true;
-            }
-
-            dist++;
-            i++;
-            if (i == entries.len)
-            {
-                i = 0;
-            }
-        }
-    }
-
-    [[nodiscard]] MapEntry* _insert_or_replace(const K& k, const V& value)
-    {
-        if (count >= entries.len)
-        {
-            resize(entries.len << 1);
-        }
-        else if (entries.len == 0)
-        {
-            resize(DefaultCapacity);
-        }
-
-        u64 hash = HashOfType<K>::hashfunc(k);
-        usize pos = InvalidPos;
-        if (_find_entry(hash, k, pos))
-        {
-            entries[pos]->kv.second = value;
-            return entries[pos];
-        }
-        else
-        {
-            usize i = hash & (entries.len - 1);
-            while (true)
-            {
-                if (entries[i] == nullptr)
-                {
-                    MapEntry* entry = mem::from_bytes<MapEntry>(allocator.alloc(sizeof(MapEntry), alignof(MapEntry))).ptr();
-                    entry->hash = hash;
-                    entry->kv = KeyValue(k, value);
-                    entry->prev = nullptr;
-                    entry->next = nullptr;
-
-                    entries[i] = entry;
-                    if (first == nullptr)
-                    {
-                        first = entry;
-                        last = entry;
-                    }
-                    else
-                    {
-                        last->next = entry;
-                        entry->prev = last;
-                        last = entry;
-                    }
-
-                    count++;
-                    return entry;
-                }
-                else if (entries[i]->hash == InvalidHash)
-                {
-                    MapEntry* entry = entries[i];
-                    entry->hash = hash;
-                    entry->kv = KeyValue(k, value);
-                    entry->prev = nullptr;
-                    entry->next = nullptr;
-
-                    if (first == nullptr)
-                    {
-                        first = entry;
-                        last = entry;
-                    }
-                    else
-                    {
-                        last->next = entry;
-                        entry->prev = last;
-                        last = entry;
-                    }
-
-                    count++;
-                    return entry;
-                }
-
-                i++;
-                if (i == entries.len)
-                {
-                    i = 0;
-                }
-            }
-        }
     }
 };
