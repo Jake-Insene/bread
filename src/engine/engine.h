@@ -3,8 +3,9 @@
 #include "display/window.h"
 #include "mem/generic_allocator.h"
 #include "resource/texture.h"
-#include "resource/sprite_animation.h"
 #include "resource/resource_manager.h"
+#include "resource/sprite_animation.h"
+#include "resource/tile_set.h"
 
 
 // Application configuration

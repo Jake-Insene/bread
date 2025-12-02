@@ -23,21 +23,25 @@ static void _load_theme(stbtt_fontinfo* font, Font::FontTheme& theme)
     {
         Font::Glyph& glyph = theme.glyphs.get(glyph_index);
         
-        i32 width;
-        i32 height;
         Opaque* bitmap = reinterpret_cast<Opaque*>(stbtt_GetCodepointBitmap(
-            font, 0.f, stbtt_ScaleForPixelHeight(font, f32(theme.font_size)), (int)glyph_index, &width, &height, 0, 0
+            font, 0.f, stbtt_ScaleForPixelHeight(font, f32(theme.font_size)), 
+            (int)glyph_index, &glyph.advance.width, &glyph.advance.height, 0, 0
         ));
-        glyph.advance.x = width;
-        glyph.advance.y = height;
 
         if (glyph_index == ' ')
         {
+            f32 scale = stbtt_ScaleForPixelHeight(font, f32(theme.font_size));
+            int advance;
+            int lsb;
+            stbtt_GetCodepointHMetrics(font, glyph_index, &advance, &lsb);
+
+            glyph.advance.width = i32(advance * scale);
+
             stbtt_FreeBitmap(bitmap->cast<u8*>(), nullptr);
             continue;
         }
 
-        auto pixels = Slice(bitmap->cast<u8*>(), width * height);
+        auto pixels = Slice(bitmap->cast<u8*>(), glyph.advance.width * glyph.advance.height);
         if (_is_valid_glyph(glyph_index))
         {
             glyph.char_texture = Graphics::create_texture(
@@ -47,7 +51,7 @@ static void _load_theme(stbtt_fontinfo* font, Font::FontTheme& theme)
                     .format = TEXTURE_FORMAT_R8,
                     .min_filter = TEXTURE_FILTER_NEAREST,
                     .mag_filter = TEXTURE_FILTER_NEAREST,
-                    .size = Vector2I(width, height),
+                    .size = Vector2I(glyph.advance.width, glyph.advance.height),
                     .pixels = pixels,
                 }
             );

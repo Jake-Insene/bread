@@ -59,7 +59,11 @@ void Area2D::_on_body_enter(Opaque* _this, Object2D* obj)
     if (area->on_body_enter.has_func() == false)
         return;
 
-    area->on_body_enter.call(Object::cast<Body2D>(obj));
+    Body2D* body = Object::cast<Body2D>(obj);
+    if (!body)
+        return;
+
+    area->on_body_enter.call(body);
 }
 
 void Area2D::_on_body_exit(Opaque* _this, Object2D* obj)
@@ -69,5 +73,9 @@ void Area2D::_on_body_exit(Opaque* _this, Object2D* obj)
     if (area->on_body_exit.has_func() == false)
         return;
 
-    area->on_body_exit.call(Object::cast<Body2D>(obj));
+    Body2D* body = Object::cast<Body2D>(obj);
+    if (!body)
+        return;
+
+    area->on_body_exit.call(body);
 }

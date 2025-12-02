@@ -55,7 +55,7 @@ if(MSVC)
         "/W4" "/Oi" "/Zl" "/GS-" "/GR-" "/EHs-" "/EHc-" "/Zc:threadSafeInit-" "/Zc:preprocessor"
         # Some warnings needs to be treated as error because we eliminated the compiler runtime,
         # so now is more easy to create bugs.
-        "/we4701" "/we4700" "/we4101" "/we4703" "/we4189" "/wd4201"
+        "/wd4201" "/we4244" "/we4701" "/we4700" "/we4101" "/we4703" "/we4189" "/we4834"
     )
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_MSVC")
 else()

@@ -87,6 +87,7 @@ void TileMap::set_tile_set(TileSet* new_tile_set)
 		shape_count++;
 		Vector2 position = Vector2(tile.position);
 		Shape2D tile_shape = Shape2D::make_box(tile_size / 2);
+		// Centering...
 		tile_shape.translate(Vector2(tile_size.x / 2.f, -tile_size.y / 2.f));
 
 		tile_shape.translate(position * tile_size);
