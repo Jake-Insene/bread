@@ -73,10 +73,10 @@ f32 P2DShape::calculate_inertia(f32 mass) const
     {
         const Vector2 center_to_vertice = vertices[i] - centroid;
         const Vector2 center_to_vertice1 = vertices[(i + 1) % 4] - centroid;
-        const f32 center_to_vertice_lenght2 = center_to_vertice.dot(center_to_vertice);
-        const f32 center_to_vertice1_lenght2 = center_to_vertice1.dot(center_to_vertice1);
+        const f32 center_to_vertice_length2 = center_to_vertice.dot(center_to_vertice);
+        const f32 center_to_vertice1_length2 = center_to_vertice1.dot(center_to_vertice1);
         const f32 inertia_triangle = mass_per_triangle_face * 
-            (center_to_vertice_lenght2 + center_to_vertice1_lenght2
+            (center_to_vertice_length2 + center_to_vertice1_length2
             + center_to_vertice.dot(center_to_vertice1)) / 6.f;
         
         inertia += inertia_triangle;

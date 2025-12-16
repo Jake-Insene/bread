@@ -1,6 +1,5 @@
 #include "canvas/canvas_sprite.h"
 
-#include "graphics/render_manager.h"
 #include "resource/texture.h"
 
 

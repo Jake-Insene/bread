@@ -70,8 +70,11 @@ void EGL::initialize(const mem::Allocator& allocator)
     EGL_REQUIRED_LOAD(glDeleteVertexArrays);
     EGL_REQUIRED_LOAD(glBindVertexArray);
     EGL_REQUIRED_LOAD(glVertexAttribPointer);
+    EGL_REQUIRED_LOAD(glVertexAttribFormat);
     EGL_REQUIRED_LOAD(glEnableVertexAttribArray);
+    EGL_REQUIRED_LOAD(glVertexAttribBinding);
     EGL_REQUIRED_LOAD(glVertexAttribDivisor);
+    EGL_REQUIRED_LOAD(glBindVertexBuffer);
 
     EGL_REQUIRED_LOAD(glGenTextures);
     EGL_REQUIRED_LOAD(glDeleteTextures);
@@ -84,6 +87,7 @@ void EGL::initialize(const mem::Allocator& allocator)
     EGL_REQUIRED_LOAD(glDeleteFramebuffers);
     EGL_REQUIRED_LOAD(glBindFramebuffer);
     EGL_REQUIRED_LOAD(glFramebufferTexture2D);
+    EGL_REQUIRED_LOAD(glCheckFramebufferStatus);
     EGL_REQUIRED_LOAD(glBlitFramebuffer);
 
     EGL_REQUIRED_LOAD(glClearColor);

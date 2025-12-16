@@ -1,5 +1,5 @@
 #pragma once
-#include "graphics/graphics_types.h"
+#include "render/render_manager.h"
 #include "math/rect_2d.h"
 #include "math/transform_2d.h"
 #include "math/color.h"
@@ -88,7 +88,7 @@ struct CanvasObject : Object
     */
     Rect2D get_rect() const;
 
-    void draw_canvas_element(const Transform2D& transform, TextureID texture, const Rect2D& rect,
+    void draw_canvas_element(const Transform2D& transform, Graphics::TextureID texture, const Rect2D& rect,
         const Rect2D& src_rect, Color mod_color, u32 flags);
 };
 

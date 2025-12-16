@@ -1,12 +1,7 @@
 #pragma once
 #include "core/templates.h"
-#include "debug/assertion.h"
+#include "debug/fail.h"
 
-
-struct StringView;
-
-template<typename E>
-StringView GetResultErrorMessage(const E& err);
 
 template<typename E>
 struct BadResult
@@ -49,13 +44,13 @@ struct [[nodiscard]] Result
 			return u_value;
 		}
 
-		DebugAssert(false, "the result hasn't a value");
+		FailOn(true, "the result hasn't a value");
 		return T();
 	}
 
 	constexpr auto error() const
 	{
-		DebugAssert(!has_value, "the result has a value");
+		FailOn(has_value, "the result has a value");
 		return u_error;
 	}
 

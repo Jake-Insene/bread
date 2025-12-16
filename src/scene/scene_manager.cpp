@@ -4,20 +4,19 @@
 #include "canvas/canvas_object.h"
 #include "debug/profiler.h"
 #include "engine/engine.h"
-#include "graphics/graphics.h"
-#include "graphics/viewport.h"
-#include "graphics/render_manager.h"
 #include "input/input.h"
 #include "log/log.h"
 #include "object/object_allocator.h"
 #include "physics/physics_2d.h"
+#include "render/viewport.h"
 
 
 void SceneManager::initialize(const mem::Allocator& allocator)
 {
     data.allocator = allocator;
 
-    data.main_viewport = Viewport::create_from_render_target(allocator, RenderTarget::get_main_render_target());
+    // TODO: Create Render Target
+    //data.main_viewport = Viewport::create_from_render_target(allocator, RenderTarget::get_main_render_target());
     
     data.current_scene = nullptr;
     data.current_camera = nullptr;
@@ -186,15 +185,14 @@ void SceneManager::step()
             data.debug_time.driver_render_time = duration;
         );
 
-        Graphics::render(&get_main_viewport());
-        RenderManager::reset_commands();
+        RenderManager::render_scene(&get_main_viewport());
     }
 
     {
         PROFILE_SCOPE(
             data.debug_time.driver_present_time = duration;
         );
-        Graphics::present(&get_main_viewport());
+        //RenderManager::present_scene(&get_main_viewport());
     }
 
     data.fps_acum++;
@@ -212,12 +210,12 @@ void SceneManager::step()
 
 void SceneManager::recreate_window()
 {
-    Graphics::recreate();
-
     if(!get_keep_viewport())
     {
         set_viewport_size(Engine::get_main_window().get_size());
     }
+
+    RenderManager::recreate_window();
 }
 
 void SceneManager::set_keep_viewport(bool keep_viewport)

@@ -1,5 +1,7 @@
 #define Input(N) layout(location = N) in
 #define Output(N) layout(location = N) out
+#define Texture2D(N) layout(binding = N) uniform sampler2D
+
 
 // Common Uniform Data
 layout(std140, binding = 0) uniform SceneUniform
@@ -24,22 +26,24 @@ Input(2) vec2 UV;
 
 Output(0) vec4 COLOR;
 
-layout(binding = 0) uniform sampler2D Texture0;
-layout(binding = 1) uniform sampler2D Texture1;
-layout(binding = 2) uniform sampler2D Texture2;
-layout(binding = 3) uniform sampler2D Texture3;
-layout(binding = 4) uniform sampler2D Texture4;
-layout(binding = 5) uniform sampler2D Texture5;
-layout(binding = 6) uniform sampler2D Texture6;
-layout(binding = 7) uniform sampler2D Texture7;
-layout(binding = 8) uniform sampler2D Texture8;
-layout(binding = 9) uniform sampler2D Texture9;
-layout(binding = 10) uniform sampler2D Texture10;
-layout(binding = 11) uniform sampler2D Texture11;
-layout(binding = 12) uniform sampler2D Texture12;
-layout(binding = 13) uniform sampler2D Texture13;
-layout(binding = 14) uniform sampler2D Texture14;
-layout(binding = 15) uniform sampler2D Texture15;
+// For now Only 16 textures are available
+Texture2D(0) Texture0;
+Texture2D(1) Texture1;
+Texture2D(2) Texture2;
+Texture2D(3) Texture3;
+Texture2D(4) Texture4;
+Texture2D(5) Texture5;
+Texture2D(6) Texture6;
+Texture2D(7) Texture7;
+Texture2D(8) Texture8;
+Texture2D(9) Texture9;
+Texture2D(10) Texture10;
+Texture2D(11) Texture11;
+Texture2D(12) Texture12;
+Texture2D(13) Texture13;
+Texture2D(14) Texture14;
+Texture2D(15) Texture15;
+
 
 vec4 Sample(vec2 UV)
 {

@@ -1,6 +1,5 @@
 #include "2d/animated_sprite_2d.h"
 
-#include "graphics/render_manager.h"
 #include "resource/sprite_animation.h"
 
 

@@ -62,8 +62,8 @@ void Material::init()
 {
 	Resource::init(RESOURCE_MATERIAL);
 
-	material_id = Graphics::create_material(
-		MaterialCreateInfo{}
+	material_id = MaterialManager::material_create(
+        MaterialManager::MaterialCreateInfo{}
 	);
 }
 
@@ -71,7 +71,7 @@ void Material::destroy()
 {
     Resource::destroy();
 
-	Graphics::destroy_material(material_id);
+    MaterialManager::material_destroy(material_id);
 }
 
 Error Material::load_from_file(StringView file_path, StringView defines)
@@ -85,7 +85,7 @@ Error Material::load_from_file(StringView file_path, StringView defines)
     auto& allocator = ResourceManager::get_allocator();
     path.set(file_path);
 
-	MaterialCompileInfo cmp_info = {};
+	MaterialManager::MaterialCompileInfo cmp_info = {};
 
 	Slice<u8> bytes = File::read_all(allocator, file_path);
 	cmp_info.source_path = file_path;
@@ -93,7 +93,7 @@ Error Material::load_from_file(StringView file_path, StringView defines)
 	cmp_info.defines = defines;
 
 
-	Error result = Graphics::material_compile_shader(material_id, cmp_info);
+	Error result = MaterialManager::material_compile_shader(material_id, cmp_info);
 
 	allocator.free(bytes);
 	return result;

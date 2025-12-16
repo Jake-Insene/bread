@@ -7,10 +7,5 @@
 */
 
 
-#define TEST(name, ...) \
-	struct Concat(TestN, __LINE__)\
-	{\
-		\
-	};\
 
 

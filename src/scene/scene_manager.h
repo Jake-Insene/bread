@@ -1,10 +1,10 @@
 #pragma once
 #include "collections/array.h"
 #include "collections/singleton.h"
-#include "graphics/viewport.h"
-#include "object/object.h"
 #include "math/color.h"
 #include "math/vec2.h"
+#include "object/object.h"
+#include "render/viewport.h"
 
 
 struct CanvasObject;

@@ -1,6 +1,8 @@
 #include "display/window.h"
 
-WindowID Window::create()
+
+
+Display::WindowID Window::create()
 {
     return Display::window_create();
 }

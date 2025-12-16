@@ -2,8 +2,9 @@
 #include "collections/error.h"
 #include "collections/hash_map.h"
 #include "collections/string_map.h"
-#include "graphics/structs.h"
+#include "graphics/graphics.h"
 #include "mem/allocator.h"
+#include "math/vec2.h"
 #include "resource/resource.h"
 
 
@@ -16,6 +17,13 @@ struct Texture;
 struct ResourceManager
 {
     static constexpr usize DefaultFontSize = 32;
+
+    struct TextureLoadInfo
+    {
+        Graphics::TextureType type;
+        Graphics::TextureFilter min_filter;
+        Graphics::TextureFilter mag_filter;
+    };
 
     struct InternalData
     {

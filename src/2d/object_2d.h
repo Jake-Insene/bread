@@ -1,7 +1,6 @@
 #pragma once
 #include "object/object.h"
-#include "graphics/graphics_types.h"
-#include "graphics/render_manager.h"
+#include "render/render_manager.h"
 #include "math/color.h"
 #include "math/transform_2d.h"
 #include "math/rect_2d.h"
@@ -132,7 +131,7 @@ struct Object2D : Object
     * @param mod_color Modulation color.
     * @param flags See Viewport::RenderFlags
     */
-    void draw_sprite(const Transform2D& transform, TextureID texture, const Rect2D& rect,
+    void draw_sprite(const Transform2D& transform, Graphics::TextureID texture, const Rect2D& rect,
         const Rect2D& src_rect, Color mod_color, u32 flags);
 
     void _update_transform() Function(FunctionInternal);

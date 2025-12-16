@@ -108,9 +108,9 @@ Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
             path,
             TextureLoadInfo
             {
-                .type = TEXTURE_2D,
-                .min_filter = TEXTURE_FILTER_NEAREST,
-                .mag_filter = TEXTURE_FILTER_NEAREST,
+                .type = Graphics::TEXTURE_2D,
+                .min_filter = Graphics::TEXTURE_FILTER_NEAREST,
+                .mag_filter = Graphics::TEXTURE_FILTER_NEAREST,
             }
         );
         break;
@@ -237,17 +237,17 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
         tex = _create_resource<Texture2D>();
         tex->path.set(path);
         
-        TextureCreateInfo create_info =
+        Graphics::TextureCreateInfo create_info =
         {
+            .usage = Graphics::TEXTURE_USAGE_UPLOAD_ONCE,
             .type = load_info.type,
-            .format = image->format == Image::FORMAT_RGB8 ? TEXTURE_FORMAT_RGB8 : TEXTURE_FORMAT_RGBA8,
+            .format = image->format == Image::FORMAT_RGB8 ? Graphics::TEXTURE_FORMAT_RGB8 : Graphics::TEXTURE_FORMAT_RGBA8,
             .min_filter = load_info.min_filter,
             .mag_filter = load_info.mag_filter,
             .size = image->size,
             .pixels = image->pixels,
         };
-        tex->texture_id = Graphics::create_texture(create_info);
-        Graphics::texture_set_image(tex->texture_id, image);
+        tex->texture_id = Graphics::texture_create(create_info);
 
         data.cached_images.insert(image, tex);
     }

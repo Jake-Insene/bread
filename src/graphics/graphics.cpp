@@ -1,97 +1,191 @@
 #include "graphics/graphics.h"
 
+#include "graphics/adapter.h"
 #include "graphics/gles/gles_driver.h"
 
 
-using GraphicsDriver = GLESDriver;
+static inline Adapter current_adapter;
 
 void Graphics::initialize(const mem::Allocator& allocator)
 {
-	GraphicsDriver::initialize(allocator);
+	current_adapter = GLESDriver::get_adapter();
+
+	current_adapter.initialize(allocator);
 }
 
 void Graphics::shutdown()
 {
-	GraphicsDriver::shutdown();
+	current_adapter.shutdown();
 }
 
-void Graphics::recreate()
+Graphics::SwapChainID Graphics::swap_chain_create(const SwapChainCreateInfo& ci)
 {
-	GraphicsDriver::recreate();
+	return current_adapter.swap_chain_create(ci);
 }
 
-void Graphics::destroy()
+void Graphics::swap_chain_destroy(SwapChainID swap_chain)
 {
-	GraphicsDriver::destroy();
+	current_adapter.swap_chain_destroy(swap_chain);
 }
 
-void Graphics::render(Viewport* viewport)
+Graphics::RenderTargetID Graphics::swap_chain_get_render_target(SwapChainID swap_chain, usize render_target_index)
 {
-	GraphicsDriver::render(viewport);
+	return current_adapter.swap_chain_get_render_target(swap_chain, render_target_index);
 }
 
-void Graphics::present(Viewport* viewport)
+void Graphics::swap_chain_present(SwapChainID swap_chain, usize render_target_index)
 {
-	GraphicsDriver::present(viewport);
+	current_adapter.swap_chain_present(swap_chain, render_target_index);
 }
 
-TextureID Graphics::create_texture(const TextureCreateInfo& create_info)
+Graphics::BufferID Graphics::buffer_create(const BufferCreateInfo& ci)
 {
-	return GraphicsDriver::create_texture(create_info);
+	return current_adapter.buffer_create(ci);
 }
 
-void Graphics::destroy_texture(TextureID tex_id)
+void Graphics::buffer_destroy(BufferID buffer)
 {
-	return GraphicsDriver::destroy_texture(tex_id);
+	current_adapter.buffer_destroy(buffer);
 }
 
-RenderTargetID Graphics::create_render_target(const RenderTargetCreateInfo& create_info)
+Slice<u8> Graphics::buffer_map_memory(Graphics::BufferID buffer, usize offset, usize len)
 {
-	return GraphicsDriver::create_render_target(create_info);
+	return current_adapter.buffer_map_memory(buffer, offset, len);
 }
 
-void Graphics::destroy_render_target(RenderTargetID rt_id)
+void Graphics::buffer_unmap_memory(Graphics::BufferID buffer, const Slice<u8>& memory)
 {
-	GraphicsDriver::destroy_render_target(rt_id);
+	current_adapter.buffer_unmap_memory(buffer, memory);
 }
 
-MaterialID Graphics::create_material(const MaterialCreateInfo& create_info)
+
+Graphics::TextureID Graphics::texture_create(const TextureCreateInfo& ci)
 {
-	return GraphicsDriver::create_material(create_info);
+	return current_adapter.texture_create(ci);
 }
 
-void Graphics::destroy_material(MaterialID material_id)
+void Graphics::texture_destroy(TextureID texture)
 {
-	GraphicsDriver::destroy_material(material_id);
+	current_adapter.texture_destroy(texture);
 }
 
-RenderTargetID Graphics::get_main_render_target()
+Vector2I Graphics::texture_get_size(TextureID texture)
 {
-	return GraphicsDriver::get_main_render_target();
+	return current_adapter.texture_get_size(texture);
 }
 
-void Graphics::texture_set_image(TextureID tex_id, Image* img)
+Graphics::RenderTargetID Graphics::render_target_create(const RenderTargetCreateInfo& ci)
 {
-	GraphicsDriver::texture_set_image(tex_id, img);
+	return current_adapter.render_target_create(ci);
 }
 
-Vector2I Graphics::texture_get_size(TextureID tex_id)
+void Graphics::render_target_destroy(RenderTargetID render_target)
 {
-	return GraphicsDriver::texture_get_size(tex_id);
+	current_adapter.render_target_destroy(render_target);
 }
 
-void Graphics::render_target_set_size(RenderTargetID rt_id, const Vector2I& new_size)
+Graphics::PipelineID Graphics::pipeline_create(const Graphics::PipelineCreateInfo& ci)
 {
-	GraphicsDriver::render_target_set_size(rt_id, new_size);
+	return current_adapter.pipeline_create(ci);
 }
 
-Vector2I Graphics::render_target_get_size(RenderTargetID rt_id)
+void Graphics::pipeline_destroy(PipelineID pipeline)
 {
-	return GraphicsDriver::render_target_get_size(rt_id);
+	current_adapter.pipeline_destroy(pipeline);
 }
 
-Error Graphics::material_compile_shader(MaterialID material_id, const MaterialCompileInfo& cmp_info)
+Graphics::ProgramID Graphics::program_create(const ProgramCreateInfo& ci)
 {
-	return GraphicsDriver::material_compile_shader(material_id, cmp_info);
+	return current_adapter.program_create(ci);
+}
+
+void Graphics::program_destroy(ProgramID pipeline)
+{
+	current_adapter.program_destroy(pipeline);
+}
+
+Graphics::CommandBufferID Graphics::command_buffer_create(const CommandBufferCreateInfo& ci)
+{
+	return current_adapter.command_buffer_create(ci);
+}
+
+void Graphics::command_buffer_destroy(CommandBufferID cmd)
+{
+	current_adapter.command_buffer_destroy(cmd);
+}
+
+void Graphics::command_buffer_begin(CommandBufferID cmd)
+{
+	current_adapter.command_buffer_begin(cmd);
+}
+
+void Graphics::command_buffer_bind_vertex_buffers(CommandBufferID cmd, u32 binding, const Slice<BufferID>& buffers, const Slice<u32>& offsets, const Slice<u32>& strides)
+{
+	current_adapter.command_buffer_bind_vertex_buffers(cmd, binding, buffers, offsets, strides);
+}
+
+void Graphics::command_buffer_bind_index_buffer(Graphics::CommandBufferID cmd, Graphics::BufferID index_buffer, u32 offset, Graphics::IndexType index_type)
+{
+	current_adapter.command_buffer_bind_index_buffer(cmd, index_buffer, offset, index_type);
+}
+
+void Graphics::command_buffer_bind_pipeline(CommandBufferID cmd, PipelineID pipeline)
+{
+	current_adapter.command_buffer_bind_pipeline(cmd, pipeline);
+}
+
+void Graphics::command_buffer_bind_render_target(CommandBufferID cmd, RenderTargetID render_target)
+{
+	current_adapter.command_buffer_bind_render_target(cmd, render_target);
+}
+
+void Graphics::command_buffer_set_texture_unit(CommandBufferID cmd, u32 set, u32 base_slot, const Slice<TextureID>& textures)
+{
+	current_adapter.command_buffer_set_texture_unit(cmd, set, base_slot, textures);
+}
+
+void Graphics::command_buffer_set_uniform(CommandBufferID cmd, u32 set, u32 base_slot, const Slice<BufferID>& buffers)
+{
+	current_adapter.command_buffer_set_uniform(cmd, set, base_slot, buffers);
+}
+
+void Graphics::command_buffer_set_viewport(CommandBufferID cmd, Rect2DI viewport_rect)
+{
+	current_adapter.command_buffer_set_viewport(cmd, viewport_rect);
+}
+
+void Graphics::command_buffer_clear(CommandBufferID cmd, RenderTargetID render_target, Color clear_color)
+{
+	current_adapter.command_buffer_clear(cmd, render_target, clear_color);
+}
+
+void Graphics::command_buffer_draw(Graphics::CommandBufferID cmd, u32 vertex_count, u32 instance_count, u32 base_vertex, u32 base_instance)
+{
+	current_adapter.command_buffer_draw(cmd, vertex_count, instance_count, base_vertex, base_instance);
+}
+
+void Graphics::command_buffer_draw_indexed(Graphics::CommandBufferID cmd, u32 index_count, u32 instance_count, u32 base_index, u32 base_vertex, u32 base_instance)
+{
+	current_adapter.command_buffer_draw_indexed(cmd, index_count, instance_count, base_index, base_vertex, base_instance);
+}
+
+void Graphics::command_buffer_end(CommandBufferID cmd)
+{
+	current_adapter.command_buffer_end(cmd);
+}
+
+Graphics::QueueID Graphics::queue_create(const QueueCreateInfo& ci)
+{
+	return current_adapter.queue_create(ci);
+}
+
+void Graphics::queue_destroy(QueueID queue)
+{
+	current_adapter.queue_destroy(queue);
+}
+
+void Graphics::queue_execute_command_buffer(QueueID queue, const Slice<CommandBufferID>& command_buffers)
+{
+	current_adapter.queue_execute_command_buffer(queue, command_buffers);
 }
 

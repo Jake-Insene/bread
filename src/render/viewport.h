@@ -1,7 +1,6 @@
 #pragma once
 #include "mem/allocator.h"
-#include "graphics/graphics_types.h"
-#include "graphics/render_target.h"
+#include "graphics/graphics.h"
 #include "math/color.h"
 #include "math/transform_2d.h"
 #include "math/rect_2d.h"
@@ -12,14 +11,14 @@
 */
 struct [[nodiscard]] Viewport
 {
-    RenderTarget rt;
+    Graphics::RenderTargetID rt;
     Transform2D scene_transform;
 
     Vector2I viewport_size;
     Color clear_color;
     bool must_sync;
 
-    static Viewport create_from_render_target(const mem::Allocator& allocator, RenderTarget rt_id);
+    static Viewport create_from_render_target(const mem::Allocator& allocator, Graphics::RenderTargetID rt);
     void destroy();
 
     void set_scene_transform(const Transform2D& transform);

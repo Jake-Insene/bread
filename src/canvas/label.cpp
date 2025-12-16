@@ -1,7 +1,5 @@
 #include "canvas/label.h"
 
-#include "graphics/render_manager.h"
-
 
 void Label::init(const CreateInfo&)
 {
@@ -42,7 +40,7 @@ void Label::render()
 			continue;
 		}
 
-		TextureID texture_id = glyph.char_texture;
+		Graphics::TextureID texture_id = glyph.char_texture;
 		Vector2 extent = Vector2(Graphics::texture_get_size(texture_id));
 		
 		draw_canvas_element(

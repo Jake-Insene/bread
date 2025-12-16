@@ -290,6 +290,9 @@ struct Object
     template<typename T>
     [[nodiscard]] static bool is_class_of(Object* object)
     {
+        if (object == nullptr)
+            return false;
+
         const Class* klass = object->klass;
         while (klass)
         {

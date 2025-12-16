@@ -1,6 +1,6 @@
 #include "2d/object_2d.h"
 
-#include "graphics/render_manager.h"
+#include "render/render_manager.h"
 #include "resource/material.h"
 
 
@@ -134,7 +134,7 @@ Transform2D Object2D::get_global_transform() const
     return data.global_transform_cache;
 }
 
-void Object2D::draw_sprite(const Transform2D& transform, TextureID texture, const Rect2D& rect, 
+void Object2D::draw_sprite(const Transform2D& transform, Graphics::TextureID texture, const Rect2D& rect, 
     const Rect2D& src_rect, Color mod_color, u32 flags)
 {
     RenderManager::render_item_draw_sprite(

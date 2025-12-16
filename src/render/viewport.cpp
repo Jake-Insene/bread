@@ -1,9 +1,9 @@
-#include "graphics/viewport.h"
+#include "render/viewport.h"
 
 #include "input/input.h"
 
 
-Viewport Viewport::create_from_render_target(const mem::Allocator&, RenderTarget rt)
+Viewport Viewport::create_from_render_target(const mem::Allocator&, Graphics::RenderTargetID rt)
 {
 	Viewport vp = {};
 	vp.rt = rt;
@@ -15,7 +15,6 @@ Viewport Viewport::create_from_render_target(const mem::Allocator&, RenderTarget
 
 void Viewport::destroy()
 {
-    rt.destroy();
 }
 
 void Viewport::set_scene_transform(const Transform2D& transform)
@@ -27,7 +26,8 @@ void Viewport::set_size(const Vector2I& new_size)
 {
 	viewport_size = new_size;
 	must_sync = true;
-	rt.set_size(new_size);
+
+	// TODO: Recreate render target
 }
 
 Vector2I Viewport::get_size() const

@@ -48,9 +48,6 @@ file(GLOB ENGINE_SRC
 
     src/graphics/egl/egl.cpp
     src/graphics/graphics.cpp
-    src/graphics/render_manager.cpp
-    src/graphics/render_target.cpp
-    src/graphics/viewport.cpp
 
     src/input/input.cpp
     
@@ -91,6 +88,10 @@ file(GLOB ENGINE_SRC
     
     src/platform/intrinsics.cpp
 
+    src/render/material_manager.cpp
+    src/render/render_manager.cpp
+    src/render/viewport.cpp
+
     src/resource/font.cpp
     src/resource/image.cpp
     src/resource/material.cpp
@@ -104,11 +105,8 @@ file(GLOB ENGINE_SRC
     src/scene/scene_manager.cpp
 )
 
-file(GLOB GLES_RENDERER_SRC
+file(GLOB GLES_ADAPTER_SRC
     src/graphics/gles/gles_driver.cpp
-    src/graphics/gles/gles_material_manager.cpp
-    src/graphics/gles/gles_memory_allocator.cpp
-    src/graphics/gles/gles_renderer.cpp
 )
 
 set(PLATFORM_LIBRARIES "")
@@ -145,7 +143,7 @@ set(SOURCE_FILES
     ${EXTERNAL_SRC}
     ${ENGINE_SRC}
     ${PLATFORM_SRC}
-    ${GLES_RENDERER_SRC}
+    ${GLES_ADAPTER_SRC}
 )
 
 add_library(

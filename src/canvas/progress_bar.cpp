@@ -1,6 +1,5 @@
 #include "canvas/progress_bar.h"
 
-#include "graphics/render_manager.h"
 #include "resource/texture.h"
 
 

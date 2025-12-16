@@ -1,7 +1,6 @@
 #include "physics/p2d/p2d_driver.h"
 
 #include "2d/object_2d.h"
-#include "graphics/render_manager.h"
 #include "physics/physics_2d.h"
 #include "physics/p2d/p2d_types.h"
 #include "physics/p2d/p2d_collision.h"

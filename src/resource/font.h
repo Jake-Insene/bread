@@ -19,7 +19,7 @@ struct Font : Resource
 
 	struct Glyph
 	{
-		TextureID char_texture;
+		Graphics::TextureID char_texture;
 		Rect2D src_rect;
 		Vector2I advance;
 	};

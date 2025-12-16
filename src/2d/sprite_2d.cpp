@@ -1,7 +1,5 @@
 #include "2d/sprite_2d.h"
 
-#include "graphics/render_manager.h"
-
 
 void Sprite2D::render()
 {

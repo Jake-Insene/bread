@@ -1,8 +1,8 @@
 #include "canvas/canvas_object.h"
 
 #include "2d/object_2d.h"
-#include "graphics/render_manager.h"
 #include "input/input.h"
+#include "render/render_manager.h"
 #include "scene/scene_manager.h"
 
 
@@ -38,6 +38,8 @@ void CanvasObject::enter()
             get_render_item(), parent_canvas->get_render_item()
         );
     }
+
+    RenderManager::item_set_layers(get_render_item(), RenderManager::RENDER_LAYER_1);
 }
 
 void CanvasObject::exit()
@@ -143,7 +145,7 @@ Rect2D CanvasObject::get_rect() const
     return Rect2D();
 }
 
-void CanvasObject::draw_canvas_element(const Transform2D& transform, TextureID texture, const Rect2D& rect, 
+void CanvasObject::draw_canvas_element(const Transform2D& transform, Graphics::TextureID texture, const Rect2D& rect, 
     const Rect2D& src_rect, Color mod_color, u32 flags)
 {
     switch (data.render_mode)

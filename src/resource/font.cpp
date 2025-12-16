@@ -44,13 +44,14 @@ static void _load_theme(stbtt_fontinfo* font, Font::FontTheme& theme)
         auto pixels = Slice(bitmap->cast<u8*>(), glyph.advance.width * glyph.advance.height);
         if (_is_valid_glyph(glyph_index))
         {
-            glyph.char_texture = Graphics::create_texture(
-                TextureCreateInfo
+            glyph.char_texture = Graphics::texture_create(
+                Graphics::TextureCreateInfo
                 {
-                    .type = TEXTURE_2D,
-                    .format = TEXTURE_FORMAT_R8,
-                    .min_filter = TEXTURE_FILTER_NEAREST,
-                    .mag_filter = TEXTURE_FILTER_NEAREST,
+                    .usage = Graphics::TEXTURE_USAGE_UPLOAD_ONCE,
+                    .type = Graphics::TEXTURE_2D,
+                    .format = Graphics::TEXTURE_FORMAT_R8,
+                    .min_filter = Graphics::TEXTURE_FILTER_NEAREST,
+                    .mag_filter = Graphics::TEXTURE_FILTER_NEAREST,
                     .size = Vector2I(glyph.advance.width, glyph.advance.height),
                     .pixels = pixels,
                 }
@@ -81,7 +82,7 @@ void Font::destroy()
             if (glyph.char_texture == ResourceID())
                 continue;
 
-            Graphics::destroy_texture(glyph.char_texture);
+            Graphics::texture_destroy(glyph.char_texture);
         }
 
         theme.glyphs.destroy();

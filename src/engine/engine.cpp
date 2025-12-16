@@ -3,12 +3,12 @@
 #include "audio/audio.h"
 #include "display/display.h"
 #include "graphics/graphics.h"
-#include "graphics/render_manager.h"
 #include "graphics/egl/egl.h"
 #include "log/log.h"
 #include "object/object_allocator.h"
 #include "scene/scene_manager.h"
 #include "os/os.h"
+#include "render/render_manager.h"
 #include "physics/physics_2d.h"
 #include "resource/resource_manager.h"
 
@@ -38,7 +38,8 @@ void Engine::initialize()
     data.main_queue = JobQueue::with_size(allocator, DefaultMainQueueSize);
     data.fps = 60;
 
-    // Going to the assets folder, crash is intended
+    // Going to the assets folder, crash is intended for now
+    // TODO: Find a better way to handle this.
     FailOn(OS::set_current_directory("assets") == false, "assets directory not found")
 
     ObjectAllocator::initialize();
@@ -91,7 +92,7 @@ void Engine::shutdown()
 
 void Engine::destroy()
 {
-    Graphics::destroy();
+    // TODO: on android destroy the surface.
 }
 
 void Engine::step()
