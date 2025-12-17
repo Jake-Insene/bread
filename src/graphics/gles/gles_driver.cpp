@@ -1,10 +1,9 @@
 #include "graphics/gles/gles_driver.h"
 
-#include "debug/debug.h"
 #include "engine/engine.h"
+#include "external/glcore.h"
 #include "graphics/egl/egl.h"
 #include "graphics/gles/gles_vtable.h"
-#include "render/viewport.h"
 
 
 #if SHOW_DEBUG_INFO
@@ -228,6 +227,7 @@ Adapter GLESDriver::get_adapter()
         .texture_get_size = &GLESDriver::texture_get_size,
         .render_target_create = &GLESDriver::render_target_create,
         .render_target_destroy = &GLESDriver::render_target_destroy,
+        .render_target_get_texture = &GLESDriver::render_target_get_texture,
         .pipeline_create = &GLESDriver::pipeline_create,
         .pipeline_destroy = &GLESDriver::pipeline_destroy,
         .program_create = &GLESDriver::program_create,
@@ -235,6 +235,7 @@ Adapter GLESDriver::get_adapter()
         .command_buffer_create = &GLESDriver::command_buffer_create,
         .command_buffer_destroy = &GLESDriver::command_buffer_destroy,
         .command_buffer_begin = &GLESDriver::command_buffer_begin,
+        .command_buffer_blit_framebuffer = &GLESDriver::command_buffer_blit_framebuffer,
         .command_buffer_bind_vertex_buffers = &GLESDriver::command_buffer_bind_vertex_buffers,
         .command_buffer_bind_index_buffer = &GLESDriver::command_buffer_bind_index_buffer,
         .command_buffer_bind_pipeline = &GLESDriver::command_buffer_bind_pipeline,
@@ -544,6 +545,12 @@ void GLESDriver::render_target_destroy(Graphics::RenderTargetID render_target)
     data.render_targets.remove(render_target);
 }
 
+Graphics::TextureID GLESDriver::render_target_get_texture(Graphics::RenderTargetID render_target)
+{
+    RenderTarget& rt = data.render_targets.get(render_target);
+    return rt.texture;
+}
+
 Graphics::PipelineID GLESDriver::pipeline_create(const Graphics::PipelineCreateInfo& ci)
 {
     GLESFailOn(ci.usage == Graphics::PIPELINE_USAGE_UNKNOWN, "invalid pipeline usage");
@@ -568,9 +575,9 @@ Graphics::PipelineID GLESDriver::pipeline_create(const Graphics::PipelineCreateI
         pipeline.gl_program = prog.glid;
     }
 
+    gl.glGenVertexArrays(1, &pipeline.vertex_array);
     if (ci.input_assembly.bindings.len)
     {
-        gl.glGenVertexArrays(1, &pipeline.vertex_array);
         gl.glBindVertexArray(pipeline.vertex_array);
 
         for (Graphics::VertexBinding& binding : ci.input_assembly.bindings)
@@ -727,6 +734,19 @@ void GLESDriver::command_buffer_begin(Graphics::CommandBufferID cmd)
     cb.offset = 0;
     cb.ended = false;
 }
+
+void GLESDriver::command_buffer_blit_framebuffer(Graphics::CommandBufferID cmd, Graphics::RenderTargetID src_render_target, Graphics::RenderTargetID dst_render_target, Rect2DI src_rect, Rect2DI dst_rect, Graphics::TextureFilter filter)
+{
+    CommandBuffer& cb = data.command_buffers.get(cmd);
+    CommandBuffer::CommandUnit& command = cb.allocate();
+    command.base.type = CommandBuffer::COMMAND_TYPE_BLIT_FRAMEBUFFER;
+    command.blit_framebuffer.src_render_target = src_render_target;
+    command.blit_framebuffer.dst_render_target = dst_render_target;
+    command.blit_framebuffer.src_rect = src_rect;
+    command.blit_framebuffer.dst_rect = dst_rect;
+    command.blit_framebuffer.filter = filter;
+}
+
 
 void GLESDriver::command_buffer_bind_vertex_buffers(Graphics::CommandBufferID cmd, u32 binding, const Slice<Graphics::BufferID>& buffers, const Slice<u32>& offsets, const Slice<u32>& strides)
 {
@@ -891,6 +911,39 @@ void GLESDriver::_queue_execute_command_buffer(Queue& q, CommandBuffer& command_
         CommandBuffer::CommandUnit& cmd = command_buffer.commands[cmd_index];
         switch (cmd.base.type)
         {
+        case CommandBuffer::COMMAND_TYPE_BLIT_FRAMEBUFFER:
+        {
+            RenderTarget& src_rt = data.render_targets.get(cmd.blit_framebuffer.src_render_target);
+            RenderTarget& dst_rt = data.render_targets.get(cmd.blit_framebuffer.dst_render_target);
+
+            GLenum filter = _texture_get_filter(cmd.blit_framebuffer.filter);
+
+            if(data.state.draw_framebuffer != dst_rt.glid)
+            {
+                gl.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dst_rt.glid);
+                data.state.draw_framebuffer = dst_rt.glid;
+            }
+
+            if (data.state.read_framebuffer != src_rt.glid)
+            {
+                gl.glBindFramebuffer(GL_READ_FRAMEBUFFER, src_rt.glid);
+                data.state.read_framebuffer = src_rt.glid;
+            }            
+
+            gl.glBlitFramebuffer(
+                cmd.blit_framebuffer.src_rect.position.x,
+                cmd.blit_framebuffer.src_rect.position.y,
+                cmd.blit_framebuffer.src_rect.size.width,
+                cmd.blit_framebuffer.src_rect.size.height,
+                cmd.blit_framebuffer.dst_rect.position.x,
+                cmd.blit_framebuffer.dst_rect.position.y,
+                cmd.blit_framebuffer.dst_rect.size.x,
+                cmd.blit_framebuffer.dst_rect.size.y,
+                GL_COLOR_BUFFER_BIT,
+                filter
+            );
+        }
+            break;
         case CommandBuffer::COMMAND_TYPE_BIND_VERTEX_BUFFER:
         {
             GLESFailOn(data.state.current_pipeline == Graphics::PipelineID::invalid(), "A pipeline is not bounded");
@@ -1015,10 +1068,12 @@ void GLESDriver::_queue_execute_command_buffer(Queue& q, CommandBuffer& command_
             );
             break;
         case CommandBuffer::COMMAND_TYPE_DRAW_INDEXED:
+        {
             gl.glDrawElementsInstanced(
                 data.state.gl_topology, cmd.draw_indexed.index_count, data.state.gl_index_type,
                 nullptr, cmd.draw_indexed.instance_count
             );
+        }
             break;
         case CommandBuffer::COMMAND_TYPE_UNKNOWN:
             GLESFailOn(true, "invalid command type");

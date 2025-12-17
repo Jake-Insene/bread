@@ -23,6 +23,7 @@ struct Adapter
 
 	VTFunc(Graphics::RenderTargetID, render_target_create, const Graphics::RenderTargetCreateInfo& ci);
 	VTFunc(void, render_target_destroy, Graphics::RenderTargetID render_target);
+	VTFunc(Graphics::TextureID, render_target_get_texture, Graphics::RenderTargetID render_target);
 
 	VTFunc(Graphics::PipelineID, pipeline_create, const Graphics::PipelineCreateInfo& ci);
 	VTFunc(void, pipeline_destroy, Graphics::PipelineID pipeline);
@@ -33,6 +34,7 @@ struct Adapter
 	VTFunc(Graphics::CommandBufferID, command_buffer_create, const Graphics::CommandBufferCreateInfo& ci);
 	VTFunc(void, command_buffer_destroy, Graphics::CommandBufferID cmd);
 	VTFunc(void, command_buffer_begin, Graphics::CommandBufferID cmd);
+	VTFunc(void, command_buffer_blit_framebuffer, Graphics::CommandBufferID cmd, Graphics::RenderTargetID src_render_target, Graphics::RenderTargetID dst_render_target, Rect2DI src_rect, Rect2DI dst_rect, Graphics::TextureFilter filter);
 	VTFunc(void, command_buffer_bind_vertex_buffers, Graphics::CommandBufferID cmd, u32 binding, const Slice<Graphics::BufferID>& buffers, const Slice<u32>& offsets, const Slice<u32>& strides);
 	VTFunc(void, command_buffer_bind_index_buffer, Graphics::CommandBufferID cmd, Graphics::BufferID index_buffer, u32 offset, Graphics::IndexType index_type);
 	VTFunc(void, command_buffer_bind_pipeline, Graphics::CommandBufferID cmd, Graphics::PipelineID pipeline);

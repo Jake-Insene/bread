@@ -257,6 +257,7 @@ struct Graphics
 	*/
 	static RenderTargetID render_target_create(const RenderTargetCreateInfo& ci);
 	static void render_target_destroy(RenderTargetID render_target);
+	static TextureID render_target_get_texture(RenderTargetID render_target);
 
 	/*
 	* Pipeline API
@@ -277,6 +278,7 @@ struct Graphics
 	static void command_buffer_destroy(CommandBufferID cmd);
 
 	static void command_buffer_begin(CommandBufferID cmd);
+	static void command_buffer_blit_framebuffer(CommandBufferID cmd, RenderTargetID src_render_target, RenderTargetID dst_render_target, Rect2DI src_rect, Rect2DI dst_rect, TextureFilter filter);
 	static void command_buffer_bind_vertex_buffers(CommandBufferID cmd, u32 binding, const Slice<BufferID>& buffers, const Slice<u32>& offsets, const Slice<u32>& strides);
 	static void command_buffer_bind_index_buffer(CommandBufferID cmd, BufferID index_buffer, u32 offset, IndexType index_type);
 	static void command_buffer_bind_pipeline(CommandBufferID cmd, PipelineID pipeline);

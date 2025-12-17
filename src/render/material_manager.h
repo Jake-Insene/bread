@@ -29,12 +29,14 @@ struct MaterialManager
         Graphics::PipelineID quads_pipeline;
         Graphics::PipelineID lines_pipeline;
         Graphics::PipelineID circles_pipeline;
+        Graphics::PipelineID screen_pipeline;
 
         Graphics::ProgramID sprite_program;
         Graphics::ProgramID sprite_ui_program;
         Graphics::ProgramID quads_program;
         Graphics::ProgramID lines_program;
         Graphics::ProgramID circles_program;
+        Graphics::ProgramID screen_program;
     };
 
     struct InternalData
@@ -47,9 +49,14 @@ struct MaterialManager
         MaterialID render_material;
 
         Slice<u8> glsl_shader_header;
+        
         Slice<u8> batch_shader;
         StringView vs_batch_shader;
         StringView fs_batch_shader;
+        
+        Slice<u8> screen_shader;
+        StringView vs_screen_shader;
+        StringView fs_screen_shader;
     };
 
     static inline InternalData data;

@@ -90,6 +90,7 @@ file(GLOB ENGINE_SRC
 
     src/render/material_manager.cpp
     src/render/render_manager.cpp
+    src/render/scene_renderer.cpp
     src/render/viewport.cpp
 
     src/resource/font.cpp

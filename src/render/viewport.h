@@ -3,7 +3,7 @@
 #include "graphics/graphics.h"
 #include "math/color.h"
 #include "math/transform_2d.h"
-#include "math/rect_2d.h"
+#include "resource/material.h"
 
 
 /*
@@ -17,6 +17,7 @@ struct [[nodiscard]] Viewport
     Vector2I viewport_size;
     Color clear_color;
     bool must_sync;
+    Material* material;
 
     static Viewport create_from_render_target(const mem::Allocator& allocator, Graphics::RenderTargetID rt);
     void destroy();

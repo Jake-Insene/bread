@@ -1,59 +1,58 @@
 #vertex
-Input(0) vec4 VertexAttrib0;
-
-#define TextureInputSlot floatBitsToUint(VertexAttrib0.x)
 
 #VERTEXCODE
 
 void main()
 {
-    vec4 Vertex = vec4(0);
-    vec4 out_uv = vec2(0);
+    vec4 Vertex = vec4(0, 0, 0, 1);
+    vec2 out_uv = vec2(0);
     uint index = gl_VertexID & 3;
-
+    
     // Vertex
     // Indices: 0, 1, 2, 2, 3, 0
-    // 0:
-    // 1:
-    // 2:
-    // 3:
+    // 0 -> -1, -1
+    // 1 -> 1, -1
+    // 2 -> 1, 1
+    // 3 -> -1, 1
     // UV:
-    // 0:
-    // 1:
-    // 2:
-    // 3:
+    // 0 -> 0, 0
+    // 1 -> 1, 0
+    // 2 -> 1, 1
+    // 3 -> 0, 1
     if(index == 0)
     {
-
+        Vertex.xy = vec2(-1, -1);
+        out_uv = vec2(0, 0);
     }
     else if(index == 1)
     {
-
+        Vertex.xy = vec2(1, -1);
+        out_uv = vec2(1, 0);
     }
     else if(index == 2)
     {
-
+        Vertex.xy = vec2(1, 1);
+        out_uv = vec2(1, 1);
     }
     else //if(index == 3)
     {
-
+        Vertex.xy = vec2(-1, 1);
+        out_uv = vec2(0, 1);
     }
 
 #if defined(CUSTOM_VERTEX)
-    Vertex = vertex(Vertex);
+    gl_Position = vertex(Vertex);
 #else
     gl_Position = Vertex;
 #endif
 
     Color = vec4(1, 1, 1, 1);
     UV = out_uv;
-    TextureUnit = TextureInputSlot;
+    TextureUnit = 0;
 }
 
 
 #fragment
-
-Output(0) vec4 COLOR;
 
 #FRAGMENTCODE
 
@@ -62,7 +61,7 @@ void main()
 #if defined(CUSTOM_FRAGMENT)
     COLOR = fragment(COLOR);
 #else
-    COLOR *= Sample(UV);
+    COLOR = Sample(UV);
 #endif
 }
 

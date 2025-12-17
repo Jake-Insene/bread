@@ -4,7 +4,9 @@
 #include "collections/scoped.h"
 #include "debug/fail.h"
 #include "fmt/fmt.h"
-#include "render/render_manager.h"
+#include "io/file.h"
+#include "math/vec4.h"
+#include "render/scene_renderer.h"
 
 
 constexpr StringView glsl_version_header =
@@ -157,25 +159,38 @@ static inline void _compile_shaders(MaterialManager::Material& material, const M
         "#define QUAD\n",
         "#define PRIMITIVE\n",
         "#define CIRCLE\n",
+        "#define SCREEN\n",
     };
 
-    StringView vssource = MaterialManager::data.vs_batch_shader;
-    StringView fssource = MaterialManager::data.fs_batch_shader;
-
-    auto new_vs_formed_code = Scoped<String>(MaterialManager::get_allocator());
     StringView vssource_start = {};
     StringView vssource_end = {};
-    _get_start_end(vssource, &vssource_start, &vssource_end, "#VERTEXCODE");
-    fmt::format<false>(new_vs_formed_code.writer(), "{}{}{}", vssource_start, cmp_info.vscode, vssource_end);
-
     StringView fssource_start = {};
     StringView fssource_end = {};
-    auto new_fs_formed_code = Scoped<String>(MaterialManager::get_allocator());
-    _get_start_end(fssource, &fssource_start, &fssource_end, "#FRAGMENTCODE");
-    fmt::format<false>(new_fs_formed_code.writer(), "{}{}{}", fssource_start, cmp_info.fscode, fssource_end);
+
+    StringView vs_batch_source = MaterialManager::data.vs_batch_shader;
+    StringView fs_batch_source = MaterialManager::data.fs_batch_shader;
+    StringView vs_screen_source = MaterialManager::data.vs_screen_shader;
+    StringView fs_screen_source = MaterialManager::data.fs_screen_shader;
+
+    auto new_vs_batch_formed_code = Scoped<String>(MaterialManager::get_allocator());
+    _get_start_end(vs_batch_source, &vssource_start, &vssource_end, "#VERTEXCODE");
+    fmt::format<false>(new_vs_batch_formed_code.writer(), "{}{}{}", vssource_start, cmp_info.vscode, vssource_end);
+
+    auto new_fs_batch_formed_code = Scoped<String>(MaterialManager::get_allocator());
+    _get_start_end(fs_batch_source, &fssource_start, &fssource_end, "#FRAGMENTCODE");
+    fmt::format<false>(new_fs_batch_formed_code.writer(), "{}{}{}", fssource_start, cmp_info.fscode, fssource_end);
+
+    auto new_vs_screen_formed_code = Scoped<String>(MaterialManager::get_allocator());
+    _get_start_end(vs_screen_source, &vssource_start, &vssource_end, "#VERTEXCODE");
+    fmt::format<false>(new_vs_screen_formed_code.writer(), "{}{}{}", vssource_start, cmp_info.vscode, vssource_end);
+
+    auto new_fs_screen_formed_code = Scoped<String>(MaterialManager::get_allocator());
+    _get_start_end(fs_screen_source, &fssource_start, &fssource_end, "#FRAGMENTCODE");
+    fmt::format<false>(new_fs_screen_formed_code.writer(), "{}{}{}", fssource_start, cmp_info.fscode, fssource_end);
 
     Graphics::ProgramID programs[] = 
     { 
+        Graphics::ProgramID::invalid(),
         Graphics::ProgramID::invalid(),
         Graphics::ProgramID::invalid(),
         Graphics::ProgramID::invalid(),
@@ -185,7 +200,15 @@ static inline void _compile_shaders(MaterialManager::Material& material, const M
     usize i = 0;
     for (auto def : type_defines)
     {
-        Graphics::ProgramID program = _compile_shader_for(cmp_info, def, new_vs_formed_code.view(), new_fs_formed_code.view());
+        Graphics::ProgramID program = Graphics::ProgramID::invalid();
+        if(def.ptr() == type_defines[5].ptr())
+        {
+            program = _compile_shader_for(cmp_info, def, new_vs_screen_formed_code.view(), new_fs_screen_formed_code.view());
+        }
+        else
+        {
+            program = _compile_shader_for(cmp_info, def, new_vs_batch_formed_code.view(), new_fs_batch_formed_code.view());
+        }
         if (program == Graphics::ProgramID::invalid())
             return;
         programs[i++] = program;
@@ -196,12 +219,13 @@ static inline void _compile_shaders(MaterialManager::Material& material, const M
     material.quads_program = programs[2];
     material.lines_program = programs[3];
     material.circles_program = programs[4];
+    material.screen_program = programs[5];
 
 	// Sprites Pipeline
     {
 		Graphics::VertexBinding bindings[] =
 		{
-			{.binding = 0, .stride = sizeof(RenderManager::SpriteInstance), .input_rate = Graphics::INPUT_RATE_PER_INSTANCE }
+			{.binding = 0, .stride = sizeof(SceneRenderer::SpriteInstance), .input_rate = Graphics::INPUT_RATE_PER_INSTANCE }
 		};
 
 		Graphics::VertexAttribute attributes[] =
@@ -235,7 +259,7 @@ static inline void _compile_shaders(MaterialManager::Material& material, const M
 	{
 		Graphics::VertexBinding bindings[] =
 		{
-			{.binding = 0, .stride = sizeof(RenderManager::SpriteUIInstance), .input_rate = Graphics::INPUT_RATE_PER_INSTANCE }
+			{.binding = 0, .stride = sizeof(SceneRenderer::SpriteUIInstance), .input_rate = Graphics::INPUT_RATE_PER_INSTANCE }
 		};
 
 		Graphics::VertexAttribute attributes[] =
@@ -269,7 +293,7 @@ static inline void _compile_shaders(MaterialManager::Material& material, const M
 	{
 		Graphics::VertexBinding bindings[] =
 		{
-			{.binding = 0, .stride = sizeof(RenderManager::QuadInstance), .input_rate = Graphics::INPUT_RATE_PER_INSTANCE }
+			{.binding = 0, .stride = sizeof(SceneRenderer::QuadInstance), .input_rate = Graphics::INPUT_RATE_PER_INSTANCE }
 		};
 
 		Graphics::VertexAttribute attributes[] =
@@ -302,7 +326,7 @@ static inline void _compile_shaders(MaterialManager::Material& material, const M
 	{
 		Graphics::VertexBinding bindings[] =
 		{
-			{.binding = 0, .stride = sizeof(RenderManager::PrimitivePoint), .input_rate = Graphics::INPUT_RATE_PER_VERTEX }
+			{.binding = 0, .stride = sizeof(SceneRenderer::PrimitivePoint), .input_rate = Graphics::INPUT_RATE_PER_VERTEX }
 		};
 
 		Graphics::VertexAttribute attributes[] =
@@ -332,7 +356,7 @@ static inline void _compile_shaders(MaterialManager::Material& material, const M
 	{
 		Graphics::VertexBinding bindings[] =
 		{
-			{.binding = 0, .stride = sizeof(RenderManager::PrimitivePoint), .input_rate = Graphics::INPUT_RATE_PER_INSTANCE }
+			{.binding = 0, .stride = sizeof(SceneRenderer::PrimitivePoint), .input_rate = Graphics::INPUT_RATE_PER_INSTANCE }
 		};
 
 		Graphics::VertexAttribute attributes[] =
@@ -357,6 +381,26 @@ static inline void _compile_shaders(MaterialManager::Material& material, const M
         circles_pipeline_ci.pipeline_program = material.circles_program;
 	    material.circles_pipeline = Graphics::pipeline_create(circles_pipeline_ci);
 	}
+
+    // Screen Pipeline
+    {
+        Graphics::InputAssembly input_assembly =
+        {
+            .bindings = {},
+            .attributes = {},
+        };
+
+        Graphics::PipelineCreateInfo screen_pipeline_ci =
+        {
+            .usage = Graphics::PIPELINE_USAGE_GRAPHICS,
+            .topology = Graphics::PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+            .input_assembly = input_assembly,
+            .pipeline_program = Graphics::ProgramID::invalid(),
+        };
+
+        screen_pipeline_ci.pipeline_program = material.screen_program;
+        material.screen_pipeline = Graphics::pipeline_create(screen_pipeline_ci);
+    }
 }
 
 static inline void _destroy_shaders(MaterialManager::Material& material)
@@ -365,30 +409,48 @@ static inline void _destroy_shaders(MaterialManager::Material& material)
     {
         Graphics::program_destroy(material.sprite_program);
         material.sprite_program = Graphics::ProgramID::invalid();
+        Graphics::pipeline_destroy(material.sprite_pipeline);
+        material.sprite_pipeline = Graphics::PipelineID::invalid();
     }
 
     if (material.sprite_ui_program != Graphics::ProgramID::invalid())
     {
         Graphics::program_destroy(material.sprite_ui_program);
         material.sprite_ui_program = Graphics::ProgramID::invalid();
+        Graphics::pipeline_destroy(material.sprite_ui_pipeline);
+        material.sprite_ui_pipeline = Graphics::PipelineID::invalid();
     }
 
     if (material.quads_program != Graphics::ProgramID::invalid())
     {
         Graphics::program_destroy(material.quads_program);
         material.quads_program = Graphics::ProgramID::invalid();
+        Graphics::pipeline_destroy(material.quads_pipeline);
+        material.quads_pipeline = Graphics::PipelineID::invalid();
     }
 
     if (material.lines_program != Graphics::ProgramID::invalid())
     {
         Graphics::program_destroy(material.lines_program);
         material.lines_program = Graphics::ProgramID::invalid();
+        Graphics::pipeline_destroy(material.lines_pipeline);
+        material.lines_pipeline = Graphics::PipelineID::invalid();
     }
 
     if (material.circles_program != Graphics::ProgramID::invalid())
     {
         Graphics::program_destroy(material.circles_program);
         material.circles_program = Graphics::ProgramID::invalid();
+        Graphics::pipeline_destroy(material.circles_pipeline);
+        material.circles_pipeline = Graphics::PipelineID::invalid();
+    }
+
+    if (material.screen_program != Graphics::ProgramID::invalid())
+    {
+        Graphics::program_destroy(material.screen_program);
+        material.screen_program = Graphics::ProgramID::invalid();
+        Graphics::pipeline_destroy(material.screen_pipeline);
+        material.screen_pipeline = Graphics::PipelineID::invalid();
     }
 }
 
@@ -397,8 +459,14 @@ void MaterialManager::initialize(const mem::Allocator& allocator)
 	data.allocator = allocator;
 
     data.glsl_shader_header = File::read_all(allocator, "shaders/bread/header.gles.glsl");
+
+    // Batch shader
     data.batch_shader = File::read_all(allocator, "shaders/bread/batch.gles.glsl");
     _parse_gles_shader(mem::from_bytes<char>(data.batch_shader), &data.vs_batch_shader, &data.fs_batch_shader);
+
+    // Screen shader
+    data.screen_shader = File::read_all(allocator, "shaders/bread/screen.gles.glsl");
+    _parse_gles_shader(mem::from_bytes<char>(data.screen_shader), &data.vs_screen_shader, &data.fs_screen_shader);
 
 	data.materials = FreeList<Material, MaterialID>::with_size(allocator, 4);
 
@@ -417,7 +485,9 @@ void MaterialManager::shutdown()
 
     get_allocator().free(data.glsl_shader_header);
     get_allocator().free(data.batch_shader);
+    get_allocator().free(data.screen_shader);
 
+    FailOn(data.materials.count != 0, "MaterialManager::shutdown: materials list is not empty");
 	data.materials.destroy();
 }
 

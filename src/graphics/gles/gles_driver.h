@@ -90,6 +90,7 @@ struct GLESDriver
 		enum CommandType
 		{
 			COMMAND_TYPE_UNKNOWN = 0,
+			COMMAND_TYPE_BLIT_FRAMEBUFFER,
 			COMMAND_TYPE_BIND_VERTEX_BUFFER,
 			COMMAND_TYPE_BIND_INDEX_BUFFER,
 			COMMAND_TYPE_BIND_PIPELINE,
@@ -106,6 +107,15 @@ struct GLESDriver
 		{
 			CommandType type;
 			u64 padding;
+		};
+
+		struct BlitFramebuffer : Command
+		{
+			Graphics::RenderTargetID src_render_target;
+			Graphics::RenderTargetID dst_render_target;
+			Rect2DI src_rect;
+			Rect2DI dst_rect;
+			Graphics::TextureFilter filter;
 		};
 
 		struct BindVertexBuffer : Command
@@ -179,6 +189,7 @@ struct GLESDriver
 		union CommandUnit
 		{
 			Command base;
+			BlitFramebuffer blit_framebuffer;
 			BindVertexBuffer bind_vertex_buffer;
 			BindIndexBuffer bind_index_buffer;
 			BindPipeline bind_pipeline;
@@ -263,6 +274,7 @@ struct GLESDriver
 
 	static Graphics::RenderTargetID render_target_create(const Graphics::RenderTargetCreateInfo& ci);
 	static void render_target_destroy(Graphics::RenderTargetID render_target);
+	static Graphics::TextureID render_target_get_texture(Graphics::RenderTargetID render_target);
 
 	static Graphics::PipelineID pipeline_create(const Graphics::PipelineCreateInfo& ci);
 	static void pipeline_destroy(Graphics::PipelineID pipeline);
@@ -274,6 +286,7 @@ struct GLESDriver
 	static void command_buffer_destroy(Graphics::CommandBufferID cmd);
 
 	static void command_buffer_begin(Graphics::CommandBufferID cmd);
+	static void command_buffer_blit_framebuffer(Graphics::CommandBufferID cmd, Graphics::RenderTargetID src_render_target, Graphics::RenderTargetID dst_render_target, Rect2DI src_rect, Rect2DI dst_rect, Graphics::TextureFilter filter);
 	static void command_buffer_bind_vertex_buffers(Graphics::CommandBufferID cmd, u32 binding, const Slice<Graphics::BufferID>& buffers, const Slice<u32>& offsets, const Slice<u32>& strides);
 	static void command_buffer_bind_index_buffer(Graphics::CommandBufferID cmd, Graphics::BufferID index_buffer, u32 offset, Graphics::IndexType index_type);
 	static void command_buffer_bind_pipeline(Graphics::CommandBufferID cmd, Graphics::PipelineID pipeline);

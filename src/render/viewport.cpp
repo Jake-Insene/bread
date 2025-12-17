@@ -15,6 +15,7 @@ Viewport Viewport::create_from_render_target(const mem::Allocator&, Graphics::Re
 
 void Viewport::destroy()
 {
+	Graphics::render_target_destroy(rt);
 }
 
 void Viewport::set_scene_transform(const Transform2D& transform)

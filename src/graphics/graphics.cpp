@@ -84,6 +84,12 @@ void Graphics::render_target_destroy(RenderTargetID render_target)
 	current_adapter.render_target_destroy(render_target);
 }
 
+Graphics::TextureID Graphics::render_target_get_texture(RenderTargetID render_target)
+{
+	return current_adapter.render_target_get_texture(render_target);
+}
+
+
 Graphics::PipelineID Graphics::pipeline_create(const Graphics::PipelineCreateInfo& ci)
 {
 	return current_adapter.pipeline_create(ci);
@@ -118,6 +124,13 @@ void Graphics::command_buffer_begin(CommandBufferID cmd)
 {
 	current_adapter.command_buffer_begin(cmd);
 }
+
+void Graphics::command_buffer_blit_framebuffer(CommandBufferID cmd, RenderTargetID src_render_target, RenderTargetID dst_render_target, Rect2DI src_rect, Rect2DI dst_rect, TextureFilter filter)
+{
+	current_adapter.command_buffer_blit_framebuffer(cmd, src_render_target, dst_render_target, src_rect, dst_rect, filter);
+}
+
+
 
 void Graphics::command_buffer_bind_vertex_buffers(CommandBufferID cmd, u32 binding, const Slice<BufferID>& buffers, const Slice<u32>& offsets, const Slice<u32>& strides)
 {

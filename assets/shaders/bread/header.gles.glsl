@@ -25,6 +25,7 @@ Input(1) flat uint TextureUnit;
 Input(2) vec2 UV;
 
 Output(0) vec4 COLOR;
+#endif
 
 // For now Only 16 textures are available
 Texture2D(0) Texture0;
@@ -45,43 +46,41 @@ Texture2D(14) Texture14;
 Texture2D(15) Texture15;
 
 
-vec4 Sample(vec2 UV)
+vec4 Sample(vec2 InUV)
 {
     switch(int(TextureUnit))
     {
     case 0:
-        return texture(Texture0, UV);
+        return texture(Texture0, InUV);
     case 1:
-        return texture(Texture1, UV);
+        return texture(Texture1, InUV);
     case 2:
-        return texture(Texture2, UV);
+        return texture(Texture2, InUV);
     case 3:
-        return texture(Texture3, UV);
+        return texture(Texture3, InUV);
     case 4:
-        return texture(Texture4, UV);
+        return texture(Texture4, InUV);
     case 5:
-        return texture(Texture5, UV);
+        return texture(Texture5, InUV);
     case 6:
-        return texture(Texture6, UV);
+        return texture(Texture6, InUV);
     case 7:
-        return texture(Texture7, UV);
+        return texture(Texture7, InUV);
     case 8:
-        return texture(Texture8, UV);
+        return texture(Texture8, InUV);
     case 9:
-        return texture(Texture9, UV);
+        return texture(Texture9, InUV);
     case 10:
-        return texture(Texture10, UV);
+        return texture(Texture10, InUV);
     case 11:
-        return texture(Texture11, UV);
+        return texture(Texture11, InUV);
     case 12:
-        return texture(Texture12, UV);
+        return texture(Texture12, InUV);
     case 13:
-        return texture(Texture13, UV);
+        return texture(Texture13, InUV);
     case 14:
-        return texture(Texture14, UV);
+        return texture(Texture14, InUV);
     case 15:
-        return texture(Texture15, UV);
+        return texture(Texture15, InUV);
     }
 }
-
-#endif

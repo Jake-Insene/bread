@@ -16,7 +16,14 @@ void SceneManager::initialize(const mem::Allocator& allocator)
     data.allocator = allocator;
 
     // TODO: Create Render Target
-    //data.main_viewport = Viewport::create_from_render_target(allocator, RenderTarget::get_main_render_target());
+    Graphics::RenderTargetCreateInfo rtci = 
+    {
+        .format = Graphics::TEXTURE_FORMAT_RGBA8,
+        .depth_stencil_format = Graphics::TEXTURE_FORMAT_UNKNOWN,
+        .size = Engine::get_configuration().viewport_size,
+    };
+
+    data.main_viewport = Viewport::create_from_render_target(allocator, Graphics::render_target_create(rtci));
     
     data.current_scene = nullptr;
     data.current_camera = nullptr;
@@ -192,7 +199,7 @@ void SceneManager::step()
         PROFILE_SCOPE(
             data.debug_time.driver_present_time = duration;
         );
-        //RenderManager::present_scene(&get_main_viewport());
+        RenderManager::present_scene();
     }
 
     data.fps_acum++;

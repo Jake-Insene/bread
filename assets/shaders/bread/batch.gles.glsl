@@ -123,7 +123,7 @@ void main()
     vec2 min_corner = SrcRect.xy;
     vec2 max_corner = SrcRect.zw;
 
-    vec2 out_uv = vec2(min_corner.x, max_corner.y);
+    vec2 out_uv = vec2(0);
     if(index == 0)
     {
         out_uv = min_corner;
@@ -135,6 +135,10 @@ void main()
     else if(index == 2)
     {
         out_uv = max_corner;
+    }
+    else //if(index == 3)
+    {
+        out_uv = vec2(min_corner.x, max_corner.y);
     }
 
     // Applying flags
@@ -151,8 +155,7 @@ void main()
 
     // Transforming
 #if defined(QUAD) || defined(SPRITE)
-    mat2 matrix_transform = Transform;
-    Vertex.xy = matrix_transform * Vertex.xy;
+    Vertex.xy = Transform * Vertex.xy;
     Vertex.xy += TransformTranslation;
 #elif defined(CIRCLE)
     Vertex.xy += InputPoint;
