@@ -2,7 +2,6 @@
 #include "collections/string_view.h"
 #include "core/templates.h"
 #include "mem/allocator.h"
-#include "mem/utils.h"
 
 
 struct StringView;

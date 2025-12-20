@@ -4,7 +4,6 @@
 #include "collections/string_map.h"
 #include "graphics/graphics.h"
 #include "mem/allocator.h"
-#include "math/vec2.h"
 #include "resource/resource.h"
 
 

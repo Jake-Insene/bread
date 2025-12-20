@@ -31,11 +31,8 @@ namespace mem
     template<typename T>
     constexpr bool compare(Slice<const T> src1, Slice<const T> src2);
 
-    template<typename T>
-    constexpr void copy(Slice<T> dest, const Slice<T>& src);
-
-    template<typename T>
-    constexpr void copy(Slice<T> dest, const Slice<const T>& src);
+    template<typename T, typename U>
+    constexpr void copy(Slice<T> dest, const Slice<U>& src);
 
     template<typename T>
     inline void set(Slice<T> dest, const T value);
@@ -119,14 +116,8 @@ constexpr void _copy_impl(Slice<T> dest, const Slice<const T>& src)
     }
 }
 
-template<typename T>
-constexpr void copy(Slice<T> dest, const Slice<T>& src)
-{
-    _copy_impl<T>(dest, Slice<const T>(src));
-}
-
-template<typename T>
-constexpr void copy(Slice<T> dest, const Slice<const T>& src)
+template<typename T, typename U>
+constexpr void copy(Slice<T> dest, const Slice<U>& src)
 {
     _copy_impl<T>(dest, src);
 }

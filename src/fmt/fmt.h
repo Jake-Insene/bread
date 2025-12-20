@@ -144,14 +144,14 @@ template<usize Base, typename T>
 inline void __format_integer(const io::Writer& writer, T arg)
 {
 	StringResult result = StringUtility::integer_to_string<T>(arg, Base);
-	writer.write(Slice(result.result + result.begin, result.len));
+	writer.write(mem::to_const_bytes(Slice(result.result + result.begin, result.len)));
 }
 
 template<typename T>
 inline void __format_floating_point(const io::Writer& writer, T arg, i32 decimals)
 {
 	StringResult result = StringUtility::fp_to_string<T>(arg, decimals);
-	writer.write(Slice(result.result, result.len));
+	writer.write(mem::to_const_bytes(Slice(result.result, result.len)));
 }
 
 template<typename T>
@@ -250,7 +250,7 @@ void format(const io::Writer& writer, const FormatString<TypeIdentity<TArgs>&&..
 	if constexpr (NewLine)
 	{
 		u8 _character = '\n';
-		Slice<u8> new_line = { &_character, 1 };
+		Slice<const u8> new_line = { &_character, 1 };
 		writer.write(new_line);
 	}
 }

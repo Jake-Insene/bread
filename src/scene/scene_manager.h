@@ -1,6 +1,5 @@
 #pragma once
 #include "collections/array.h"
-#include "collections/singleton.h"
 #include "math/color.h"
 #include "math/vec2.h"
 #include "object/object.h"

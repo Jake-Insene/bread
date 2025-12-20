@@ -1,5 +1,6 @@
 #pragma once
-#include "core/templates.h"
+#include "core/header.h"
+
 
 namespace fmt
 {
@@ -25,15 +26,13 @@ struct Log
 #if DEBUG
         info(fmt, Forward<TArgs>(args)...);
 #else
-        (void)fmt;
-        ((void)args, ...);
+        Unused(fmt, args...);
 #endif
     }
 };
 
 #include "fmt/fmt.h"
 #include "io/file.h"
-#include "io/writer.h"
 
 template<typename... TArgs>
 void Log::error(const fmt::FormatString<TypeIdentity<TArgs>&&...>& fmt, TArgs&&... args)

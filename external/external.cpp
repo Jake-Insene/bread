@@ -8,7 +8,7 @@ static void* _alloc(usize size)
 
 static void* _realloc(void* ptr, usize old_size, usize new_size)
 {
-    Slice<u8> old_mem = Slice<u8>{(u8*)ptr, old_size};
+    Slice<u8> old_mem = Slice<u8>(reinterpret_cast<u8*>(ptr), old_size);
     if(ptr && ResourceManager::get_allocator().realloc(old_mem, new_size, alignof(usize)))
     {
         return ptr;

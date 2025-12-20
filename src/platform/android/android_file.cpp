@@ -2,7 +2,7 @@
 
 #include "platform/android/android_engine.h"
 
-#include <android/log.h>
+
 
 static constexpr usize StderrHandle = 1;
 static constexpr usize StdoutHandle = 2;
@@ -84,14 +84,14 @@ void File::write(const Slice<const u8> bytes)
 
     if(handle == StderrHandle)
     {
-        Slice buffer = Slice(StderrBuffer);
+        Slice<u8> buffer = Slice(StderrBuffer);
         buffer = buffer.add(StderrBufferCounter);
         mem::copy(buffer, bytes);
         StderrBufferCounter += bytes.len;
     }
     else if(handle == StdoutHandle)
     {
-        Slice buffer = Slice(StdoutBuffer);
+        Slice<u8> buffer = Slice(StdoutBuffer);
         buffer = buffer.add(StdoutBufferCounter);
         mem::copy(buffer, bytes);
         StdoutBufferCounter += bytes.len;
@@ -116,14 +116,14 @@ void File::flush()
     {
         __android_log_print(ANDROID_LOG_ERROR, "Bread", "%.*s", (int)StderrBufferCounter, (char*)StderrBuffer);
         StderrBufferCounter = 0;
-        Slice buffer = Slice(StderrBuffer);
+        Slice<u8> buffer = Slice(StderrBuffer);
         mem::set<u8>(buffer, 0);
     }
     else if(handle == StdoutHandle)
     {
         __android_log_print(ANDROID_LOG_INFO, "Bread", "%.*s", (int)StdoutBufferCounter, (char*)StdoutBuffer);
         StdoutBufferCounter = 0;
-        Slice buffer = Slice(StdoutBuffer);
+        Slice<u8> buffer = Slice(StdoutBuffer);
         mem::set<u8>(buffer, 0);
     }
 }

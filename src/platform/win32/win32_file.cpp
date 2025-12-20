@@ -33,7 +33,6 @@ File File::get_stderr()
 	HANDLE handle = GetStdHandle(STD_ERROR_HANDLE);
 	return File
 	{
-
 		.handle = (usize)handle,
 	};
 }
@@ -43,7 +42,6 @@ File File::get_stdout()
 	HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
 	return File
 	{
-
 		.handle = (usize)handle,
 	};
 }
@@ -53,7 +51,6 @@ File File::get_stdin()
 	HANDLE handle = GetStdHandle(STD_INPUT_HANDLE);
 	return File
 	{
-
 		.handle = (usize)handle,
 	};
 }
@@ -61,9 +58,9 @@ File File::get_stdin()
 File File::open(StringView path, OpenMode mode)
 {
 	char tmp[256] = {};
-	mem::copy(Slice(tmp), path);
-
 	UINT access = 0;
+
+	mem::copy(Slice(tmp), path);
 
 	if (mode & File::Read)
 	{
@@ -130,7 +127,6 @@ void File::read(Slice<u8> bytes)
 	DebugAssert(handle != 0, "invalid file handler");
 	(void)ReadFile(HANDLE(handle), bytes.ptr(), (DWORD)bytes.len, 0, 0);
 }
-
 
 void File::flush()
 {

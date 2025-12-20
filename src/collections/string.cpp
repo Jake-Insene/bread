@@ -3,6 +3,7 @@
 #include "collections/string_view.h"
 #include "collections/string_utility.h"
 #include "io/writer.h"
+#include "mem/utils.h"
 
 
 String String::with_allocator(mem::Allocator allocator)
@@ -63,7 +64,7 @@ void String::resize(usize new_size)
 
     if (!allocator.realloc(mem::to_bytes(chars), new_size, alignof(usize)))
     {
-        auto new_chars = mem::from_bytes<char>(allocator.alloc(new_size, alignof(usize)));
+        Slice<char> new_chars = mem::from_bytes<char>(allocator.alloc(new_size, alignof(usize)));
         mem::copy(new_chars, chars);
         allocator.free(mem::to_bytes(chars));
         chars = new_chars;
@@ -89,7 +90,7 @@ bool String::ends_with(StringView str) const
 
 StringView String::view()
 {
-    return StringView{chars.ptr(), count};
+    return StringView(chars.ptr(), count);
 }
 
 io::Writer String::writer()
@@ -98,8 +99,8 @@ io::Writer String::writer()
     writer.writable = reinterpret_cast<Opaque*>(this);
     writer.write_fn = [](Opaque* self, const Slice<const u8> bytes) -> void
     {
-        String* str = self->cast<String*>();
-        str->add(StringView((const char*)bytes.ptr(), bytes.len));
+        String& str = *self->cast<String*>();
+        str.add(StringView(reinterpret_cast<const char*>(bytes.ptr()), bytes.len));
     };
     return writer;
 }
