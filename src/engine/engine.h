@@ -24,7 +24,8 @@
 #define PreloadEnd() }
 
 // Resource Loading
-#define PreloadTexture(path)
+#define PreloadTexture(path) Resource::load<Texture2D>(path)
+#define PreloadMaterial(path) Resource::load<Material>(path)
 
 // SpriteAnimation
 #define SpriteAnimationBegin(name) {\

@@ -83,7 +83,6 @@ void SceneManager::shutdown()
     data.touched_focus.destroy();
     data.root_canvas.destroy();
 
-
     data.main_viewport.destroy();
 }
 
@@ -128,12 +127,12 @@ void SceneManager::step()
             "\tUpdate Time: {}\n"
             "\tPhysics 2D Time: {}\n"
             "\tRender Time: {}\n"
-            "\tDriver Render Time: {}\n"
-            "\tDriver Present Time: {}",
+            "\tRender Scene: {}\n"
+            "\tPresent Scene Time: {}",
             data.fps_counter, data.delta_time, data.debug_time.internal_update_time,
             data.debug_time.update_time, data.debug_time.physics_2d_time, 
-            data.debug_time.render_time, data.debug_time.driver_render_time,
-            data.debug_time.driver_present_time
+            data.debug_time.render_time, data.debug_time.render_scene_time,
+            data.debug_time.present_scene_time
         );
 
         data.fps_acum = 0;
@@ -189,7 +188,7 @@ void SceneManager::step()
 
     {
         PROFILE_SCOPE(
-            data.debug_time.driver_render_time = duration;
+            data.debug_time.render_scene_time = duration;
         );
 
         RenderManager::render_scene(&get_main_viewport());
@@ -197,7 +196,7 @@ void SceneManager::step()
 
     {
         PROFILE_SCOPE(
-            data.debug_time.driver_present_time = duration;
+            data.debug_time.present_scene_time = duration;
         );
         RenderManager::present_scene();
     }

@@ -40,6 +40,7 @@ struct PlatformIntricics
 			const __m128 result = _mm_dp_ps(v1, v2, 0x3F);
 			return _mm_cvtss_f32(result);
 #else
+            return (x1 * x2 + y1 * y2);
 #endif
 		}
 	}

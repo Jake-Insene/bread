@@ -110,7 +110,7 @@ static inline GLenum _texture_get_filter(Graphics::TextureFilter filter)
 }
 
 
-static inline GLenum _render_target_format_to_gl_format(Graphics::TextureFormat format)
+static inline GLenum _render_target_get_format(Graphics::TextureFormat format)
 {
     switch (format)
     {
@@ -120,6 +120,21 @@ static inline GLenum _render_target_format_to_gl_format(Graphics::TextureFormat 
         return GL_RGB;
     default:
         break;
+    }
+
+    GLESFailOn(true, "invalid swap chain format");
+}
+
+static inline GLenum _render_target_get_internal_format(Graphics::TextureFormat format)
+{
+    switch (format)
+    {
+        case Graphics::TEXTURE_FORMAT_RGBA8:
+            return GL_RGBA8;
+        case Graphics::TEXTURE_FORMAT_RGB8:
+            return GL_RGB8;
+        default:
+            break;
     }
 
     GLESFailOn(true, "invalid swap chain format");
@@ -260,6 +275,9 @@ void GLESDriver::initialize(const mem::Allocator& allocator)
     
     data.state.draw_framebuffer = 0;
     data.state.read_framebuffer = 0;
+    data.state.current_pipeline = Graphics::PipelineID::invalid();
+    data.state.gl_index_type = 0;
+    data.state.gl_topology = 0;
 
     EGL::initialize(allocator);
 
@@ -268,8 +286,6 @@ void GLESDriver::initialize(const mem::Allocator& allocator)
     gl.glEnable(GL_BLEND);
     gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     gl.glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    gl.glEnable(GL_CULL_FACE);
 
     _init_context();
 
@@ -305,7 +321,10 @@ Graphics::SwapChainID GLESDriver::swap_chain_create(const Graphics::SwapChainCre
         "invalid swap chain image count '{}', only 2 or 3 are allowed for now", ci.image_count);
     GLESFailOn(ci.format == Graphics::TEXTURE_FORMAT_UNKNOWN, "invalid swap chain format");
     GLESFailOn(ci.present_mode == Graphics::PRESENT_MODE_UNKNOWN, "invalid swap chain present mode");
+    GLESFailOn(ci.size == Vector2I(0, 0), "invalid swap chain image size");
+#if !defined(BREAD_ANDROID)
     GLESFailOn(ci.window == Display::WindowID::invalid(), "invalid window id");
+#endif
 
     Graphics::SwapChainID sc_id = data.swapchains.add(SwapChain());
     SwapChain& sc = data.swapchains.get(sc_id);
@@ -460,7 +479,7 @@ Graphics::TextureID GLESDriver::texture_create(const Graphics::TextureCreateInfo
     GLenum internal_format = _texture_get_internal_format(ci.format);
 
     gl.glTexImage2D(
-        GL_TEXTURE_2D, 0, internal_format, 
+        GL_TEXTURE_2D, 0, (GLint)internal_format,
         ci.size.width, ci.size.height, 0, 
         format, GL_UNSIGNED_BYTE, ci.pixels.ptr()
     );
@@ -494,7 +513,7 @@ Vector2I GLESDriver::texture_get_size(Graphics::TextureID texture)
 Graphics::RenderTargetID GLESDriver::render_target_create(const Graphics::RenderTargetCreateInfo& ci)
 {
     GLESFailOn(ci.format == Graphics::TEXTURE_FORMAT_UNKNOWN, "invalid render target format");
-    GLESFailOn(ci.format == Graphics::TEXTURE_FORMAT_UNKNOWN, "invalid render target size");
+    GLESFailOn(ci.size == Vector2I(0, 0), "invalid render target size");
 
     Graphics::RenderTargetID rt_id = _allocate_render_target();
     RenderTarget& rt = data.render_targets.get(rt_id);
@@ -503,7 +522,8 @@ Graphics::RenderTargetID GLESDriver::render_target_create(const Graphics::Render
     rt.size = ci.size;
 
     gl.glBindFramebuffer(GL_FRAMEBUFFER, rt.glid);
-    GLint gl_format = _render_target_format_to_gl_format(ci.format);
+    GLenum gl_format = _render_target_get_format(ci.format);
+    GLenum gl_internal_format = _render_target_get_internal_format(ci.format);
 
     { // FRAMEBUFFER TEXTURE
 
@@ -513,23 +533,26 @@ Graphics::RenderTargetID GLESDriver::render_target_create(const Graphics::Render
 
         gl.glBindTexture(GL_TEXTURE_2D, texture.glid);
         gl.glTexImage2D(
-            GL_TEXTURE_2D, 0, GL_RGB,
+            GL_TEXTURE_2D, 0, (GLint)gl_internal_format,
             ci.size.width, ci.size.height, 0,
             gl_format, GL_UNSIGNED_BYTE, nullptr
         );
-        gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         gl.glBindTexture(GL_TEXTURE_2D, 0);
 
         gl.glFramebufferTexture2D(
             GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
             texture.glid, 0
         );
+
     }
 
+    GLenum framebuffer_state = gl.glCheckFramebufferStatus(GL_FRAMEBUFFER);
+
     GLESFailOn(
-        gl.glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE,
-        "the framebuffer was not created correctly"
+            framebuffer_state != GL_FRAMEBUFFER_COMPLETE,
+            "the framebuffer was not created correctly"
     );
 
     gl.glBindFramebuffer(GL_FRAMEBUFFER, 0);

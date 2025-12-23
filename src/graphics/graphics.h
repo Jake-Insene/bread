@@ -135,6 +135,17 @@ struct Graphics
 		TEXTURE_FILTER_LINEAR,
 	};
 
+	struct DeviceInfo
+	{
+		StringView vendor_name;
+		StringView device_name;
+		StringView version_name;
+
+		Vector2I max_render_target_size;
+		i32 texture_units_per_stage;
+		i32 max_vertex_attributes;
+	};
+
 	struct VertexBinding
 	{
 		u32 binding;

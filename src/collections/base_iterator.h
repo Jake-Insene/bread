@@ -7,14 +7,13 @@
 * 
 * @param Iterator Must implement begin()/end()
 */
-template<typename Iterator, typename T>
+template<typename T>
 struct [[nodiscard]] BaseIterator
 {
-	constexpr Iterator find(const T& item_requested) const
+	template<typename Self>
+	constexpr auto find(this Self const& self, const T& item_requested)
 	{
-		const Iterator& iterable = static_cast<const Iterator&>(*this);
-
-		for (auto it = iterable.begin(); it != iterable.end(); ++it)
+		for (auto it = self.begin(); it != self.end(); ++it)
 		{
 			if (*it == item_requested)
 			{
@@ -22,18 +21,17 @@ struct [[nodiscard]] BaseIterator
 			}
 		}
 
-		return iterable.end();
+		return self.end();
 	}
 
 	template<typename Fn>
-	constexpr Iterator& for_each(Fn&& fn)
+	constexpr auto for_each(this auto&& self, Fn&& fn)
 	{
 		using ItFnComplete1 = void(*)(T&, usize);
 		using ItFnComplete2 = void(*)(const T&, usize);
 		
-		const Iterator& it = static_cast<const Iterator&>(*this);
 		usize index = 0;
-		for (auto&& item : it)
+		for (auto&& item : self)
 		{
 			if constexpr (IsAnyOf<Fn, ItFnComplete1, ItFnComplete2>)
 			{
@@ -45,20 +43,18 @@ struct [[nodiscard]] BaseIterator
 			}
 		}
 
-		return static_cast<Iterator&>(*this);
+		return Forward<decltype(self)>(self);
 	}
 
-	template<typename Fn>
-	constexpr Iterator& transform(Fn&& op)
+	template<typename Self, typename Fn>
+	constexpr auto transform(this auto&& self, Fn&& op)
 	{
-		Iterator& iterable = static_cast<Iterator&>(*this);
-
-		for (auto it = iterable.begin(); it != iterable.end(); ++it)
+		for (auto it = self.begin(); it != self.end(); ++it)
 		{
 			*it = op(*it);
 		}
 
-		return iterable;
+		return Forward<decltype(self)>(self);
 	}
 
 };

@@ -3,7 +3,7 @@
 #include "display/display.h"
 
 
-struct AndroidDisplay : Display
+struct AndroidDisplay
 {
     struct InternalData
     {

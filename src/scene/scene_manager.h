@@ -43,8 +43,8 @@ struct SceneManager
             f64 update_time;
             f64 physics_2d_time;
             f64 render_time;
-            f64 driver_render_time;
-            f64 driver_present_time;
+            f64 render_scene_time;
+            f64 present_scene_time;
         } debug_time;
 
         f32 last_time;

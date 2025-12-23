@@ -9,7 +9,7 @@
 * Used to iterate over an static array.
 */
 template<typename T>
-struct [[nodiscard]] StaticArrayIterator : BaseIterator<StaticArrayIterator<T>, T>
+struct [[nodiscard]] StaticArrayIterator : BaseIterator<T>
 {
     using Type = T;
 

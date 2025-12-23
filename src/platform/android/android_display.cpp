@@ -6,6 +6,8 @@
 void Display::initialize(const mem::Allocator &allocator)
 {
     Display::data.allocator = allocator;
+
+    AndroidDisplay::data.window_size = Engine::get_configuration().viewport_size;
 }
 
 void Display::shutdown()
@@ -13,7 +15,7 @@ void Display::shutdown()
 
 Display::WindowID Display::window_create()
 {
-    return Display::WindowID();
+    return Display::WindowID::invalid();
 }
 
 Vector2I Display::window_get_size(Display::WindowID)

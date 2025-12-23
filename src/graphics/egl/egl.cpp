@@ -89,13 +89,13 @@ void EGL::initialize(const mem::Allocator& allocator)
     EGL_REQUIRED_LOAD(glFramebufferTexture2D);
     EGL_REQUIRED_LOAD(glCheckFramebufferStatus);
     EGL_REQUIRED_LOAD(glBlitFramebuffer);
+    EGL_REQUIRED_LOAD(glDrawBuffers);
 
     EGL_REQUIRED_LOAD(glClearColor);
     EGL_REQUIRED_LOAD(glClear);
 
     EGL_REQUIRED_LOAD(glActiveTexture);
 
-    EGL_REQUIRED_LOAD(glDrawArrays);
     EGL_REQUIRED_LOAD(glDrawArraysInstanced);
     EGL_REQUIRED_LOAD(glDrawElementsInstanced);
 

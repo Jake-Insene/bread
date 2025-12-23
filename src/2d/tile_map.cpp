@@ -15,7 +15,7 @@ void TileMap::init(const CreateInfo&)
 
 void TileMap::deinit()
 {
-	data.bodies.iter().for_each(Physics2D::destroy_body);
+	(void)data.bodies.iter().for_each(Physics2D::destroy_body);
 	data.bodies.destroy();
 }
 
@@ -60,7 +60,7 @@ void TileMap::render()
 
 void TileMap::transform_changed()
 {
-	data.bodies.iter().for_each([&] (Physics2D::BodyID body_id)
+	(void)data.bodies.iter().for_each([&] (Physics2D::BodyID body_id)
 	{ 
 		Physics2D::body_set_transform(body_id, get_global_transform());
 	});

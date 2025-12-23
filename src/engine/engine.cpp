@@ -92,7 +92,7 @@ void Engine::shutdown()
 
 void Engine::destroy()
 {
-    // TODO: on android destroy the surface.
+    EGL::destroy_window_surface();
 }
 
 void Engine::step()
@@ -110,6 +110,7 @@ void Engine::request_recreate_window()
 {
     data.main_queue.add_job([]() 
         {
+            EGL::recreate_window_surface();
             SceneManager::recreate_window();
         }
     );

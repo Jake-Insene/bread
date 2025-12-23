@@ -37,11 +37,10 @@ struct [[nodiscard]] Slice
         return *this;
     }
 
-    template<typename Self>
-    [[nodiscard]] constexpr auto& operator[](this Self& self, const usize index)
+    [[nodiscard]] constexpr decltype(auto) operator[](this auto&& self, const usize index)
     {
         DebugAssert(index < self.len, "index out of range");
-        return self.items[index];
+        return Forward<decltype(self)>(self).items[index];
     }
 
     [[nodiscard]] constexpr T* begin() { return items; }

@@ -4,9 +4,9 @@
 
 void main()
 {
-    vec4 Vertex = vec4(0, 0, 0, 1);
-    vec2 out_uv = vec2(0);
-    uint index = gl_VertexID & 3;
+    vec4 Vertex = vec4(0.0, 0.0, 0.0, 1.0);
+    vec2 out_uv = vec2(0.0);
+    int index = gl_VertexID & 3;
     
     // Vertex
     // Indices: 0, 1, 2, 2, 3, 0
@@ -31,13 +31,13 @@ void main()
     }
     else if(index == 2)
     {
-        Vertex.xy = vec2(1, 1);
-        out_uv = vec2(1, 1);
+        Vertex.xy = vec2(1.0, 1.0);
+        out_uv = vec2(1.0, 1.0);
     }
     else //if(index == 3)
     {
-        Vertex.xy = vec2(-1, 1);
-        out_uv = vec2(0, 1);
+        Vertex.xy = vec2(-1.0, 1.0);
+        out_uv = vec2(0.0, 1.0);
     }
 
 #if defined(CUSTOM_VERTEX)
@@ -46,9 +46,9 @@ void main()
     gl_Position = Vertex;
 #endif
 
-    Color = vec4(1, 1, 1, 1);
+    Color = vec4(1.0, 1.0, 1.0, 1.0);
     UV = out_uv;
-    TextureUnit = 0;
+    TextureUnit = uint(0.0);
 }
 
 

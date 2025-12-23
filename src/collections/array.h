@@ -8,7 +8,7 @@
 * Used to iterate over an array.
 */
 template<typename T>
-struct [[nodiscard]] ArrayIterator : BaseIterator<ArrayIterator<T>, T>
+struct [[nodiscard]] ArrayIterator : BaseIterator<T>
 {
     using Type = T;
 

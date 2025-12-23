@@ -56,8 +56,8 @@ void AndroidEGL::initialize(const mem::Allocator&)
         EGL_BLUE_SIZE, 8,
         EGL_GREEN_SIZE, 8,
         EGL_RED_SIZE, 8,
-        EGL_DEPTH_SIZE, 24,
-        EGL_STENCIL_SIZE, 8,
+        EGL_DEPTH_SIZE, 0,
+        EGL_STENCIL_SIZE, 0,
         EGL_NONE
     };
     EGLint num_configs = 0;
@@ -88,7 +88,7 @@ void AndroidEGL::initialize(const mem::Allocator&)
             eglGetConfigAttrib(data.display, cfg, EGL_BLUE_SIZE, &b) &&
             eglGetConfigAttrib(data.display, cfg, EGL_DEPTH_SIZE, &d) && 
             eglGetConfigAttrib(data.display, cfg, EGL_STENCIL_SIZE, &s) &&
-            r == 8 && g == 8 && b == 8 && d == 24 && s == 8)
+            r == 8 && g == 8 && b == 8 && d == 0 && s == 0)
         {
             data.config = supported_configs.get(i);
             break;

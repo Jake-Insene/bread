@@ -19,15 +19,16 @@ struct Font : Resource
 
 	struct Glyph
 	{
-		Graphics::TextureID char_texture;
 		Rect2D src_rect;
-		Vector2I advance;
+		Vector2 advance;
+		Vector2 size;
 	};
 
 	struct FontTheme
 	{
 		Array<Glyph> glyphs;
 		i32 font_size;
+		Graphics::TextureID font_atlas;
 	};
 
 	struct InternalData
