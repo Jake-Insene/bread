@@ -6,6 +6,7 @@
 #include "resource/resource_manager.h"
 #include "resource/sprite_animation.h"
 #include "resource/tile_set.h"
+#include "resource/material.h"
 
 
 // Application configuration
@@ -24,8 +25,8 @@
 #define PreloadEnd() }
 
 // Resource Loading
-#define PreloadTexture(path) Resource::load<Texture2D>(path)
-#define PreloadMaterial(path) Resource::load<Material>(path)
+#define PreloadTexture(path) (void)Resource::load<Texture2D>(path)
+#define PreloadMaterial(path) (void)Resource::load<Material>(path)
 
 // SpriteAnimation
 #define SpriteAnimationBegin(name) {\
