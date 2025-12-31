@@ -18,6 +18,7 @@ struct AudioPlayer : Object
     } data;
 
     void enter();
+    void exit();
     void internal_update(f32 dt);
 
     void play();

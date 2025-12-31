@@ -17,6 +17,7 @@ struct Label : CanvasObject
 	} data;
 
 	String text;
+	usize visible_characters = MaxValue<usize>;
 
 	void init(const CreateInfo&);
 	void deinit();

@@ -72,5 +72,6 @@ struct XAudio2Driver
 	static f32 source_voice_get_volume(Audio::SourceVoiceID sv_id);
 
 	static void source_voice_play(Audio::SourceVoiceID sv_id);
+	static void source_voice_stop(Audio::SourceVoiceID sv_id);
 	static void source_voice_keep_playing(Audio::SourceVoiceID sv_id);
 };

@@ -53,6 +53,9 @@ void Object::mark(MarkName mark_name)
     case MARK_RENDER:
         SceneManager::_update_object_mark(mark_name, this, true);
         break;
+    case MARK_DEALLOCATED:
+        SceneManager::_update_object_mark(mark_name, this, true);
+        break;
     default:
         break;
     }

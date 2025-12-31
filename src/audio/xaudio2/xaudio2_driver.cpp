@@ -18,6 +18,7 @@ Audio::VTable XAudio2Driver::get_vtable()
 		.source_voice_get_volume = &XAudio2Driver::source_voice_get_volume,
 		
 		.source_voice_play = &XAudio2Driver::source_voice_play,
+		.source_voice_stop = &XAudio2Driver::source_voice_stop,
 		.source_voice_keep_playing = &XAudio2Driver::source_voice_keep_playing,
 	};
 }
@@ -116,7 +117,14 @@ void XAudio2Driver::source_voice_play(Audio::SourceVoiceID sv_id)
 	buffer.pAudioData = sv.buffer.ptr();
 
 	sv.sv_xaudio->SubmitSourceBuffer(&buffer);
-	sv.sv_xaudio->Start(0);
+	sv.sv_xaudio->Start();
+}
+
+void XAudio2Driver::source_voice_stop(Audio::SourceVoiceID sv_id)
+{
+	SourceVoice& sv = _get_source_voice(sv_id);
+	sv.is_playing = false;
+	sv.sv_xaudio->Stop();
 }
 
 void XAudio2Driver::source_voice_keep_playing(Audio::SourceVoiceID sv_id)

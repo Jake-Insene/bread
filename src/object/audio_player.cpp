@@ -7,6 +7,11 @@ void AudioPlayer::enter()
 {
 }
 
+void AudioPlayer::exit()
+{
+    Audio::source_voice_stop(get_sound()->get_source_voice());
+}
+
 void AudioPlayer::internal_update(f32)
 {
     if (get_sound() == nullptr)

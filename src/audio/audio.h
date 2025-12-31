@@ -30,6 +30,7 @@ struct Audio
         VTFunc(f32, source_voice_get_volume, SourceVoiceID);
 
         VTFunc(void, source_voice_play, SourceVoiceID);
+        VTFunc(void, source_voice_stop, SourceVoiceID);
         VTFunc(void, source_voice_keep_playing, SourceVoiceID);
     };
 
@@ -45,6 +46,7 @@ struct Audio
     VTFuncDefArg1RetS(f32, source_voice_get_volume, SourceVoiceID);
 
     VTFuncDefArg1S(source_voice_play, SourceVoiceID);
+    VTFuncDefArg1S(source_voice_stop, SourceVoiceID);
     VTFuncDefArg1S(source_voice_keep_playing, SourceVoiceID);
 
 };

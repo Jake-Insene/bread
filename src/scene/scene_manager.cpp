@@ -340,6 +340,16 @@ void SceneManager::_handle_change_scene()
     data.current_scene = data.change_scene.new_scene;
     data.change_scene.new_scene = nullptr;
     ObjectCallRef(data.current_scene, enter);
+
+    _handle_object_mark_changed();
+    for (auto& [object_id, queue_info] : data.queue_frees.iter())
+    {
+        _remove_object_from_list(queue_info.child);
+        queue_info.parent->remove_child(queue_info.child);
+    }
+
+    data.queue_frees.clear();
+    _try_clear_root_canvas();
 }
 
 Vector2 SceneManager::_screen_make_local_to_canvas(const Vector2& pos)
@@ -435,6 +445,14 @@ void SceneManager::_handle_object_mark_changed()
             {
                 (void)data.render_list.add(mark_changed.object);
             }
+        }
+        break;
+        case Object::MARK_DEALLOCATED:
+        {
+            DebugAssert(mark_changed.marked == true, "Object marked as deallocated, but marked as false");
+            data.int_update_list.remove(mark_changed.object);
+            data.update_list.remove(mark_changed.object);
+            data.render_list.remove(mark_changed.object);
         }
         break;
         }

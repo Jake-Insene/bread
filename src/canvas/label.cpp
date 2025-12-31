@@ -23,7 +23,12 @@ void Label::render()
 
 	const Font::FontTheme& font_theme = data.font->get_font_theme(get_font_size());
 	
-	for (usize i = 0; i < text.count; i++)
+	usize characters_to_shown = visible_characters != MaxValue<usize> 
+	? math::min(text.count, visible_characters) : text.count;
+	
+	f32 current_start_y = begin_pos.y;
+
+	for (usize i = 0; i < characters_to_shown; i++)
 	{
 		char character = text.get(i);
 		const Font::Glyph& glyph = font_theme.glyphs.get(u8(character));
@@ -36,7 +41,8 @@ void Label::render()
 		}
 		else if (character == '\n')
 		{
-			transform.set_position(Vector2(begin_pos.x, begin_pos.y - font_size.y));
+			current_start_y -= font_size.y;
+			transform.set_position(Vector2(begin_pos.x, current_start_y));
 			continue;
 		}
 
