@@ -13,6 +13,34 @@ Object* Object::_get_by_id(ObjectID id)
     return ObjectAllocator::get_by_id(id);
 }
 
+Object::Class* Object::get_class()
+{
+    static VTable vtable = []()
+    {
+        VTable tmp = {};
+        tmp.construct.bind([](Object* obj) -> void { ::new (obj) Object(); });
+        tmp.init.bind(&Object::initv);
+        tmp.deinit.bind(&Object::deinitv);
+        tmp.enter.bind(&Object::enterv);
+        tmp.internal_update.bind(&Object::internal_updatev);
+        tmp.update.bind(&Object::update);
+        tmp.render.bind(&Object::render);
+        tmp.exit.bind(&Object::exitv);
+        tmp.event.bind(&Object::eventv);
+        return tmp;
+    }();
+
+    static Class klass
+    {
+        .super_class = nullptr,
+        .class_name = "Object",
+        .class_size = sizeof(Object),
+        .vtable = &vtable,
+    };
+    
+    return &klass;
+}
+
 Object* Object::create_from_class(const Class* object_klass)
 {
     return ObjectAllocator::allocate_class(object_klass);

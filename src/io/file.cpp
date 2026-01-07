@@ -8,7 +8,7 @@ io::Writer File::writer()
 {
     io::Writer writer = {};
     writer.writable = reinterpret_cast<Opaque*>(this);
-    writer.write_fn = [](Opaque* self, const Slice<const u8> bytes) -> void
+    writer.write_fn = [](Opaque* self, const Slice<const u8>& bytes) -> void
     {
         File& file = *self->cast<File*>();
         file.write(bytes);

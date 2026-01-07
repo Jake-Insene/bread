@@ -39,5 +39,6 @@ void CanvasSprite::set_texture(Texture2D* new_texture)
         return;
 
     src_rect.size = Vector2(new_texture->get_size());
+    set_size(src_rect.size);
 }
 

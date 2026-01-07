@@ -2,7 +2,6 @@
 #include "collections/array.h"
 #include "collections/bits.h"
 #include "collections/event.h"
-#include "collections/hash_map.h"
 #include "collections/string.h"
 #include "collections/string_view.h"
 #include "object/object_id.h"
@@ -252,35 +251,9 @@ struct Object
     static void _try_bind_vtable(VTable&) {}
     static void _bind_vtable(VTable&);
 
-    static Class* get_class()
-    {
-        static VTable vtable = []()
-        {
-            VTable tmp = {};
-            tmp.construct.bind([](Object* obj) -> void { ::new (obj) Object(); });
-            tmp.init.bind(&Object::initv);
-            tmp.deinit.bind(&Object::deinitv);
-            tmp.enter.bind(&Object::enterv);
-            tmp.internal_update.bind(&Object::internal_updatev);
-            tmp.update.bind(&Object::update);
-            tmp.render.bind(&Object::render);
-            tmp.exit.bind(&Object::exitv);
-            tmp.event.bind(&Object::eventv);
-            return tmp;
-        }();
-
-        static Class klass
-        {
-            .super_class = nullptr,
-            .class_name = "Object",
-            .class_size = sizeof(Object),
-            .vtable = &vtable,
-        };
-
-        return &klass;
-    }
-
-    static Object* _get_by_id(ObjectID id) Function(FunctionInternal);
+    static Object* _get_by_id(ObjectID id);
+    
+    static Class* get_class();
 
     /*
     * @param Object Object to check.

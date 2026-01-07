@@ -43,16 +43,19 @@ void PageAllocator::free(Slice<u8> ptr)
     OS::unmap_memory(ptr);
 }
 
+
+static inline Allocator::VTable vtable =
+{
+    .alloc = (decltype(Allocator::VTable::alloc))&PageAllocator::alloc,
+    .realloc = (decltype(Allocator::VTable::realloc))&PageAllocator::realloc,
+    .free = (decltype(Allocator::VTable::free))&PageAllocator::free,
+};
+
 Allocator PageAllocator::allocator()
 {
     return Allocator
     {
-        .vtable =
-        {
-            .alloc = (decltype(Allocator::VTable::alloc))&PageAllocator::alloc,
-            .realloc = (decltype(Allocator::VTable::realloc))&PageAllocator::realloc,
-            .free = (decltype(Allocator::VTable::free))&PageAllocator::free,
-        },
+        .vtable = &vtable,
         .self = (Allocator*)this,
     };
 }

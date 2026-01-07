@@ -81,7 +81,7 @@ struct Resource
     * Load the resource of the given type, can return nullptr.
     */
     template<typename T>
-        requires(!IsSame<Resource, T>&& IsBaseOf<Resource, T>)
+        requires(!IsSame<Resource, T> && IsBaseOf<Resource, T>)
     [[nodiscard]] static T* load(StringView path)
     {
         return reinterpret_cast<T*>(_load_resource(T::Type, T::Specification, path).value());

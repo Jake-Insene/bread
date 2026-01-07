@@ -163,7 +163,9 @@ void __format_single_argument(const io::Writer& writer, T&& arg)
 	static constexpr fmt::FormatType type = fmt::__GetFormatType<T>();
 	if constexpr (type == fmt::FormatType::Bool)
 	{
-		auto str = mem::to_const_bytes(StringView(arg ? "true" : "false"));
+		static constexpr StringView true_str = "true";
+		static constexpr StringView false_str = "false";
+		Slice<const u8> str = mem::to_const_bytes(arg ? true_str : false_str);
 		writer.write(str);
 	}
 	else if constexpr (type == fmt::FormatType::Signed || type == fmt::FormatType::Unsigned)

@@ -7,10 +7,10 @@
 * Set/unset a collection of bits.
 * Useful for flags.
 */
-template<usize RequestedBits = sizeof(usize)*8>
+template<usize RequestedBits = sizeof(usize) * 8>
 struct [[nodiscard]] BitMask
 {
-    static constexpr usize get_required_len()
+    static constexpr usize _get_required_len()
     {
         if constexpr(RequestedBits <= 64)
         {
@@ -18,11 +18,11 @@ struct [[nodiscard]] BitMask
         }
         else
         {
-            return (RequestedBits >> 6) + 1;
+            return (RequestedBits / 64) + 1;
         }
     }
 
-    usize data[get_required_len()];
+    usize data[_get_required_len()];
     
     constexpr void set(const usize index)
     {
@@ -45,5 +45,5 @@ struct [[nodiscard]] BitMask
         );
     }
     
-    constexpr void clear() { ::new(data) usize[get_required_len()]{}; }
+    constexpr void clear() { ::new(data) usize[_get_required_len()]{}; }
 };

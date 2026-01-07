@@ -34,7 +34,7 @@ namespace mem
         template<typename T, typename... TArgs>
         constexpr void construct(T* instance, TArgs&&... args);
 
-        VTable vtable;
+        VTable* vtable;
         Allocator* self;
     };
     
@@ -47,20 +47,20 @@ namespace mem
 inline Slice<u8> mem::Allocator::alloc(usize size, usize alignment) const
 {
     DebugAssert(self != nullptr, "self is null");
-    Slice<u8> ptr = (self->*vtable.alloc)(size, alignment);
+    Slice<u8> ptr = (self->*vtable->alloc)(size, alignment);
     return ptr;
 }
 
 inline bool mem::Allocator::realloc(Slice<u8> ptr, usize new_size, usize alignment) const
 {
     DebugAssert(self != nullptr, "self is null");
-    return (self->*vtable.realloc)(ptr, new_size, alignment);
+    return (self->*vtable->realloc)(ptr, new_size, alignment);
 }
 
 inline void mem::Allocator::free(Slice<u8> ptr) const
 {
     DebugAssert(self != nullptr, "self is null");
-    (self->*vtable.free)(ptr);
+    (self->*vtable->free)(ptr);
 }
 
 template<typename T>

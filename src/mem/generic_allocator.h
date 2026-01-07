@@ -4,7 +4,7 @@
 namespace mem
 {
     
-    struct GenericAllocator : Allocator
+    struct GenericAllocator
     {
         static constexpr u16 MaxPageCount = u16(-1);
         static constexpr usize DefaultPageListSize = 128;

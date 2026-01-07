@@ -11,7 +11,7 @@ namespace mem
     
     static inline GenericAllocator::Header* get_header(Slice<u8> ptr)
     {
-        return (GenericAllocator::Header*)(ptr.sub(sizeof(GenericAllocator::Header)).ptr());
+        return reinterpret_cast<GenericAllocator::Header*>(ptr.sub(sizeof(GenericAllocator::Header)).ptr());
     }
     
     void GenericAllocator::destroy()
@@ -129,7 +129,7 @@ namespace mem
                                 const Header copied_block = *allocated_mem;
                                 Header* prev = allocated_mem->prev;
 
-                                allocated_mem = (Header*)(aligned_base - sizeof(Header));
+                                allocated_mem = reinterpret_cast<Header*>(aligned_base - sizeof(Header));
                                 allocated_mem->len = copied_block.len - offset;
                                 allocated_mem->page_index = i;
                                 allocated_mem->tags = 0;
@@ -159,7 +159,7 @@ namespace mem
                         {
                             u8* remain_base = (u8*)(usize(aligned_base) + aligned_size);
 
-                            Header* remain_header = (Header*)remain_base;
+                            Header* remain_header = reinterpret_cast<Header*>(remain_base);
 
                             remain_header->len = remain - sizeof(Header);
                             remain_header->page_index = allocated_mem->page_index;
@@ -196,11 +196,11 @@ namespace mem
         next_page_size += DefaultNextPageSize;
 
         u8* base = new_page.bytes.ptr();
-        u8* aligned_mem = (u8*)mem::align_up<usize>(usize(base) + sizeof(Header), alignment);
+        u8* aligned_mem = reinterpret_cast<u8*>(mem::align_up<usize>(usize(base) + sizeof(Header), alignment));
 
-        Header* allocation_header = (Header*)(aligned_mem - sizeof(Header));
+        Header* allocation_header = reinterpret_cast<Header*>(aligned_mem - sizeof(Header));
         allocation_header->len = new_page.bytes.len - sizeof(Header);
-        allocation_header->page_index = page_count-1;
+        allocation_header->page_index = page_count - 1;
         allocation_header->tags = Allocated;
         allocation_header->prev = nullptr;
         allocation_header->next = nullptr;
@@ -284,16 +284,17 @@ namespace mem
         check_integrity();
     }
         
+    static inline Allocator::VTable vtable = 
+    {
+        .alloc = (decltype(Allocator::VTable::alloc))&GenericAllocator::alloc,
+        .realloc = (decltype(Allocator::VTable::realloc))&GenericAllocator::realloc,
+        .free = (decltype(Allocator::VTable::free))&GenericAllocator::free,
+    };
     Allocator GenericAllocator::allocator()
     {
         return Allocator
         {
-            .vtable = 
-            {
-                .alloc = (decltype(Allocator::VTable::alloc))&GenericAllocator::alloc,
-                .realloc = (decltype(Allocator::VTable::realloc))&GenericAllocator::realloc,
-                .free = (decltype(Allocator::VTable::free))&GenericAllocator::free,
-            },
+            .vtable = &vtable,
             .self = (Allocator*)this,
         };
     }
