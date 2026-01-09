@@ -63,7 +63,9 @@ else()
         set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} "-msse4.1")
     endif()
     set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS}
-        "-fno-rtti" "-fno-exceptions" "-Wall" "-Wextra" "-ffast-math"
+        "-fno-rtti" "-fno-exceptions" "-Wall" "-Wextra" "-ffast-math" "-Werror" "-Wpedantic"
+        "-Wno-language-extension-token" "-Wno-gnu-anonymous-struct" "-Wno-error=gnu-anonymous-struct"
+        "-Wuninitialized" "-Wconditional-uninitialized"
     )
     
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_CLANG")

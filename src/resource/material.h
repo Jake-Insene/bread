@@ -6,7 +6,7 @@
 
 struct Material : Resource
 {
-    RESOURCE(RESOURCE_MATERIAL, LoadFromAssets, ResourceExtensions("shader"));
+    RESOURCE(RESOURCE_MATERIAL, LoadFromAssets, ResourceExtensions("shader"))
     MaterialManager::MaterialID material_id;
 
     void init();

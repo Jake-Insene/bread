@@ -120,14 +120,14 @@ f32 Physics2D::body_get_air_friction(BodyID body_id)
     return P2DDriver::body_get_air_friction(body_id);
 }
 
-void Physics2D::body_set_bounce(BodyID body_id, f32 bounce)
+void Physics2D::body_set_restitution(BodyID body_id, f32 new_restitution)
 {
-    P2DDriver::body_set_bounce(body_id, bounce);
+    P2DDriver::body_set_restitution(body_id, new_restitution);
 }
 
-f32 Physics2D::body_get_bounce(BodyID body_id)
+f32 Physics2D::body_get_restitution(BodyID body_id)
 {
-    return P2DDriver::body_get_bounce(body_id);
+    return P2DDriver::body_get_restitution(body_id);
 }
 
 void Physics2D::body_apply_force(BodyID body_id, const Vector2& force, const Vector2& position)

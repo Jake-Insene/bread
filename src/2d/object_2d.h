@@ -15,8 +15,8 @@ struct Material;
 */
 struct Object2D : Object
 {
-    OBJECT(Object2D, Object);
-    MARKS(MARK_2D);
+    OBJECT(Object2D, Object)
+    MARKS(MARK_2D)
 
     DefineVTable(Object)
     {

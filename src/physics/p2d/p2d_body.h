@@ -20,7 +20,7 @@ struct [[nodiscard]] P2DBody
         f32 inv_mass;
         f32 friction;
         f32 air_friction;
-        f32 bounce;
+        f32 restitution;
 
         P2DShape shape;
         P2DShape shape_transformed;
@@ -48,9 +48,11 @@ struct [[nodiscard]] P2DBody
 
     void set_velocity(const Vector2& new_velocity);
     Vector2 get_velocity() const;
+    void add_velocity(const Vector2& vel);
 
     void set_angular_velocity(f32 new_angular_velocity);
     f32 get_angular_velocity() const;
+    void add_angular_velocity(f32 ang_vel);
 
     [[nodiscard]] f32 get_inv_inertia() const {return data.inv_inertia; }
 
@@ -67,8 +69,8 @@ struct [[nodiscard]] P2DBody
     void set_air_friction(f32 new_air_friction);
     [[nodiscard]] f32 get_air_friction() const { return data.air_friction; }
 
-    void set_bounce(f32 new_bounce);
-    [[nodiscard]] f32 get_bounce() const { return data.bounce; }
+    void set_restitution(f32 new_restitution);
+    [[nodiscard]] f32 get_restitution() const { return data.restitution; }
 
     void set_shape(const P2DShape& new_shape);
     const P2DShape& get_shape() const { return data.shape; }

@@ -24,6 +24,11 @@ Vector2 P2DBody::get_velocity() const
 	return data.velocity;
 }
 
+void P2DBody::add_velocity(const Vector2& vel)
+{
+	data.velocity += vel;
+}
+
 void P2DBody::set_angular_velocity(f32 new_angular_velocity)
 {
 	if(fixed_rotation)
@@ -34,6 +39,13 @@ void P2DBody::set_angular_velocity(f32 new_angular_velocity)
 f32 P2DBody::get_angular_velocity() const
 {
 	return data.angular_velocity;
+}
+
+void P2DBody::add_angular_velocity(f32 ang_vel)
+{
+	if(fixed_rotation)
+		return;
+	data.angular_velocity += ang_vel;
 }
 
 void P2DBody::set_mass(f32 new_mass)
@@ -60,9 +72,9 @@ void P2DBody::set_air_friction(f32 new_air_friction)
 	data.air_friction = new_air_friction;
 }
 
-void P2DBody::set_bounce(f32 new_bounce)
+void P2DBody::set_restitution(f32 new_restitution)
 {
-	data.bounce = new_bounce;
+	data.restitution = new_restitution;
 }
 
 void P2DBody::set_shape(const P2DShape& new_shape)
@@ -83,8 +95,8 @@ void P2DBody::step(f32 dt)
 {
 	integrate(dt);
 
-	data.velocity *= 0.999f;
-	data.angular_velocity *= 0.999f;
+	data.velocity *= (1 - data.air_friction);
+	data.angular_velocity *= (1 - data.air_friction);
 	data.force_accumulator = Vector2();
 }
 

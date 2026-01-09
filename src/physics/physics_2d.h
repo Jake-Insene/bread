@@ -93,8 +93,8 @@ struct Physics2D
         VTFunc(f32, body_get_friction, BodyID);
         VTFunc(void, body_set_air_friction, BodyID, f32);
         VTFunc(f32, body_get_air_friction, BodyID);
-        VTFunc(void, body_set_bounce, BodyID, f32);
-        VTFunc(f32, body_get_bounce, BodyID);
+        VTFunc(void, body_set_restitution, BodyID, f32);
+        VTFunc(f32, body_get_restitution, BodyID);
         VTFunc(void, body_apply_force, BodyID, const Vector2&, const Vector2&);
         VTFunc(void, body_apply_impulse, BodyID, const Vector2&, const Vector2&);
         VTFunc(void, body_set_fixed_rotation, BodyID, bool);
@@ -154,8 +154,8 @@ struct Physics2D
     static f32 body_get_friction(BodyID body_id);
     static void body_set_air_friction(BodyID body_id, f32 air_friction);
     static f32 body_get_air_friction(BodyID body_id);
-    static void body_set_bounce(BodyID body_id, f32 bounce);
-    static f32 body_get_bounce(BodyID body_id);
+    static void body_set_restitution(BodyID body_id, f32 new_restitution);
+    static f32 body_get_restitution(BodyID body_id);
     static void body_apply_force(BodyID body_id, const Vector2& force, const Vector2& position);
     static void body_apply_impulse(BodyID body_id, const Vector2& impulse, const Vector2& position);
     static void body_set_fixed_rotation(BodyID body_id, bool fixed_rotation);

@@ -12,8 +12,8 @@
 */
 struct CanvasObject : Object
 {
-    OBJECT(CanvasObject, Object);
-    MARKS(MARK_CANVAS);
+    OBJECT(CanvasObject, Object)
+    MARKS(MARK_CANVAS)
     DefineVTable(Object)
     {
         Event<void(CanvasObject::*)(const InputEvent&), false> gui_event;

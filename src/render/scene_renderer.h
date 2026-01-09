@@ -51,7 +51,7 @@ struct SceneRenderer
         Color color;
         u32 padding[3];
     };
-    CheckInstanceSize(SpriteInstance);
+    CheckInstanceSize(SpriteInstance)
 
     struct alignas(16) SpriteUIInstance
     {
@@ -70,7 +70,7 @@ struct SceneRenderer
         Color color;
         u32 padding[3];
     };
-    CheckInstanceSize(SpriteUIInstance);
+    CheckInstanceSize(SpriteUIInstance)
 
     struct alignas(16) QuadInstance
     {
@@ -86,7 +86,7 @@ struct SceneRenderer
         Color color;
         u32 padding1[3];
     };
-    CheckInstanceSize(QuadInstance);
+    CheckInstanceSize(QuadInstance)
 
     struct alignas(16) PrimitivePoint
     {
@@ -95,7 +95,7 @@ struct SceneRenderer
         Color color;
         u32 flags;
     };
-    CheckInstanceSize(PrimitivePoint);
+    CheckInstanceSize(PrimitivePoint)
 
     struct alignas(16) PrimitiveCircle
     {
@@ -104,16 +104,16 @@ struct SceneRenderer
         Color color;
         f32 radius;
     };
-    CheckInstanceSize(PrimitiveCircle);
+    CheckInstanceSize(PrimitiveCircle)
 
     struct alignas(16) ScreenInstance
     {
         u32 unit;
         u32 padding[3];
     };
-    CheckInstanceSize(ScreenInstance);
+    CheckInstanceSize(ScreenInstance)
 
-    struct alignas(16) SceneUniform
+    struct SceneUniform
     {
         Mat4 viewport_transform;
         Mat4 scene_transform;
@@ -128,11 +128,12 @@ struct SceneRenderer
         u32 instance_count;
         u32 current_instance_count;
         u32 buffer_offset;
+        u32 padding;
     };
 
     struct SpriteBatchBase : BatchBase
     {
-        u32 texture_index;
+        usize texture_index;
         Graphics::TextureID texture_units[16];
     };
 
@@ -155,10 +156,6 @@ struct SceneRenderer
         Graphics::BufferID global_ib;
         u32 usable_texture_units;
 
-        SceneUniform scene_data;
-        Graphics::BufferID scene_uniform;
-        bool scene_data_ubo_update;
-
         MaterialManager::MaterialID item_material;
         Graphics::RenderTargetID render_targets[2];
         usize present_index;
@@ -175,6 +172,10 @@ struct SceneRenderer
         Batch<PrimitiveCircle> circles_batch;
 
         Vector2I render_target_size;
+
+        SceneUniform scene_data;
+        Graphics::BufferID scene_uniform;
+        bool scene_data_ubo_update;
     };
 
     static inline InternalData data{};

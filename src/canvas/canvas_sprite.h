@@ -7,8 +7,8 @@ struct Texture2D;
 
 struct CanvasSprite : CanvasObject
 {
-    OBJECT(CanvasSprite, CanvasObject);
-    MARKS(MARK_RENDER);
+    OBJECT(CanvasSprite, CanvasObject)
+    MARKS(MARK_RENDER)
 
     struct InternalData
     {

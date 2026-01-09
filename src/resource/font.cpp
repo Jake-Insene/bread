@@ -40,7 +40,10 @@ static void _load_theme(const mem::Allocator& allocator, const Slice<u8>& font_f
 
         stbtt_PackBegin(&pack_context, pixels.ptr(), width, width, width, 0, 0);
 
-        i32 result = stbtt_PackFontRange(&pack_context, font_file_content.ptr(), 0, theme.font_size, 0, Font::MinimumGlyphCount, ranges);
+        i32 result = stbtt_PackFontRange(
+            &pack_context, font_file_content.ptr(), 0, 
+            f32(theme.font_size), 0, Font::MinimumGlyphCount, ranges
+        );
         if(result != 1)
         {
             width *= 2;
@@ -64,7 +67,7 @@ static void _load_theme(const mem::Allocator& allocator, const Slice<u8>& font_f
             i32 line_gap;
             stbtt_GetFontVMetrics(font, &ascent, &descent, &line_gap);
 
-            f32 scale = stbtt_ScaleForPixelHeight(font, theme.font_size);
+            f32 scale = stbtt_ScaleForPixelHeight(font, f32(theme.font_size));
             f32 line_advance = (ascent - descent + line_gap) * scale;
             glyph.advance.height = line_advance;
             

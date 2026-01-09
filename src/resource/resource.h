@@ -55,7 +55,7 @@ struct Resource
     RESOURCE(
         RESOURCE_UNKNOWN,
         NoResourceFlags, 
-        ResourceExtensions(""));
+        ResourceExtensions(""))
 
     
     static Result<Resource*, Error> _load_resource(ResourceType type, ResourceTypeSpecification spec, StringView path);

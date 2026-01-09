@@ -92,10 +92,9 @@ void P2DCollision::positional_correction(const CollisionManifold& manifold, P2DB
 	{
 		inv_mass_sum = 1.f / inv_mass_sum;
 	}
-	else if (body_a.type == Physics2D::KINEMATIC)
+	else if (inv_mass_sum == 0.f)
 	{
-		inv_mass_sum = 1.f;
-		inv_mass_a = 1.f;
+		return;
 	}
 
 	const f32 amount_to_correct = manifold.depth * inv_mass_sum * correction_percentage;
@@ -144,12 +143,19 @@ void P2DCollision::resolve_collision(const CollisionManifold& manifold, P2DBody&
 	if (relative_velocity_along_normal > 0.f)
 		return;
 
-	f32 inv_bounce_sum = body_a.get_bounce() + body_b.get_bounce();
-	if (inv_bounce_sum > 0)
+	f32 inv_restitution_sum = body_a.get_restitution() + body_b.get_restitution();
+	if (inv_restitution_sum > 0)
 	{
-		inv_bounce_sum = 1.f / inv_bounce_sum;
+		inv_restitution_sum = 1.f / inv_restitution_sum;
 	}
-	const f32 e = (2 * body_a.get_bounce() * body_b.get_bounce()) * inv_bounce_sum;
+
+	f32 inv_friction_sum = body_a.get_friction() + body_b.get_friction();
+	if(inv_friction_sum > 0)
+	{
+		inv_friction_sum = 1.f / inv_friction_sum;
+	}
+
+	const f32 e = (2 * body_a.get_restitution() * body_b.get_restitution()) * inv_restitution_sum;
 	const f32 p_to_centeroid_cross_normal_a = Vector2::cross(penetration_to_centeroid_a, manifold.normal);
 	const f32 p_to_centeroid_cross_normal_b = Vector2::cross(penetration_to_centeroid_b, manifold.normal);
 	const f32 inv_mass_sum = body_a.get_inv_mass() + body_b.get_inv_mass();
@@ -163,16 +169,48 @@ void P2DCollision::resolve_collision(const CollisionManifold& manifold, P2DBody&
 	f32 j = -(1.f + e) * relative_velocity_along_normal;
 	j /= (inv_mass_sum + cross_n_sum);
 
-	const Vector2 impulse = manifold.normal * j;
-	const Vector2 impulse_body_a = impulse * body_a.get_inv_mass() * -1;
-	const Vector2 impulse_body_b = impulse * body_b.get_inv_mass();
-	body_a.set_velocity(body_a.get_velocity() + impulse_body_a);
-	body_b.set_velocity(body_b.get_velocity() + impulse_body_b);
+	const Vector2 impulse_vector = manifold.normal * j;
+	const Vector2 impulse_vector_body_a = impulse_vector * body_a.get_inv_mass() * -1;
+	const Vector2 impulse_vector_body_b = impulse_vector * body_b.get_inv_mass();
+	body_a.add_velocity(impulse_vector_body_a);
+	body_b.add_velocity(impulse_vector_body_b);
 
-	body_a.set_angular_velocity(
-		body_a.get_angular_velocity() + -p_to_centeroid_cross_normal_a * j * inv_inertia_a
+	body_a.add_angular_velocity(-p_to_centeroid_cross_normal_a * j * inv_inertia_a);
+	body_b.add_angular_velocity(p_to_centeroid_cross_normal_b * j * inv_inertia_b);
+
+	const Vector2 velocity_normal_direction = manifold.normal * relative_velocity.dot(manifold.normal);
+	Vector2 tangent = (relative_velocity - velocity_normal_direction) * -1;
+	const f32 friction = (2 * body_a.get_friction() * body_b.get_friction()) * inv_friction_sum;
+
+	if(tangent.x > 0.0001 || tangent.y > 0.0001)
+	{
+		tangent.normalize();
+	}
+
+	const f32 p_to_centeroid_cross_tangent_a = Vector2::cross(penetration_to_centeroid_a, tangent);
+	const f32 p_to_centeroid_cross_tangent_b = Vector2::cross(penetration_to_centeroid_b, tangent);
+	const f32 cross_sum_tangent = 
+		(p_to_centeroid_cross_tangent_a * p_to_centeroid_cross_tangent_a * inv_inertia_a)
+		+ (p_to_centeroid_cross_tangent_b * p_to_centeroid_cross_tangent_b * inv_inertia_b);
+
+	f32 frictional_impulse = -(1.f + e) * relative_velocity.dot(tangent) * friction;
+	frictional_impulse /= (inv_mass_sum + cross_sum_tangent);
+
+	if(frictional_impulse > j)
+	{
+		frictional_impulse = j;
+	}
+
+	
+
+	const Vector2 frictional_impulse_vector = tangent * frictional_impulse;
+	body_a.add_velocity(
+		((frictional_impulse_vector * body_a.get_inv_mass())) * -1.f
 	);
-	body_b.set_angular_velocity(
-		body_b.get_angular_velocity() + p_to_centeroid_cross_normal_b * j * inv_inertia_b
+	body_b.add_velocity(
+		(frictional_impulse_vector * body_b.get_inv_mass())
 	);
+
+	body_a.add_angular_velocity(-p_to_centeroid_cross_tangent_a * frictional_impulse * body_a.get_inv_inertia());
+	body_b.add_angular_velocity(p_to_centeroid_cross_tangent_b * frictional_impulse * body_b.get_inv_inertia());
 }

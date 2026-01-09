@@ -7,7 +7,7 @@
 // A group of pixels allocated in the gpu.
 struct Texture : Resource
 {
-    RESOURCE(RESOURCE_TEXTURE, LoadFromAssets, ResourceExtensions("png"));
+    RESOURCE(RESOURCE_TEXTURE, LoadFromAssets, ResourceExtensions("png"))
 
     Graphics::TextureID texture_id;
     
@@ -20,7 +20,7 @@ struct Texture : Resource
 // Same as Texture but specialized for 2D.
 struct Texture2D : Texture
 {
-    RESOURCE(RESOURCE_TEXTURE_2D, LoadFromAssets, ResourceExtensions("png"));
+    RESOURCE(RESOURCE_TEXTURE_2D, LoadFromAssets, ResourceExtensions("png"))
 
     void init();
     void destroy();

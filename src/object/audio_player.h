@@ -5,8 +5,8 @@
 
 struct AudioPlayer : Object
 {
-    OBJECT(AudioPlayer, Object);
-    MARKS(MARK_INTERNAL_UPDATE);
+    OBJECT(AudioPlayer, Object)
+    MARKS(MARK_INTERNAL_UPDATE)
 
     struct InternalData
     {

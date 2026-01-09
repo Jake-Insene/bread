@@ -7,8 +7,9 @@ struct Texture2D;
 
 struct ProgressBar : CanvasObject
 {
-	OBJECT(ProgressBar, CanvasObject);
-    MARKS(MARK_RENDER, MARK_INTERNAL_UPDATE);
+	OBJECT(ProgressBar, CanvasObject)
+    
+    MARKS(MARK_RENDER, MARK_INTERNAL_UPDATE)
 
     static constexpr f32 DefaultMin = 0.f;
     static constexpr f32 DefaultMax = 100.f;

@@ -470,7 +470,7 @@ void SceneRenderer::_render_item(RenderManager::RenderItem& item)
 
 			Graphics::TextureID tex = sprite->texture;
 
-			u32 tex_unit = u32(-1);
+			u32 tex_unit = MaxValue<u32>;
 			for (u32 t = 0; t < data.sprite_batch.texture_index; t++)
 			{
 				if (data.sprite_batch.texture_units[t] == tex)
@@ -480,10 +480,10 @@ void SceneRenderer::_render_item(RenderManager::RenderItem& item)
 				}
 			}
 
-			if (tex_unit == u32(-1))
+			if (tex_unit == MaxValue<u32>)
 			{
-				tex_unit = data.sprite_batch.texture_index;
-				data.sprite_batch.texture_units[data.sprite_batch.texture_index] = tex;
+				tex_unit = u32(data.sprite_batch.texture_index);
+				data.sprite_batch.texture_units[data.sprite_batch.texture_index] = Graphics::TextureID(tex);
 				data.sprite_batch.texture_index++;
 			}
 
@@ -540,7 +540,7 @@ void SceneRenderer::_render_item(RenderManager::RenderItem& item)
 
 			Graphics::TextureID tex = ui_sprite->texture;
 
-			u32 tex_unit = u32(-1);
+			u32 tex_unit = MaxValue<u32>;
 			for (u32 t = 0; t < data.sprite_ui_batch.texture_index; t++)
 			{
 				if (data.sprite_ui_batch.texture_units[t] == tex)
@@ -550,9 +550,9 @@ void SceneRenderer::_render_item(RenderManager::RenderItem& item)
 				}
 			}
 
-			if (tex_unit == u32(-1))
+			if (tex_unit == MaxValue<u32>)
 			{
-				tex_unit = data.sprite_ui_batch.texture_index;
+				tex_unit = u32(data.sprite_ui_batch.texture_index);
 				data.sprite_ui_batch.texture_units[data.sprite_ui_batch.texture_index] = tex;
 				data.sprite_ui_batch.texture_index++;
 			}

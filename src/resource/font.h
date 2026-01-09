@@ -12,7 +12,7 @@ struct Texture2D;
 
 struct Font : Resource
 {
-	RESOURCE(RESOURCE_FONT, LoadFromAssets, ResourceExtensions("ttf"));
+	RESOURCE(RESOURCE_FONT, LoadFromAssets, ResourceExtensions("ttf"))
 
 	static constexpr usize MinimumGlyphCount = 256;
 	static constexpr usize DefaultFontSize = 32;

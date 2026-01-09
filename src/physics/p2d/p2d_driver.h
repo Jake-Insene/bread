@@ -99,8 +99,8 @@ struct P2DDriver
     static f32 body_get_friction(Physics2D::BodyID body_id);
     static void body_set_air_friction(Physics2D::BodyID body_id, f32 new_air_friction);
     static f32 body_get_air_friction(Physics2D::BodyID body_id);
-    static void body_set_bounce(Physics2D::BodyID body_id, f32 new_bounce);
-    static f32 body_get_bounce(Physics2D::BodyID body_id);
+    static void body_set_restitution(Physics2D::BodyID body_id, f32 new_restitution);
+    static f32 body_get_restitution(Physics2D::BodyID body_id);
     static void body_apply_force(Physics2D::BodyID body_id, const Vector2& point, const Vector2& force);
     static void body_apply_impulse(Physics2D::BodyID body_id, const Vector2& point, const Vector2& force);
     static void body_set_fixed_rotation(Physics2D::BodyID body_id, bool enable);

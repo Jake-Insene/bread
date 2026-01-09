@@ -10,6 +10,11 @@ void Body2D::_bind_vtable(Object2D::VTable& vtable)
 void Body2D::init(const CreateInfo&)
 {
     data.body_id = Physics2D::create_body(this);
+
+    data.friction = Physics2D::body_get_friction(data.body_id);
+    data.air_friction = Physics2D::body_get_friction(data.body_id);
+    data.restitution = Physics2D::body_get_restitution(data.body_id);
+
     Physics2D::EventOnCollide event_on_collide;
     event_on_collide.bind(&_on_body_collide);
 
@@ -93,15 +98,10 @@ void Body2D::set_air_friction(f32 new_air_friction)
     Physics2D::body_set_air_friction(data.body_id, new_air_friction);
 }
 
-void Body2D::set_bounce(f32 new_bounce)
+void Body2D::set_restitution(f32 new_restitution)
 {
-    data.bounce = new_bounce;
-    Physics2D::body_set_bounce(data.body_id, new_bounce);
-}
-
-f32 Body2D::get_bounce() const
-{
-    return Physics2D::body_get_bounce(data.body_id);
+    data.restitution = new_restitution;
+    Physics2D::body_set_restitution(data.body_id, new_restitution);
 }
 
 void Body2D::apply_force(const Vector2& point, const Vector2& force) const

@@ -6,8 +6,8 @@ struct SpriteAnimation;
 
 struct AnimatedSprite2D : Object2D
 {
-	OBJECT(AnimatedSprite2D, Object2D);
-    MARKS(MARK_RENDER);
+	OBJECT(AnimatedSprite2D, Object2D)
+    MARKS(MARK_RENDER)
 
     struct InternalData
     {

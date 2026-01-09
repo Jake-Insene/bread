@@ -7,8 +7,8 @@
 
 struct Sprite2D : Object2D
 {
-    OBJECT(Sprite2D, Object2D);
-    MARKS(MARK_RENDER);
+    OBJECT(Sprite2D, Object2D)
+    MARKS(MARK_RENDER)
 
     struct InternalData
     {

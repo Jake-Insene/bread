@@ -20,9 +20,9 @@ struct Body2D : Object2D
         BodyType type = BodyType::UNKNOWN;
         
         f32 mass = 1.f;
-        f32 friction = 1.f;
-        f32 air_friction = 1.f;
-        f32 bounce = 1.f;
+        f32 friction;
+        f32 air_friction;
+        f32 restitution;
 
         bool grounded = false;
 
@@ -61,8 +61,8 @@ struct Body2D : Object2D
     void set_air_friction(f32 new_air_friction);
     [[nodiscard]] f32 get_air_friction() const { return data.air_friction; }
 
-    void set_bounce(f32 new_bounce);
-    [[nodiscard]] f32 get_bounce() const;
+    void set_restitution(f32 new_restitution);
+    [[nodiscard]] f32 get_restitution() const { return data.restitution; }
 
     void apply_force(const Vector2& point, const Vector2& force) const;
     void apply_impulse(const Vector2& point, const Vector2& force) const;

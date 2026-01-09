@@ -38,8 +38,8 @@ Physics2D::VTable P2DDriver::get_vtable()
         .body_get_friction = &P2DDriver::body_get_friction,
         .body_set_air_friction = &P2DDriver::body_set_air_friction,
         .body_get_air_friction = &P2DDriver::body_get_air_friction,
-        .body_set_bounce = &P2DDriver::body_set_bounce,
-        .body_get_bounce = &P2DDriver::body_get_bounce,
+        .body_set_restitution = &P2DDriver::body_set_restitution,
+        .body_get_restitution = &P2DDriver::body_get_restitution,
         .body_apply_force = &P2DDriver::body_apply_force,
         .body_apply_impulse = &P2DDriver::body_apply_impulse,
         .body_set_fixed_rotation = &P2DDriver::body_set_fixed_rotation,
@@ -116,7 +116,10 @@ void P2DDriver::step(f32 dt)
     data.accumulator += dt;
     while (data.accumulator >= data.fixed_step)
     {
-        _step_fixed(data.fixed_step);
+        for(i32 i = 0; i < 4; i++)
+        {
+            _step_fixed(data.fixed_step / 4.f);
+        }
         data.accumulator -= data.fixed_step;
     }
 
@@ -164,9 +167,9 @@ Physics2D::BodyID P2DDriver::create_body(Object2D* object)
 
     new_body.set_shape(P2DShape());
     new_body.set_mass(1.f);
-    new_body.set_friction(1.f);
-    new_body.set_air_friction(1.f);
-    new_body.set_bounce(0.f);
+    new_body.set_friction(0.1f);
+    new_body.set_air_friction(0.001f);
+    new_body.set_restitution(0.5f);
     new_body.compute_inertia();
     new_body.set_velocity(Vector2());
     new_body.set_angular_velocity(0.f);
@@ -350,16 +353,16 @@ f32 P2DDriver::body_get_air_friction(Physics2D::BodyID body_id)
     return body.get_air_friction();
 }
 
-void P2DDriver::body_set_bounce(Physics2D::BodyID body_id, f32 new_bounce)
+void P2DDriver::body_set_restitution(Physics2D::BodyID body_id, f32 new_restitution)
 {
     P2DBody& body = _get_body(body_id);
-    body.set_bounce(new_bounce);
+    body.set_restitution(new_restitution);
 }
 
-f32 P2DDriver::body_get_bounce(Physics2D::BodyID body_id)
+f32 P2DDriver::body_get_restitution(Physics2D::BodyID body_id)
 {
     const P2DBody& body = _get_body(body_id);
-    return body.get_bounce();
+    return body.get_restitution();
 }
 
 void P2DDriver::body_apply_force(Physics2D::BodyID body_id, const Vector2&, const Vector2& force)
