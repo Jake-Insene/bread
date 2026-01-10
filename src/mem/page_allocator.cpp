@@ -44,18 +44,17 @@ void PageAllocator::free(Slice<u8> ptr)
 }
 
 
-static inline Allocator::VTable vtable =
+static inline Allocator::VTable page_vtable =
 {
     .alloc = (decltype(Allocator::VTable::alloc))&PageAllocator::alloc,
     .realloc = (decltype(Allocator::VTable::realloc))&PageAllocator::realloc,
     .free = (decltype(Allocator::VTable::free))&PageAllocator::free,
 };
-
 Allocator PageAllocator::allocator()
 {
     return Allocator
     {
-        .vtable = &vtable,
+        .vtable = &page_vtable,
         .self = (Allocator*)this,
     };
 }

@@ -50,13 +50,14 @@ elseif("${BREAD_TARGET_ARCH}" STREQUAL "ARM64")
 endif()
 
 # Configuration per compiler
+# Some warnings needs to be treated as error because we eliminated the compiler runtime,
+# so now is more easy to create bugs.
 if(MSVC)
     set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} 
         "/W4" "/Oi" "/Zl" "/GS-" "/GR-" "/EHs-" "/EHc-" "/Zc:threadSafeInit-" "/Zc:preprocessor"
-        # Some warnings needs to be treated as error because we eliminated the compiler runtime,
-        # so now is more easy to create bugs.
         "/wd4201" "/we4244" "/we4701" "/we4700" "/we4101" "/we4703" "/we4189" "/we4834" "/we4100"
     )
+
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_MSVC")
 else()
     if("${BREAD_TARGET_ARCH}" STREQUAL "X64")
@@ -65,8 +66,10 @@ else()
     set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS}
         "-fno-rtti" "-fno-exceptions" "-Wall" "-Wextra" "-ffast-math" "-Werror" "-Wpedantic"
         "-Wno-language-extension-token" "-Wno-gnu-anonymous-struct" "-Wno-error=gnu-anonymous-struct"
-        "-Wuninitialized" "-Wconditional-uninitialized"
+        "-Wuninitialized" "-Wconditional-uninitialized" "-flto"
+        "-fuse-ld=lld-link"
     )
+    set(BREAD_LINK_OPTIONS ${BREAD_LINK_OPTIONS} "-flto")
     
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_CLANG")
 endif()

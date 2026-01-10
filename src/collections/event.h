@@ -75,35 +75,17 @@ struct [[nodiscard]] Event
 			DebugAssert(storage.instance != nullptr, "instance pointer don't set");
 		}
 
-		if constexpr (IsSame<ReturnType, void>)
+		if constexpr (IsMemberFunction<Fn> && UseInstance)
 		{
-			if constexpr (IsMemberFunction<Fn> && UseInstance)
-			{
-				(storage.instance->*storage.func)(args...);
-			}
-			else if constexpr (IsMemberFunction<Fn> && !UseInstance)
-			{
-				_call_method<Decomposed>(args...);
-			}
-			else
-			{
-				storage.func(args...);
-			}
+			return (storage.instance->*storage.func)(args...);
+		}
+		else if constexpr (IsMemberFunction<Fn> && !UseInstance)
+		{
+			return _call_method<Decomposed>(args...);
 		}
 		else
 		{
-			if constexpr (IsMemberFunction<Fn> && UseInstance)
-			{
-				(storage.instance->*storage.func)(args...);
-			}
-			else if constexpr (IsMemberFunction<Fn> && !UseInstance)
-			{
-				return _call_method<Decomposed>(args...);
-			}
-			else
-			{
-				return storage.func(args...);
-			}
+			return storage.func(args...);
 		}
 	}
 
@@ -111,14 +93,7 @@ struct [[nodiscard]] Event
 	requires(IsMemberFunction<Fn>)
 	constexpr ReturnType _call_method(DecomposedFn::ObjectType* instance, TArgs&&... args) const
 	{
-		if constexpr (IsSame<ReturnType, void>)
-		{
-			(instance->*storage.func)(args...);
-		}
-		else
-		{
-			return (instance->*storage.func)(args...);
-		}
+		return (instance->*storage.func)(args...);
 	}
 
 	constexpr bool has_func() const { return storage.func != nullptr; }

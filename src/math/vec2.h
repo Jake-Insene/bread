@@ -2,8 +2,8 @@
 #include "core/types.h"
 #include "debug/assertion.h"
 #include "math/funcs.h"
-
 #include "platform/instrinsics.h"
+
 
 
 template <typename T>
@@ -257,13 +257,5 @@ void format_custom<Vector2I>(const io::Writer& writer, const Vector2I& v);
 
 }
 
-namespace math
-{
-    template<typename T>
-        requires(IsArithmetic<T>)
-    [[nodiscard]] constexpr T to_range(const T v, const Vector2T<T>& orange, const Vector2T<T>& nrange)
-    {
-        return nrange.min + ((v - orange.min) / (orange.max - orange.min)) * (nrange.max - nrange.min);
-    }
-}
+
 

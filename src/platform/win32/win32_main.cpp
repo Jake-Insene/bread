@@ -6,13 +6,16 @@
 
 extern "C"
 {
+	__declspec(dllexport)
 	int _fltused = 0;
-	__declspec(selectany) unsigned long _tls_index = 0;
+	
+	unsigned long _tls_index = 0;
 
-	extern "C" void __chkstk(void) {}
+	__declspec(dllexport)
+	void __chkstk() {}
 
 	#pragma function(memset)
-	extern "C" void* __cdecl memset(void* dest, int c, size_t count)
+	void* __cdecl memset(void* dest, int c, size_t count)
 	{
 		if(c == 0)
 		{
@@ -26,14 +29,14 @@ extern "C"
 	}
 
 	#pragma function(memcpy)
-	extern "C" void* __cdecl memcpy(void* dest, const void* src, size_t count)
+	void* __cdecl memcpy(void* dest, const void* src, size_t count)
 	{
 		mem::copy(Slice<u8>((u8*)dest, count), Slice<u8>((u8*)src, count));
 		return dest;
 	}
 
 	#pragma function(strlen)
-	extern "C" usize __cdecl strlen(const char* str)
+	usize __cdecl strlen(const char* str)
 	{
 		return __string_len(str);
 	}

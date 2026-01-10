@@ -104,6 +104,7 @@ file(GLOB ENGINE_SRC
     src/resource/tile_set.cpp
 
     src/scene/scene_manager.cpp
+    src/scene/scene.cpp
 )
 
 file(GLOB GLES_ADAPTER_SRC

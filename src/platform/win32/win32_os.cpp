@@ -137,7 +137,7 @@ OS::ThreadID Win32OS::thread_create(OS::ThreadFn fn, Opaque* arg)
         CREATE_SUSPENDED, 0
     );
     DebugAssert(thread_handle != nullptr, "can't create a new thread");
-    
+   
     mem::set(Slice(thread_data.name), 0i8);
 
     thread_data.arg = arg;

@@ -1,6 +1,5 @@
 #pragma once
 #include "math/constants.h"
-#include "platform/instrinsics.h"
 
 
 namespace math::impl

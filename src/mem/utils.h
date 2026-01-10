@@ -7,35 +7,35 @@ struct Slice;
 
 namespace mem
 {
-    template<typename T>
-    inline Slice<u8> to_bytes(const Slice<T>& items);
+template<typename T>
+inline Slice<u8> to_bytes(const Slice<T>& items);
 
-    template<typename T>
-    inline Slice<const u8> to_const_bytes(const Slice<T>& items);
-    
-    template<typename T>
-    inline Slice<T> from_bytes(const Slice<u8> bytes);
-    
-    template<typename T>
-    constexpr T align_up(T value, T alignment)
-    {
-        return (value + (alignment - 1)) & ~(alignment - 1);
-    }
-    
-    template<typename T>
-    constexpr T align_down(T value, T alignment)
-    {
-        return value & ~(alignment - 1);
-    }
-    
-    template<typename T>
-    constexpr bool compare(Slice<const T> src1, Slice<const T> src2);
+template<typename T>
+inline Slice<const u8> to_const_bytes(const Slice<T>& items);
 
-    template<typename T, typename U>
-    constexpr void copy(Slice<T> dest, const Slice<U>& src);
+template<typename T>
+inline Slice<T> from_bytes(const Slice<u8> bytes);
 
-    template<typename T>
-    inline void set(Slice<T> dest, const T value);
+template<typename T>
+constexpr T align_up(T value, T alignment)
+{
+    return (value + (alignment - 1)) & ~(alignment - 1);
+}
+
+template<typename T>
+constexpr T align_down(T value, T alignment)
+{
+    return value & ~(alignment - 1);
+}
+
+template<typename T>
+constexpr bool compare(Slice<const T> src1, Slice<const T> src2);
+
+template<typename T, typename U>
+constexpr void copy(Slice<T> dest, const Slice<U>& src);
+
+template<typename T>
+inline void set(Slice<T> dest, const T value);
 
 }
 

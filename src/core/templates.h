@@ -12,6 +12,23 @@ inline constexpr bool IsSame<A, A> = true;
 template<typename T, typename... TArgs>
 inline constexpr bool IsAnyOf = (IsSame<T, TArgs> || ...);
 
+// Sequence...
+template<usize... Seq>
+struct Sequence{};
+
+template<usize N, usize... Seq>
+struct BuildSequence : BuildSequence<N - 1, N - 1, Seq...>
+{};
+
+template<usize... Seq>
+struct BuildSequence<0, Seq...> : Sequence<Seq...>
+{};
+
+// Types...
+template<typename... TArgs>
+struct TypeList {};
+
+
 // Type modification
 
 template<typename T>
@@ -285,6 +302,12 @@ template<typename Fn>
 struct FunctionDecomposed;
 
 template<typename RT, typename... TArgs>
+struct FunctionDecomposed<RT (TArgs...)>
+{
+    using ReturnType = RT;
+};
+
+template<typename RT, typename... TArgs>
 struct FunctionDecomposed<RT(*)(TArgs...)>
 {
     using ReturnType = RT;
@@ -326,6 +349,12 @@ template<typename T>
 }
 
 template<typename T>
+[[nodiscard]] constexpr RemoveReference<T>&& Move(T& arg)
+{
+    return static_cast<RemoveReference<T>&&>(arg);
+}
+
+template<typename T>
 [[nodiscard]] constexpr RemoveReference<T>&& Move(T&& arg)
 {
     return static_cast<RemoveReference<T>&&>(arg);
@@ -348,5 +377,24 @@ constexpr auto&& GetArgument(T&& first, TArgs&&... args)
     else
     {
         return GetArgument<N - 1, TArgs...>(Forward<TArgs>(args)...);
+    }
+}
+
+template<typename Fn, typename T, typename... TArgs>
+constexpr auto InvokeMember(Fn&& fn, T* instance, TArgs&&... args)
+{
+    return (instance->*fn)(Forward<TArgs>(args)...);
+}
+
+template<typename Fn, typename... TArgs>
+constexpr auto Invoke(Fn&& fn, TArgs&&... args)
+{
+    if constexpr(IsMemberFunction<RemoveReference<Fn>>)
+    {
+        return InvokeMember(fn, Forward<TArgs>(args)...);
+    }
+    else
+    {
+        return fn(Forward<TArgs>(args)...);
     }
 }

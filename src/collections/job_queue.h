@@ -31,7 +31,7 @@ struct [[nodiscard]] JobQueue
 
 		JobInfo job =
 		{
-			.func = [](Opaque* arg) { (*arg->cast<Fn*>())(); },
+			.func = [](Opaque* arg) { Invoke(*arg->cast<Fn*>()); },
 			.arg = reinterpret_cast<Opaque*>(fn_mem),
 		};
 

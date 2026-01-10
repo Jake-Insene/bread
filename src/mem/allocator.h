@@ -81,7 +81,8 @@ constexpr void mem::Allocator::construct_array(Slice<T> array) const
 template<typename T, typename... TArgs>
 constexpr T* mem::Allocator::object(TArgs&&... args)
 {
-    T* instance = reinterpret_cast<T*>(alloc(sizeof(T), alignof(T)).items);
+    constexpr usize alignment = alignof(T) == 1 ? 16 : alignof(T);
+    T* instance = reinterpret_cast<T*>(alloc(sizeof(T), alignment).items);
     construct(instance, args...);
     return instance;
 }
