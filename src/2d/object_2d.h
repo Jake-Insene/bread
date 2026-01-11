@@ -115,6 +115,11 @@ struct Object2D : Object
     * @return The object transformation matrix.
     */
     Transform2D get_transform() const;
+
+    /*
+    * @param new_transform The new object global transformation matrix.
+    */
+    void set_global_transform(const Transform2D& new_transform);
     
     /*
     * @return The object global transformation matrix.

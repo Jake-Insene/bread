@@ -105,11 +105,11 @@ void P2DCollision::positional_correction(const CollisionManifold& manifold, P2DB
 
 	if (body_a_movement != Vector2())
 	{
-		body_a.target->translate(body_a_movement);
+		body_a.data.transform.translate(body_a_movement);
 	}
 	if (body_b_movement != Vector2())
 	{
-		body_b.target->translate(body_b_movement);
+		body_a.data.transform.translate(body_b_movement);
 	}
 }
 

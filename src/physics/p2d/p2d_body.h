@@ -27,7 +27,7 @@ struct [[nodiscard]] P2DBody
         Transform2D transform;
     } data;
 
-    Object2D* target;
+    void* user_data;
     Physics2D::BodyID self;
     Physics2D::BodyType type;
     Physics2D::CollisionMask residence_mask;

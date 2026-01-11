@@ -16,7 +16,7 @@ struct [[nodiscard]] P2DArea
 
     InternalData data;
 
-    Object2D* target;
+    void* user_data;
     Physics2D::AreaID self;
     Physics2D::CollisionMask residence_mask;
 

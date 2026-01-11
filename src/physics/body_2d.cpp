@@ -9,7 +9,8 @@ void Body2D::_bind_vtable(Object2D::VTable& vtable)
 
 void Body2D::init(const CreateInfo&)
 {
-    data.body_id = Physics2D::create_body(this);
+    data.body_id = Physics2D::create_body((void*)this);
+    data.type = Physics2D::DYNAMIC;
 
     data.friction = Physics2D::body_get_friction(data.body_id);
     data.air_friction = Physics2D::body_get_friction(data.body_id);
@@ -28,6 +29,15 @@ void Body2D::deinit()
 
 void Body2D::enter()
 {}
+
+void Body2D::internal_update(f32 )
+{
+    if (data.type == BodyType::DYNAMIC || data.type == BodyType::KINEMATIC)
+    {
+        Transform2D t = Physics2D::body_get_transform(data.body_id);
+        set_global_transform(t);
+    }
+}
 
 void Body2D::exit()
 {}
@@ -131,12 +141,13 @@ void Body2D::set_collision_mask(CollisionMask mask)
     Physics2D::body_set_collision_mask(data.body_id, mask);
 }
 
-void Body2D::_on_body_collide(Opaque* _this, Object2D* obj)
+void Body2D::_on_body_collide(Opaque* _this, void* obj)
 {
     Body2D* body = _this->cast<Body2D*>();
+    Object2D* object = static_cast<Object2D*>(obj);
 
     if (body->on_collide.has_func() == false)
         return;
 
-    body->on_collide.call(obj);
+    body->on_collide.call(object);
 }

@@ -62,9 +62,9 @@ struct Physics2D
     };
 
     using CollisionMask = u32;
-    using EventOnCollide = Event<void(*)(Opaque*, Object2D*)>;
-    using EventOnBodyEnter = Event<void(*)(Opaque*, Object2D*)>;
-    using EventOnBodyExit = Event<void(*)(Opaque*, Object2D*)>;
+    using EventOnCollide = Event<void(*)(Opaque*, void*)>;
+    using EventOnBodyEnter = Event<void(*)(Opaque*, void*)>;
+    using EventOnBodyExit = Event<void(*)(Opaque*, void*)>;
 
     struct VTable
     {
@@ -73,15 +73,16 @@ struct Physics2D
 
         VTFunc(void, step, f32);
 
-        VTFunc(BodyID, create_body, Object2D*);
+        VTFunc(BodyID, create_body, void*);
         VTFunc(void, destroy_body, BodyID);
-        VTFunc(AreaID, create_area, Object2D*);
+        VTFunc(AreaID, create_area, void*);
         VTFunc(void, destroy_area, AreaID);
 
         VTFunc(void, body_set_shape, BodyID, const Shape2D&);
         VTFunc(Shape2D, body_get_shape, BodyID);
 
         VTFunc(void, body_set_transform, BodyID, const Transform2D&);
+        VTFunc(Transform2D, body_get_transform, BodyID);
         VTFunc(void, body_set_type, BodyID, BodyType);
         VTFunc(void, body_set_velocity, BodyID, const Vector2&);
         VTFunc(Vector2, body_get_velocity, BodyID);
@@ -134,15 +135,16 @@ struct Physics2D
 
     static void step(f32 dt);
 
-    static BodyID create_body(Object2D* object);
+    static BodyID create_body(void* user_data);
     static void destroy_body(BodyID body_id);
-    static AreaID create_area(Object2D* object);
+    static AreaID create_area(void* user_data);
     static void destroy_area(AreaID area_id);
 
     static void body_set_shape(BodyID body_id, const Shape2D& shape);
     static Shape2D body_get_shape(BodyID body_id);
 
     static void body_set_transform(BodyID body_id, const Transform2D& transform);
+    static Transform2D body_get_transform(BodyID body_id);
     static void body_set_type(BodyID body_id, BodyType type);
     static void body_set_velocity(BodyID body_id, const Vector2& velocity);
     static Vector2 body_get_velocity(BodyID body_id);

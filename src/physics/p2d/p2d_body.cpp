@@ -1,6 +1,5 @@
 #include "physics/p2d/p2d_body.h"
 
-#include "2d/object_2d.h"
 
 
 
@@ -123,13 +122,16 @@ void P2DBody::_semi_implicit_euler(f32 dt)
 	// Linear Velocity?
 	const Vector2 acceleration = data.force_accumulator * data.inv_mass;
 	data.velocity += acceleration * dt;
-	target->translate(data.velocity * dt);
+	data.transform.translate(data.velocity * dt);
 
 	// Angular Velocity
 	if (fixed_rotation == false)
 	{
-		target->rotate(data.angular_velocity * dt);
+		data.transform.rotate(data.angular_velocity * dt);
 	}
+
+	data.shape_transformed = data.shape;
+	data.shape_transformed.apply_transform(data.transform);
 }
 
 

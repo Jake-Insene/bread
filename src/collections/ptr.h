@@ -21,7 +21,7 @@ struct ScopedData<Ptr<T>>
 	template<typename... TArgs>
 	ScopedData(const mem::Allocator& allocator, TArgs&&... args) : allocator(allocator)
 	{
-		Unused(Forward<TArgs>(args)...);
+		Unused(args...);
 	}
 
 	auto as_tuple() const { return Tuple<mem::Allocator>(allocator); }
@@ -38,25 +38,53 @@ template<typename T>
 struct Ptr
 {
     T* memory;
+#if defined(DEBUG)
+    void* allocator_self;
+#endif
 
     template<typename... TArgs>
     static Ptr<T> create(mem::Allocator& allocator, TArgs&&... args)
     {
         T* memory = allocator.object<T>(Forward<TArgs>(args)...);
-
+        
         return Ptr<T>
         {
             .memory = memory,
+#if defined(DEBUG)
+            .allocator_self = allocator.self,
+#endif
+        };
+    }
+
+    template<typename... TArgs>
+    static Ptr<T> from_memory(mem::Allocator& allocator, T* memory)
+    {
+#if defined(RELEASE)
+        Unused(allocator);
+#endif
+        return Ptr<T>
+        {
+            .memory = memory,
+#if defined(DEBUG)
+            .allocator_self = allocator.self,
+#endif
         };
     }
 
     void destroy(const mem::Allocator& allocator)
     {
+        DebugAssert(allocator.self == allocator_self, " allocator mismatch");
         DebugAssert(memory != nullptr, "memory is null");
+
+        memory->~T();
 
         allocator.free(mem::to_bytes(Slice<T>(memory, 1)));
         memory = nullptr;
     }
 
-    inline T* operator->() const { return memory; }
+    inline T* operator->() const
+    { 
+        DebugAssert(memory != nullptr, "memory is null"); 
+        return memory; 
+    }
 };

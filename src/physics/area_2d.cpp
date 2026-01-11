@@ -10,7 +10,7 @@ void Area2D::_bind_vtable(Area2D::VTable& vtable)
 
 void Area2D::init(const CreateInfo&)
 {
-    data.area_id = Physics2D::create_area(this);
+    data.area_id = Physics2D::create_area((void*)this);
     Physics2D::EventOnBodyEnter event_on_body_enter;
     event_on_body_enter.bind(&_on_body_enter);
     Physics2D::area_set_on_body_enter(data.area_id, reinterpret_cast<Opaque*>(this), event_on_body_enter);
@@ -52,28 +52,28 @@ void Area2D::set_residence_mask(CollisionMask mask)
     Physics2D::area_set_residence_mask(data.area_id, mask);
 }
 
-void Area2D::_on_body_enter(Opaque* _this, Object2D* obj)
+void Area2D::_on_body_enter(Opaque* _this, void* obj)
 {
     Area2D* area = _this->cast<Area2D*>();
 
     if (area->on_body_enter.has_func() == false)
         return;
 
-    Body2D* body = Object::cast<Body2D>(obj);
+    Body2D* body = static_cast<Body2D*>(obj);
     if (!body)
         return;
 
     area->on_body_enter.call(body);
 }
 
-void Area2D::_on_body_exit(Opaque* _this, Object2D* obj)
+void Area2D::_on_body_exit(Opaque* _this, void* obj)
 {
     Area2D* area = _this->cast<Area2D*>();
 
     if (area->on_body_exit.has_func() == false)
         return;
 
-    Body2D* body = Object::cast<Body2D>(obj);
+    Body2D* body = static_cast<Body2D*>(obj);
     if (!body)
         return;
 

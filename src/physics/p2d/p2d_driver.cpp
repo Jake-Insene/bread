@@ -1,6 +1,5 @@
 #include "physics/p2d/p2d_driver.h"
 
-#include "2d/object_2d.h"
 #include "physics/physics_2d.h"
 #include "physics/p2d/p2d_types.h"
 #include "physics/p2d/p2d_collision.h"
@@ -27,6 +26,7 @@ Physics2D::VTable P2DDriver::get_vtable()
         .body_get_shape = &P2DDriver::body_get_shape,
 
         .body_set_transform = &P2DDriver::body_set_transform,
+        .body_get_transform = &P2DDriver::body_get_transform,
         .body_set_type = &P2DDriver::body_set_type,
         .body_set_velocity = &P2DDriver::body_set_velocity,
         .body_get_velocity = &P2DDriver::body_get_velocity,
@@ -152,13 +152,13 @@ void P2DDriver::step(f32 dt)
     }
 }
 
-Physics2D::BodyID P2DDriver::create_body(Object2D* object)
+Physics2D::BodyID P2DDriver::create_body(void* user_data)
 {
     Physics2D::BodyID id = data.current_bodies.add(P2DBody());
     P2DBody& new_body = data.current_bodies.get(id);
     (void)data.active_bodies.add(id);
 
-    new_body.target = object;
+    new_body.user_data = user_data;
     new_body.self = id;
     new_body.type = Physics2D::DYNAMIC;
     new_body.residence_mask = Physics2D::CollisionMask(Physics2D::DEFAULT_COLLISION_MASK);
@@ -200,7 +200,7 @@ void P2DDriver::destroy_body(Physics2D::BodyID body_id)
                 continue;
 
             if(area.on_body_exit.has_func())
-                area.on_body_exit.call(area._this, body.target);
+                area.on_body_exit.call(area._this, body.user_data);
             
             area.bodies_inside.remove(body.self);
         }
@@ -210,12 +210,12 @@ void P2DDriver::destroy_body(Physics2D::BodyID body_id)
     data.current_bodies.remove(body_id);
 }
 
-Physics2D::AreaID P2DDriver::create_area(Object2D* object)
+Physics2D::AreaID P2DDriver::create_area(void* user_data)
 {
     Physics2D::AreaID id = data.current_areas.add(P2DArea());
     P2DArea& new_area = data.current_areas.get(id);
 
-    new_area.target = object;
+    new_area.user_data = user_data;
     new_area.self = id;
     new_area.residence_mask = Physics2D::CollisionMask(Physics2D::DEFAULT_COLLISION_MASK);
     _active_area(id);
@@ -245,7 +245,7 @@ void P2DDriver::destroy_area(Physics2D::AreaID area_id)
     {
         P2DBody& body = _get_body(body_id);
         if(area.on_body_exit.has_func())
-            area.on_body_exit.call(area._this, body.target);
+            area.on_body_exit.call(area._this, body.user_data);
     }
 
     area.bodies_inside.destroy();
@@ -270,6 +270,12 @@ void P2DDriver::body_set_transform(Physics2D::BodyID body_id, const Transform2D&
 {
     P2DBody& body = _get_body(body_id);
     body.set_transform(new_transform);
+}
+
+Transform2D P2DDriver::body_get_transform(Physics2D::BodyID body_id)
+{
+    const P2DBody& body = _get_body(body_id);
+    return body.get_transform();
 }
 
 void P2DDriver::body_set_type(Physics2D::BodyID body_id, Physics2D::BodyType new_type)
@@ -509,9 +515,6 @@ void P2DDriver::_step_fixed(f32 dt)
     {
         P2DArea& area = _get_area(area_id);
         area.check_counter++;
-        // We can't garant that the body still on the scene.
-        if (area.target->has_mark(Object::MARK_QUEUE_FREE))
-            continue;
 
         _area_recompute_tiles(area);
         _check_area_collision(area);
@@ -523,9 +526,6 @@ void P2DDriver::_step_fixed(f32 dt)
     for (Physics2D::BodyID body_id : data.active_bodies.iter())
     {
         P2DBody& body = _get_body(body_id);
-        // We can't garant that the body still on the scene.
-        if (body.target->has_mark(Object::MARK_QUEUE_FREE))
-            continue;
 
         _move_body(body, dt);
         _body_recompute_tiles(body);
@@ -555,23 +555,23 @@ void P2DDriver::_handle_debug_draw_body(P2DBody& body)
         Vector2 point2 = shape.vertices[(i + 1) % 4];
 
         RenderManager::render_item_draw_line(
-            body.target->get_render_item(),
+            data.grid_item,
             point1, point2, Color(255, 0, 0, 255)
         );
     }
     
     RenderManager::render_item_draw_circle(
-        body.target->get_render_item(),
+        data.grid_item,
         shape.get_centroid(), 1.f, Color(255, 0, 0, 255)
     );
 
     RenderManager::render_item_draw_circle(
-        body.target->get_render_item(),
+        data.grid_item,
         shape.aabb.min, 1.f, Color(0, 255, 0, 255)
     );
 
     RenderManager::render_item_draw_circle(
-        body.target->get_render_item(),
+        data.grid_item,
         shape.aabb.max, 1.f, Color(0, 0, 255, 255)
     );
 }
@@ -589,13 +589,13 @@ void P2DDriver::_handle_debug_draw_area(P2DArea& area)
         Vector2 point2 = shape.vertices[(i + 1) % 4];
 
         RenderManager::render_item_draw_line(
-            area.target->get_render_item(),
+            data.grid_item,
             point1, point2, Color(0, 0, 255, 255)
         );
     }
 
     RenderManager::render_item_draw_circle(
-        area.target->get_render_item(),
+        data.grid_item,
         shape.get_centroid(), 1.f, Color(255, 0, 0, 255)
     );
 }
@@ -637,10 +637,6 @@ void P2DDriver::_check_body_collisions_on_tile(P2DBody& body, PhysicsTile& tile)
 
         P2DBody& other_body = _get_body(other_body_id);
 
-        // We can't garant that the body still on the scene.
-        if (other_body.target->has_mark(Object::MARK_QUEUE_FREE))
-            continue;
-        
         // Ignore collision between static objects.
         if(body.type == Physics2D::STATIC && other_body.type == Physics2D::STATIC)
             continue;
@@ -718,10 +714,6 @@ void P2DDriver::_check_area_collision_on_tile(P2DArea& area, PhysicsTile& tile)
     {
         P2DBody& body = _get_body(body_id);
 
-        // We can't garant that the body still on the scene.
-        if (body.target->has_mark(Object::MARK_QUEUE_FREE))
-            continue;
-
         if ((area.residence_mask & body.residence_mask) == 0)
             continue;
 
@@ -748,7 +740,7 @@ void P2DDriver::_area_handle_collision(P2DArea& area, P2DBody& body, bool collid
     {
         area.bodies_inside.remove(body.self);
         if (area.on_body_exit.has_func())
-            area.on_body_exit.call(area._this, body.target);
+            area.on_body_exit.call(area._this, body.user_data);
         return;
     }
     else if(has_body && collided)
@@ -773,7 +765,7 @@ void P2DDriver::_area_handle_collision(P2DArea& area, P2DBody& body, bool collid
     if (area.on_body_enter.has_func() == false)
         return;
     
-    area.on_body_enter.call(area._this, body.target);
+    area.on_body_enter.call(area._this, body.user_data);
 }
 
 void P2DDriver::_check_area_bodies_still_inside(P2DArea& area)
@@ -785,7 +777,7 @@ void P2DDriver::_check_area_bodies_still_inside(P2DArea& area)
         {
             area.bodies_inside.remove(body_id);
             if (area.on_body_exit.has_func())
-                area.on_body_exit.call(area._this, body.target);
+                area.on_body_exit.call(area._this, body.user_data);
         }
     }
 }
@@ -799,11 +791,11 @@ void P2DDriver::_resolve_collision_callbacks()
 
         if (body.on_collide.has_func())
         {
-            body.on_collide.call(body._this, collided.target);
+            body.on_collide.call(body._this, collided.user_data);
         }
         if(collided.on_collide.has_func())
         {
-            collided.on_collide.call(collided._this, body.target);
+            collided.on_collide.call(collided._this, body.user_data);
         }
     }
 

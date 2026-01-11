@@ -7,6 +7,7 @@
 
 struct Body2D : Object2D
 {
+    MARKS(MARK_INTERNAL_UPDATE)
     OBJECT(Body2D, Object2D);
 
     static void _bind_vtable(Object2D::VTable& vtable);
@@ -36,6 +37,7 @@ struct Body2D : Object2D
     void deinit();
     
     void enter();
+    void internal_update(f32 dt);
     void exit();
 
     void transform_changed();
@@ -77,5 +79,5 @@ struct Body2D : Object2D
     void set_collision_mask(CollisionMask mask);
     [[nodiscard]] CollisionMask get_collision_mask() const { return data.collision_mask; }
 
-    static void _on_body_collide(Opaque* _this, Object2D* obj);
+    static void _on_body_collide(Opaque* _this, void* obj);
 };

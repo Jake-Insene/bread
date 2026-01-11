@@ -30,9 +30,9 @@ void Physics2D::step(f32 delta_time)
     P2DDriver::step(delta_time);
 }
 
-Physics2D::BodyID Physics2D::create_body(Object2D* object)
+Physics2D::BodyID Physics2D::create_body(void* user_data)
 {
-    return P2DDriver::create_body(object);
+    return P2DDriver::create_body(user_data);
 }
 
 void Physics2D::destroy_body(BodyID body_id)
@@ -40,9 +40,9 @@ void Physics2D::destroy_body(BodyID body_id)
     P2DDriver::destroy_body(body_id);
 }
 
-Physics2D::AreaID Physics2D::create_area(Object2D* object)
+Physics2D::AreaID Physics2D::create_area(void* user_data)
 {
-    return P2DDriver::create_area(object);
+    return P2DDriver::create_area(user_data);
 }
 
 void Physics2D::destroy_area(AreaID area_id)
@@ -63,6 +63,11 @@ Shape2D Physics2D::body_get_shape(BodyID body_id)
 void Physics2D::body_set_transform(BodyID body_id, const Transform2D& new_transform)
 {
     P2DDriver::body_set_transform(body_id, new_transform);
+}
+
+Transform2D Physics2D::body_get_transform(BodyID body_id)
+{
+    return P2DDriver::body_get_transform(body_id);
 }
 
 void Physics2D::body_set_type(BodyID body_id, BodyType new_type)

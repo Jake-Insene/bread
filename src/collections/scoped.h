@@ -49,7 +49,7 @@ struct ScopedData
 	using DestroyArgList = TypeList<>;
 
 	template<typename... TArgs>
-	ScopedData(TArgs&&... args) { Unused(Forward<TArgs>(args)...); }
+	ScopedData(TArgs&&... args) { Unused(args...); }
 
 	auto as_tuple() const { return Tuple<>(); }
 };

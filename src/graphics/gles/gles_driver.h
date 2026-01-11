@@ -1,10 +1,10 @@
 #pragma once
-#include "collections/array.h"
 #include "collections/static_array.h"
 #include "collections/free_list.h"
 #include "graphics/adapter.h"
 #include "log/log.h"
 #include "platform/platform_header.h"
+
 
 #define GLESDebugInfo(...) Log::debug("[GLESDriver]: " __VA_ARGS__)
 #define GLESFatal(...) Fatal("[GLESDriver]: " __VA_ARGS__)

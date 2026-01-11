@@ -129,6 +129,36 @@ Transform2D Object2D::get_transform() const
     return data.transform;
 }
 
+void Object2D::set_global_transform(const Transform2D& new_transform)
+{
+    data.global_transform_cache = new_transform;
+
+    Object* parent = get_parent();
+    if (parent && parent->has_mark(MARK_2D))
+    {
+        Object2D* p2d = (Object2D*)parent;
+        data.transform = p2d->get_global_transform().inverse() * new_transform;
+    }
+    else
+    {
+        data.transform = new_transform;
+    }
+
+    data.pos_cache = data.transform.get_position();
+    data.scale_cache = data.transform.get_scale();
+    data.rot_cache = data.transform.get_rotation();
+
+    for (usize i = 0; i < get_child_count(); i++)
+    {
+        if (Object2D* child = Object::cast<Object2D>(get_child(i)))
+        {
+            child->_update_transform();
+        }
+    }
+
+    ObjectCall(transform_changed);
+}
+
 Transform2D Object2D::get_global_transform() const
 {
     return data.global_transform_cache;
