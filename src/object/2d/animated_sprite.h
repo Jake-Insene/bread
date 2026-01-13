@@ -1,14 +1,12 @@
 #pragma once
-#include "2d/object_2d.h"
+#include "object/core/renderable.h"
+
 
 struct SpriteAnimation;
 
 
-struct AnimatedSprite2D : Object2D
+struct AnimatedSprite : Renderable
 {
-	OBJECT(AnimatedSprite2D, Object2D)
-    MARKS(MARK_RENDER)
-
     struct InternalData
     {
         u32 frame = 0;
@@ -21,6 +19,7 @@ struct AnimatedSprite2D : Object2D
     * Sprite modulate color.
     */
     Color color{255, 255, 255, 255};
+
     /*
     * Contains the animations and texture references to draw.
     */
@@ -40,11 +39,11 @@ struct AnimatedSprite2D : Object2D
     */
     bool flip_v = false;
 
-	void init(const CreateInfo&);
+    void init(const CreateInfo&);
     void deinit();
 
-    void internal_update(f32 dt);
-	void render();
+    void update(f32 dt);
+	void render(const Transform2D& transform);
 
     /*
     * Start playing the give animation.
@@ -52,6 +51,7 @@ struct AnimatedSprite2D : Object2D
     * @param animation_name The name of the animation to play.
     */
     void play(StringView animation_name) Function(FunctionNormal);
+    
     /*
     * Stop the current playing animation.
     */

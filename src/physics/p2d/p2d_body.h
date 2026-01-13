@@ -27,13 +27,12 @@ struct [[nodiscard]] P2DBody
         Transform2D transform;
     } data;
 
-    void* user_data;
+    Opaque* user_data;
     Physics2D::BodyID self;
     Physics2D::BodyType type;
     Physics2D::CollisionMask residence_mask;
     Physics2D::CollisionMask collision_mask;
 
-    Opaque* _this;
     Physics2D::EventOnCollide on_collide;
 
     bool fixed_rotation;

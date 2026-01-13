@@ -15,6 +15,8 @@ struct [[nodiscard]] Transform2D
 
     static Transform2D with_rotation(const f32 rads);
 
+    static Transform2D with_position(const Vector2& position);
+
     constexpr Transform2D()
     {
         rows[0] = Vector2(1, 0);

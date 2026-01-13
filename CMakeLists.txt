@@ -21,19 +21,7 @@ file(GLOB EXTERNAL_SRC
 )
 
 file(GLOB ENGINE_SRC
-    src/2d/animated_sprite_2d.cpp
-    src/2d/camera_2d.cpp
-    src/2d/object_2d.cpp
-    src/2d/sprite_2d.cpp
-    src/2d/tile_map.cpp
-
     src/audio/audio.cpp
-
-    src/canvas/button.cpp
-    src/canvas/canvas_object.cpp
-    src/canvas/canvas_sprite.cpp
-    src/canvas/label.cpp
-    src/canvas/progress_bar.cpp
 
     src/collections/error.cpp
     src/collections/job_queue.cpp
@@ -68,14 +56,17 @@ file(GLOB ENGINE_SRC
     src/os/semaphore.cpp
     src/os/thread.cpp
 
-    src/object/audio_player.cpp
     src/object/object.cpp
-    src/object/object_allocator.cpp
-    src/object/scene_manager.cpp
-    src/object/timer.cpp
 
-    src/physics/area_2d.cpp
-    src/physics/body_2d.cpp
+    src/object/2d/animated_sprite.cpp
+    src/object/2d/camera.cpp
+    src/object/2d/sprite.cpp
+    src/object/2d/tile_map.cpp
+
+    src/object/core/audio_player.cpp
+    src/object/core/renderable.cpp
+    src/object/core/timer.cpp
+
     src/physics/physics_2d.cpp
     src/physics/shape_2d.cpp
 

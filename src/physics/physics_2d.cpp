@@ -1,6 +1,5 @@
 #include "physics/physics_2d.h"
 
-#include "debug/fail.h"
 #include "physics/p2d/p2d_driver.h"
 
 
@@ -30,7 +29,7 @@ void Physics2D::step(f32 delta_time)
     P2DDriver::step(delta_time);
 }
 
-Physics2D::BodyID Physics2D::create_body(void* user_data)
+Physics2D::BodyID Physics2D::create_body(Opaque* user_data)
 {
     return P2DDriver::create_body(user_data);
 }
@@ -40,7 +39,7 @@ void Physics2D::destroy_body(BodyID body_id)
     P2DDriver::destroy_body(body_id);
 }
 
-Physics2D::AreaID Physics2D::create_area(void* user_data)
+Physics2D::AreaID Physics2D::create_area(Opaque* user_data)
 {
     return P2DDriver::create_area(user_data);
 }
@@ -58,6 +57,16 @@ void Physics2D::body_set_shape(BodyID body_id, const Shape2D& new_shape)
 Shape2D Physics2D::body_get_shape(BodyID body_id)
 {
     return P2DDriver::body_get_shape(body_id);
+}
+
+void Physics2D::body_set_user_data(BodyID body_id, Opaque* user_data)
+{
+    P2DDriver::body_set_user_data(body_id, user_data);
+}
+
+Opaque* Physics2D::body_get_user_data(BodyID body_id)
+{
+    return P2DDriver::body_get_user_data(body_id);
 }
 
 void Physics2D::body_set_transform(BodyID body_id, const Transform2D& new_transform)
@@ -180,9 +189,9 @@ Physics2D::CollisionMask Physics2D::body_get_collision_mask(BodyID body_id)
     return P2DDriver::body_get_collision_mask(body_id);
 }
 
-void Physics2D::body_set_on_collide(BodyID body_id, Opaque* user_data, EventOnCollide event)
+void Physics2D::body_set_on_collide(BodyID body_id, EventOnCollide event)
 {
-    P2DDriver::body_set_on_collide(body_id, user_data, event);
+    P2DDriver::body_set_on_collide(body_id, event);
 }
 
 void Physics2D::area_set_shape(AreaID area_id, const Shape2D& shape)
@@ -195,9 +204,24 @@ Shape2D Physics2D::area_get_shape(AreaID area_id)
     return P2DDriver::area_get_shape(area_id);
 }
 
+void Physics2D::area_set_user_data(AreaID area_id, Opaque* user_data)
+{
+    P2DDriver::area_set_user_data(area_id, user_data);
+}
+
+Opaque* Physics2D::area_get_user_data(AreaID area_id)
+{
+    return P2DDriver::area_get_user_data(area_id);
+}
+
 void Physics2D::area_set_transform(AreaID area_id, const Transform2D& transform)
 {
     P2DDriver::area_set_transform(area_id, transform);
+}
+
+Transform2D Physics2D::area_get_transform(AreaID area_id)
+{
+    return P2DDriver::area_get_transform(area_id);
 }
 
 void Physics2D::area_set_residence_mask(AreaID area_id, CollisionMask mask)
@@ -210,14 +234,14 @@ Physics2D::CollisionMask Physics2D::area_get_residence_mask(AreaID area_id)
     return P2DDriver::area_get_residence_mask(area_id);
 }
 
-void Physics2D::area_set_on_body_enter(AreaID area_id, Opaque* user_data, EventOnBodyEnter event)
+void Physics2D::area_set_on_body_enter(AreaID area_id, EventOnBodyEnter event)
 {
-    P2DDriver::area_set_on_body_enter(area_id, user_data, event);
+    P2DDriver::area_set_on_body_enter(area_id, event);
 }
 
-void Physics2D::area_set_on_body_exit(AreaID area_id, Opaque* user_data, EventOnBodyExit event)
+void Physics2D::area_set_on_body_exit(AreaID area_id, EventOnBodyExit event)
 {
-    P2DDriver::area_set_on_body_exit(area_id, user_data, event);
+    P2DDriver::area_set_on_body_exit(area_id, event);
 }
 
 void Physics2D::set_property(StringView property_name, PropertyValue new_value)

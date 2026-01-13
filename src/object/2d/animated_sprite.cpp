@@ -1,20 +1,27 @@
-#include "2d/animated_sprite_2d.h"
+#include "object/2d/animated_sprite.h"
 
 #include "resource/sprite_animation.h"
 
 
-void AnimatedSprite2D::init(const CreateInfo&)
+
+void AnimatedSprite::init(const CreateInfo& info)
 {
+	Renderable::init(info);
 	data.current_animation = String::with_allocator(allocator);
 }
 
-void AnimatedSprite2D::deinit()
+void AnimatedSprite::deinit()
 {
 	data.current_animation.destroy();
+
+	Renderable::deinit();
 }
 
-void AnimatedSprite2D::internal_update(f32 dt)
+void AnimatedSprite::update(f32 dt)
 {
+	if(data.playing == false)
+		return;
+
 	data.remain -= f32(dt);
 
 	if (data.remain > 0)
@@ -29,7 +36,6 @@ void AnimatedSprite2D::internal_update(f32 dt)
 		if (anim.loop == false)
 		{
 			data.playing = false;
-			unmark(MARK_INTERNAL_UPDATE);
 		}
 	}
 
@@ -37,7 +43,7 @@ void AnimatedSprite2D::internal_update(f32 dt)
 	data.remain = frame.duration;
 }
 
-void AnimatedSprite2D::render()
+void AnimatedSprite::render(const Transform2D& transform)
 {
 	if (animation == nullptr)
 		return;
@@ -68,12 +74,13 @@ void AnimatedSprite2D::render()
 	}
 
 	draw_sprite(
-		get_global_transform(), current_frame.sprite->texture_id,
-		rect, src_rect, Color(255, 255, 255, 255), flags
-	);
+        transform, current_frame.sprite, 
+        rect, src_rect, color, flags
+    );
 }
 
-void AnimatedSprite2D::play(StringView animation_name)
+
+void AnimatedSprite::play(StringView animation_name)
 {
 	if (!animation || !animation->has_animation(animation_name))
 		return;
@@ -89,13 +96,12 @@ void AnimatedSprite2D::play(StringView animation_name)
 
 	data.current_animation.set(animation_name);
 	data.remain = animation->get_frame(animation_name, 0).duration;
-	mark(MARK_INTERNAL_UPDATE);
 }
 
-void AnimatedSprite2D::stop()
+void AnimatedSprite::stop()
 {
 	data.playing = false;
 	data.frame = 0;
 	data.current_animation.set("");
-	unmark(MARK_INTERNAL_UPDATE);
 }
+

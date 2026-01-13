@@ -1,5 +1,6 @@
 #pragma once
 #include "core/templates.h"
+#include "debug/assertion.h"
 
 
 template<typename Fn, bool UseInstance>

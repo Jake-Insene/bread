@@ -1,7 +1,21 @@
-#include "2d/sprite_2d.h"
+#include "object/2d/sprite.h"
+#include "object/core/renderable.h"
+#include "render/render_manager.h"
 
 
-void Sprite2D::render()
+
+void Sprite::init(const CreateInfo& info)
+{
+    Renderable::init(info);
+}
+
+void Sprite::deinit()
+{
+    Renderable::deinit();
+}
+
+
+void Sprite::render(const Transform2D& transform)
 {
     if (data.texture == nullptr)
         return;
@@ -24,13 +38,10 @@ void Sprite2D::render()
         rect.position = Vector2(rect.size.x / -2.f, rect.size.y / 2.f);
     }
 
-    draw_sprite(
-        get_global_transform(), get_texture()->texture_id,
-        rect, src_rect, color, flags
-    );
+    draw_sprite(transform, get_texture(), rect, src_rect, color, flags);
 }
 
-void Sprite2D::set_texture(Texture2D* new_texture)
+void Sprite::set_texture(Texture2D* new_texture)
 {
     data.texture = new_texture;
     if (data.texture == nullptr)
@@ -38,4 +49,3 @@ void Sprite2D::set_texture(Texture2D* new_texture)
 
     src_rect.size = Vector2(new_texture->get_size());
 }
-

@@ -62,9 +62,9 @@ struct Physics2D
     };
 
     using CollisionMask = u32;
-    using EventOnCollide = Event<void(*)(Opaque*, void*)>;
-    using EventOnBodyEnter = Event<void(*)(Opaque*, void*)>;
-    using EventOnBodyExit = Event<void(*)(Opaque*, void*)>;
+    using EventOnCollide = Event<void(*)(BodyID, BodyID)>;
+    using EventOnBodyEnter = Event<void(*)(AreaID, BodyID)>;
+    using EventOnBodyExit = Event<void(*)(AreaID, BodyID)>;
 
     struct VTable
     {
@@ -73,14 +73,16 @@ struct Physics2D
 
         VTFunc(void, step, f32);
 
-        VTFunc(BodyID, create_body, void*);
+        VTFunc(BodyID, create_body, Opaque*);
         VTFunc(void, destroy_body, BodyID);
-        VTFunc(AreaID, create_area, void*);
+        VTFunc(AreaID, create_area, Opaque*);
         VTFunc(void, destroy_area, AreaID);
 
         VTFunc(void, body_set_shape, BodyID, const Shape2D&);
         VTFunc(Shape2D, body_get_shape, BodyID);
 
+        VTFunc(void, body_set_user_data, BodyID, Opaque*);
+        VTFunc(Opaque*, body_get_user_data, BodyID);
         VTFunc(void, body_set_transform, BodyID, const Transform2D&);
         VTFunc(Transform2D, body_get_transform, BodyID);
         VTFunc(void, body_set_type, BodyID, BodyType);
@@ -105,17 +107,20 @@ struct Physics2D
         VTFunc(CollisionMask, body_get_residence_mask, BodyID);
         VTFunc(void, body_set_collision_mask, BodyID, CollisionMask);
         VTFunc(CollisionMask, body_get_collision_mask, BodyID);
-        VTFunc(void, body_set_on_collide, BodyID, Opaque*, EventOnCollide);
+        VTFunc(void, body_set_on_collide, BodyID, EventOnCollide);
 
         VTFunc(void, area_set_shape, AreaID, const Shape2D&);
         VTFunc(Shape2D, area_get_shape, AreaID);
 
+        VTFunc(void, area_set_user_data, AreaID, Opaque*);
+        VTFunc(Opaque*, area_get_user_data, AreaID);
         VTFunc(void, area_set_transform, AreaID, const Transform2D&);
+        VTFunc(Transform2D, area_get_transform, AreaID);
         VTFunc(void, area_set_residence_mask, AreaID, CollisionMask);
         VTFunc(CollisionMask, area_get_residence_mask, AreaID);
 
-        VTFunc(void, area_set_on_body_enter, AreaID, Opaque*, EventOnBodyEnter);
-        VTFunc(void, area_set_on_body_exit, AreaID, Opaque*, EventOnBodyExit);
+        VTFunc(void, area_set_on_body_enter, AreaID, EventOnBodyEnter);
+        VTFunc(void, area_set_on_body_exit, AreaID, EventOnBodyExit);
 
         // Internal
         VTFunc(void, property_change, StringView, PropertyValue);
@@ -135,14 +140,16 @@ struct Physics2D
 
     static void step(f32 dt);
 
-    static BodyID create_body(void* user_data);
+    static BodyID create_body(Opaque* user_data);
     static void destroy_body(BodyID body_id);
-    static AreaID create_area(void* user_data);
+    static AreaID create_area(Opaque* user_data);
     static void destroy_area(AreaID area_id);
 
     static void body_set_shape(BodyID body_id, const Shape2D& shape);
     static Shape2D body_get_shape(BodyID body_id);
 
+    static void body_set_user_data(BodyID body_id, Opaque* user_data);
+    static Opaque* body_get_user_data(BodyID body_id);
     static void body_set_transform(BodyID body_id, const Transform2D& transform);
     static Transform2D body_get_transform(BodyID body_id);
     static void body_set_type(BodyID body_id, BodyType type);
@@ -167,16 +174,19 @@ struct Physics2D
     static CollisionMask body_get_residence_mask(BodyID body_id);
     static void body_set_collision_mask(BodyID body_id, CollisionMask mask);
     static CollisionMask body_get_collision_mask(BodyID body_id);
-    static void body_set_on_collide(BodyID body_id, Opaque* user_data, EventOnCollide event);
+    static void body_set_on_collide(BodyID body_id, EventOnCollide event);
 
     static void area_set_shape(AreaID area_id, const Shape2D& shape);
     static Shape2D area_get_shape(AreaID area_id);
 
+    static void area_set_user_data(AreaID area_id, Opaque* user_data);
+    static Opaque* area_get_user_data(AreaID area_id);
     static void area_set_transform(AreaID area_id, const Transform2D& transform);
+    static Transform2D area_get_transform(AreaID area_id);
     static void area_set_residence_mask(AreaID area_id, CollisionMask mask);
     static CollisionMask area_get_residence_mask(AreaID area_id);
-    static void area_set_on_body_enter(AreaID area_id, Opaque* user_data, EventOnBodyEnter event);
-    static void area_set_on_body_exit(AreaID area_id, Opaque* user_data, EventOnBodyExit event);
+    static void area_set_on_body_enter(AreaID area_id, EventOnBodyEnter event);
+    static void area_set_on_body_exit(AreaID area_id, EventOnBodyExit event);
 
     // Properties
 

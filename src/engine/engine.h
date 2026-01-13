@@ -11,7 +11,7 @@
 
 // Application configuration
 #define EngineConfiguration(...) EngineConfiguration __configuration__ = {__VA_ARGS__};
-#define DefaultCreateScene(name) []() -> Object* { return Object::create<name>(); }
+#define DefaultCreateScene(name) [](const mem::Allocator& allocator) -> Scene* { return Scene::create<name>(allocator); }
 #define EngineDefaultConfiguration(main_scene) \
     EngineConfiguration __configuration__ =\
     {\
@@ -65,13 +65,13 @@
 #define TileSetTileData(texture_position, ...) TileSet::TileData(texture_position),
 
 
-struct Object;
+struct Scene;
 struct InputEvent;
 
 struct EngineConfiguration
 {
     Vector2I viewport_size = Vector2I(Display::DefaultWidth, Display::DefaultHeight);
-    Object* (*create_main_scene)();
+    Scene* (*create_main_scene)(const mem::Allocator&);
     bool vsync = true;
     bool keep_viewport;
     bool enable_debug_console = false;

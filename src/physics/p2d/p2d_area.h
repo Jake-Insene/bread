@@ -16,11 +16,10 @@ struct [[nodiscard]] P2DArea
 
     InternalData data;
 
-    void* user_data;
+    Opaque* user_data;
     Physics2D::AreaID self;
     Physics2D::CollisionMask residence_mask;
 
-    Opaque* _this;
     Physics2D::EventOnBodyEnter on_body_enter;
     Physics2D::EventOnBodyExit on_body_exit;
 

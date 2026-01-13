@@ -14,6 +14,15 @@ Transform2D Transform2D::with_rotation(const f32 rads)
     );
 }
 
+Transform2D Transform2D::with_position(const Vector2& position)
+{
+    return Transform2D(
+        Vector2(1, 0),
+        Vector2(0, 1),
+        position
+    );
+}
+
 Transform2D Transform2D::operator*(const Transform2D& t) const
 {
     const Vector2 new_pos

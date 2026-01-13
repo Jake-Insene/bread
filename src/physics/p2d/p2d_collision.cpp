@@ -1,6 +1,5 @@
 #include "physics/p2d/p2d_collision.h"
 
-#include "2d/object_2d.h"
 
 
 
@@ -109,7 +108,7 @@ void P2DCollision::positional_correction(const CollisionManifold& manifold, P2DB
 	}
 	if (body_b_movement != Vector2())
 	{
-		body_a.data.transform.translate(body_b_movement);
+		body_b.data.transform.translate(body_b_movement);
 	}
 }
 

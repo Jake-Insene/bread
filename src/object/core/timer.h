@@ -8,12 +8,11 @@
 */
 struct Timer : Object
 {
-    OBJECT(Timer, Object);
-
     struct InternalData
     {
         f32 acumulator = 0;
         bool loop = false;
+        bool started = false;
     } data;
 
     /*
@@ -23,10 +22,11 @@ struct Timer : Object
     /*
     * Timeout event, it's called when the timer reachs duration.
     */
-    Event<void(Object::*)()> timeout;
+    Event<void(*)(Timer*)> timeout;
 
-    void enter();
-    void internal_update(f32 dt);
+    void init(const CreateInfo& info);
+    void deinit();
+    void update(f32 dt);
 
     /*
     * Start the timer and resets it to 0.

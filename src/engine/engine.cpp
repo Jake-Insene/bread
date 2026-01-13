@@ -5,7 +5,6 @@
 #include "graphics/graphics.h"
 #include "graphics/egl/egl.h"
 #include "log/log.h"
-#include "object/object_allocator.h"
 #include "scene/scene_manager.h"
 #include "os/os.h"
 #include "render/render_manager.h"
@@ -42,8 +41,6 @@ void Engine::initialize()
     // TODO: Find a better way to handle this.
     FailOn(OS::set_current_directory("assets") == false, "assets directory not found")
 
-    ObjectAllocator::initialize();
-
     Display::initialize(allocator);
 
     // Allocating main window
@@ -66,7 +63,7 @@ void Engine::initialize()
     __preload__();
 
     // Entry point for app
-    SceneManager::change_scene(__configuration__.create_main_scene());
+    SceneManager::change_scene(__configuration__.create_main_scene(allocator));
 }
 
 void Engine::shutdown()
@@ -81,7 +78,6 @@ void Engine::shutdown()
     Audio::shutdown();
 
     Display::shutdown();
-    ObjectAllocator::shutdown();
 
     data.main_queue.destroy();
 

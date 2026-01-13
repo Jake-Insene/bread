@@ -29,10 +29,10 @@ namespace mem
         constexpr void construct_array(Slice<T> array) const;
 
         template<typename T, typename... TArgs>
-        constexpr T* object(TArgs&&... args);
+        constexpr T* object(TArgs&&... args) const;
         
         template<typename T, typename... TArgs>
-        constexpr void construct(T* instance, TArgs&&... args);
+        constexpr void construct(T* instance, TArgs&&... args) const;
 
         VTable* vtable;
         Allocator* self;
@@ -79,7 +79,7 @@ constexpr void mem::Allocator::construct_array(Slice<T> array) const
 }
 
 template<typename T, typename... TArgs>
-constexpr T* mem::Allocator::object(TArgs&&... args)
+constexpr T* mem::Allocator::object(TArgs&&... args) const
 {
     constexpr usize alignment = alignof(T) == 1 ? 16 : alignof(T);
     T* instance = reinterpret_cast<T*>(alloc(sizeof(T), alignment).items);
@@ -88,7 +88,7 @@ constexpr T* mem::Allocator::object(TArgs&&... args)
 }
 
 template<typename T, typename... TArgs>
-constexpr void mem::Allocator::construct(T* instance, TArgs&&... args)
+constexpr void mem::Allocator::construct(T* instance, TArgs&&... args) const
 {
     ::new(instance) T(args...);
 }

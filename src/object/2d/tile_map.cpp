@@ -1,15 +1,13 @@
-#include "2d/tile_map.h"
+#include "object/2d/tile_map.h"
 
 #include "log/log.h"
 
 
-void TileMap::_bind_vtable(TileMap::VTable& vtable)
-{
-	BindVTable(vtable, transform_changed, &TileMap::transform_changed);
-}
 
-void TileMap::init(const CreateInfo&)
+void TileMap::init(const CreateInfo& info)
 {
+    Renderable::init(info);
+
 	data.bodies = Array<Physics2D::BodyID>::with_size(allocator, 4);
 }
 
@@ -17,9 +15,11 @@ void TileMap::deinit()
 {
 	(void)data.bodies.iter().for_each(Physics2D::destroy_body);
 	data.bodies.destroy();
+
+    Renderable::deinit();
 }
 
-void TileMap::render()
+void TileMap::render(const Transform2D& transform)
 {
 	if (data.tile_set == nullptr)
 		return;
@@ -30,7 +30,7 @@ void TileMap::render()
 
 	const Vector2 tile_size = Vector2(data.tile_set->get_tile_size());
 
-	Transform2D base_transform = get_global_transform();
+	Transform2D base_transform = transform;
 
 	Slice<TileSet::Tile> tiles = data.tile_set->get_tiles();
 	Slice<TileSet::TileData> tiles_data = data.tile_set->get_tiles_data();
@@ -52,18 +52,18 @@ void TileMap::render()
 		);
 
 		draw_sprite(
-			tile_transform, tile_map_texture->texture_id, rect,
+			tile_transform, tile_map_texture, rect,
 			src_rect, Color(255, 255, 255, 255), 0
 		);
 	}
 }
 
-void TileMap::transform_changed()
+Physics2D::BodyID TileMap::_try_create_physics_body()
 {
-	(void)data.bodies.iter().for_each([&] (Physics2D::BodyID body_id)
-	{ 
-		Physics2D::body_set_transform(body_id, get_global_transform());
-	});
+	Physics2D::BodyID body_id = Physics2D::create_body(reinterpret_cast<Opaque*>(this));
+	Physics2D::body_set_type(body_id, Physics2D::STATIC);
+	(void)data.bodies.add(body_id);
+	return body_id;
 }
 
 void TileMap::set_tile_set(TileSet* new_tile_set)
@@ -92,17 +92,11 @@ void TileMap::set_tile_set(TileSet* new_tile_set)
 
 		tile_shape.translate(position * tile_size);
 		Physics2D::body_set_shape(body_id, tile_shape);
-		Physics2D::body_set_transform(body_id, get_global_transform());
 	}
 
-	Log::debug("TileMap({}): Creating {} shapes", (void*)usize(id.id), shape_count);
+	Log::debug("TileMap({}): Creating {} shapes", (void*)usize(this), shape_count);
 }
 
 
-Physics2D::BodyID TileMap::_try_create_physics_body()
-{
-	Physics2D::BodyID body_id = Physics2D::create_body(this);
-	Physics2D::body_set_type(body_id, Physics2D::STATIC);
-	(void)data.bodies.add(body_id);
-	return body_id;
-}
+
+

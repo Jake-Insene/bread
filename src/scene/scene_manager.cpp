@@ -1,14 +1,13 @@
 #include "scene/scene_manager.h"
 
-#include "2d/camera_2d.h"
-#include "canvas/canvas_object.h"
 #include "debug/profiler.h"
 #include "engine/engine.h"
 #include "input/input.h"
 #include "log/log.h"
-#include "object/object_allocator.h"
+#include "mem/utils.h"
 #include "physics/physics_2d.h"
 #include "render/viewport.h"
+#include "render/render_manager.h"
 
 
 void SceneManager::initialize(const mem::Allocator& allocator)
@@ -26,7 +25,6 @@ void SceneManager::initialize(const mem::Allocator& allocator)
     data.main_viewport = Viewport::create_from_render_target(allocator, Graphics::render_target_create(rtci));
     
     data.current_scene = nullptr;
-    data.current_camera = nullptr;
     
     data.last_time = f32(OS::get_time());
     data.time_acum = 0;
@@ -35,58 +33,26 @@ void SceneManager::initialize(const mem::Allocator& allocator)
     data.fps_counter = 0;
     data.fps_acum = 0;
     
-    data.root_canvas = Array<CanvasObject*>::with_size(
-        data.allocator, 4
-    );
-    
-    data.touched_focus = Array<CanvasObject*>::with_size(
-        data.allocator, 4
-    );
-
+    // TODO: touch focus.
 	// To avoid any out of range error in handle_input
-    data.touched_focus.resize(1);
-
-    data.queue_frees = HashMap<ObjectID, QueueFreeInfo>::with_size(allocator, 4);
-
-    data.int_update_list = Array<Object*>::with_size(
-        data.allocator, 4
-    );
-
-    data.update_list = Array<Object*>::with_size(
-        data.allocator, 4
-    );
-
-    data.render_list = Array<Object*>::with_size(
-        data.allocator, 4
-    );
-
-    data.objects_mark_changed = Array<MarkChangedInfo>::with_size(
-        data.allocator, 4
-    );
+    // data.touched_focus.resize(1);
 }
 
 void SceneManager::shutdown()
 {
     if(data.current_scene)
     {
-		ObjectCallRef(data.current_scene, exit);
-        ObjectAllocator::destroy_object(data.current_scene);
+		SceneCallRef(data.current_scene, on_exit);
+		SceneCallRef(data.current_scene, on_destroy);
+        data.allocator.free(mem::to_bytes(Slice<Scene>(data.current_scene, 1)));
     }
 
-    data.objects_mark_changed.destroy();
-
-    data.render_list.destroy();
-    data.update_list.destroy();
-    data.int_update_list.destroy();
-
     data.queue_frees.destroy();
-    data.touched_focus.destroy();
-    data.root_canvas.destroy();
 
     data.main_viewport.destroy();
 }
 
-void SceneManager::change_scene(Object* new_scene)
+void SceneManager::change_scene(Scene* new_scene)
 {
     DebugAssert(new_scene != nullptr, "new scene can't be null");
     DebugAssert(data.change_scene.requested == false, "a change scene was already requested");
@@ -96,7 +62,7 @@ void SceneManager::change_scene(Object* new_scene)
     if (data.current_scene == nullptr)
     {
         data.current_scene = new_scene;
-        ObjectCallRef(data.current_scene, enter);
+        SceneCallRef(data.current_scene, on_enter);
         return;
     }
 
@@ -144,10 +110,7 @@ void SceneManager::step()
             data.debug_time.internal_update_time = duration;
         );
      
-        for (Object* object : data.int_update_list.iter())
-        {
-            ObjectCallRef(object, internal_update, data.delta_time);
-        }
+        SceneCallRef(data.current_scene, on_internal_update, data.delta_time);
     }
 
     {
@@ -155,10 +118,7 @@ void SceneManager::step()
             data.debug_time.update_time = duration;
         );
 
-        for (Object* object : data.update_list.iter())
-        {
-            ObjectCallRef(object, update, data.delta_time);
-        }
+        SceneCallRef(data.current_scene, on_update, data.delta_time);
     }
 
     {
@@ -168,22 +128,12 @@ void SceneManager::step()
         Physics2D::step(data.delta_time);
     }
 
-    Transform2D camera_transform = Transform2D();
-    if (data.current_camera)
-    {
-        camera_transform = data.current_camera->get_camera_transform(true);
-    }
-    get_main_viewport().set_scene_transform(camera_transform);
-
     {
         PROFILE_SCOPE(
             data.debug_time.render_time = duration;
         );
 
-        for (Object* object : data.render_list.iter())
-        {
-            ObjectCallRef(object, render);
-        }
+        SceneCallRef(data.current_scene, on_render, data.delta_time);
     }
 
     {
@@ -204,14 +154,8 @@ void SceneManager::step()
     data.fps_acum++;
 
     _handle_object_mark_changed();
-    for (auto& [object_id, queue_info] : data.queue_frees.iter())
-    {
-        _remove_object_from_list(queue_info.child);
-        queue_info.parent->remove_child(queue_info.child);
-    }
 
     data.queue_frees.clear();
-    _try_clear_root_canvas();
 }
 
 void SceneManager::recreate_window()
@@ -241,17 +185,12 @@ void SceneManager::set_viewport_size(const Vector2I& new_vp_size)
     data.main_viewport.set_size(new_vp_size);
 }
 
-void SceneManager::set_camera_2d(Camera2D* camera)
-{
-    data.current_camera = camera;
-}
-
 void SceneManager::scene_handle_input(const InputEvent& event)
 {
     if (data.current_scene == nullptr)
         return;
 
-    if (!data.current_scene->has_mark(Object::MARK_EVENT))
+    if (!data.current_scene->has_mark(Scene::MARK_EVENT))
         return;
 
     switch (event.type)
@@ -263,23 +202,7 @@ void SceneManager::scene_handle_input(const InputEvent& event)
         new_event = et;
 
         new_event.position = _screen_make_local_to_canvas(et.position);
-        data.touched_focus.resize(et.pointer + 1);
-        if (CanvasObject* c = _find_canvas_in_pos(new_event.position))
-        {
-            data.touched_focus.get(et.pointer) = c;
-            ObjectCallRef(c, gui_event, new_event);
-        }
-        else
-        {
-            c = data.touched_focus.get(et.pointer);
-            if (c)
-            {
-                // point_is_in will be always false
-                new_event.pressed = false;
-                ObjectCallRef(c, gui_event, new_event);
-            }
-            data.touched_focus.get(et.pointer) = nullptr;
-        }
+        SceneCallRef(data.current_scene, on_event, new_event);
     }
     break;
     case INPUT_EVENT_MOUSE_BUTTON:
@@ -289,43 +212,15 @@ void SceneManager::scene_handle_input(const InputEvent& event)
         new_event = et;
 
         new_event.position = _screen_make_local_to_canvas(et.position);
-        if (CanvasObject* c = _find_canvas_in_pos(new_event.position))
-        {
-            data.touched_focus.get(0) = c;
-            ObjectCallRef(c, gui_event, new_event);
-        }
-        else
-        {
-            c = data.touched_focus.get(0);
-            if (c)
-            {
-                // point_is_in will be always false
-                new_event.pressed = false;
-                ObjectCallRef(c, gui_event, new_event);
-            }
-            data.touched_focus.get(0) = nullptr;
-        }
+        SceneCallRef(data.current_scene, on_event, new_event);
     }
     break;
     default:
-    break;
+        SceneCallRef(data.current_scene, on_event, event);
+        break;
     }
 
-    data.current_scene->handle_event(event);
-}
-
-void SceneManager::_try_clear_root_canvas()
-{
-    for (usize i = 0; i < data.root_canvas.count; i++)
-    {
-        CanvasObject* gui_root = data.root_canvas.get(i);
-
-        if (gui_root == nullptr || !gui_root->has_mark(Object::MARK_QUEUE_FREE))
-            continue;
-
-        data.root_canvas.remove_at(i);
-        i--;
-    }
+    
 }
 
 void SceneManager::_handle_change_scene()
@@ -334,22 +229,15 @@ void SceneManager::_handle_change_scene()
         return;
 
     data.change_scene.requested = false;
-    ObjectCallRef(data.current_scene, exit);
-    ObjectAllocator::destroy_object(data.current_scene);
+    SceneCallRef(data.current_scene, on_exit);
+    SceneCallRef(data.current_scene, on_destroy);
+    data.allocator.free(mem::to_bytes(Slice<Scene>(data.current_scene, 1)));
 
     data.current_scene = data.change_scene.new_scene;
     data.change_scene.new_scene = nullptr;
-    ObjectCallRef(data.current_scene, enter);
-
-    _handle_object_mark_changed();
-    for (auto& [object_id, queue_info] : data.queue_frees.iter())
-    {
-        _remove_object_from_list(queue_info.child);
-        queue_info.parent->remove_child(queue_info.child);
-    }
+    SceneCallRef(data.current_scene, on_enter);
 
     data.queue_frees.clear();
-    _try_clear_root_canvas();
 }
 
 Vector2 SceneManager::_screen_make_local_to_canvas(const Vector2& pos)
@@ -365,130 +253,15 @@ Vector2 SceneManager::_screen_make_local_to_canvas(const Vector2& pos)
     return canvas_pos;
 }
 
-CanvasObject* SceneManager::_find_canvas_in_pos(const Vector2& pos)
-{
-    for(CanvasObject* c : data.root_canvas.iter())
-    {
-        if(ObjectCallRef(c, is_inside, pos))
-        {
-            return c;
-        }
-    }
-    
-    return nullptr;
-}
-
-void SceneManager::_add_root_canvas(CanvasObject* c)
-{
-    (void)data.root_canvas.add(c);
-}
-
-void SceneManager::_remove_object_from_list(Object* object)
-{
-    for (usize i = 0; i < object->get_child_count(); i++)
-    {
-        Object* child = object->get_child(i);
-        _remove_object_from_list(child);
-    }
-
-    data.int_update_list.remove(object);
-    data.update_list.remove(object);
-    data.render_list.remove(object);
-}
+void SceneManager::_remove_object_from_list(Scene*)
+{}
 
 void SceneManager::_handle_object_mark_changed()
-{
-    for (MarkChangedInfo& mark_changed : data.objects_mark_changed.iter())
-    {
-        switch (mark_changed.mark_name)
-        {
-        case Object::MARK_INTERNAL_UPDATE:
-        {
-            if (!mark_changed.marked)
-            {
-                data.int_update_list.remove(mark_changed.object);
-                break;
-            }
+{}
 
-            if (data.int_update_list.find(mark_changed.object) ==
-                data.int_update_list.iter().end())
-            {
-                (void)data.int_update_list.add(mark_changed.object);
-            }
-        }
-        break;
-        case Object::MARK_UPDATE:
-        {
-            if (!mark_changed.marked)
-            {
-                data.update_list.remove(mark_changed.object);
-                break;
-            }
+void SceneManager::_queue_free(Scene*, Scene*)
+{}
 
-            if (data.update_list.find(mark_changed.object) ==
-                data.update_list.iter().end())
-            {
-                (void)data.update_list.add(mark_changed.object);
-            }
-        }
-        break;
-        case Object::MARK_RENDER:
-        {
-            if (!mark_changed.marked)
-            {
-                data.render_list.remove(mark_changed.object);
-                break;
-            }
-
-            if (data.render_list.find(mark_changed.object) ==
-                data.render_list.iter().end())
-            {
-                (void)data.render_list.add(mark_changed.object);
-            }
-        }
-        break;
-        case Object::MARK_DEALLOCATED:
-        {
-            DebugAssert(mark_changed.marked == true, "Object marked as deallocated, but marked as false");
-            data.int_update_list.remove(mark_changed.object);
-            data.update_list.remove(mark_changed.object);
-            data.render_list.remove(mark_changed.object);
-        }
-        break;
-        }
-    }
-
-    if(data.objects_mark_changed.count)
-    {
-        data.objects_mark_changed.clear();
-    }
-}
-
-void SceneManager::_queue_free(Object* parent, Object* child)
-{
-    (void)data.queue_frees.insert(
-        child->id, 
-        QueueFreeInfo
-        {
-            .parent = parent,
-            .child = child
-        }
-    );
-
-    _update_object_mark(Object::MARK_INTERNAL_UPDATE, child, false);
-    _update_object_mark(Object::MARK_UPDATE, child, false);
-    _update_object_mark(Object::MARK_RENDER, child, false);
-}
-
-void SceneManager::_update_object_mark(MarkName mark_name, Object* object, bool marked)
-{
-    (void)data.objects_mark_changed.add(
-        MarkChangedInfo
-        {
-            .mark_name = mark_name,
-            .object = object,
-            .marked = marked,
-        }
-    );
-}
+void SceneManager::_update_object_mark(Scene::MarkName, Scene*, bool)
+{}
 

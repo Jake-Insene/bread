@@ -5,9 +5,6 @@
 
 struct AudioPlayer : Object
 {
-    OBJECT(AudioPlayer, Object)
-    MARKS(MARK_INTERNAL_UPDATE)
-
     struct InternalData
     {
         Sound* sound;
@@ -17,9 +14,9 @@ struct AudioPlayer : Object
         bool loop = false;
     } data;
 
-    void enter();
-    void exit();
-    void internal_update(f32 dt);
+    void init(const CreateInfo& info);
+    void deinit();
+    void update(f32 dt);
 
     void play();
     void stop();

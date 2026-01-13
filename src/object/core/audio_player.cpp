@@ -1,27 +1,7 @@
-#include "object/audio_player.h"
+#include "object/core/audio_player.h"
 
 #include "audio/audio.h"
 
-
-void AudioPlayer::enter()
-{
-}
-
-void AudioPlayer::exit()
-{
-    Audio::source_voice_stop(get_sound()->get_source_voice());
-}
-
-void AudioPlayer::internal_update(f32)
-{
-    if (get_sound() == nullptr)
-        return;
-
-    if (data.loop == false)
-        return;
- 
-    Audio::source_voice_keep_playing(get_sound()->get_source_voice());
-}
 
 
 void AudioPlayer::play()
@@ -56,4 +36,29 @@ void AudioPlayer::set_volume(f32 new_volume)
 
     Audio::source_voice_set_volume(get_sound()->get_source_voice(), new_volume);
     data.volume_cache = new_volume;
+}
+
+void AudioPlayer::init(const CreateInfo& info)
+{
+    Object::init(info);
+}
+
+void AudioPlayer::deinit()
+{
+    Object::deinit();
+    if(get_sound() == nullptr)
+        return;
+
+    Audio::source_voice_stop(get_sound()->get_source_voice());
+}
+
+void AudioPlayer::update(f32)
+{
+    if (get_sound() == nullptr)
+        return;
+
+    if (data.loop == false)
+        return;
+ 
+    Audio::source_voice_keep_playing(get_sound()->get_source_voice());
 }

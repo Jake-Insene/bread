@@ -1,16 +1,11 @@
 #pragma once
-#include "2d/object_2d.h"
+#include "object/core/renderable.h"
 #include "resource/tile_set.h"
 #include "physics/physics_2d.h"
 
 
-struct TileMap : Object2D
+struct TileMap : Renderable
 {
-	OBJECT(TileMap, Object2D)
-    MARKS(MARK_RENDER)
-
-	static void _bind_vtable(TileMap::VTable& vtable);
-
 	struct InternalData
 	{
 		TileSet* tile_set;
@@ -19,12 +14,10 @@ struct TileMap : Object2D
 		Array<Physics2D::BodyID> bodies;
 	} data;
 
-	void init(const CreateInfo&);
+	void init(const CreateInfo& info);
 	void deinit();
 
-	void render();
-
-	void transform_changed();
+	void render(const Transform2D& transform);
 
 	/*
 	* Set the tile set used to draw the tile map.

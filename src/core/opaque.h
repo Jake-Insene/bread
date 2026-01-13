@@ -16,10 +16,14 @@ struct Opaque
     Opaque(const Opaque&) = delete;
     Opaque(Opaque&&) = delete;
 
+    
+    template<typename T>
+    static inline Opaque* from(T& reference) { return reinterpret_cast<Opaque*>(&reference); }
+
     /*
     * Returns the address of the object as a plain number.
     */
-    [[nodiscard]] MemoryAddress address() const { return reinterpret_cast<MemoryAddress>(this); }
+    [[nodiscard]] inline MemoryAddress address() const { return reinterpret_cast<MemoryAddress>(this); }
 
     /*
     * Reinterprets the object as a diferent type.

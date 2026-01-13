@@ -1,15 +1,14 @@
 #pragma once
-#include "2d/object_2d.h"
 #include "math/color.h"
 #include "math/rect_2d.h"
 #include "resource/texture.h"
+#include "object/core/renderable.h"
 
 
-struct Sprite2D : Object2D
+
+
+struct Sprite : Renderable
 {
-    OBJECT(Sprite2D, Object2D)
-    MARKS(MARK_RENDER)
-
     struct InternalData
     {
         Texture2D* texture;
@@ -36,9 +35,12 @@ struct Sprite2D : Object2D
     * Flip the entire sprite vertically
     */
     bool flip_v = false;
-    
-    void render();
 
+    void init(const CreateInfo& info);
+    void deinit();
+
+    void render(const Transform2D& transform);
+    
     /*
     * Set the sprite texture.
     * 
@@ -54,3 +56,4 @@ struct Sprite2D : Object2D
         return data.texture;
     }
 };
+
