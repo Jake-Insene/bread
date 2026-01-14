@@ -58,13 +58,16 @@ file(GLOB ENGINE_SRC
 
     src/object/object.cpp
 
-    src/object/2d/animated_sprite.cpp
+    src/modifier/2d/sprite.cpp
+    src/modifier/2d/animated_sprite.cpp
+
+    src/modifier/core/renderable.cpp
+
     src/object/2d/camera.cpp
-    src/object/2d/sprite.cpp
     src/object/2d/tile_map.cpp
 
     src/object/core/audio_player.cpp
-    src/object/core/renderable.cpp
+    src/object/core/render_object.cpp
     src/object/core/timer.cpp
 
     src/physics/physics_2d.cpp

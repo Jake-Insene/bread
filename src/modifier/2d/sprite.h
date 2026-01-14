@@ -1,13 +1,15 @@
 #pragma once
 #include "math/color.h"
 #include "math/rect_2d.h"
-#include "resource/texture.h"
-#include "object/core/renderable.h"
+#include "modifier/modifier.h"
+#include "render/render_manager.h"
 
 
 
+struct Texture2D;
 
-struct Sprite : Renderable
+
+struct Sprite : Modifier
 {
     struct InternalData
     {
@@ -36,10 +38,10 @@ struct Sprite : Renderable
     */
     bool flip_v = false;
 
-    void init(const CreateInfo& info);
+    void init(const mem::Allocator& allocator);
     void deinit();
 
-    void render(const Transform2D& transform);
+    void render(RenderItemID render_item, const Transform2D& transform, const Rect2D& rect);
     
     /*
     * Set the sprite texture.

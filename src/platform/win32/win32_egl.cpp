@@ -62,10 +62,10 @@ void Win32EGL::initialize(const mem::Allocator&)
 	wglMakeCurrent(data.device_context, tmp_ctx);
 
 	wgl.wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
-	
+
 	int attribs[] =
 	{
-		WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+		WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
 		WGL_CONTEXT_MINOR_VERSION_ARB, 3,
 		WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
 #if DEBUG
@@ -77,7 +77,7 @@ void Win32EGL::initialize(const mem::Allocator&)
 	};
 	
 	HGLRC real_context = wgl.wglCreateContextAttribsARB(data.device_context, 0, attribs);
-	DebugAssert(real_context, "couldn't create the OpenGL context");
+	DebugAssert(real_context != nullptr, "couldn't create the OpenGL context");
 
 	wglDeleteContext(tmp_ctx);
 	wglMakeCurrent(data.device_context, real_context);

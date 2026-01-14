@@ -1,7 +1,6 @@
 #pragma once
-#include "core/header.h"
 #include "collections/string_view.h"
-#include "display/window.h"
+#include "display/display.h"
 #include "mem/allocator.h"
 #include "math/vec2.h"
 #include "math/rect_2d.h"

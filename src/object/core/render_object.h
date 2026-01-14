@@ -5,7 +5,7 @@
 
 struct Texture2D;
 
-struct Renderable : Object
+struct RenderObject : Object
 {
     struct InternalData
     {

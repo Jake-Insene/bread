@@ -1,27 +1,22 @@
-#include "object/2d/sprite.h"
-#include "object/core/renderable.h"
+#include "modifier/2d/sprite.h"
+
+#include "resource/texture.h"
 #include "render/render_manager.h"
 
 
 
-void Sprite::init(const CreateInfo& info)
-{
-    Renderable::init(info);
-}
+void Sprite::init(const mem::Allocator&)
+{}
 
 void Sprite::deinit()
-{
-    Renderable::deinit();
-}
+{}
 
-
-void Sprite::render(const Transform2D& transform)
+void Sprite::render(RenderItemID render_item, const Transform2D& transform, const Rect2D& rect)
 {
     if (data.texture == nullptr)
         return;
     
-    Vector2 extent = Vector2(data.texture->get_size());
-    Rect2D rect = Rect2D(Vector2(), extent);
+    Rect2D updated_rect = rect;
 
     u32 flags = 0;
     if (flip_h)
@@ -35,10 +30,13 @@ void Sprite::render(const Transform2D& transform)
 
     if (centered)
     {
-        rect.position = Vector2(rect.size.x / -2.f, rect.size.y / 2.f);
+        updated_rect.position = Vector2(rect.size.x / -2.f, rect.size.y / 2.f);
     }
 
-    draw_sprite(transform, get_texture(), rect, src_rect, color, flags);
+    RenderManager::render_item_draw_sprite(
+        render_item, transform, data.texture->texture_id, 
+        updated_rect, src_rect, color, static_cast<RenderManager::RenderFlags>(flags)
+    );
 }
 
 void Sprite::set_texture(Texture2D* new_texture)

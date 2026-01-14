@@ -6,7 +6,7 @@
 
 void TileMap::init(const CreateInfo& info)
 {
-    Renderable::init(info);
+    RenderObject::init(info);
 
 	data.bodies = Array<Physics2D::BodyID>::with_size(allocator, 4);
 }
@@ -16,7 +16,7 @@ void TileMap::deinit()
 	(void)data.bodies.iter().for_each(Physics2D::destroy_body);
 	data.bodies.destroy();
 
-    Renderable::deinit();
+    RenderObject::deinit();
 }
 
 void TileMap::render(const Transform2D& transform)

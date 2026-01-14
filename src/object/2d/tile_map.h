@@ -1,10 +1,10 @@
 #pragma once
-#include "object/core/renderable.h"
+#include "object/core/render_object.h"
 #include "resource/tile_set.h"
 #include "physics/physics_2d.h"
 
 
-struct TileMap : Renderable
+struct TileMap : RenderObject
 {
 	struct InternalData
 	{

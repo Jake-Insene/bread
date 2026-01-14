@@ -122,6 +122,13 @@ void P2DDriver::step(f32 dt)
     data.accumulator += dt;
     while (data.accumulator >= data.fixed_step)
     {
+        for (Physics2D::BodyID body_id : data.active_bodies.iter())
+        {
+            P2DBody& body = _get_body(body_id);
+            body.is_on_floor = false;
+            body.is_on_ceil = false;
+        }
+
         const i32 sub_steps = 4;
         for(i32 i = 0; i < sub_steps; i++)
         {
@@ -148,6 +155,8 @@ void P2DDriver::step(f32 dt)
     for (auto& [cid, tile] : data.world_tiles.iter())
     {
         const PhysicsTileCoord& coord = cid;
+        if(tile.bodies.count == 0 && tile.areas.count == 0)
+            continue;
 
         const f32 ts = f32(_get_tile_size());
         Vector2 min = Vector2((coord.x) * ts, (coord.y) * ts);
@@ -390,13 +399,13 @@ f32 P2DDriver::body_get_restitution(Physics2D::BodyID body_id)
     return body.get_restitution();
 }
 
-void P2DDriver::body_apply_force(Physics2D::BodyID body_id, const Vector2&, const Vector2& force)
+void P2DDriver::body_apply_force(Physics2D::BodyID body_id, const Vector2& force, const Vector2&)
 {
     P2DBody& body = _get_body(body_id);
     body.add_force(force);
 }
 
-void P2DDriver::body_apply_impulse(Physics2D::BodyID body_id, const Vector2&, const Vector2& impulse)
+void P2DDriver::body_apply_impulse(Physics2D::BodyID body_id, const Vector2& impulse, const Vector2&)
 {
     P2DBody& body = _get_body(body_id);
     if (body.get_inv_mass() > 0.f)
@@ -646,9 +655,6 @@ void P2DDriver::_move_body(P2DBody& body, f32 dt)
 
     body.add_force(data.gravity * body.get_mass());
     body.step(dt);
-
-    body.is_on_floor = false;
-    body.is_on_ceil = false;
 }
 
 void P2DDriver::_check_body_collision(P2DBody& body)

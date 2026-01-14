@@ -1,5 +1,6 @@
 #pragma once
-#include "object/core/renderable.h"
+#include "collections/string.h"
+#include "modifier/core/renderable.h"
 
 
 struct SpriteAnimation;
@@ -39,11 +40,11 @@ struct AnimatedSprite : Renderable
     */
     bool flip_v = false;
 
-    void init(const CreateInfo&);
+    void init(const mem::Allocator& allocator);
     void deinit();
 
     void update(f32 dt);
-	void render(const Transform2D& transform);
+	void render(RenderItemID render_item, const Transform2D& transform);
 
     /*
     * Start playing the give animation.

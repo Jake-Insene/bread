@@ -43,10 +43,12 @@ struct Object
 
     template<typename T>
         requires(IsBaseOf<Object, T>)
-    static T* create(const mem::Allocator& allocator)
+    static T* create(const mem::Allocator& allocator, const T::CreateInfo& t_info)
     {
         T* obj = allocator.object<T>();
-        obj->init({.allocator = allocator});
+        typename T::CreateInfo info = t_info;
+        info.allocator = allocator;
+        obj->init(info);
         return obj;
     }
 

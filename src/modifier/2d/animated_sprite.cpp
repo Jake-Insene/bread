@@ -1,20 +1,17 @@
-#include "object/2d/animated_sprite.h"
+#include "modifier/2d/animated_sprite.h"
 
 #include "resource/sprite_animation.h"
 
 
 
-void AnimatedSprite::init(const CreateInfo& info)
+void AnimatedSprite::init(const mem::Allocator& allocator)
 {
-	Renderable::init(info);
 	data.current_animation = String::with_allocator(allocator);
 }
 
 void AnimatedSprite::deinit()
 {
 	data.current_animation.destroy();
-
-	Renderable::deinit();
 }
 
 void AnimatedSprite::update(f32 dt)
@@ -43,7 +40,7 @@ void AnimatedSprite::update(f32 dt)
 	data.remain = frame.duration;
 }
 
-void AnimatedSprite::render(const Transform2D& transform)
+void AnimatedSprite::render(RenderItemID render_item, const Transform2D& transform)
 {
 	if (animation == nullptr)
 		return;
@@ -74,7 +71,7 @@ void AnimatedSprite::render(const Transform2D& transform)
 	}
 
 	draw_sprite(
-        transform, current_frame.sprite, 
+        render_item, transform, current_frame.sprite,
         rect, src_rect, color, flags
     );
 }
