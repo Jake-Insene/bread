@@ -51,7 +51,7 @@ struct [[nodiscard]] ArrayIterator : BaseIterator<T>
 
 /*
 * A collection of linear memory that contains items of type T.
-* You can add/remove/modify items and clear it.
+* You can add/remove/modify items.
 */
 template<typename T>
 struct [[nodiscard]] Array
@@ -232,5 +232,10 @@ struct [[nodiscard]] Array
     
     template<typename Self>
     Slice<Type> slice(this Self& self) { return self.items.slice(self.count); }
+
+    Array<Type> copy(const mem::Allocator& copy_allocator) const
+    {
+        return Array<Type>::from_items(copy_allocator, slice());
+    }
 };
 

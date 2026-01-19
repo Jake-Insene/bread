@@ -144,14 +144,14 @@ f32 Physics2D::body_get_restitution(BodyID body_id)
     return P2DDriver::body_get_restitution(body_id);
 }
 
-void Physics2D::body_apply_force(BodyID body_id, const Vector2& force, const Vector2& position)
+void Physics2D::body_apply_force(BodyID body_id, const Vector2& force, const Vector2& point)
 {
-    P2DDriver::body_apply_force(body_id, force, position);
+    P2DDriver::body_apply_force(body_id, force, point);
 }
 
-void Physics2D::body_apply_impulse(BodyID body_id, const Vector2& impulse, const Vector2& position)
+void Physics2D::body_apply_impulse(BodyID body_id, const Vector2& impulse, const Vector2& point)
 {
-    P2DDriver::body_apply_impulse(body_id, impulse, position);
+    P2DDriver::body_apply_impulse(body_id, impulse, point);
 }
 
 void Physics2D::body_set_fixed_rotation(BodyID body_id, bool fixed_rotation)

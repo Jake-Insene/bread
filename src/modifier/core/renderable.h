@@ -6,7 +6,7 @@
 struct Texture2D;
 
 
-struct Renderable : Modifier
+struct [[nodiscard]] Renderable : Modifier
 {
     static void draw_sprite(
         RenderItemID render_item, const Transform2D& transform, 

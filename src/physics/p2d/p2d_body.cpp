@@ -3,6 +3,48 @@
 
 
 
+void P2DBody::init(const mem::Allocator allocator, Physics2D::BodyID id, Opaque* ud)
+{
+	self = id;
+	user_data = ud;
+	type = Physics2D::DYNAMIC;
+	residence_mask = Physics2D::CollisionMask(Physics2D::DEFAULT_COLLISION_MASK);
+    collision_mask = Physics2D::CollisionMask(Physics2D::DEFAULT_COLLISION_MASK);
+
+	data.force_accumulator = Vector2();
+	data.torque_accumulator = 0.f;
+	data.angular_velocity = 0.f;
+
+	shape.init(allocator);
+	data.shape_transformed.init(allocator);
+    set_mass(1.f);
+    set_friction(0.1f);
+    set_air_friction(0.001f);
+    set_restitution(0.5f);
+    set_velocity(Vector2());
+    set_angular_velocity(0.f);
+    set_transform(Transform2D());
+    
+	_compute_inertia();
+
+    tiles_on = Array<PhysicsTileCoord>::with_size(allocator, 4);
+}
+
+void P2DBody::destroy()
+{
+	shape.destroy();
+	data.shape_transformed.destroy();
+    tiles_on.destroy();
+}
+
+void P2DBody::apply_force(const Vector2& force, const Vector2& point)
+{
+    const Vector2 direction = point - shape.centroid;
+	add_force(force);
+
+	data.torque_accumulator += Vector2::cross(direction, force);
+}
+
 void P2DBody::add_force(const Vector2& force)
 {
 	data.force_accumulator += force;
@@ -76,17 +118,19 @@ void P2DBody::set_restitution(f32 new_restitution)
 	data.restitution = new_restitution;
 }
 
-void P2DBody::set_shape(const P2DShape& new_shape)
+void P2DBody::set_shape_from_2d(const Shape2D& new_shape)
 {
-	data.shape = new_shape;
-	data.shape_transformed = data.shape;
-	compute_inertia();
+	shape.set_from_shape_2d(new_shape);
+	data.shape_transformed.set_from_shape_2d(new_shape);
+	_compute_inertia();
 }
+
 
 void P2DBody::set_transform(const Transform2D& new_transform)
 {
 	data.transform = new_transform;
-	data.shape_transformed = data.shape;
+	
+	data.shape_transformed.set_from_shape(shape);
 	data.shape_transformed.apply_transform(new_transform);
 }
 
@@ -94,9 +138,21 @@ void P2DBody::step(f32 dt)
 {
 	integrate(dt);
 
-	data.velocity *= (1 - data.air_friction);
-	data.angular_velocity *= (1 - data.air_friction);
+	data.velocity *= (1 - data.air_friction * dt);
+	data.angular_velocity *= (1 - data.air_friction * dt);
+
 	data.force_accumulator = Vector2();
+	
+	// Simple sleep based on velocity
+	const f32 rest_threshold = 0.001f;
+	if (data.velocity.dot(data.velocity) < rest_threshold * rest_threshold)
+	{
+		data.velocity = Vector2();
+	}
+	if (math::abs(data.angular_velocity) < rest_threshold)
+	{
+		data.angular_velocity = 0.f;
+	}
 }
 
 void P2DBody::integrate(f32 dt)
@@ -104,9 +160,9 @@ void P2DBody::integrate(f32 dt)
 	_semi_implicit_euler(dt);
 }
 
-void P2DBody::compute_inertia()
+void P2DBody::_compute_inertia()
 {
-	data.inertia = data.shape.calculate_inertia(data.mass);
+	data.inertia = shape.calculate_inertia(data.mass);
 	if(data.inertia > 0)
 	{
 		data.inv_inertia = 1.f / data.inertia;
@@ -124,13 +180,17 @@ void P2DBody::_semi_implicit_euler(f32 dt)
 	data.velocity += acceleration * dt;
 	data.transform.translate(data.velocity * dt);
 
+	// Angular acceleration
+	const f32 angular_acceleration = data.torque_accumulator * data.inv_inertia;
+	data.angular_velocity += angular_acceleration;
+
 	// Angular Velocity
 	if (fixed_rotation == false)
 	{
 		data.transform.rotate(data.angular_velocity * dt);
 	}
 
-	data.shape_transformed = data.shape;
+	data.shape_transformed.set_from_shape(shape);
 	data.shape_transformed.apply_transform(data.transform);
 }
 

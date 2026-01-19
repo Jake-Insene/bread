@@ -174,24 +174,7 @@ Physics2D::BodyID P2DDriver::create_body(Opaque* user_data)
     P2DBody& new_body = data.current_bodies.get(id);
     (void)data.active_bodies.add(id);
 
-    new_body.user_data = user_data;
-    new_body.self = id;
-    new_body.type = Physics2D::DYNAMIC;
-    new_body.residence_mask = Physics2D::CollisionMask(Physics2D::DEFAULT_COLLISION_MASK);
-
-    new_body.collision_mask = Physics2D::CollisionMask(Physics2D::DEFAULT_COLLISION_MASK);
-
-    new_body.set_shape(P2DShape());
-    new_body.set_mass(1.f);
-    new_body.set_friction(0.1f);
-    new_body.set_air_friction(0.001f);
-    new_body.set_restitution(0.5f);
-    new_body.compute_inertia();
-    new_body.set_velocity(Vector2());
-    new_body.set_angular_velocity(0.f);
-    new_body.set_transform(Transform2D());
-
-    new_body.tiles_on = Array<PhysicsTileCoord>::with_size(get_allocator(), 4);
+    new_body.init(get_allocator(), id, user_data);
 
     return id;
 }
@@ -222,7 +205,7 @@ void P2DDriver::destroy_body(Physics2D::BodyID body_id)
         }
     }
 
-    body.tiles_on.destroy();
+    body.destroy();
     data.current_bodies.remove(body_id);
 }
 
@@ -231,15 +214,9 @@ Physics2D::AreaID P2DDriver::create_area(Opaque* user_data)
     Physics2D::AreaID id = data.current_areas.add(P2DArea());
     P2DArea& new_area = data.current_areas.get(id);
 
-    new_area.user_data = user_data;
-    new_area.self = id;
-    new_area.residence_mask = Physics2D::CollisionMask(Physics2D::DEFAULT_COLLISION_MASK);
     _active_area(id);
 
-    new_area.set_shape(P2DShape());
-    new_area.bodies_inside = HashMap<Physics2D::BodyID, P2DArea::BodyInArea>::with_size(get_allocator(), 4);
-    new_area.tiles_on = Array<PhysicsTileCoord>::with_size(get_allocator(), 4);
-    new_area.check_counter = 0;
+    new_area.init(get_allocator(), id, user_data);
 
     return id;
 }
@@ -264,22 +241,22 @@ void P2DDriver::destroy_area(Physics2D::AreaID area_id)
             area.on_body_exit.call(area.self, body.self);
     }
 
-    area.bodies_inside.destroy();
-    area.tiles_on.destroy();
+    area.destroy();
+
     data.current_areas.remove(area_id);
 }
 
 void P2DDriver::body_set_shape(Physics2D::BodyID body_id, const Shape2D& new_shape)
 {
     P2DBody& body = _get_body(body_id);
-    body.set_shape(P2DShape::from_shape_2d(new_shape));
+    body.set_shape_from_2d(new_shape);
     _body_recompute_tiles(body);
 }
 
 Shape2D P2DDriver::body_get_shape(Physics2D::BodyID body_id)
 {
     P2DBody& body = _get_body(body_id);
-    return body.get_shape().to_shape_2d();
+    return body.shape.to_shape_2d();
 }
 
 void P2DDriver::body_set_user_data(Physics2D::BodyID body_id, Opaque* user_data)
@@ -399,10 +376,10 @@ f32 P2DDriver::body_get_restitution(Physics2D::BodyID body_id)
     return body.get_restitution();
 }
 
-void P2DDriver::body_apply_force(Physics2D::BodyID body_id, const Vector2& force, const Vector2&)
+void P2DDriver::body_apply_force(Physics2D::BodyID body_id, const Vector2& force, const Vector2& point)
 {
     P2DBody& body = _get_body(body_id);
-    body.add_force(force);
+    body.apply_force(force, point);
 }
 
 void P2DDriver::body_apply_impulse(Physics2D::BodyID body_id, const Vector2& impulse, const Vector2&)
@@ -463,7 +440,7 @@ void P2DDriver::body_set_on_collide(Physics2D::BodyID body_id, Physics2D::EventO
 void P2DDriver::area_set_shape(Physics2D::AreaID area_id, const Shape2D& new_shape)
 {
     P2DArea& area = _get_area(area_id);
-    area.set_shape(P2DShape::from_shape_2d(new_shape));
+    area.set_shape_from_2d(new_shape);
 
     // Getting tiles in area
     _area_recompute_tiles(area);
@@ -472,7 +449,7 @@ void P2DDriver::area_set_shape(Physics2D::AreaID area_id, const Shape2D& new_sha
 Shape2D P2DDriver::area_get_shape(Physics2D::AreaID area_id)
 {
     P2DArea& area = _get_area(area_id);
-    return area.get_shape().to_shape_2d();
+    return area.shape.to_shape_2d();
 }
 
 void P2DDriver::area_set_user_data(Physics2D::AreaID area_id, Opaque* user_data)
@@ -592,10 +569,10 @@ void P2DDriver::_handle_debug_draw_body(P2DBody& body)
 
     const P2DShape& shape = body.get_shape_transformed();
 
-    for (usize i = 0; i < 4; i++)
+    for (usize i = 0; i < shape.vertices.count; i++)
     {
-        Vector2 point1 = shape.vertices[i];
-        Vector2 point2 = shape.vertices[(i + 1) % 4];
+        Vector2 point1 = shape.vertices.get(i);
+        Vector2 point2 = shape.vertices.get((i + 1) % shape.vertices.count);
 
         RenderManager::render_item_draw_line(
             data.grid_item,
@@ -626,10 +603,10 @@ void P2DDriver::_handle_debug_draw_area(P2DArea& area)
 
     const P2DShape& shape = area.get_shape_transformed();
 
-    for (usize i = 0; i < 4; i++)
+    for (usize i = 0; i < shape.vertices.count; i++)
     {
-        Vector2 point1 = shape.vertices[i];
-        Vector2 point2 = shape.vertices[(i + 1) % 4];
+        Vector2 point1 = shape.vertices.get(i);
+        Vector2 point2 = shape.vertices.get((i + 1) % shape.vertices.count);
 
         RenderManager::render_item_draw_line(
             data.grid_item,
@@ -886,9 +863,9 @@ void P2DDriver::_body_recompute_tiles(P2DBody& body)
     body.tiles_on.clear();
 
     // Getting tiles in shape
-    const P2DShape& body_shape = body.get_shape_transformed();
+    const P2DShape& body_shape_transformed = body.get_shape_transformed();
 
-    AABB aabb = body_shape.aabb;
+    AABB aabb = body_shape_transformed.aabb;
     PhysicsTileCoord min_tile = _convert_to_world_tile(aabb.min);
     PhysicsTileCoord max_tile = _convert_to_world_tile(aabb.max);
 
@@ -916,6 +893,8 @@ void P2DDriver::_body_recompute_tiles(P2DBody& body)
                 (void)tile.bodies.add(body.self);
         }
     }
+
+    return;
 }
 
 void P2DDriver::_area_recompute_tiles(P2DArea& area)
@@ -929,9 +908,9 @@ void P2DDriver::_area_recompute_tiles(P2DArea& area)
     area.tiles_on.clear();
 
     // Getting tiles in shape
-    const P2DShape& area_shape = area.get_shape_transformed();
+    const P2DShape& area_shape_transformed = area.get_shape_transformed();
 
-    const AABB& aabb = area_shape.aabb;
+    const AABB& aabb = area_shape_transformed.aabb;
     PhysicsTileCoord min_tile = _convert_to_world_tile(aabb.min);
     PhysicsTileCoord max_tile = _convert_to_world_tile(aabb.max);
 

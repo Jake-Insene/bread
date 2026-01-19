@@ -1,18 +1,25 @@
 #pragma once
+#include "collections/array.h"
 #include "math/transform_2d.h"
 #include "math/aabb.h"
 #include "physics/shape_2d.h"
 
 
+
 struct [[nodiscard]] P2DShape
 {
-	Vector2 vertices[4];
-	Vector2 normals[4];
+	Array<Vector2> vertices;
+	Array<Vector2> normals;
 	f32 area;
 	Vector2 centroid;
 	AABB aabb;
 
-	static P2DShape from_shape_2d(const Shape2D& shape);
+	void init(const mem::Allocator& allocator);
+	void destroy();
+
+	P2DShape copy() const;
+	void set_from_shape_2d(const Shape2D& shape_2d);
+	void set_from_shape(const P2DShape& other_shape);
 
 	void apply_transform(const Transform2D& transform);
 	void translate(const Vector2& translation);

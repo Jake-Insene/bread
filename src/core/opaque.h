@@ -29,9 +29,9 @@ struct Opaque
     * Reinterprets the object as a diferent type.
     * @tparam Type the type of the object to cast to.
     */
-    template<typename Type>
-    [[nodiscard]] inline Type cast() const Function(FunctionUnsafe)
+    template<typename Type, typename Self>
+    [[nodiscard]] inline Type cast(this Self& self) Function(FunctionUnsafe)
     {
-        return reinterpret_cast<Type>(address());
+        return reinterpret_cast<Type>(&self);
     };
 };

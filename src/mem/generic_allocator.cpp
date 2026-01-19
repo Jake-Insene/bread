@@ -271,7 +271,6 @@ void GenericAllocator::free(Slice<u8> ptr)
         header = header->prev;
     }
 
-
     if(header && header->next && header->next->tags == 0)
     {
         header->len += header->next->len + sizeof(Header);
@@ -279,8 +278,6 @@ void GenericAllocator::free(Slice<u8> ptr)
         
         if (header->next)
             header->next->prev = header;
-        
-        header = header->next;
     }
 
     check_integrity();

@@ -86,12 +86,13 @@ void TileMap::set_tile_set(TileSet* new_tile_set)
 
 		shape_count++;
 		Vector2 position = Vector2(tile.position);
-		Shape2D tile_shape = Shape2D::make_box(tile_size / 2);
+		Shape2D tile_shape = Shape2D::make_box(allocator, tile_size / 2);
 		// Centering...
 		tile_shape.translate(Vector2(tile_size.x / 2.f, -tile_size.y / 2.f));
 
 		tile_shape.translate(position * tile_size);
 		Physics2D::body_set_shape(body_id, tile_shape);
+		tile_shape.destroy();
 	}
 
 	Log::debug("TileMap({}): Creating {} shapes", (void*)usize(this), shape_count);

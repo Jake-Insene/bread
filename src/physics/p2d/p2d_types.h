@@ -4,6 +4,7 @@
 #include "physics/physics_2d.h"
 
 
+
 struct CollisionManifold
 {
     Vector2 normal;
@@ -11,7 +12,6 @@ struct CollisionManifold
     f32 depth;
     bool valid;
 };
-
 
 
 struct CollisionID

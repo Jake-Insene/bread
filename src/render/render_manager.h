@@ -18,6 +18,7 @@ struct RenderManager
 
     enum RenderLayerMask
     {
+        RENDER_LAYER_NONE = 0,
         RENDER_LAYER_0 = Bit(0),
         RENDER_LAYER_1 = Bit(1),
         RENDER_LAYER_2 = Bit(2),

@@ -8,9 +8,9 @@ P2DCollision::SupportPoint P2DCollision::find_support_point(const Vector2& norma
 	SupportPoint sp = {};
 	f32 current_depthest_penetration = 0.f;
 
-	for (usize i = 0; i < 4; i++)
+	for (usize i = 0; i < other_points.vertices.count; i++)
 	{
-		const Vector2 vertice = other_points.vertices[i];
+		const Vector2 vertice = other_points.vertices.get(i);
 		const Vector2 vertice_to_point_edge = vertice - point_on_edge;
 		const f32 penetration_depth = vertice_to_point_edge.dot(normal_edge * -1);
 
@@ -31,10 +31,10 @@ CollisionManifold P2DCollision::get_contact_point(const P2DShape& shape_a, const
 	CollisionManifold contact = {};
 	f32 minimum_penetration_depth = MaxValue<f32>;
 
-	for (usize i = 0; i < 4; i++)
+	for (usize i = 0; i < shape_a.vertices.count; i++)
 	{
-		Vector2 point = shape_a.vertices[i];
-		Vector2 normal = shape_a.normals[i];
+		Vector2 point = shape_a.vertices.get(i);
+		Vector2 normal = shape_a.normals.get(i);
 
 		SupportPoint support_point = find_support_point(normal, point, shape_b);
 		if (!support_point.valid)
@@ -81,7 +81,7 @@ CollisionManifold P2DCollision::polygon_v_polygon(
 
 void P2DCollision::positional_correction(const CollisionManifold& manifold, P2DBody& body_a, P2DBody& body_b)
 {
-	const f32 correction_percentage = 1.0f;
+	const f32 correction_percentage = 0.5f;
 
 	f32 inv_mass_a = body_a.get_inv_mass();
 	f32 inv_mass_b = body_b.get_inv_mass();

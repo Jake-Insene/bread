@@ -63,6 +63,8 @@ file(GLOB ENGINE_SRC
 
     src/modifier/core/renderable.cpp
 
+    src/object/object_pool.cpp
+
     src/object/2d/camera.cpp
     src/object/2d/tile_map.cpp
 

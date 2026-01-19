@@ -165,8 +165,8 @@ struct Physics2D
     static f32 body_get_air_friction(BodyID body_id);
     static void body_set_restitution(BodyID body_id, f32 new_restitution);
     static f32 body_get_restitution(BodyID body_id);
-    static void body_apply_force(BodyID body_id, const Vector2& force, const Vector2& position);
-    static void body_apply_impulse(BodyID body_id, const Vector2& impulse, const Vector2& position);
+    static void body_apply_force(BodyID body_id, const Vector2& force, const Vector2& point);
+    static void body_apply_impulse(BodyID body_id, const Vector2& impulse, const Vector2& point);
     static void body_set_fixed_rotation(BodyID body_id, bool fixed_rotation);
     static bool body_is_on_floor(BodyID body_id);
     static bool body_is_on_ceil(BodyID body_id);

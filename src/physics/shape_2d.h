@@ -1,4 +1,5 @@
 #pragma once
+#include "collections/array.h"
 #include "math/vec2.h"
 
 
@@ -12,9 +13,11 @@ struct [[nodiscard]] Shape2D
     // 1 -> Top right
     // 2 -> Bottom right
     // 3 -> Bottom left
-    Vector2 vertices[4];
+    Array<Vector2> vertices;
 
-    static Shape2D make_box(const Vector2& size);
+    static Shape2D make_box(const mem::Allocator& allocator, const Vector2& size);
+
+    void destroy();
 
     void translate(const Vector2& translation);
 };

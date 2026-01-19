@@ -9,7 +9,7 @@
 struct Texture2D;
 
 
-struct Sprite : Modifier
+struct [[nodiscard]] Sprite : Modifier
 {
     struct InternalData
     {

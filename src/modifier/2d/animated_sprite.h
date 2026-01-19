@@ -6,7 +6,7 @@
 struct SpriteAnimation;
 
 
-struct AnimatedSprite : Renderable
+struct [[nodiscard]] AnimatedSprite : Renderable
 {
     struct InternalData
     {

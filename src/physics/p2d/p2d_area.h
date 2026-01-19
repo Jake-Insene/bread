@@ -1,21 +1,26 @@
 #pragma once
 #include "collections/array.h"
-#include "physics/physics_2d.h"
 
 #include "physics/p2d/p2d_shape.h"
 #include "physics/p2d/p2d_types.h"
 
+
+
 struct [[nodiscard]] P2DArea
 {
-    struct InternalData
+    struct BodyInArea
     {
-        P2DShape shape;
-        P2DShape shape_transformed;
-        Transform2D transform;
+        bool is_inside;
+        i64 check_counter;
     };
 
-    InternalData data;
+    struct InternalData
+    {
+        P2DShape shape_transformed;
+        Transform2D transform;
+    } data;
 
+    P2DShape shape;
     Opaque* user_data;
     Physics2D::AreaID self;
     Physics2D::CollisionMask residence_mask;
@@ -25,19 +30,16 @@ struct [[nodiscard]] P2DArea
 
     bool is_active;
 
-    struct BodyInArea
-    {
-        bool is_inside;
-        i64 check_counter;
-    };
-
     HashMap<Physics2D::BodyID, BodyInArea> bodies_inside;
     Array<PhysicsTileCoord> tiles_on;
     i64 check_counter;
 
-    void set_shape(const P2DShape& new_shape);
-    P2DShape get_shape() const { return data.shape; }
+    void init(const mem::Allocator& allocator, Physics2D::AreaID id, Opaque* ud);
+    void destroy();
+
+    void set_shape_from_2d(const Shape2D& new_shape);
     P2DShape get_shape_transformed() const { return data.shape_transformed; }
+
     void set_transform(const Transform2D& new_transform);
     Transform2D get_transform() const { return data.transform; }
 };
