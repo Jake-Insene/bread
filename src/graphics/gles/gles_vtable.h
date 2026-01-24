@@ -12,7 +12,7 @@ inline GLESFuncGeneric(*platform_get_proc)(const char* name) = nullptr;
 
 #define EGL_REQUIRED_LOAD(name) \
     gl.name = reinterpret_cast<decltype(gl.name)>(platform_get_proc(#name)); \
-    FailOn(gl.name == nullptr, "Couldn't load the function {}", StringView(#name));
+    FailOn(gl.name == nullptr, "couldn't load the function {}", StringView(#name));
 
 #define EGL_NOT_REQUIRED_LOAD(name) \
     gl.name = reinterpret_cast<decltype(gl.name)>(platform_get_proc(#name));

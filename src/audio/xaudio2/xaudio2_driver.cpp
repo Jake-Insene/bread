@@ -73,7 +73,7 @@ Audio::SourceVoiceID XAudio2Driver::create_source_voice(const AudioSourceVoiceCr
 
 	sv.callback = get_allocator().object<VoiceCallback>();
 	data.xaudio->CreateSourceVoice(&sv.sv_xaudio, &wfx, 0, XAUDIO2_DEFAULT_FREQ_RATIO, sv.callback);
-	DebugAssert(sv.sv_xaudio != nullptr, "Couldn't create a source voice");
+	DebugAssert(sv.sv_xaudio != nullptr, "couldn't create a source voice");
 
 	sv.buffer = get_allocator().array<u8>(create_info.buffer.len);
 	mem::copy(sv.buffer, create_info.buffer);

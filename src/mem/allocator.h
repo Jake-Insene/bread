@@ -34,6 +34,9 @@ namespace mem
         template<typename T, typename... TArgs>
         constexpr void construct(T* instance, TArgs&&... args) const;
 
+        template<typename T>
+        constexpr void destruct(T* instance) const;
+
         VTable* vtable;
         Allocator* self;
     };
@@ -64,7 +67,7 @@ inline void mem::Allocator::free(Slice<u8> ptr) const
 }
 
 template<typename T>
-Slice<T> mem::Allocator::array(usize count) const
+inline Slice<T> mem::Allocator::array(usize count) const
 {
     static constexpr usize Alignment = ConditionalValue<usize, alignof(T) == 1, 8, alignof(T)>;
     Slice<T> array = mem::from_bytes<T>(alloc(sizeof(T) * count, Alignment));
@@ -73,13 +76,13 @@ Slice<T> mem::Allocator::array(usize count) const
 }
 
 template<typename T>
-constexpr void mem::Allocator::construct_array(Slice<T> array) const
+inline constexpr void mem::Allocator::construct_array(Slice<T> array) const
 {
     ::new(array.ptr()) T[array.len]{};
 }
 
 template<typename T, typename... TArgs>
-constexpr T* mem::Allocator::object(TArgs&&... args) const
+inline constexpr T* mem::Allocator::object(TArgs&&... args) const
 {
     constexpr usize alignment = alignof(T) == 1 ? 16 : alignof(T);
     T* instance = reinterpret_cast<T*>(alloc(sizeof(T), alignment).items);
@@ -88,7 +91,13 @@ constexpr T* mem::Allocator::object(TArgs&&... args) const
 }
 
 template<typename T, typename... TArgs>
-constexpr void mem::Allocator::construct(T* instance, TArgs&&... args) const
+inline constexpr void mem::Allocator::construct(T* instance, TArgs&&... args) const
 {
     ::new(instance) T(args...);
+}
+
+template<typename T>
+inline constexpr void mem::Allocator::destruct(T* instance) const
+{
+    instance->~T();
 }

@@ -198,6 +198,8 @@ struct [[nodiscard]] Array
     void remove_at(usize index)
     {
         DebugAssert(index < count && count != 0, "index out of range");
+        allocator.destruct(&items[index]);
+
         if (count == 1 || index == count - 1)
         {
             count--;

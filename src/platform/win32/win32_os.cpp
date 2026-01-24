@@ -153,7 +153,7 @@ OS::ThreadID Win32OS::thread_create(OS::ThreadFn fn, Opaque* arg)
 
 void Win32OS::thread_destroy(OS::ThreadID tid)
 {
-    FailOn(thread_join(tid) == false, "Couldn't join the thread {}", tid.id);
+    FailOn(thread_join(tid) == false, "couldn't join the thread {}", tid.id);
 
     ThreadData& thread_data = thread_data_get(tid);
     CloseHandle((HANDLE)thread_data.handle);

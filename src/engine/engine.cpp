@@ -14,13 +14,13 @@
 
 void* operator new(size_t)
 {
-    FailOn(true, "Avoid 'new' statements!");
+    FailOn(true, "avoid 'new' statements!");
     return (void*)0xFFFFFFFF'FFFFFFFF;
 }
 
 void operator delete(void*)
 {
-    FailOn(true, "Avoid 'delete' statements!");
+    FailOn(true, "avoid 'delete' statements!");
 }
 
 void Engine::initialize()

@@ -345,7 +345,7 @@ void SceneRenderer::render_scene(Viewport* main_viewport)
 		Graphics::command_buffer_draw_indexed(data.command_buffer, 6, 1, 0, 0, 0);
 	}
 	else
-	{	
+	{
 		Graphics::command_buffer_blit_framebuffer(
 			data.command_buffer, main_viewport->rt, data.render_targets[data.present_index],
 			Rect2DI(Vector2I(), main_viewport->viewport_size), Rect2DI(Vector2I(), data.render_target_size), 

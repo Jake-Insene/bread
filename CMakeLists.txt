@@ -60,6 +60,7 @@ file(GLOB ENGINE_SRC
 
     src/modifier/2d/sprite.cpp
     src/modifier/2d/animated_sprite.cpp
+    src/modifier/2d/world_transform.cpp
 
     src/modifier/core/renderable.cpp
 

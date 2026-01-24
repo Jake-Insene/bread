@@ -85,7 +85,7 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
     }
     else if(page_count >= allocated_pages.len)
     {
-        FailOn(allocated_pages.len >= MaxPageCount, "Allocator reaches its limit!");
+        FailOn(allocated_pages.len >= MaxPageCount, "allocator reaches its limit!");
         
         usize new_size = allocated_pages.len + allocated_pages.len / 2;
         if(internal_allocator.realloc(mem::to_bytes(allocated_pages), sizeof(Page) * new_size, alignof(Page)))

@@ -6,7 +6,13 @@
 
 
 void Sprite::init(const mem::Allocator&)
-{}
+{
+    color = Color(255, 255, 255, 255);
+    src_rect = Rect2D();
+    centered = true;
+    flip_h = false;
+    flip_v = false;
+}
 
 void Sprite::deinit()
 {}

@@ -8,5 +8,8 @@
 struct [[nodiscard]] WorldTransform : Modifier
 {
     Transform2D transform;
+
+    void init();
+    void deinit();
 };
 

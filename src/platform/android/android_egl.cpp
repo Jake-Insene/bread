@@ -96,7 +96,7 @@ void AndroidEGL::initialize(const mem::Allocator&)
     }
     
     supported_configs.destroy();
-    FailOn(i == num_configs, "Unable to initialize EGLConfig");
+    FailOn(i == num_configs, "unable to initialize EGLConfig");
     
     data.surface = eglCreateWindowSurface(
         data.display, data.config,
@@ -121,13 +121,13 @@ void AndroidEGL::initialize(const mem::Allocator&)
     {
         EGL::data.gles32 = true;
     }
-    FailOn(data.context == nullptr, "Unable to setting up the EGL context");
+    FailOn(data.context == nullptr, "unable to setting up the EGL context");
 
     EGLBoolean result = eglMakeCurrent(
             data.display, data.surface,
             data.surface, data.context
     );
-    FailOn(result == EGL_FALSE, "Unable to setting up the EGL context");
+    FailOn(result == EGL_FALSE, "unable to setting up the EGL context");
 
     if(AndroidEngine::data.app->window != nullptr)
     {
@@ -184,7 +184,7 @@ void AndroidEGL::recreate_window_surface()
         data.display, data.surface,
         data.surface, data.context
     );
-    FailOn(result == EGL_FALSE, "Unable to setting up the EGL context");
+    FailOn(result == EGL_FALSE, "unable to setting up the EGL context");
 }
 
 void AndroidEGL::destroy_window_surface()

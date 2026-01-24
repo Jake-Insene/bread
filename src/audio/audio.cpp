@@ -18,7 +18,7 @@ void Audio::initialize(const mem::Allocator& allocator, DriverType driver)
 #endif
 		break;
 	default:
-		FailOn(true, "Invalid graphics driver");
+		FailOn(true, "invalid audio driver");
 		break;
 	}
 

@@ -6,7 +6,7 @@
 #include "mem/utils.h"
 
 
-String String::with_allocator(mem::Allocator allocator)
+String String::with_allocator(const mem::Allocator& allocator)
 {
     return String
     {
@@ -16,7 +16,7 @@ String String::with_allocator(mem::Allocator allocator)
     };
 }
 
-String String::with_size(mem::Allocator allocator, usize size)
+String String::with_size(const mem::Allocator& allocator, usize size)
 {
     return String
     {
@@ -26,7 +26,7 @@ String String::with_size(mem::Allocator allocator, usize size)
     };
  }
 
-String String::from_chars(mem::Allocator allocator, StringView chars)
+String String::from_chars(const mem::Allocator& allocator, StringView chars)
 {
     String s = String::with_size(allocator, chars.len);
     

@@ -73,10 +73,10 @@ struct Ptr
 
     void destroy(const mem::Allocator& allocator)
     {
-        DebugAssert(allocator.self == allocator_self, " allocator mismatch");
+        DebugAssert(allocator.self == allocator_self, "allocator mismatch");
         DebugAssert(memory != nullptr, "memory is null");
 
-        memory->~T();
+        allocator.destruct(memory);
 
         allocator.free(mem::to_bytes(Slice<T>(memory, 1)));
         memory = nullptr;
