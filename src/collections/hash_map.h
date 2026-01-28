@@ -1,5 +1,6 @@
 #pragma once
 #include "core/header.h"
+#include "collections/map_iterator.h"
 #include "collections/pair.h"
 #include "mem/allocator.h"
 #include "mem/utils.h"
@@ -26,44 +27,6 @@ struct HashMapEntry
     HashMapEntry* next;
 };
 
-template<typename K, typename V, typename HashType>
-struct [[nodiscard]] HashMapIterator
-{
-    using IteratorEntry = HashMapEntry<K, V, HashType>;
-
-    IteratorEntry* entry;
-
-    HashMapIterator(IteratorEntry* entry) : entry(entry) {}
-
-    IteratorEntry::KeyValue& operator*() const { return entry->kv; }
-    IteratorEntry::KeyValue* operator->() const { return &entry->kv; }
-
-    HashMapIterator& operator++()
-    {
-        if (entry)
-        {
-            entry = entry->next;
-        }
-
-        return *this;
-    }
-
-    HashMapIterator& operator--()
-    {
-        if (entry)
-        {
-            entry = entry->prev;
-        }
-
-        return *this;
-    }
-
-    bool operator==(const HashMapIterator& b) const { return entry == b.entry; }
-    bool operator!=(const HashMapIterator& b) const { return entry != b.entry; }
-
-    HashMapIterator begin() const { return *this; }
-    HashMapIterator end() const { return HashMapIterator(nullptr); }
-};
 
 /*
 * A collection of items referenced as a key.
@@ -71,14 +34,14 @@ struct [[nodiscard]] HashMapIterator
 template<typename K, typename V>
 struct [[nodiscard]] HashMap
 {
-    static constexpr u64 InvalidHash = MaxValue<u64>;
-    static constexpr usize InvalidPos = MaxValue<usize>;
-    static constexpr usize DefaultCapacity = 16;
-
     using HashType = u64;
     using MapEntry = HashMapEntry<K, V, HashType>;
     using KeyValue = Pair<K, V>;
-    using Iterator = HashMapIterator<K, V, HashType>;
+    using Iterator = MapIterator<MapEntry>;
+
+    static constexpr HashType InvalidHash = MaxValue<HashType>;
+    static constexpr usize InvalidPos = MaxValue<usize>;
+    static constexpr usize DefaultCapacity = 16;
 
     mem::Allocator allocator;
     Slice<MapEntry*> entries;
@@ -125,10 +88,127 @@ struct [[nodiscard]] HashMap
             entries = {};
         }
     }
-
-    // non user funcs
     
-    [[nodiscard]] bool _find_entry(const u64 hash, const K& k, usize& pos) const
+    Iterator iter() const { return Iterator{ .entry = first }; }
+
+    void resize(usize new_size)
+    {
+        if(entries.len == 0)
+        {
+            new_size = new_size > 0 ? new_size : DefaultCapacity;
+            entries = allocator.array<MapEntry*>(new_size);
+            return;
+        }
+
+        if(entries.len >= new_size)
+        {
+            return;
+        }
+        
+        Slice<MapEntry*> new_entries = allocator.array<MapEntry*>(new_size);
+
+        for (MapEntry* e = first; e != nullptr; e = e->next)
+        {
+            HashType hash = e->hash;
+            usize i = hash & (new_size - 1);
+            while (new_entries[i] != nullptr)
+            {
+                i = (i + 1) % new_size;
+            }
+            new_entries[i] = e;
+        }
+
+        if (entries.ptr())
+        {
+            allocator.free(mem::to_bytes(entries));
+        }
+
+        entries = new_entries;
+    }
+    
+    [[nodiscard]] bool has(const K& k) const
+    {
+        HashType hash = HashOfType<K>::hashfunc(k);
+        usize pos = InvalidPos;
+        return _find_entry(hash, k, pos);
+    }
+    
+    [[nodiscard]] V& get(const K& k)
+    {
+        HashType hash = HashOfType<K>::hashfunc(k);
+        usize pos = InvalidPos;
+        (void)_find_entry(hash, k, pos);
+        DebugAssert(pos != InvalidPos, "the item don't exists!");
+        return entries[pos]->kv.second;
+    }
+    
+    [[nodiscard]] const V& get(const K& k) const
+    {
+        HashType hash = HashOfType<K>::hashfunc(k);
+        usize pos = InvalidPos;
+        (void)_find_entry(hash, k, pos);
+        DebugAssert(pos != InvalidPos, "the item don't exists!");
+        return entries[pos]->kv.second;
+    }
+    
+    V& insert(const K& k, const V& value)
+    {
+        return _insert_or_replace(k, value)->kv.second;
+    }
+
+    void remove(const K& k)
+    {
+        HashType hash = HashOfType<K>::hashfunc(k);
+        usize pos = InvalidPos;
+        if (_find_entry(hash, k, pos) == false)
+        {
+            DebugAssert(false, "the item don't exists!");
+        }
+
+        MapEntry* entry = entries[pos];
+        if (entry->prev)
+        {
+            entry->prev->next = entry->next;
+        }
+
+        if (entry->next)
+        {
+            entry->next->prev = entry->prev;
+        }
+
+        if (entry == first && entry == last)
+        {
+            first = nullptr;
+            last = nullptr;
+        }
+        else if (entry == first)
+        {
+            first = entry->next;
+        }
+        else if (entry == last)
+        {
+            last = entry->prev;
+        }
+
+        entry->hash = InvalidHash;
+        count--;
+    }
+  
+    void clear()
+    {
+        for (auto& entry : entries)
+        {
+            if (entry)
+            {
+                entry->hash = InvalidHash;
+            }
+        }
+
+        count = 0;
+        first = last = nullptr;
+    }
+
+    [[nodiscard]] bool _find_entry(const HashType hash, const K& k, usize& pos) const
     {
         u64 i = hash & (entries.len - 1);
         usize dist = 0;
@@ -140,7 +220,10 @@ struct [[nodiscard]] HashMap
                 return false;
             }
 
-            if (entries[i] != nullptr && entries[i]->hash == hash && HashOfType<K>::compare(k, entries[i]->kv.first))
+            if (entries[i] != nullptr
+                && entries[i]->hash == hash 
+                && HashOfType<K>::compare(k, entries[i]->kv.first)
+            )
             {
                 pos = i;
                 return true;
@@ -166,7 +249,7 @@ struct [[nodiscard]] HashMap
             resize(DefaultCapacity);
         }
 
-        u64 hash = HashOfType<K>::hashfunc(k);
+        HashType hash = HashOfType<K>::hashfunc(k);
         usize pos = InvalidPos;
         if (_find_entry(hash, k, pos))
         {
@@ -180,7 +263,9 @@ struct [[nodiscard]] HashMap
             {
                 if (entries[i] == nullptr)
                 {
-                    MapEntry* entry = mem::from_bytes<MapEntry>(allocator.alloc(sizeof(MapEntry), alignof(MapEntry))).ptr();
+                    MapEntry* entry = mem::from_bytes<MapEntry>(
+                        allocator.alloc(sizeof(MapEntry), alignof(MapEntry))
+                    ).ptr();
                     entry->hash = hash;
                     entry->kv = KeyValue(k, value);
                     entry->prev = nullptr;
@@ -233,124 +318,5 @@ struct [[nodiscard]] HashMap
                 }
             }
         }
-    }
-    
-    Iterator iter() const { return Iterator(first); }
-
-    void resize(usize new_size)
-    {
-        if(entries.len == 0)
-        {
-            new_size = new_size > 0 ? new_size : DefaultCapacity;
-            entries = allocator.array<MapEntry*>(new_size);
-            return;
-        }
-
-        if(entries.len >= new_size)
-        {
-            return;
-        }
-        
-        Slice<MapEntry*> new_entries = allocator.array<MapEntry*>(new_size);
-
-        for (MapEntry* e = first; e != nullptr; e = e->next)
-        {
-            u64 hash = e->hash;
-            usize i = hash & (new_size - 1);
-            while (new_entries[i] != nullptr)
-            {
-                i = (i + 1) % new_size;
-            }
-            new_entries[i] = e;
-        }
-
-        if (entries.ptr())
-        {
-            allocator.free(mem::to_bytes(entries));
-        }
-
-        entries = new_entries;
-    }
-    
-    [[nodiscard]] bool has(const K& k) const
-    {
-        u64 hash = HashOfType<K>::hashfunc(k);
-        usize pos = InvalidPos;
-        return _find_entry(hash, k, pos);
-    }
-    
-    [[nodiscard]] V& get(const K& k)
-    {
-        u64 hash = HashOfType<K>::hashfunc(k);
-        usize pos = InvalidPos;
-        (void)_find_entry(hash, k, pos);
-        DebugAssert(pos != InvalidPos, "the item don't exists!");
-        return entries[pos]->kv.second;
-    }
-    
-    [[nodiscard]] const V& get(const K& k) const
-    {
-        u64 hash = HashOfType<K>::hashfunc(k);
-        usize pos = InvalidPos;
-        (void)_find_entry(hash, k, pos);
-        DebugAssert(pos != InvalidPos, "the item don't exists!");
-        return entries[pos]->kv.second;
-    }
-    
-    V& insert(const K& k, const V& value)
-    {
-        return _insert_or_replace(k, value)->kv.second;
-    }
-
-    void remove(const K& k)
-    {
-        u64 hash = HashOfType<K>::hashfunc(k);
-        usize pos = InvalidPos;
-        if (_find_entry(hash, k, pos) == false)
-        {
-            DebugAssert(false, "the item don't exists!");
-        }
-
-        MapEntry* entry = entries[pos];
-        if (entry->prev)
-        {
-            entry->prev->next = entry->next;
-        }
-
-        if (entry->next)
-        {
-            entry->next->prev = entry->prev;
-        }
-
-        if (entry == first && entry == last)
-        {
-            first = nullptr;
-            last = nullptr;
-        }
-        else if (entry == first)
-        {
-            first = entry->next;
-        }
-        else if (entry == last)
-        {
-            last = entry->prev;
-        }
-
-        entry->hash = InvalidHash;
-        count--;
-    }
-  
-    void clear()
-    {
-        for (auto& entry : entries)
-        {
-            if (entry)
-            {
-                entry->hash = InvalidHash;
-            }
-        }
-
-        count = 0;
-        first = last = nullptr;
     }
 };

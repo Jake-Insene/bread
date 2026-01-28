@@ -14,7 +14,7 @@ void SpriteAnimation::init()
 void SpriteAnimation::destroy()
 {
 	Resource::destroy();
-	for (auto& it : animations)
+	for (auto& it : animations.iter())
 	{
 		it.second.frames.destroy();
 	}

@@ -15,8 +15,6 @@ struct [[nodiscard]] ArrayIterator : BaseIterator<T>
     T* base;
     usize extent;
     
-    ArrayIterator(T* base, usize extent) : base(base), extent(extent) {}
-
     T& operator*() const { return *base; }
     T* operator->() const { return base; }
 
@@ -40,7 +38,7 @@ struct [[nodiscard]] ArrayIterator : BaseIterator<T>
     }
 
     ArrayIterator begin() const { return *this; }
-    ArrayIterator end() const { return ArrayIterator(base + extent, 0); }
+    ArrayIterator end() const { return ArrayIterator{ .base = base + extent, .extent = 0 }; }
 
     [[nodiscard]] usize distance(const ArrayIterator& it) const
     {
@@ -126,7 +124,7 @@ struct [[nodiscard]] Array
     template<typename Self>
     Iterator iter(this Self& self)
     {
-        return Iterator(self.items.items, self.count);
+        return Iterator{ .base = self.items.items, .extent = self.count };
     }
     
     [[nodiscard]] bool is_empty() const { return count == 0; }

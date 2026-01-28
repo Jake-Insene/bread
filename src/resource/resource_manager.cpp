@@ -30,7 +30,7 @@ void ResourceManager::initialize(mem::Allocator& allocator)
 
 void ResourceManager::shutdown()
 {
-    for(auto& it : data.resources)
+    for(auto& it : data.resources.iter())
     {
         switch (it.second->type)
         {

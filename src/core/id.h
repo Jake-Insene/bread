@@ -22,7 +22,7 @@ struct [[nodiscard]] ID
 
     [[nodiscard]] constexpr operator T() const { return id; }
 
-    [[nodiscard]] constexpr bool operator==(const ID<T, Tag>& other_id) const { return id == other_id; }
+    [[nodiscard]] constexpr bool operator==(const ID& other_id) const { return id == other_id; }
     
     [[nodiscard]] constexpr bool is_valid() const { return id != InvalidID; }
 };

@@ -2,7 +2,7 @@
 #include "debug/debug.h"
 
 
-#if defined(DEBUG)
+#if defined(DEBUG) || defined(BREAD_ENABLE_ASSERTIONS)
 #define DebugAssert(cond, msg, ...) \
     if(!(cond))\
     {\
