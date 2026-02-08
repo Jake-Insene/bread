@@ -1,7 +1,7 @@
 #pragma once
 #include "collections/free_list.h"
-#include "platform/platform_header.h"
 #include "display/display.h"
+#include "platform/platform_header.h"
 
 
 struct Win32Display
@@ -13,6 +13,7 @@ struct Win32Display
         Display::WindowID self_id;
         HWND handle;
         RECT window_rect;
+        bool mouse_captured;
     };
 
     struct InternalData

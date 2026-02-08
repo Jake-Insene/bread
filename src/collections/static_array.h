@@ -16,8 +16,6 @@ struct [[nodiscard]] StaticArrayIterator : BaseIterator<T>
     T* base;
     usize extent;
 
-    constexpr StaticArrayIterator(T* base, usize extent) : base(base), extent(extent) {}
-
     constexpr T& operator*() const { return *base; }
     constexpr T* operator->() const { return base; }
 
@@ -41,7 +39,7 @@ struct [[nodiscard]] StaticArrayIterator : BaseIterator<T>
     }
 
     constexpr StaticArrayIterator begin() const { return *this; }
-    constexpr StaticArrayIterator end() const { return StaticArrayIterator(base + extent, 0); }
+    constexpr StaticArrayIterator end() const { return StaticArrayIterator{ .base = base + extent, .extent = 0 }; }
 
     [[nodiscard]] usize distance(const StaticArrayIterator& it) const
     {
@@ -101,7 +99,7 @@ struct [[nodiscard]] StaticArray
     template<typename Self>
     constexpr Iterator iter(this Self& self)
     {
-        return Iterator(self.items, self.count);
+        return Iterator{ .base = self.items, .extent = self.count };
     }
 
     [[nodiscard]] constexpr bool is_empty() const { return count == 0; }

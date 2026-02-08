@@ -82,12 +82,12 @@ struct AndroidOS
 
     static bool set_current_directory(StringView dir);
 
-    static OS::ThreadID thread_data_allocate();
-    static ThreadData& thread_data_get(OS::ThreadID tid);
+    static OS::ThreadID _thread_data_allocate();
+    static ThreadData& _thread_data_get(OS::ThreadID tid);
 
-    static OS::MutexID mutex_data_allocate();
-    static MutexData& mutex_data_get(OS::MutexID mid);
+    static OS::MutexID _mutex_data_allocate();
+    static MutexData& _mutex_data_get(OS::MutexID mid);
 
-    static OS::SemaphoreID semaphore_data_allocate();
-    static SemaphoreData& semaphore_data_get(OS::SemaphoreID sid);
+    static OS::SemaphoreID _semaphore_data_allocate();
+    static SemaphoreData& _semaphore_data_get(OS::SemaphoreID sid);
 };

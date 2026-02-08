@@ -13,7 +13,7 @@ static inline Win32Display::WindowData& _get_window_data(Display::WindowID id)
 static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	Display::WindowID window_id = Display::WindowID(
-		GetWindowLongPtrA(handle, GWLP_USERDATA) & MaxValue<Display::WindowID>
+		GetWindowLongPtrA(handle, GWLP_USERDATA) & MaxValue<Display::WindowID::Type>
 	);
 
 	switch (msg)
@@ -21,6 +21,38 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
+	case WM_CAPTURECHANGED:
+	{
+		Win32Display::WindowData& window_data = _get_window_data(window_id);
+		
+		if (window_data.mouse_captured)
+		{
+			window_data.mouse_captured = false;
+		}
+		break;
+	}
+	case WM_KILLFOCUS:
+	case WM_CANCELMODE:
+	case WM_MOUSELEAVE:
+	{
+		Input::data.mouse_buttons[i32(MouseButton::Left)] = false;
+		Input::data.mouse_buttons[i32(MouseButton::Middle)] = false;
+		Input::data.mouse_buttons[i32(MouseButton::Right)] = false;
+
+		MouseButton buttons[] = {MouseButton::Left, MouseButton::Middle, MouseButton::Right};
+		for(MouseButton btn : buttons)
+		{
+			Input::data.mouse_buttons[i32(btn)] = false;
+
+			InputEventMouseButton event = {};
+			event.type = INPUT_EVENT_MOUSE_BUTTON;
+			event.position = Input::data.mouse_position;
+			event.pressed = false;
+			event.button = btn;
+			Engine::handle_input(event);
+		}
+	}
+		break;
 	case WM_LBUTTONDOWN:
 	case WM_LBUTTONUP:
 	case WM_RBUTTONDOWN:
@@ -43,13 +75,31 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 			|| msg == WM_RBUTTONDOWN
 			|| msg == WM_MBUTTONDOWN;
 
+		if(Input::data.mouse_buttons[i32(button)])
+		{
+			Win32Display::WindowData& window_data = _get_window_data(window_id);
+
+			SetCapture(handle);
+    		window_data.mouse_captured = true;
+		}
+		else
+		{
+			Win32Display::WindowData& window_data = _get_window_data(window_id);
+
+			if(window_data.mouse_captured)
+			{
+				ReleaseCapture();
+				window_data.mouse_captured = false;
+			}
+		}
+
 		// Y positive is up
 		Vector2 pos = Vector2(
 			f32(GET_X_LPARAM(lparam)),
 			-f32(GET_Y_LPARAM(lparam))
 		);
 
-		InputEventMouseButton event{};
+		InputEventMouseButton event = {};
 		event.type = INPUT_EVENT_MOUSE_BUTTON;
 		event.position = pos;
 		event.pressed = Input::data.mouse_buttons[i32(button)];
@@ -162,7 +212,7 @@ Display::WindowID Display::window_create()
 		0, 0, GetModuleHandleA(nullptr), 0
 	);
 
-	SetWindowLongPtrA(new_window.handle, GWLP_USERDATA, (LONG_PTR)new_id);
+	SetWindowLongPtrA(new_window.handle, GWLP_USERDATA, (LONG_PTR)new_id.integer());
 
 	ShowWindow(new_window.handle, SW_SHOW);
 

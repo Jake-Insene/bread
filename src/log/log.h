@@ -37,7 +37,7 @@ struct Log
 template<typename... TArgs>
 void Log::error(const fmt::FormatString<TypeIdentity<TArgs>&&...>& fmt, TArgs&&... args)
 {
-    auto err = File::get_stderr();
+    File err = File::get_stderr();
     if (err.handle == 0) return;
     fmt::format<true>(
         err.writer(), fmt, Forward<TArgs>(args)...
@@ -48,7 +48,7 @@ void Log::error(const fmt::FormatString<TypeIdentity<TArgs>&&...>& fmt, TArgs&&.
 template<typename... TArgs>
 void Log::warning(const fmt::FormatString<TypeIdentity<TArgs>&&...>& fmt, TArgs&&... args)
 {
-    auto err = File::get_stderr();
+    File err = File::get_stderr();
     if (err.handle == 0) return;
     fmt::format<true>(
         err.writer(), fmt, Forward<TArgs>(args)...
@@ -59,7 +59,7 @@ void Log::warning(const fmt::FormatString<TypeIdentity<TArgs>&&...>& fmt, TArgs&
 template<typename... TArgs>
 void Log::info(const fmt::FormatString<TypeIdentity<TArgs>&&...>& fmt, TArgs&&... args)
 {
-    auto out = File::get_stdout();
+    File out = File::get_stdout();
     if (out.handle == 0) return;
     fmt::format<true>(
         out.writer(), fmt, Forward<TArgs>(args)...

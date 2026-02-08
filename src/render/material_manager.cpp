@@ -137,8 +137,8 @@ static inline Graphics::ProgramID _compile_shader_for(const MaterialManager::Mat
 
     Graphics::ShaderInfo shaders[] =
     {
-        {Graphics::SHADER_STAGE_VERTEX, cmp_info.source_path, mem::to_bytes(vs_source.view())},
-        {Graphics::SHADER_STAGE_FRAGMENT, cmp_info.source_path, mem::to_bytes(fs_source.view())},
+        {Graphics::SHADER_STAGE_VERTEX, cmp_info.source_path, mem::to_const_bytes(vs_source.view())},
+        {Graphics::SHADER_STAGE_FRAGMENT, cmp_info.source_path, mem::to_const_bytes(fs_source.view())},
     };
 
     Graphics::ProgramCreateInfo pci =

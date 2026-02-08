@@ -1,5 +1,6 @@
 #pragma once
 #include "core/types.h"
+#include "core/templates.h"
 
 
 template<typename T>
@@ -37,6 +38,14 @@ constexpr void copy(Slice<T> dest, const Slice<U>& src);
 template<typename T>
 inline void set(Slice<T> dest, const T value);
 
+template<typename T>
+inline constexpr void swap(T& a, T& b)
+{
+    T tmp = a;
+    a = b;
+    b = tmp;
+}
+
 }
 
 
@@ -49,19 +58,21 @@ namespace mem
 template<typename T>
 inline Slice<u8> to_bytes(const Slice<T>& items)
 {
-    return Slice<u8>(
-        (u8*)items.items,
+    return Slice<u8>
+    {
+        reinterpret_cast<u8*>(items.items),
         items.len * sizeof(T)
-    );
+    };
 }
 
 template<typename T>
 inline Slice<const u8> to_const_bytes(const Slice<T>& items)
 {
-    return Slice<const u8>(
-        (const u8*)items.items,
+    return Slice<const u8>
+    {
+        reinterpret_cast<const u8*>(items.items),
         items.len * sizeof(T)
-    );
+    };
 }
 
 template<typename T>
@@ -69,8 +80,8 @@ inline Slice<T> from_bytes(const Slice<u8> bytes)
 {
     return Slice<T>
     {
-        (T*)bytes.items,
-            bytes.len / sizeof(T),
+        reinterpret_cast<T*>(bytes.items),
+        bytes.len / sizeof(T),
     };
 }
 

@@ -20,6 +20,7 @@ void Object::init(const CreateInfo& info)
 {
     allocator = info.allocator;
     data.name = String::with_allocator(allocator);
+    data.bit_groups = {};
 }
 
 void Object::deinit()

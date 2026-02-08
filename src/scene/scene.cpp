@@ -111,6 +111,11 @@ void Scene::set_viewport(Viewport* new_viewport)
 void Scene::on_create(const CreateInfo& info)
 {
     allocator = info.allocator;
+    
+    data.name = String::with_allocator(allocator);
+    data.bit_groups = {};
+    data.marks = {};
+    data.viewport = nullptr;
 }
 
 void Scene::on_destroy() {}

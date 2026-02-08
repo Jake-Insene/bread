@@ -42,7 +42,7 @@ void Win32EGL::initialize(const mem::Allocator&)
 	// Initialize OpenGL ES and EGL
 	// Format R8G8B8A8 D24 S8
 
-    PIXELFORMATDESCRIPTOR pfd{};
+    PIXELFORMATDESCRIPTOR pfd = {};
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
     pfd.nVersion = 1;
 	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;

@@ -1,5 +1,5 @@
 #pragma once
-#include "collections/job_queue.h"
+#include "concurrency/job_queue.h"
 #include "display/window.h"
 #include "mem/generic_allocator.h"
 #include "resource/texture.h"

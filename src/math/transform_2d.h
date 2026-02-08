@@ -41,10 +41,10 @@ struct [[nodiscard]] Transform2D
     [[nodiscard]] Transform2D operator*(const Transform2D& t) const;
     [[nodiscard]] Vector2 operator*(const Vector2& t) const;
 
-    void set_position(Vector2 position);
+    void set_position(const Vector2& new_position);
     Vector2 get_position() const;
 
-    void translate(Vector2 t);
+    void translate(const Vector2& translation);
 
     void set_scale(const Vector2& scale);
     Vector2 get_scale() const;

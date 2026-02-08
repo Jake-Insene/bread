@@ -43,7 +43,7 @@ struct [[nodiscard]] Event
 	using Decomposed = FunctionDecomposed<Fn>;
 	using ReturnType = Decomposed::ReturnType;
 
-	EventStorage<Fn, UseInstance> storage{};
+	EventStorage<Fn, UseInstance> storage;
 
 	template<typename T>
 	constexpr void bind(T func)

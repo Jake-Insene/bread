@@ -14,9 +14,6 @@ struct Transform2D;
 
 struct Physics2D
 {
-    struct __BodyTag {};
-    struct __AreaTag {};
-
     enum DriverType
     {
         UNKNOWN_DRIVER = 0,
@@ -26,8 +23,8 @@ struct Physics2D
         DEFAULT_DRIVER = P2D,
     };
 
-    using BodyID = ID<u32, __BodyTag>;
-    using AreaID = ID<u32, __AreaTag>;
+    using BodyID = ID<u32, struct __BodyTag>;
+    using AreaID = ID<u32, struct __AreaTag>;
 
     enum BodyType
     {
@@ -133,7 +130,7 @@ struct Physics2D
         StringMap<PropertyValue> properties;
     };
 
-    static inline InternalData data{};
+    static inline InternalData data = {};
 
     static void initialize(const mem::Allocator& allocator, DriverType driver);
     static void shutdown();

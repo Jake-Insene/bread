@@ -1,12 +1,13 @@
 #include "modifier/2d/sprite.h"
 
 #include "resource/texture.h"
-#include "render/render_manager.h"
 
 
 
 void Sprite::init(const mem::Allocator&)
 {
+    data.texture = nullptr;
+
     color = Color(255, 255, 255, 255);
     src_rect = Rect2D();
     centered = true;

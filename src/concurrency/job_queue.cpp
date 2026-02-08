@@ -1,4 +1,4 @@
-#include "collections/job_queue.h"
+#include "concurrency/job_queue.h"
 
 
 JobQueue JobQueue::with_allocator(const mem::Allocator& allocator)

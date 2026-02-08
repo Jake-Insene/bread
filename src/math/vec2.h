@@ -9,7 +9,7 @@
 template <typename T>
 union [[nodiscard]] Vector2T
 {
-    T comp[2]{};
+    T comp[2];
 
     struct
     {

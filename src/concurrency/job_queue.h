@@ -3,8 +3,10 @@
 #include "os/mutex.h"
 
 
-// TODO:
-// Thread safe by default
+/* 
+* TODO:
+* Thread safe by default
+*/
 struct [[nodiscard]] JobQueue
 {
 	struct JobInfo

@@ -144,7 +144,7 @@ struct [[nodiscard]] Array
         
         if(!allocator.realloc(mem::to_bytes(items), sizeof(Type) * new_cap, alignof(Type)))
         {
-            auto new_items = allocator.array<Type>(new_cap);
+            Slice<Type> new_items = allocator.array<Type>(new_cap);
             if(items.ptr())
             {
                 mem::copy(new_items, items);

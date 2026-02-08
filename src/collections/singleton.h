@@ -7,7 +7,7 @@ struct Singleton
 {
 	static auto& get()
 	{
-		static T instance{};
+		static T instance = {};
 		return instance;
 	}
 };

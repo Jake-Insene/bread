@@ -2,27 +2,34 @@
 #include "math/vec2.h"
 
 
+
+/*
+* Top Left rectangle.
+*/
 template<typename T>
 struct [[nodiscard]] Rect2DT
 {
-    Vector2T<T> position = Vector2T<T>(0, 0);
-    Vector2T<T> size = Vector2T<T>(0, 0);
+    using Type = T;
+    using VectorType = Vector2T<Type>;
+
+    VectorType position;
+    VectorType size;
     
     static constexpr Rect2DT zero() { return Rect2DT(0, 0, 0, 0); }
     static constexpr Rect2DT one() { return Rect2DT(1, 1, 1, 1); }
     
     constexpr Rect2DT() = default;
-    constexpr explicit Rect2DT(const T x, const T y, const T w, const T h) : position(x, y), size(w, h) {}
-    constexpr explicit Rect2DT(const Vector2T<T>& pos, const Vector2T<T>& sz) : position(pos), size(sz) {}
+    constexpr explicit Rect2DT(const Type x, const Type y, const Type w, const Type h) : position(x, y), size(w, h) {}
+    constexpr explicit Rect2DT(const VectorType& pos, const VectorType& sz) : position(pos), size(sz) {}
     
-    [[nodiscard]] constexpr bool point_is_in(const Vector2T<T>& p)
+    [[nodiscard]] constexpr bool contains(const VectorType& point)
     {
-        if(p.x < position.x || p.y > position.y)
+        if(point.x < position.x || point.y > position.y)
         {
             return false;
         }
         
-        if(p.x > (position.x + size.width) || p.y < (position.y - size.height))
+        if(point.x > (position.x + size.width) || point.y < (position.y - size.height))
         {
             return false;
         }
@@ -30,21 +37,21 @@ struct [[nodiscard]] Rect2DT
         return true;
     }
 
-    [[nodiscard]] constexpr bool is_inside(const Rect2DT& r)
+    [[nodiscard]] constexpr bool is_inside(const Rect2DT& other_rect)
     {
-        return r.position.x >= position.x &&
-               r.position.x + r.size.width <= position.x + size.width &&
-               r.position.y <= position.y - size.height &&
-               r.position.y - r.size.height <= position.y - size.height;
+        return other_rect.position.x >= position.x &&
+               other_rect.position.x + other_rect.size.width <= position.x + size.width &&
+               other_rect.position.y <= position.y - size.height &&
+               other_rect.position.y - other_rect.size.height <= position.y - size.height;
     }
 
-    [[nodiscard]] constexpr bool is_colliding(const Rect2DT& r)
+    [[nodiscard]] constexpr bool is_colliding(const Rect2DT& other_rect)
     {
-        const Vector2T<T> min = position;
-        const Vector2T<T> max = position + Vector2T(size.x, -size.y);
+        const VectorType min = position;
+        const VectorType max = position + VectorType(size.x, -size.y);
 
-        const Vector2T<T> min_r = r.position;
-        const Vector2T<T> max_r = r.position + Vector2T(r.size.x, -r.size.y);
+        const VectorType min_r = other_rect.position;
+        const VectorType max_r = other_rect.position + VectorType(other_rect.size.x, -other_rect.size.y);
 
         return min.x < max_r.x &&
             max.x > min_r.x &&
@@ -52,6 +59,10 @@ struct [[nodiscard]] Rect2DT
             max.y < min_r.x;
     }
 
+    constexpr VectorType center() const
+    {
+        return VectorType(position.x + size.x/Type(2), position.y - size.y/Type(2));
+    }
 };
 
 using Rect2D = Rect2DT<f32>;

@@ -1,5 +1,6 @@
 #include "math/transform_2d.h"
 
+#include "debug/assertion.h"
 #include "math/funcs.h"
 
 
@@ -50,9 +51,9 @@ Vector2 Transform2D::operator*(const Vector2& t) const
     return new_pos;
 }
 
-void Transform2D::set_position(Vector2 position)
+void Transform2D::set_position(const Vector2& new_position)
 {
-    rows[2] = position;
+    rows[2] = new_position;
 }
 
 Vector2 Transform2D::get_position() const
@@ -60,9 +61,9 @@ Vector2 Transform2D::get_position() const
     return rows[2];
 }
 
-void Transform2D::translate(Vector2 t)
+void Transform2D::translate(const Vector2& translation)
 {
-    rows[2] += t;
+    rows[2] += translation;
 }
 
 void Transform2D::set_scale(const Vector2& scale)
@@ -103,6 +104,7 @@ f32 Transform2D::determinant() const
 
 Vector2 Transform2D::get_column(usize n) const
 {
+    DebugAssert(n < 2, "only 0, 1 are valid columns");
     if (n == 0)
     {
         return Vector2(rows[0].x, rows[1].x);

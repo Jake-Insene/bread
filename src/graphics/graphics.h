@@ -170,7 +170,7 @@ struct Graphics
 	{
 		ShaderStage stage;
 		StringView source_path;
-		Slice<u8> code;
+		Slice<const u8> code;
 	};
 
 	struct SwapChainCreateInfo

@@ -10,16 +10,16 @@ struct [[nodiscard]] AnimatedSprite : Renderable
 {
     struct InternalData
     {
-        u32 frame = 0;
-        bool playing = false;
-        String current_animation{};
+        u32 frame;
+        bool playing;
+        String current_animation;
         f32 remain;
     } data;
 	
     /*
     * Sprite modulate color.
     */
-    Color color{255, 255, 255, 255};
+    Color color;
 
     /*
     * Contains the animations and texture references to draw.
@@ -30,15 +30,15 @@ struct [[nodiscard]] AnimatedSprite : Renderable
     * If true the sprite is drawed with its center at the transform position,
     * otherwise the sprite top left will be at the transform position.
     */
-    bool centered = true;
+    bool centered;
     /*
     * Flip the entire sprite horizontally
     */
-    bool flip_h = false;
+    bool flip_h;
     /*
     * Flip the entire sprite vertically
     */
-    bool flip_v = false;
+    bool flip_v;
 
     void init(const mem::Allocator& allocator);
     void deinit();

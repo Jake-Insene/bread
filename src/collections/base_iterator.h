@@ -1,5 +1,6 @@
 #pragma once
 #include "core/header.h"
+#include "core/templates.h"
 
 
 /*
@@ -35,11 +36,11 @@ struct [[nodiscard]] BaseIterator
 		{
 			if constexpr (IsAnyOf<Fn, ItFnComplete1, ItFnComplete2>)
 			{
-				fn(item, index++);
+				Invoke(fn, item, index++);
 			}
 			else
 			{
-				fn(item);
+				Invoke(fn, item);
 			}
 		}
 

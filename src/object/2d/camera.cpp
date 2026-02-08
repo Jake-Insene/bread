@@ -6,6 +6,14 @@
 void Camera::init(const CreateInfo& info)
 {
     Object::init(info);
+
+    data.enable = false;
+    data.old_pos = Vector2();
+    data.old_rot = 0.f;
+    data.position_mode = POSITION_TOP_LEFT;
+    data.transform = Transform2D();
+
+    camera_speed = Vector2(1, 1);
 }
 
 void Camera::deinit()

@@ -142,7 +142,7 @@ struct [[nodiscard]] Mat4
 
     constexpr Mat4 transposing()
     {
-        Mat4 transposed{};
+        Mat4 transposed = {};
 
         for (i32 i = 0; i < 4; ++i)
         {
@@ -202,7 +202,7 @@ struct [[nodiscard]] Mat4
     constexpr Mat4 inverse()
     {
         Mat4 m = *this;
-        Mat4 out{};
+        Mat4 out = {};
         f32 cof00 = m[1][1] * (m[2][2] * m[3][3] - m[2][3] * m[3][2]) - 
                   m[1][2] * (m[2][1] * m[3][3] - m[2][3] * m[3][1]) +
                   m[1][3] * (m[2][1] * m[3][2] - m[2][2] * m[3][1]);

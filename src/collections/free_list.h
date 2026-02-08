@@ -59,7 +59,7 @@ struct [[nodiscard]] FreeList
         if(last_free_element != InvalidSlot)
         {
             SlotID id = last_free_element;
-            SlotID* last_element = (SlotID*)&_get_element_at(last_free_element);
+            SlotID* last_element = reinterpret_cast<SlotID*>(&_get_element_at(last_free_element.integer()));
             if(last_element[0] != InvalidSlot)
             {
                 last_free_element = last_element[0];
@@ -76,13 +76,16 @@ struct [[nodiscard]] FreeList
 
         (void)array.add(item);
         count++;
-        return SlotID((array.count - 1) & SlotBitmask);
+        return SlotID((array.count - 1) & SlotBitmask.integer());
     }
 
     void remove(const SlotID& slot)
     {
-        DebugAssert(slot < array.count, "invalid slot");
-        DebugAssert(((const SlotID*)&_get_element_at(slot))[0] != InvalidSlot, "slot is already free");
+        DebugAssert(slot.integer() < array.count, "invalid slot");
+        DebugAssert(
+            *reinterpret_cast<const SlotID*>(&_get_element_at(slot.integer())) != InvalidSlot,
+            "slot is already free"
+        );
 
         count--;
 
@@ -92,21 +95,21 @@ struct [[nodiscard]] FreeList
         if(last_free_element == InvalidSlot)
         {
             last_free_element = slot;
-            SlotID* last_element = (SlotID*)&_get_element_at(last_free_element);
+            SlotID* last_element = reinterpret_cast<SlotID*>(&_get_element_at(last_free_element.integer()));
             last_element[0] = InvalidSlot;
             return;
         }
 
-        SlotID* last_element = (SlotID*)&_get_element_at(last_free_element);
+        SlotID* last_element = reinterpret_cast<SlotID*>(&_get_element_at(last_free_element.integer()));
         if(last_element[0] != InvalidSlot)
         {
-            SlotID* free_element = (SlotID*)&_get_element_at(slot);
+            SlotID* free_element = reinterpret_cast<SlotID*>(&_get_element_at(slot.integer()));
             free_element[0] = last_free_element;
             last_free_element = slot;
         }
         else
         {
-            SlotID* free_element = (SlotID*)&_get_element_at(slot);
+            SlotID* free_element = reinterpret_cast<SlotID*>(&_get_element_at(slot.integer()));
             free_element[0] = InvalidSlot;
             last_element[0] = slot;
         }
@@ -114,9 +117,12 @@ struct [[nodiscard]] FreeList
 
     [[nodiscard]] T& get(const SlotID& slot)
     {
-        DebugAssert(slot < array.count, "invalid slot");
-        DebugAssert(((SlotID*)&_get_element_at(slot))[0] != InvalidSlot, "slot isn't free");
-        return array.get(slot);
+        DebugAssert(slot.integer() < array.count, "invalid slot");
+        DebugAssert(
+            *reinterpret_cast<SlotID*>(&_get_element_at(slot.integer())) != InvalidSlot,
+            "slot isn't free"
+        );
+        return array.get(slot.integer());
     }
 
     T& _get_element_at(usize index) { return array.get(index); }

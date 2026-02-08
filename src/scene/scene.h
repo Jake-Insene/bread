@@ -249,10 +249,10 @@ struct Scene
     
     struct InternalData
     {
-        String name{}; // necessary?
+        String name; // necessary?
 
-        BitMask<MARK_COUNT> marks{};
-        BitMask<64> bit_groups{};
+        BitMask<MARK_COUNT> marks;
+        BitMask<64> bit_groups;
 
         Viewport* viewport;
     } data;

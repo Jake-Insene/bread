@@ -24,9 +24,10 @@ file(GLOB ENGINE_SRC
     src/audio/audio.cpp
 
     src/collections/error.cpp
-    src/collections/job_queue.cpp
     src/collections/string.cpp
     
+    src/concurrency/job_queue.cpp
+
     src/debug/debug.cpp
     
     src/display/display.cpp
@@ -36,6 +37,9 @@ file(GLOB ENGINE_SRC
 
     src/graphics/egl/egl.cpp
     src/graphics/graphics.cpp
+
+    src/gui/canvas_element.cpp
+    src/gui/canvas.cpp
 
     src/input/input.cpp
     

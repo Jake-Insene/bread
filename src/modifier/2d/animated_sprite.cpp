@@ -6,7 +6,16 @@
 
 void AnimatedSprite::init(const mem::Allocator& allocator)
 {
+	data.frame = 0;
+	data.playing = false;
 	data.current_animation = String::with_allocator(allocator);
+	data.remain = 0;
+
+	color = Color(255, 255, 255, 255);
+	animation = nullptr;
+	centered = true;
+	flip_h = false;
+	flip_v = false;
 }
 
 void AnimatedSprite::deinit()

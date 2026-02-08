@@ -34,7 +34,7 @@ void TileMap::render(const Transform2D& transform)
 
 	Slice<TileSet::Tile> tiles = data.tile_set->get_tiles();
 	Slice<TileSet::TileData> tiles_data = data.tile_set->get_tiles_data();
-	for (auto& tile : tiles)
+	for (TileSet::Tile& tile : tiles)
 	{
 		TileSet::TileData& tile_data = tiles_data[tile.data_index];
 		Vector2 tile_position = Vector2(tile_data.texture_position);
@@ -77,7 +77,7 @@ void TileMap::set_tile_set(TileSet* new_tile_set)
 
 	Vector2 tile_size = Vector2(data.tile_set->get_tile_size());
 	usize shape_count = 0;
-	for (auto& tile : tiles)
+	for (TileSet::Tile& tile : tiles)
 	{
 		if (tile.has_shape_2d == false)
 			continue;

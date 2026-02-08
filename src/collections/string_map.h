@@ -70,7 +70,7 @@ struct [[nodiscard]] StringMap
     {
         if(entries.ptr())
         {
-            for(auto entry : entries)
+            for(MapEntry* entry : entries)
             {
                 if(entry != nullptr)
                 {
@@ -191,7 +191,7 @@ struct [[nodiscard]] StringMap
 
     void clear()
     {
-        for (auto& entry : entries)
+        for (MapEntry* entry : entries)
         {
             if (entry)
             {

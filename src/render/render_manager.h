@@ -156,7 +156,7 @@ struct RenderManager
         OT order_table;
     };
 
-    static inline InternalData data{};
+    static inline InternalData data = {};
 
     [[nodiscard]] static mem::Allocator get_allocator() { return data.allocator; }
     [[nodiscard]] static OT& get_order_table() { return data.order_table; }

@@ -26,7 +26,7 @@ void operator delete(void*)
 void Engine::initialize()
 {
     data.allocator = {};
-    auto allocator = data.allocator.allocator();
+    mem::Allocator allocator = data.allocator.allocator();
 
     // Initilizing the core components
     Log::debug("[Engine]: Initializing...");

@@ -10,8 +10,8 @@ void AndroidOS::initialize(const mem::Allocator& allocator)
     data.mutexes = FreeList<MutexData, OS::MutexID>::with_size(allocator, InitialMutexCount);
 
     // First data thread is reserved for main thread
-    OS::ThreadID main_thread = thread_data_allocate();
-    auto& thread_data = thread_data_get(main_thread);
+    OS::ThreadID main_thread = _thread_data_allocate();
+    auto& thread_data = _thread_data_get(main_thread);
 
     thread_data.state = THREAD_STATE_RUNNING;
 }
@@ -135,32 +135,32 @@ bool AndroidOS::set_current_directory(StringView dir)
     return true;
 }
 
-OS::ThreadID AndroidOS::thread_data_allocate()
+OS::ThreadID AndroidOS::_thread_data_allocate()
 {
     return data.threads.add(ThreadData());
 }
 
-AndroidOS::ThreadData& AndroidOS::thread_data_get(OS::ThreadID tid)
+AndroidOS::ThreadData& AndroidOS::_thread_data_get(OS::ThreadID tid)
 {
     return data.threads.get(tid);
 }
 
-OS::MutexID AndroidOS::mutex_data_allocate()
+OS::MutexID AndroidOS::_mutex_data_allocate()
 {
     return data.mutexes.add(MutexData());
 }
 
-AndroidOS::MutexData& AndroidOS::mutex_data_get(OS::MutexID mid)
+AndroidOS::MutexData& AndroidOS::_mutex_data_get(OS::MutexID mid)
 {
     return data.mutexes.get(mid);
 }
 
-OS::SemaphoreID AndroidOS::semaphore_data_allocate()
+OS::SemaphoreID AndroidOS::_semaphore_data_allocate()
 {
     return data.semaphores.add(SemaphoreData());
 }
 
-AndroidOS::SemaphoreData& AndroidOS::semaphore_data_get(OS::SemaphoreID sid)
+AndroidOS::SemaphoreData& AndroidOS::_semaphore_data_get(OS::SemaphoreID sid)
 {
     return data.semaphores.get(sid);
 }

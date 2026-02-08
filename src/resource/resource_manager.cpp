@@ -190,7 +190,7 @@ Result<Resource*, Error> ResourceManager::_load_image(StringView path)
     }
     else
     {
-        Image tmp_image{};
+        Image tmp_image = {};
 
         Error load_result = tmp_image.load(path);
         if (!load_result)

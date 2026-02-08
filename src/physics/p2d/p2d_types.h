@@ -28,6 +28,21 @@ struct PendingCollision
 
 using PhysicsTileCoord = Vector2I;
 
+
+template<>
+struct HashOfType<Physics2D::BodyID>
+{
+    [[nodiscard]] static constexpr u64 hashfunc(const Physics2D::BodyID& k)
+    {
+        return k.id;
+    }
+
+    [[nodiscard]] static constexpr bool compare(const Physics2D::BodyID& k1, const Physics2D::BodyID& k2)
+    {
+        return k1.id == k2.id;
+    }
+};
+
 template<>
 struct HashOfType<CollisionID>
 {

@@ -94,4 +94,4 @@ struct GLESVTable
     PFNGLLINEWIDTHPROC glLineWidth;
 };
 
-inline GLESVTable gl{};
+inline GLESVTable gl = {};

@@ -50,8 +50,8 @@ void Win32OS::initialize(const mem::Allocator& allocator)
     data.semaphores = FreeList<SemaphoreData, OS::SemaphoreID>::with_size(allocator, InitialSemaphoreCount);
 
     // First data thread is reserved for main thread
-    OS::ThreadID main_thread = thread_data_allocate();
-    auto& thread_data = thread_data_get(main_thread);
+    OS::ThreadID main_thread = _thread_data_allocate();
+    auto& thread_data = _thread_data_get(main_thread);
 
     thread_data.handle = GetCurrentThread();
     thread_data.state = THREAD_STATE_RUNNING;
@@ -129,8 +129,8 @@ void Win32OS::unmap_memory(Slice<u8> memory)
 
 OS::ThreadID Win32OS::thread_create(OS::ThreadFn fn, Opaque* arg)
 {
-    OS::ThreadID tid = thread_data_allocate();
-    ThreadData& thread_data = thread_data_get(tid);
+    OS::ThreadID tid = _thread_data_allocate();
+    ThreadData& thread_data = _thread_data_get(tid);
 
     HANDLE thread_handle = CreateThread(
         nullptr, 0, &_thread_handler, &thread_data,
@@ -155,7 +155,7 @@ void Win32OS::thread_destroy(OS::ThreadID tid)
 {
     FailOn(thread_join(tid) == false, "couldn't join the thread {}", tid.id);
 
-    ThreadData& thread_data = thread_data_get(tid);
+    ThreadData& thread_data = _thread_data_get(tid);
     CloseHandle((HANDLE)thread_data.handle);
  
     data.threads.remove(tid);
@@ -163,7 +163,7 @@ void Win32OS::thread_destroy(OS::ThreadID tid)
 
 bool Win32OS::thread_join(OS::ThreadID tid)
 {
-    ThreadData& thread_data = thread_data_get(tid);
+    ThreadData& thread_data = _thread_data_get(tid);
     if (WaitForSingleObjectEx(thread_data.handle, INFINITE, FALSE) == WAIT_FAILED)
     {
         return false;
@@ -174,7 +174,7 @@ bool Win32OS::thread_join(OS::ThreadID tid)
 
 void Win32OS::thread_set_name(OS::ThreadID tid, StringView new_name)
 {
-    ThreadData& thread_data = thread_data_get(tid);
+    ThreadData& thread_data = _thread_data_get(tid);
     mem::copy(Slice(thread_data.name), new_name);
 
     SetThreadDescription(thread_data.handle, reinterpret_cast<PCWSTR>(thread_data.name));
@@ -182,7 +182,7 @@ void Win32OS::thread_set_name(OS::ThreadID tid, StringView new_name)
 
 StringView Win32OS::thread_get_name(OS::ThreadID tid)
 {
-    ThreadData& thread_data = thread_data_get(tid);
+    ThreadData& thread_data = _thread_data_get(tid);
 
     CHAR* name_address = nullptr;
     GetThreadDescription(thread_data.handle, reinterpret_cast<PWSTR*>(&name_address));
@@ -194,8 +194,8 @@ StringView Win32OS::thread_get_name(OS::ThreadID tid)
 
 OS::MutexID Win32OS::mutex_create()
 {
-    OS::MutexID mid = mutex_data_allocate();
-    MutexData& mutex_data = mutex_data_get(mid);
+    OS::MutexID mid = _mutex_data_allocate();
+    MutexData& mutex_data = _mutex_data_get(mid);
 
     mutex_data.srw = SRWLOCK_INIT;
 
@@ -209,27 +209,27 @@ void Win32OS::mutex_destroy(OS::MutexID mid)
 
 void Win32OS::mutex_lock(OS::MutexID mid)
 {
-    MutexData& mutex_data = mutex_data_get(mid);
+    MutexData& mutex_data = _mutex_data_get(mid);
     _mutex_lock(&mutex_data.srw);
 }
 
 bool Win32OS::mutex_try_lock(OS::MutexID mid)
 {
-    MutexData& mutex_data = mutex_data_get(mid);
+    MutexData& mutex_data = _mutex_data_get(mid);
     return _mutex_try_lock(&mutex_data.srw);
 }
 
 void Win32OS::mutex_unlock(OS::MutexID mid)
 {
-    MutexData& mutex_data = mutex_data_get(mid);
+    MutexData& mutex_data = _mutex_data_get(mid);
     _mutex_unlock(&mutex_data.srw);
 }
 
 
 OS::SemaphoreID Win32OS::semaphore_create(usize initial_value)
 {
-    OS::SemaphoreID sid = semaphore_data_allocate();
-    SemaphoreData& semaphore_data = semaphore_data_get(sid);
+    OS::SemaphoreID sid = _semaphore_data_allocate();
+    SemaphoreData& semaphore_data = _semaphore_data_get(sid);
     
     semaphore_data.handle = CreateSemaphoreA(nullptr, LONG(initial_value), MaxValue<i32>, nullptr);
     DebugAssert(semaphore_data.handle != nullptr, "can't create a new semaphore");
@@ -239,19 +239,19 @@ OS::SemaphoreID Win32OS::semaphore_create(usize initial_value)
 
 void Win32OS::semaphore_destroy(OS::SemaphoreID sid)
 {
-    SemaphoreData& semaphore_data = semaphore_data_get(sid);
+    SemaphoreData& semaphore_data = _semaphore_data_get(sid);
     CloseHandle(semaphore_data.handle);
 }
 
 void Win32OS::semaphore_signal(OS::SemaphoreID sid)
 {
-    SemaphoreData& semaphore_data = semaphore_data_get(sid);
+    SemaphoreData& semaphore_data = _semaphore_data_get(sid);
     ReleaseSemaphore(semaphore_data.handle, 1, nullptr);
 }
 
 void Win32OS::semaphore_wait(OS::SemaphoreID sid)
 {
-    SemaphoreData& semaphore_data = semaphore_data_get(sid);
+    SemaphoreData& semaphore_data = _semaphore_data_get(sid);
     WaitForSingleObject(semaphore_data.handle, INFINITE);
 }
 
@@ -264,32 +264,32 @@ bool Win32OS::set_current_directory(StringView dir)
     return false;
 }
 
-OS::ThreadID Win32OS::thread_data_allocate()
+OS::ThreadID Win32OS::_thread_data_allocate()
 {
     return data.threads.add(ThreadData());
 }
 
-Win32OS::ThreadData& Win32OS::thread_data_get(OS::ThreadID tid)
+Win32OS::ThreadData& Win32OS::_thread_data_get(OS::ThreadID tid)
 {
     return data.threads.get(tid);
 }
 
-OS::MutexID Win32OS::mutex_data_allocate()
+OS::MutexID Win32OS::_mutex_data_allocate()
 {
     return data.mutexes.add(MutexData());
 }
 
-Win32OS::MutexData& Win32OS::mutex_data_get(OS::MutexID mid)
+Win32OS::MutexData& Win32OS::_mutex_data_get(OS::MutexID mid)
 {
     return data.mutexes.get(mid);
 }
 
-OS::SemaphoreID Win32OS::semaphore_data_allocate()
+OS::SemaphoreID Win32OS::_semaphore_data_allocate()
 {
     return data.semaphores.add(SemaphoreData());
 }
 
-Win32OS::SemaphoreData& Win32OS::semaphore_data_get(OS::SemaphoreID sid)
+Win32OS::SemaphoreData& Win32OS::_semaphore_data_get(OS::SemaphoreID sid)
 {
     return data.semaphores.get(sid);
 }

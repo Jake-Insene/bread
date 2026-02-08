@@ -6,14 +6,12 @@
 
 struct Display
 {
-    struct __WindowTag {};
-
     static constexpr i32 DefaultWidth = 600;
     static constexpr i32 DefaultHeight = 800;
 
     static constexpr const char* DefaultTitle = "Bread!!!";
 
-    using WindowID = ID<u32, __WindowTag>;
+    using WindowID = ID<u32, struct __WindowTag>;
 
     struct VTable
     {

@@ -13,12 +13,12 @@ struct Camera : Object
 
     struct InternalData
     {
-        bool enable = false;
-        Vector2 old_pos{};
-        f32 old_rot = 0;
+        bool enable;
+        Vector2 old_pos;
+        f32 old_rot;
 
-        PositionMode position_mode = POSITION_TOP_LEFT;
-        Transform2D transform{};
+        PositionMode position_mode;
+        Transform2D transform;
 
     } data;
 
@@ -26,7 +26,7 @@ struct Camera : Object
     * When smoot_position is enabled camera_speed 
     * is used to update the camera current position
     */
-    Vector2 camera_speed{1, 1};
+    Vector2 camera_speed;
     /*
     * Enable camera position interpolation.
     */

@@ -190,9 +190,6 @@ void SceneManager::scene_handle_input(const InputEvent& event)
     if (data.current_scene == nullptr)
         return;
 
-    if (!data.current_scene->has_mark(Scene::MARK_EVENT))
-        return;
-
     switch (event.type)
     {
     case INPUT_EVENT_TOUCH:

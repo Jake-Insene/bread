@@ -108,22 +108,22 @@ struct InputEventKey : InputEvent
 
 struct InputEventTouch : InputEvent
 {
-    i32 pointer = 0;
-    bool pressed = false;
-    Vector2 position{};
+    i32 pointer;
+    bool pressed;
+    Vector2 position;
 };
 
 struct InputEventMouseMove : InputEvent
 {
-    Vector2 position{};
+    Vector2 position;
 };
 
 
 struct InputEventMouseButton : InputEvent
 {
-    Vector2 position{};
+    Vector2 position;
     MouseButton button;
-    bool pressed = false;
+    bool pressed;
 };
 
 
@@ -144,15 +144,15 @@ struct Input
         Vector2 mouse_position;
     };
 
-    static inline InternalData data{};
+    static inline InternalData data = {};
 
-    static KeyState get_key_state(Key k);
+    [[nodiscard]] static KeyState get_key_state(Key k);
 
-    static bool is_key_down(Key k);
-    static bool is_key_just_down(Key k);
+    [[nodiscard]] static bool is_key_down(Key k);
+    [[nodiscard]] static bool is_key_just_down(Key k);
 
-    static bool is_mouse_button_pressed(MouseButton button);
-    static bool is_mouse_button_just_pressed(MouseButton button);
+    [[nodiscard]] static bool is_mouse_button_pressed(MouseButton button);
+    [[nodiscard]] static bool is_mouse_button_just_pressed(MouseButton button);
 
     static Vector2 get_mouse_position();
 };

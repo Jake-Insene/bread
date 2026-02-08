@@ -2,7 +2,5 @@
 #include "core/id.h"
 
 
-struct __ResourceTag {};
-
-using ResourceID = ID<u32, __ResourceTag>;
+using ResourceID = ID<u32, struct __ResourceTag>;
 

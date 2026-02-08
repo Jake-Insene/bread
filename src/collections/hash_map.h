@@ -77,7 +77,7 @@ struct [[nodiscard]] HashMap
     {
         if (entries.ptr())
         {
-            for (auto entry : entries)
+            for (MapEntry* entry : entries)
             {
                 if (entry != nullptr)
                 {
@@ -196,7 +196,7 @@ struct [[nodiscard]] HashMap
   
     void clear()
     {
-        for (auto& entry : entries)
+        for (MapEntry* entry : entries)
         {
             if (entry)
             {

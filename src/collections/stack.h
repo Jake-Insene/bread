@@ -7,10 +7,12 @@
 template<typename T>
 struct [[nodiscard]] Stack
 {
+	using Type = T;
+
 	static constexpr usize DefaultCapacity = 4;
 
 	mem::Allocator allocator;
-	Slice<T> items;
+	Slice<Type> items;
 	usize sp;
 
 	static Stack with_allocator(const mem::Allocator& allocator)
@@ -18,7 +20,7 @@ struct [[nodiscard]] Stack
 		return Stack
 		{
 			.allocator = allocator,
-			.items = allocator.array<T>(DefaultCapacity),
+			.items = allocator.array<Type>(DefaultCapacity),
 			.sp = 0,
 		};
 	}
@@ -28,7 +30,7 @@ struct [[nodiscard]] Stack
 		return Stack
 		{
 			.allocator = allocator,
-			.items = allocator.array<T>(size),
+			.items = allocator.array<Type>(size),
 			.sp = 0,
 		};
 	}
@@ -59,9 +61,9 @@ struct [[nodiscard]] Stack
 			new_cap = required_capacity;
 		}
 
-		if (!allocator.realloc(mem::to_bytes(items), sizeof(T) * new_cap, alignof(T)))
+		if (!allocator.realloc(mem::to_bytes(items), sizeof(Type) * new_cap, alignof(Type)))
 		{
-			auto new_items = allocator.array<T>(new_cap);
+			Slice<Type> new_items = allocator.array<Type>(new_cap);
 			if (items.ptr())
 			{
 				mem::copy(new_items, items);
@@ -77,20 +79,20 @@ struct [[nodiscard]] Stack
 		}
 	}
 
-	void push(const T& new_item)
+	void push(const Type& new_item)
 	{
 		ensure_capacity(sp + 1);
 		items[sp++] = new_item;
 	}
 
-	T pop()
+	Type pop()
 	{
 		DebugAssert(sp > 0, "stack is empty!");
 
-		const T item = items[sp - 1];
+		const Type item = items[sp - 1];
 		if (sp > 1)
 		{
-			items[sp - 1] = T();
+			items[sp - 1] = Type();
 		}
 
 		sp--;

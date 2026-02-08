@@ -178,7 +178,7 @@ struct SceneRenderer
         bool scene_data_ubo_update;
     };
 
-    static inline InternalData data{};
+    static inline InternalData data = {};
 
     [[nodiscard]] static mem::Allocator get_allocator() { return data.allocator; }
 

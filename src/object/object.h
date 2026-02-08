@@ -27,8 +27,8 @@ struct Object
     */
     struct InternalData
     {
-        String name{}; // necessary?
-        BitMask<64> bit_groups{};
+        String name; // necessary?
+        BitMask<64> bit_groups;
     };
 
     struct CreateInfo
@@ -55,7 +55,7 @@ struct Object
     /*
     * The object memory allocator, Use it to allocate memory for the object.
     */
-    mem::Allocator allocator{};
+    mem::Allocator allocator;
     InternalData data;
 
     void handle_event(const InputEvent& event) Function(FunctionInternal);
