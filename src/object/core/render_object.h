@@ -17,6 +17,7 @@ struct RenderObject : Object
 
     RenderItemID get_render_item() const { return data.render_item; }
 
+    void draw_rect(const Transform2D& transform, const Rect2D& rect, Color color);
     void draw_sprite(const Transform2D& transform, Texture2D* texture, const Rect2D& rect, const Rect2D& src_rect, Color color, u32 flags);
 };
 
