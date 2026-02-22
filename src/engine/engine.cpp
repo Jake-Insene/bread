@@ -15,7 +15,7 @@
 void* operator new(size_t)
 {
     FailOn(true, "avoid 'new' statements!");
-    return (void*)0xFFFFFFFF'FFFFFFFF;
+    return reinterpret_cast<void*>(0xFFFFFFFF'FFFFFFFF);
 }
 
 void operator delete(void*)

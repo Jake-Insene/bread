@@ -138,7 +138,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		InputEventKey event = {};
 		event.type = InputEventType::INPUT_EVENT_KEY;
 		event.pressed = Input::data.keys[wparam] == KeyState::Pressed;
-		event.key = (Key)wparam;
+		event.key = static_cast<Key>(wparam);
 
 		Engine::handle_input(event);
 		return 0;
@@ -212,7 +212,7 @@ Display::WindowID Display::window_create()
 		0, 0, GetModuleHandleA(nullptr), 0
 	);
 
-	SetWindowLongPtrA(new_window.handle, GWLP_USERDATA, (LONG_PTR)new_id.integer());
+	SetWindowLongPtrA(new_window.handle, GWLP_USERDATA, static_cast<LONG_PTR>(new_id.integer()));
 
 	ShowWindow(new_window.handle, SW_SHOW);
 

@@ -59,7 +59,9 @@ struct [[nodiscard]] FreeList
         if(last_free_element != InvalidSlot)
         {
             SlotID id = last_free_element;
-            SlotID* last_element = reinterpret_cast<SlotID*>(&_get_element_at(last_free_element.integer()));
+            SlotID* last_element = reinterpret_cast<SlotID*>(
+                &_get_element_at(last_free_element.integer())
+            );
             if(last_element[0] != InvalidSlot)
             {
                 last_free_element = last_element[0];
@@ -70,7 +72,7 @@ struct [[nodiscard]] FreeList
             }
 
             count++;
-            (*(T*)last_element) = item;
+            *reinterpret_cast<T*>(last_element) = item;
             return id;
         }
 

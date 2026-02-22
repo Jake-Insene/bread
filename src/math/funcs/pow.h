@@ -71,7 +71,7 @@ template<typename T>
     {
         // handle integer exponent fast
         i64 yi = i64(y);
-        if ((T)yi == y)
+        if (T(yi) == y)
         {
             return T(__pow_integer<T>(x, yi));
         }

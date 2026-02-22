@@ -14,7 +14,7 @@ struct Viewport;
 #define SCENE_FUNCV(CLASS, BASE, NAME)\
     void(Scene::*get_##NAME()) ()\
     {\
-        return (void(Scene::*)())&CLASS::NAME;\
+        return reinterpret_cast<void(Scene::*)()>(&CLASS::NAME);\
     }\
     void NAME##v()\
     {\
@@ -28,7 +28,7 @@ struct Viewport;
 #define SCENE_RFUNCV(CLASS, BASE, NAME)\
     void(Scene::*get_##NAME()) ()\
     {\
-        return (void(Scene::*)())&CLASS::NAME;\
+        return reinterpret_cast<void(Scene::*)()>(&CLASS::NAME);\
     }\
     void NAME##v()\
     {\
@@ -42,7 +42,7 @@ struct Viewport;
 #define SCENE_FUNCV_ARG1(CLASS, BASE, NAME, ARG0)\
     void(Scene::*get_##NAME()) (ARG0)\
     {\
-        return (void(Scene::*)(ARG0))&CLASS::NAME;\
+        return reinterpret_cast<void(Scene::*)(ARG0)>(&CLASS::NAME);\
     }\
     void NAME##v(ARG0 _0)\
     {\
@@ -86,7 +86,7 @@ struct Viewport;
     }\
     void(Scene::*get_on_create()) (const CreateInfo&)\
     {\
-        return (void(Scene::*)(const CreateInfo&))&CLASS::on_create;\
+        return reinterpret_cast<void(Scene::*)(const CreateInfo&)>(&CLASS::on_create);\
     }\
     void on_createv(const CreateInfo& info)\
     {\
@@ -211,7 +211,7 @@ struct Scene
 #define SCENE_FDEFAULT(NAME)\
     void(Scene::*get_##NAME()) ()\
     {\
-        return (void(Scene::*)())&Scene::NAME;\
+        return reinterpret_cast<void(Scene::*)()>(&Scene::NAME);\
     }\
     void NAME##v()\
     {\
@@ -221,7 +221,7 @@ struct Scene
 #define SCENE_FDEFAULT_ARG1(NAME, ARG0)\
     void(Scene::*get_##NAME()) (ARG0)\
     {\
-        return (void(Scene::*)(ARG0))&Scene::NAME;\
+        return reinterpret_cast<void(Scene::*)(ARG0)>(&Scene::NAME);\
     }\
     void NAME##v(ARG0 _0)\
     {\

@@ -36,37 +36,37 @@ void ResourceManager::shutdown()
         {
         case RESOURCE_IMAGE:
         {
-            Image* image = (Image*)it.second;
+            Image* image = reinterpret_cast<Image*>(it.second);
             image->destroy();
         }
             break;
         case RESOURCE_SOUND:
         {
-            Sound* sound = (Sound*)it.second;
+            Sound* sound = reinterpret_cast<Sound*>(it.second);
             sound->destroy();
         }
             break;
         case RESOURCE_FONT:
             {
-                Font* font = (Font*)it.second;
+                Font* font = reinterpret_cast<Font*>(it.second);
                 font->destroy();
             }
             break;
         case RESOURCE_SPRITE_ANIMATION:
         {
-            SpriteAnimation* sa = (SpriteAnimation*)it.second;
+            SpriteAnimation* sa = reinterpret_cast<SpriteAnimation*>(it.second);
             sa->destroy();
         }
             break;
         case RESOURCE_TILE_SET:
         {
-            TileSet* ts = (TileSet*)it.second;
+            TileSet* ts = reinterpret_cast<TileSet*>(it.second);
             ts->destroy();
         }
         break;
         case RESOURCE_MATERIAL:
         {
-            Material* ma = (Material*)it.second;
+            Material* ma = reinterpret_cast<Material*>(it.second);
             ma->destroy();
         }
             break;
@@ -186,7 +186,7 @@ Result<Resource*, Error> ResourceManager::_load_image(StringView path)
     Image* image = nullptr;
     if (data.resources.has(path))
     {
-        image = (Image*)data.resources.get(path);
+        image = reinterpret_cast<Image*>(data.resources.get(path));
     }
     else
     {
@@ -213,7 +213,7 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
     Image* image = nullptr;
     if(data.resources.has(path))
     {
-        image = (Image*)data.resources.get(path);
+        image = reinterpret_cast<Image*>(data.resources.get(path));
     }
     else
     {
@@ -229,7 +229,7 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
     Texture2D* tex = nullptr;
     if(data.cached_images.has(image))
     {
-        tex = (Texture2D*)data.cached_images.get(image);
+        tex = reinterpret_cast<Texture2D*>(data.cached_images.get(image));
     }
     else
     {
@@ -259,7 +259,7 @@ Result<Resource*, Error> ResourceManager::_load_sound(StringView path)
 {
     if (data.resources.has(path))
     {
-        return (Sound*)data.resources.get(path);
+        return reinterpret_cast<Sound*>(data.resources.get(path));
     }
 
     Sound* new_sound = _create_resource<Sound>();
@@ -277,7 +277,7 @@ Result<Resource*, Error> ResourceManager::_load_font(StringView path)
 {
     if (data.resources.has(path))
     {
-        return (Font*)data.resources.get(path);
+        return reinterpret_cast<Font*>(data.resources.get(path));
     }
 
     Font* new_font = _create_resource<Font>();
@@ -295,7 +295,7 @@ Result<Resource*, Error> ResourceManager::_load_material(StringView path)
 {
     if (data.resources.has(path))
     {
-        return (Material*)data.resources.get(path);
+        return reinterpret_cast<Material*>(data.resources.get(path));
     }
 
     Material* new_material = _create_resource<Material>();

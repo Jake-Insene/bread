@@ -13,7 +13,7 @@ static inline void debug_callback(
     const void*
 )
 {
-    StringView msg{ message, (usize)length };
+    StringView msg = StringView(message, static_cast<usize>(length));
     switch (severity)
     {
     case GL_DEBUG_SEVERITY_LOW:
@@ -479,7 +479,7 @@ Graphics::TextureID GLESDriver::texture_create(const Graphics::TextureCreateInfo
     GLenum internal_format = _texture_get_internal_format(ci.format);
 
     gl.glTexImage2D(
-        GL_TEXTURE_2D, 0, (GLint)internal_format,
+        GL_TEXTURE_2D, 0, internal_format,
         ci.size.width, ci.size.height, 0, 
         format, GL_UNSIGNED_BYTE, ci.pixels.ptr()
     );
@@ -533,7 +533,7 @@ Graphics::RenderTargetID GLESDriver::render_target_create(const Graphics::Render
 
         gl.glBindTexture(GL_TEXTURE_2D, texture.glid);
         gl.glTexImage2D(
-            GL_TEXTURE_2D, 0, (GLint)gl_internal_format,
+            GL_TEXTURE_2D, 0, gl_internal_format,
             ci.size.width, ci.size.height, 0,
             gl_format, GL_UNSIGNED_BYTE, nullptr
         );
@@ -682,7 +682,7 @@ Graphics::ProgramID GLESDriver::program_create(const Graphics::ProgramCreateInfo
         {
             i32 len = 0;
             gl.glGetShaderInfoLog(sh, 512, &len, log);
-            StringView log_view{ log, (usize)len };
+            StringView log_view = StringView(log, static_cast<usize>(len));
             GLESFatal(
                 "Error compiling the {} shader: '{}':\n{}", 
                 _program_get_shader_name(shader.stage),
@@ -706,7 +706,7 @@ Graphics::ProgramID GLESDriver::program_create(const Graphics::ProgramCreateInfo
     {
         i32 len = 0;
         gl.glGetProgramInfoLog(program.glid, 512, &len, log);
-        StringView log_view{ log, (usize)len };
+        StringView log_view = StringView(log, static_cast<usize>(len));
 
         GLESFatal(
             "Error linking the shader program: '{}':\n{}", 
@@ -1139,7 +1139,7 @@ void GLESDriver::_init_context()
     GLint opengl_info[] = { GL_VENDOR, GL_RENDERER, GL_VERSION };
     for (GLint name : opengl_info)
     {
-        const char* str = (const char*)gl.glGetString(name);
+        const char* str = reinterpret_cast<const char*>(gl.glGetString(name));
         StringView info = StringView(str, __string_len(str));
         GLESDebugInfo("OpenGL Info: {}", info);
     }
@@ -1149,7 +1149,7 @@ void GLESDriver::_init_context()
     GLESDebugInfo("OpenGL Extensions: {}", num_extensions);
     for (GLint i = 0; i < num_extensions; i++)
     {
-        const char* str = (const char*)gl.glGetStringi(GL_EXTENSIONS, i);
+        const char* str = reinterpret_cast<const char*>(gl.glGetStringi(GL_EXTENSIONS, i));
         StringView extension = StringView(str, __string_len(str));
         GLESDebugInfo("{}", extension);
     }

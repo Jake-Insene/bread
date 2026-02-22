@@ -66,6 +66,7 @@ else()
     set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS}
         "-fno-rtti" "-fno-exceptions" "-Wall" "-Wextra" "-ffast-math" "-Werror" "-Wpedantic"
         "-Wno-language-extension-token" "-Wno-gnu-anonymous-struct" "-Wno-error=gnu-anonymous-struct"
+        "-Wold-style-cast"
         "-Wuninitialized" "-Wconditional-uninitialized" "-flto"
         "-fuse-ld=lld-link"
     )

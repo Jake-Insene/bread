@@ -144,7 +144,7 @@ union [[nodiscard]] Vector3T
 
     constexpr void normalize()
     {
-        const T len = (T)math::sqrt(x * x + y * y + z * z);
+        const T len = T(math::sqrt(x * x + y * y + z * z));
         if(len)
         {
             x /= len;

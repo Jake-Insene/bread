@@ -33,7 +33,7 @@ File File::get_stderr()
 	HANDLE handle = GetStdHandle(STD_ERROR_HANDLE);
 	return File
 	{
-		.handle = (usize)handle,
+		.handle = reinterpret_cast<usize>(handle),
 	};
 }
 
@@ -42,7 +42,7 @@ File File::get_stdout()
 	HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
 	return File
 	{
-		.handle = (usize)handle,
+		.handle = reinterpret_cast<usize>(handle),
 	};
 }
 
@@ -51,7 +51,7 @@ File File::get_stdin()
 	HANDLE handle = GetStdHandle(STD_INPUT_HANDLE);
 	return File
 	{
-		.handle = (usize)handle,
+		.handle = reinterpret_cast<usize>(handle),
 	};
 }
 
@@ -87,7 +87,7 @@ File File::open(StringView path, OpenMode mode)
 
 	return File
 	{
-		.handle = (usize)file,
+		.handle = reinterpret_cast<usize>(file),
 	};
 }
 
@@ -108,28 +108,28 @@ void File::destroy()
 	if (handle == 0) 
 		return;
 
-	CloseHandle(HANDLE(handle));
+	CloseHandle(reinterpret_cast<HANDLE>(handle));
 }
 
 void File::write(const Slice<const u8> bytes)
 {
 	DebugAssert(handle != 0, "invalid file handler");
-	(void)WriteFile(HANDLE(handle), bytes.ptr(), (DWORD)bytes.len, 0, 0);
+	(void)WriteFile(reinterpret_cast<HANDLE>(handle), bytes.ptr(), static_cast<DWORD>(bytes.len), 0, 0);
 }
 
 void File::put(u8 value)
 {
-	WriteFile((HANDLE)handle, &value, 1, 0, 0);
+	WriteFile(reinterpret_cast<HANDLE>(handle), &value, 1, 0, 0);
 }
 
 void File::read(Slice<u8> bytes)
 {
 	DebugAssert(handle != 0, "invalid file handler");
-	(void)ReadFile(HANDLE(handle), bytes.ptr(), (DWORD)bytes.len, 0, 0);
+	(void)ReadFile(reinterpret_cast<HANDLE>(handle), bytes.ptr(), static_cast<DWORD>(bytes.len), 0, 0);
 }
 
 void File::flush()
 {
 	DebugAssert(handle != 0, "invalid file handler");
-	(void)FlushFileBuffers(HANDLE(handle));
+	(void)FlushFileBuffers(reinterpret_cast<HANDLE>(handle));
 }

@@ -85,7 +85,9 @@ void XAudio2Driver::destroy_source_voice(Audio::SourceVoiceID sv_id)
 {
 	SourceVoice& sv = _get_source_voice(sv_id);
 	sv.sv_xaudio->DestroyVoice();
-	get_allocator().free(Slice((u8*)sv.callback, 1));
+	get_allocator().free(
+		Slice(reinterpret_cast<u8*>(sv.callback), 1)
+	);
 	get_allocator().free(sv.buffer);
 
 	data.source_voices.remove(sv_id);
@@ -113,7 +115,7 @@ void XAudio2Driver::source_voice_play(Audio::SourceVoiceID sv_id)
 
 	XAUDIO2_BUFFER buffer = {};
 	buffer.Flags = XAUDIO2_END_OF_STREAM;
-	buffer.AudioBytes = (UINT32)sv.buffer.len;
+	buffer.AudioBytes = static_cast<UINT32>(sv.buffer.len);
 	buffer.pAudioData = sv.buffer.ptr();
 
 	sv.sv_xaudio->SubmitSourceBuffer(&buffer);
@@ -135,7 +137,7 @@ void XAudio2Driver::source_voice_keep_playing(Audio::SourceVoiceID sv_id)
 	{
 		XAUDIO2_BUFFER buffer = {};
 		buffer.Flags = XAUDIO2_END_OF_STREAM;
-		buffer.AudioBytes = (UINT32)sv.buffer.len;
+		buffer.AudioBytes = static_cast<UINT32>(sv.buffer.len);
 		buffer.pAudioData = sv.buffer.ptr();
 
 		sv.sv_xaudio->SubmitSourceBuffer(&buffer);

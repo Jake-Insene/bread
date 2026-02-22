@@ -40,10 +40,14 @@ void Win32OS::initialize(const mem::Allocator& allocator)
 {
     // For get_time()
     LARGE_INTEGER platform_time;
-    QueryPerformanceFrequency((LARGE_INTEGER*)&data.frequency);
+    QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&data.frequency));
     QueryPerformanceCounter(&platform_time);
 
     data.program_start = f64(platform_time.QuadPart) / f64(data.frequency);
+
+    SYSTEM_INFO info;
+    GetSystemInfo(&info);
+    data.page_size = static_cast<usize>(info.dwPageSize);
 
     data.threads = FreeList<ThreadData,OS::ThreadID>::with_size(allocator, InitialThreadCount);
     data.mutexes = FreeList<MutexData, OS::MutexID>::with_size(allocator, InitialMutexCount);
@@ -74,14 +78,12 @@ f64 Win32OS::get_time()
 
 void Win32OS::exit(u64 code)
 {
-    ExitProcess((UINT)code);
+    ExitProcess(static_cast<UINT>(code));
 }
 
 usize Win32OS::get_page_size()
 {
-    SYSTEM_INFO info;
-    GetSystemInfo(&info);
-    return (usize)info.dwPageSize;
+    return data.page_size;
 }
 
 Slice<u8> Win32OS::map_memory(usize memory_size, OS::MapAccess access)
@@ -156,7 +158,7 @@ void Win32OS::thread_destroy(OS::ThreadID tid)
     FailOn(thread_join(tid) == false, "couldn't join the thread {}", tid.id);
 
     ThreadData& thread_data = _thread_data_get(tid);
-    CloseHandle((HANDLE)thread_data.handle);
+    CloseHandle(thread_data.handle);
  
     data.threads.remove(tid);
 }

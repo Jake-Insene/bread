@@ -32,9 +32,9 @@ Error Image::load(StringView file_path)
     Slice<u8> buffer = File::read_all(ResourceManager::get_allocator(), file_path);
     
     i32 channels = 0;
-    pixels.items = (u8*)stbi_load_from_memory(
-        buffer.ptr(), (int)buffer.len, &size.width, &size.height, &channels, 0
-    );
+    pixels.items = reinterpret_cast<u8*>(stbi_load_from_memory(
+        buffer.ptr(), static_cast<int>(buffer.len), &size.width, &size.height, &channels, 0
+    ));
 
     if(pixels.null())
     {

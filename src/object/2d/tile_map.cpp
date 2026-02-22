@@ -95,7 +95,7 @@ void TileMap::set_tile_set(TileSet* new_tile_set)
 		tile_shape.destroy();
 	}
 
-	Log::debug("TileMap({}): Creating {} shapes", (void*)usize(this), shape_count);
+	Log::debug("TileMap({}): Creating {} shapes", reinterpret_cast<void*>(usize(this)), shape_count);
 }
 
 

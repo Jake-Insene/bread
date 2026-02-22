@@ -119,8 +119,10 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
 
                 if(allocated_mem->len >= aligned_size)
                 {
-                    u8* aligned_base = (u8*)mem::align_up(usize(allocated_mem) + sizeof(Header), alignment);
-                    isize offset = aligned_base - ((u8*)allocated_mem + sizeof(Header));
+                    u8* aligned_base = reinterpret_cast<u8*>(
+                        mem::align_up(usize(allocated_mem) + sizeof(Header), alignment)
+                    );
+                    isize offset = aligned_base - (reinterpret_cast<u8*>(allocated_mem) + sizeof(Header));
 
                     if (offset > 0)
                     {
@@ -157,7 +159,7 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
                     
                     if (remain >= MinimumValidRemain)
                     {
-                        u8* remain_base = (u8*)(usize(aligned_base) + aligned_size);
+                        u8* remain_base = reinterpret_cast<u8*>(usize(aligned_base) + aligned_size);
 
                         Header* remain_header = reinterpret_cast<Header*>(remain_base);
 
@@ -214,7 +216,7 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
         if(unused_size >= MinimumValidRemain)
         {
             // Creating new header
-            Header* fill_header = (Header*)(aligned_mem + aligned_size);
+            Header* fill_header = reinterpret_cast<Header*>(aligned_mem + aligned_size);
             fill_header->len = unused_size - sizeof(Header);
             fill_header->page_index = allocation_header->page_index;
             fill_header->tags = 0;
@@ -285,16 +287,16 @@ void GenericAllocator::free(Slice<u8> ptr)
     
 static inline Allocator::VTable ga_vtable = 
 {
-    .alloc = (decltype(Allocator::VTable::alloc))&GenericAllocator::alloc,
-    .realloc = (decltype(Allocator::VTable::realloc))&GenericAllocator::realloc,
-    .free = (decltype(Allocator::VTable::free))&GenericAllocator::free,
+    .alloc = reinterpret_cast<decltype(Allocator::VTable::alloc)>(&GenericAllocator::alloc),
+    .realloc = reinterpret_cast<decltype(Allocator::VTable::realloc)>(&GenericAllocator::realloc),
+    .free = reinterpret_cast<decltype(Allocator::VTable::free)>(&GenericAllocator::free),
 };
 Allocator GenericAllocator::allocator()
 {
     return Allocator
     {
         .vtable = &ga_vtable,
-        .self = (Allocator*)this,
+        .self = reinterpret_cast<Allocator*>(this),
     };
 }
     

@@ -28,7 +28,9 @@ struct [[nodiscard]] JobQueue
 	template<typename Fn>
 	void add_job(Fn fn)
 	{
-		Fn* fn_mem = (Fn*)allocator.alloc(sizeof(Fn), alignof(usize)).ptr();
+		Fn* fn_mem = reinterpret_cast<Fn*>(
+			allocator.alloc(sizeof(Fn), alignof(usize)).ptr()
+		);
 		allocator.construct<Fn>(fn_mem, fn);
 
 		JobInfo job =

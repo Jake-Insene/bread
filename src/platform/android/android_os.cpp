@@ -48,12 +48,12 @@ Slice<u8> AndroidOS::map_memory(usize memory_size, OS::MapAccess access)
         break;
     case OS::MapReadWrtie:
     {
-        ptr.items = (u8*)mmap(
+        ptr.items = reinterpret_cast<char*>(mmap(
             0, aligned_size,
             PROT_READ | PROT_WRITE,
             MAP_ANONYMOUS | MAP_PRIVATE,
             -1, 0
-        );
+        ));
         ptr.len = aligned_size;
     }
     break;

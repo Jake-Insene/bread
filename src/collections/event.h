@@ -49,7 +49,7 @@ struct [[nodiscard]] Event
 	constexpr void bind(T func)
 		requires(!IsMemberFunction<Fn>)
 	{
-		storage.func = (Fn)func;
+		storage.func = static_cast<Fn>(func);
 	}
 
 	template<typename T>
@@ -63,8 +63,8 @@ struct [[nodiscard]] Event
 	constexpr void bind(T* instance, Fn2 func)
 		requires(IsMemberFunction<Fn> && UseInstance)
 	{
-		storage.instance = (decltype(storage.instance))instance;
-		storage.func = (Fn)func;
+		storage.instance = reinterpret_cast<decltype(storage.instance)>(instance);
+		storage.func = reinterpret_cast<Fn>(func);
 	}
 
 	template<typename... TArgs>

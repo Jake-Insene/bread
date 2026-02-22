@@ -49,6 +49,7 @@ struct Win32OS
 
         i64 frequency;
         f64 program_start;
+        usize page_size;
 
         FreeList<ThreadData, OS::ThreadID> threads;
         FreeList<MutexData, OS::MutexID> mutexes;

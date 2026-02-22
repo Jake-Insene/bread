@@ -61,7 +61,7 @@ void Win32EGL::initialize(const mem::Allocator&)
 	HGLRC tmp_ctx = wglCreateContext(data.device_context);
 	wglMakeCurrent(data.device_context, tmp_ctx);
 
-	wgl.wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
+	wgl.wglCreateContextAttribsARB = reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>(wglGetProcAddress("wglCreateContextAttribsARB"));
 
 	int attribs[] =
 	{
@@ -84,7 +84,7 @@ void Win32EGL::initialize(const mem::Allocator&)
 
 	data.context = real_context;
 	
-	wgl.wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
+	wgl.wglSwapIntervalEXT = reinterpret_cast<PFNWGLSWAPINTERVALEXTPROC>(wglGetProcAddress("wglSwapIntervalEXT"));
 }
 
 void Win32EGL::shutdown()

@@ -11,7 +11,7 @@ static void* _dr_alloc(size_t size, void*)
 
 static void* _dr_realloc(void* mem, size_t new_size, void*)
 {
-    Slice<u8> old_mem = Slice((u8*)mem, 1);
+    Slice<u8> old_mem = Slice(reinterpret_cast<u8*>(mem), 1);
     if (ResourceManager::get_allocator().realloc(old_mem, new_size, 16))
     {
         return mem;
@@ -28,7 +28,9 @@ static void* _dr_realloc(void* mem, size_t new_size, void*)
 
 static inline void _dr_free(void* mem, void*)
 {
-    ResourceManager::get_allocator().free(Slice((u8*)mem, 1));
+    ResourceManager::get_allocator().free(
+        Slice(reinterpret_cast<u8*>(mem), 1)
+    );
 }
 
 static inline drwav_allocation_callbacks alloc_callbacks =
@@ -67,7 +69,7 @@ Error Sound::load(StringView file_path)
     drwav wav = {};
     drwav_init_memory(&wav, content.ptr(), content.len, &alloc_callbacks);
 
-    const size_t total_samples = (size_t)wav.totalPCMFrameCount * wav.channels;
+    const size_t total_samples = static_cast<size_t>(wav.totalPCMFrameCount * wav.channels);
     const usize bytes_per_sample = wav.bitsPerSample / 8;
     auto buffer = allocator.array<u8>(total_samples * bytes_per_sample);
 

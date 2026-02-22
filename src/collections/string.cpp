@@ -115,19 +115,19 @@ void String::_set_str_view(StringView str)
 void String::_set_from_signed(i64 integer)
 {
     StringResult result = StringUtility::integer_to_string(integer, 10);
-    set(StringView((char*)(result.result + result.begin), result.len));
+    set(StringView(reinterpret_cast<char*>(result.result + result.begin), result.len));
 }
 
 void String::_set_from_unsigned(u64 integer)
 {
     StringResult result = StringUtility::integer_to_string(integer, 10);
-    set(StringView((char*)(result.result + result.begin), result.len));
+    set(StringView(reinterpret_cast<char*>(result.result + result.begin), result.len));
 }
 
 void String::_set_from_float(f64 fp)
 {
     StringResult result = StringUtility::fp_to_string(fp, 2);
-    set(StringView((char*)(result.result + result.begin), result.len));
+    set(StringView(reinterpret_cast<char*>(result.result + result.begin), result.len));
 }
 
 void String::_add_str_view(StringView str)
@@ -143,18 +143,18 @@ void String::_add_str_view(StringView str)
 void String::_add_from_signed(i64 integer)
 {
     StringResult result = StringUtility::integer_to_string(integer, 10);
-    add(StringView((char*)(result.result + result.begin), result.len));
+    add(StringView(reinterpret_cast<char*>(result.result + result.begin), result.len));
 }
 
 void String::_add_from_unsigned(u64 integer)
 {
     StringResult result = StringUtility::integer_to_string(integer, 10);
-    add(StringView((char*)(result.result + result.begin), result.len));
+    add(StringView(reinterpret_cast<char*>(result.result + result.begin), result.len));
 }
 
 void String::_add_from_float(f64 fp)
 {
     StringResult result = StringUtility::fp_to_string(fp, 2);
-    add(StringView((char*)(result.result + result.begin), result.len));
+    add(StringView(reinterpret_cast<char*>(result.result + result.begin), result.len));
 }
 

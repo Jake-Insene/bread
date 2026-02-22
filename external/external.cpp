@@ -28,24 +28,34 @@ static void _free(void* ptr)
 {
     if(ptr)
     {
-        ResourceManager::get_allocator().free(Slice<u8>((u8*)ptr, 1));
+        ResourceManager::get_allocator().free(
+            Slice<u8>(reinterpret_cast<u8*>(ptr), 1)
+        );
     }
 }
 
-static void* __bread_memcpy(void* dest, void* src, size_t len)
+static void* __bread_memcpy(void* dest, const void* src, size_t len)
 {
-    auto dest_items = Slice((u8*)dest, len);
-    auto src_items = Slice((u8*)src, len);
+    Slice<u8> dest_items = Slice(reinterpret_cast<u8*>(dest), len);
+    Slice<const u8> src_items = Slice(reinterpret_cast<const u8*>(src), len);
     mem::copy(dest_items, src_items);
     return dest;
 }
 
 static void* __bread_memset(void* dest, int value, size_t len)
 {
-    auto dest_items = Slice((u8*)dest, len);
+    auto dest_items = Slice(reinterpret_cast<u8*>(dest), len);
     mem::set(dest_items, u8(value));
     return dest;
 }
+
+
+/*
+* Here start external inclusion
+* The external libraries are C compatible so they need c casting style.
+*/
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast"
 
 static u32 _lrotl(u32 x, int y)
 {
@@ -100,9 +110,11 @@ static u32 _lrotl(u32 x, int y)
 #define DRWAV_MALLOC(size) _alloc(size)
 #define DRWAV_REALLOC(ptr, size) _realloc(ptr, 0, size)
 #define DRWAV_FREE(ptr) _free(ptr)
-#define DRWAV_COPY_MEMORY(dest, src, len) __bread_memcpy((void*)(dest), (void*)(src), len)
-#define DRWAV_ZERO_MEMORY(dest, len) __bread_memset((void*)(dest), 0, len)
+#define DRWAV_COPY_MEMORY(dest, src, len) __bread_memcpy(reinterpret_cast<void*>(dest), reinterpret_cast<const void*>(src), len)
+#define DRWAV_ZERO_MEMORY(dest, len) __bread_memset(reinterpret_cast<void*>(dest), 0, len)
 
 #define DR_WAV_NO_STDIO
 #define DR_WAV_IMPLEMENTATION
 #include "dr_wav.h"
+
+#pragma clang diagnostic pop

@@ -29,7 +29,7 @@ bool PageAllocator::realloc(Slice<u8> ptr, usize new_size, usize)
 
     if (aligned_new_size < aligned_ptr_size)
     {
-        u8* ptr_out = ((u8*)ptr.items) + aligned_new_size;
+        u8* ptr_out = reinterpret_cast<u8*>(ptr.items) + aligned_new_size;
         Slice<u8> memory_to_free = Slice<u8>(ptr_out, aligned_ptr_size - aligned_new_size);
         OS::unmap_memory(memory_to_free);
         return true;
@@ -46,16 +46,16 @@ void PageAllocator::free(Slice<u8> ptr)
 
 static inline Allocator::VTable page_vtable =
 {
-    .alloc = (decltype(Allocator::VTable::alloc))&PageAllocator::alloc,
-    .realloc = (decltype(Allocator::VTable::realloc))&PageAllocator::realloc,
-    .free = (decltype(Allocator::VTable::free))&PageAllocator::free,
+    .alloc = reinterpret_cast<decltype(Allocator::VTable::alloc)>(&PageAllocator::alloc),
+    .realloc = reinterpret_cast<decltype(Allocator::VTable::realloc)>(&PageAllocator::realloc),
+    .free = reinterpret_cast<decltype(Allocator::VTable::free)>(&PageAllocator::free),
 };
 Allocator PageAllocator::allocator()
 {
     return Allocator
     {
         .vtable = &page_vtable,
-        .self = (Allocator*)this,
+        .self = reinterpret_cast<Allocator*>(this),
     };
 }
 }

@@ -137,7 +137,7 @@ union [[nodiscard]] Vector4T
 
     constexpr void normalize()
     {
-        const T len = (T)sqrt(x * x + y * y + z * z + w * w);
+        const T len = T(math::sqrt(x * x + y * y + z * z + w * w));
         if(len)
         {
             x /= len;

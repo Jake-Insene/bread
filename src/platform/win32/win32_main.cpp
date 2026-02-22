@@ -19,11 +19,15 @@ extern "C"
 	{
 		if(c == 0)
 		{
-			PlatformIntricics::setzero(Slice<u8>((u8*)dest, count));
+			PlatformIntricics::setzero(Slice<u8>(
+				reinterpret_cast<u8*>(dest), count)
+			);
 		}
 		else
 		{
-			mem::set(Slice<u8>((u8*)dest, count), u8(c));
+			mem::set(
+				Slice<u8>(reinterpret_cast<u8*>(dest), count), u8(c)
+			);
 		}
 		return dest;
 	}
@@ -31,7 +35,10 @@ extern "C"
 	#pragma function(memcpy)
 	void* __cdecl memcpy(void* dest, const void* src, size_t count)
 	{
-		mem::copy(Slice<u8>((u8*)dest, count), Slice<u8>((u8*)src, count));
+		mem::copy(
+			Slice<u8>(reinterpret_cast<u8*>(dest), count),
+			Slice<const u8>(reinterpret_cast<const u8*>(src), count)
+		);
 		return dest;
 	}
 
@@ -84,7 +91,9 @@ LONG _exception_handler(EXCEPTION_POINTERS* ep)
 		DWORD line = 0;
 
 		DWORD64 module_base = SymGetModuleBase64(process, frame.AddrPC.Offset);
-		DWORD module_name_len = GetModuleFileNameA((HINSTANCE)module_base, module_name_buff, MAX_PATH);
+		DWORD module_name_len = GetModuleFileNameA(
+			reinterpret_cast<HINSTANCE>(module_base), module_name_buff, MAX_PATH
+		);
 		module_name = StringView(module_name_buff, module_name_len);
 
 		usize index = module_name_len - 1;
@@ -96,7 +105,7 @@ LONG _exception_handler(EXCEPTION_POINTERS* ep)
 		module_name = StringView(module_name_buff + index + 1, module_name_len - index - 1);
 
 		char symbol_buffer[sizeof(IMAGEHLP_SYMBOL64) + 255];
-		PIMAGEHLP_SYMBOL64 symbol = (PIMAGEHLP_SYMBOL64)symbol_buffer;
+		PIMAGEHLP_SYMBOL64 symbol = reinterpret_cast<PIMAGEHLP_SYMBOL64>(symbol_buffer);
 		symbol->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL64) + 255;
 		symbol->MaxNameLength = 254;
 
