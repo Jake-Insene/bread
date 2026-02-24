@@ -54,8 +54,14 @@ static void* __bread_memset(void* dest, int value, size_t len)
 * Here start external inclusion
 * The external libraries are C compatible so they need c casting style.
 */
+
+#if defined(BREAD_MSVC)
+#pragma warning(push)
+#pragma warning(disable : 4245)
+#elif defined(BREAD_CLANG)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wold-style-cast"
+#endif
 
 static u32 _lrotl(u32 x, int y)
 {
@@ -117,4 +123,8 @@ static u32 _lrotl(u32 x, int y)
 #define DR_WAV_IMPLEMENTATION
 #include "dr_wav.h"
 
+#if defined(BREAD_MSVC)
+#pragma warning(pop)
+#elif defined(BREAD_CLANG)
 #pragma clang diagnostic pop
+#endif

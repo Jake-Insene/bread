@@ -6,7 +6,7 @@
 
 
 /*
-* Contains a collection of T elements,
+* Contains a linear collection of T elements.
 * T The type of the elements in the slice.
 */
 template<typename T>
@@ -72,4 +72,3 @@ struct [[nodiscard]] Slice
         return Slice<T>(items, count);
     }
 };
-

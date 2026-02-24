@@ -56,6 +56,7 @@ if(MSVC)
     set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS} 
         "/W4" "/Oi" "/Zl" "/GS-" "/GR-" "/EHs-" "/EHc-" "/Zc:threadSafeInit-" "/Zc:preprocessor"
         "/wd4201" "/we4244" "/we4701" "/we4700" "/we4101" "/we4703" "/we4189" "/we4834" "/we4100"
+        "/we26493"
     )
 
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_MSVC")

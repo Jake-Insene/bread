@@ -99,7 +99,7 @@ void CanvasElement::draw(RenderItemID render_item)
 			render_item,
             text_transform, font_theme.font_atlas, 
 			Rect2D(Vector2(), Vector2(glyph.src_rect.size)), glyph.src_rect,
-			Color(255, 255, 255, 255),
+			element_color,
 			RenderManager::RENDER_FLAG_FONT_CHAR
 		);
 
