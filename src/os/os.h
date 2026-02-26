@@ -1,6 +1,6 @@
 #pragma once
-#include "collections/string.h"
 #include "core/header.h"
+#include "collections/string.h"
 
 
 struct OS
@@ -14,10 +14,10 @@ struct OS
 
     using ThreadID = ID<u32, struct __ThreadTag>;
     using ThreadFn = void(*)(Opaque*);
-
     using MutexID = ID<u32, struct __MutexTag>;
-
     using SemaphoreID = ID<u32, struct __SemaphoreTag>;
+
+    using VoidFunction = void(*)();
 
     static void initialize(const mem::Allocator& allocator);
     static void shutdown();
@@ -26,6 +26,10 @@ struct OS
 
     static void exit(u64 code);
     static usize get_page_size();
+
+    static MemoryAddress load_library(StringView lib_path);
+    static void unload_library(MemoryAddress library);
+    static VoidFunction get_proc_address(MemoryAddress library, StringView symbol_name);
 
     static Slice<u8> map_memory(usize memory_size, MapAccess access);
     static void unmap_memory(Slice<u8> memory);

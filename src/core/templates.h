@@ -380,6 +380,13 @@ constexpr auto&& GetArgument(T&& first, TArgs&&... args)
     }
 }
 
+template<typename T, usize N>
+constexpr auto ArraySize(T(&array)[N])
+{
+    Unused(array);
+    return N;
+}
+
 template<typename Fn, typename T, typename... TArgs>
 constexpr auto InvokeMember(Fn&& fn, T* instance, TArgs&&... args)
 {

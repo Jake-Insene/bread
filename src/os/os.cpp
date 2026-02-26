@@ -37,6 +37,21 @@ usize OS::get_page_size()
 	return PlatformOS::get_page_size();
 }
 
+MemoryAddress OS::load_library(StringView lib_path)
+{
+	return PlatformOS::load_library(lib_path);
+}
+
+void OS::unload_library(MemoryAddress library)
+{
+	PlatformOS::unload_library(library);
+}
+
+OS::VoidFunction OS::get_proc_address(MemoryAddress library, StringView symbol_name)
+{
+	return PlatformOS::get_proc_address(library, symbol_name);
+}
+
 Slice<u8> OS::map_memory(usize memory_size, MapAccess access)
 {
 	return PlatformOS::map_memory(memory_size, access);

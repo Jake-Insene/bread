@@ -86,6 +86,23 @@ usize Win32OS::get_page_size()
     return data.page_size;
 }
 
+MemoryAddress Win32OS::load_library(StringView lib_path)
+{
+    return reinterpret_cast<MemoryAddress>(LoadLibraryA(lib_path.ptr()));
+}
+
+void Win32OS::unload_library(MemoryAddress library)
+{
+    FreeLibrary(reinterpret_cast<HMODULE>(library));
+}
+
+OS::VoidFunction Win32OS::get_proc_address(MemoryAddress library, StringView symbol_name)
+{
+    return reinterpret_cast<OS::VoidFunction>(
+        GetProcAddress(reinterpret_cast<HMODULE>(library), symbol_name.ptr())
+    );
+}
+
 Slice<u8> Win32OS::map_memory(usize memory_size, OS::MapAccess access)
 {
     const usize aligned_size = mem::align_up(memory_size, get_page_size());

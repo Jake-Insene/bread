@@ -2,7 +2,6 @@
 #include "core/doc.h"
 #include "core/types.h"
 
-using MemoryAddress = usize;
 
 
 /*

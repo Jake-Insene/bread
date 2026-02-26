@@ -31,7 +31,7 @@ set(BREAD_COMPILE_OPTIONS "")
 set(BREAD_LINK_OPTIONS "")
 set(BREAD_EXE_LINK_OPTIONS "")
 set(BREAD_EXE_BUILD_OPTIONS "")
-set(BREAD_DEBUG_DEFINITIONS "-DDEBUG -DSHOW_DEBUG_INFO -DENABLE_DEBUG_OPTIONS")
+set(BREAD_DEBUG_DEFINITIONS "-DDEBUG -DBREAD_SHOW_DEBUG_INFO -DBREAD_ENABLE_DEBUG_OPTIONS")
 
 # Detecting target arch
 if(DEFINED BREAD_ANDROID)
@@ -67,7 +67,6 @@ else()
     set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS}
         "-fno-rtti" "-fno-exceptions" "-Wall" "-Wextra" "-ffast-math" "-Werror" "-Wpedantic"
         "-Wno-language-extension-token" "-Wno-gnu-anonymous-struct" "-Wno-error=gnu-anonymous-struct"
-        "-Wold-style-cast"
         "-Wuninitialized" "-Wconditional-uninitialized" "-flto"
         "-fuse-ld=lld-link"
     )

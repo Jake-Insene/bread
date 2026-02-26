@@ -1,14 +1,14 @@
 #include "graphics/graphics.h"
 
 #include "graphics/adapter.h"
-#include "graphics/gles/gles_driver.h"
+#include "graphics/vk/vk_driver.h"
 
 
 static inline Adapter current_adapter;
 
 void Graphics::initialize(const mem::Allocator& allocator)
 {
-	current_adapter = GLESDriver::get_adapter();
+	current_adapter = VulkanDriver::get_adapter();
 
 	current_adapter.initialize(allocator);
 }

@@ -72,9 +72,10 @@ struct EngineConfiguration
 {
     Vector2I viewport_size = Vector2I(Display::DefaultWidth, Display::DefaultHeight);
     Scene* (*create_main_scene)(const mem::Allocator&);
-    bool vsync = true;
+    bool vsync;
     bool keep_viewport;
-    bool enable_debug_console = false;
+    bool enable_debug_console;
+    bool enable_custom_rendering;
 };
 
 extern EngineConfiguration __configuration__;

@@ -136,19 +136,9 @@ void SceneManager::step()
         SceneCallRef(data.current_scene, on_render, data.delta_time);
     }
 
+    if(!Engine::get_configuration().enable_custom_rendering)
     {
-        PROFILE_SCOPE(
-            data.debug_time.render_scene_time = duration;
-        );
-
-        RenderManager::render_scene(&get_main_viewport());
-    }
-
-    {
-        PROFILE_SCOPE(
-            data.debug_time.present_scene_time = duration;
-        );
-        RenderManager::present_scene();
+        _render_manager_tick();
     }
 
     data.fps_acum++;
@@ -216,8 +206,24 @@ void SceneManager::scene_handle_input(const InputEvent& event)
         SceneCallRef(data.current_scene, on_event, event);
         break;
     }
+}
 
-    
+void SceneManager::_render_manager_tick()
+{
+    {
+        PROFILE_SCOPE(
+            data.debug_time.render_scene_time = duration;
+        );
+
+        RenderManager::render_scene(&get_main_viewport());
+    }
+
+    {
+        PROFILE_SCOPE(
+            data.debug_time.present_scene_time = duration;
+        );
+        RenderManager::present_scene();
+    }
 }
 
 void SceneManager::_handle_change_scene()

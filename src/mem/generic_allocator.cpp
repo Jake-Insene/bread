@@ -255,7 +255,7 @@ bool GenericAllocator::realloc(Slice<u8> ptr, usize new_size, usize alignment)
         
 void GenericAllocator::free(Slice<u8> ptr)
 {
-    DebugAssert(ptr.ptr() != nullptr, "invalid pointer");
+    DebugAssert(ptr.ptr() != nullptr, "can't delete a null pointer");
     
     Header* header = get_header(ptr);
     DebugAssert(header->tags & Allocated, "the given block is already free.");

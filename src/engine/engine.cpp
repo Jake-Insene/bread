@@ -3,7 +3,6 @@
 #include "audio/audio.h"
 #include "display/display.h"
 #include "graphics/graphics.h"
-#include "graphics/egl/egl.h"
 #include "log/log.h"
 #include "scene/scene_manager.h"
 #include "os/os.h"
@@ -88,7 +87,6 @@ void Engine::shutdown()
 
 void Engine::destroy()
 {
-    EGL::destroy_window_surface();
 }
 
 void Engine::step()
@@ -106,7 +104,6 @@ void Engine::request_recreate_window()
 {
     data.main_queue.add_job([]() 
         {
-            EGL::recreate_window_surface();
             SceneManager::recreate_window();
         }
     );
@@ -118,6 +115,6 @@ void Engine::set_vsync(bool vsync)
         return;
 
     data.vsync_cache = vsync;
-    EGL::set_vsync(vsync);
+    // TODO: Set VSync
 }
 

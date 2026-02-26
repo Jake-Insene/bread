@@ -11,6 +11,8 @@ namespace mem
 {
     struct Allocator
     {
+        static constexpr usize DefaultAlignment = sizeof(MemoryAddress) * 2;
+
         struct VTable
         {
             Slice<u8>(Allocator::*alloc)(usize, usize);

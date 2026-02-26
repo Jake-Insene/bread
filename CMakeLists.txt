@@ -35,7 +35,6 @@ file(GLOB ENGINE_SRC
     
     src/engine/engine.cpp
 
-    src/graphics/egl/egl.cpp
     src/graphics/graphics.cpp
 
     src/gui/canvas_element.cpp
@@ -108,8 +107,9 @@ file(GLOB ENGINE_SRC
     src/scene/scene.cpp
 )
 
-file(GLOB GLES_ADAPTER_SRC
-    src/graphics/gles/gles_driver.cpp
+file(GLOB VULKAN_ADAPTER_SRC
+    src/graphics/vk/vk_driver.cpp
+    src/graphics/vk/vk_header.cpp
 )
 
 set(PLATFORM_LIBRARIES "")
@@ -146,14 +146,14 @@ set(SOURCE_FILES
     ${EXTERNAL_SRC}
     ${ENGINE_SRC}
     ${PLATFORM_SRC}
-    ${GLES_ADAPTER_SRC}
+    ${VULKAN_ADAPTER_SRC}
 )
 
 add_library(
     "bread"
     STATIC
     ${SOURCE_FILES}
-)
+ "src/graphics/vk/vk_header.h")
 
 target_compile_definitions("bread" PUBLIC ${BREAD_BUILD_DEFINITIONS})
 target_compile_options("bread" PUBLIC ${BREAD_COMPILE_OPTIONS})
@@ -166,6 +166,7 @@ target_include_directories(
     "."
     "external/freetype/include"
     ${ANDROID_NDK}/sources/android/native_app_glue
+    $ENV{VULKAN_SDK}/Include
 )
 
 target_link_libraries(

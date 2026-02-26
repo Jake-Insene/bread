@@ -77,6 +77,8 @@ struct SceneManager
 
     static void scene_handle_input(const InputEvent& event);
     
+    static void _render_manager_tick();
+
     static void _handle_change_scene();
 
     static Vector2 _screen_make_local_to_canvas(const Vector2& pos);
