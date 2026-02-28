@@ -10,32 +10,35 @@ struct Vulkan
     static constexpr StringView VkApplicationName = "Game";
     static constexpr StringView VkEngineName = "Bread";
 
-    static inline VkAllocationCallbacks* allocation_callbacks()
+    static constexpr const char* VkCoreDeviceExtensions[] =
     {
-        static VkAllocationCallbacks _vk_allocation_callbacks =
-        {
-            .pUserData = nullptr,
-            .pfnAllocation = &_vk_driver_allocate,
-            .pfnReallocation = &_vk_driver_reallocate,
-            .pfnFree = &_vk_driver_free,
-            .pfnInternalAllocation = &_vk_driver_internal_allocate,
-            .pfnInternalFree = &_vk_driver_internal_free,
-        };
-        return &_vk_allocation_callbacks;
-    }
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+    };
 
     static StringView result_as_string(VkResult result)
     {
         return StringView(string_VkResult(result), __string_len(string_VkResult(result)));
     }
-
+    
     static StringView vulkan_string_to_sv(const char* vk_str)
     {
         return StringView(vk_str, __string_len(vk_str));
     }
+    
+    static VkAllocationCallbacks* allocation_callbacks();
+    static const char* const* core_device_extensions();
+
+    static void load_core_procs(MemoryAddress vk_lib);
+    static void load_instance_procs(VkInstance instance);
+    static void load_device_procs(DeviceVulkanTable& table, VkDevice device);
 
     static uint32_t get_api_version();
     static VkInstance create_instance();
+
+    static VkSurfaceKHR create_surface(VkInstance instance, MemoryAddress native_handle);
+    static void destroy_surface(VkInstance instance, VkSurfaceKHR surface);
+    
+    static void check_device_extensions(VkPhysicalDevice physical_device);
 
     /*
     * VK_ext_debug_utils

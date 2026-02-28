@@ -2,10 +2,23 @@
 #include "graphics/graphics.h"
 
 
+
+namespace InternalGraphics
+{
+
 struct Adapter
 {
 	VTFunc(void, initialize, const mem::Allocator&);
 	VTFunc(void, shutdown);
+
+	VTFunc(Slice<Graphics::PhysicalDeviceID>, physical_devices_enumerate);
+	VTFunc(Graphics::PhysicalDeviceInfo, physical_device_get_info, Graphics::PhysicalDeviceID physical_device);
+
+	VTFunc(Graphics::DeviceID, device_create, const Graphics::DeviceCreateInfo& ci);
+	VTFunc(void, device_destroy, Graphics::DeviceID device);
+
+	VTFunc(Graphics::SurfaceID, surface_create, const Graphics::SurfaceCreateInfo& ci);
+	VTFunc(void, surface_destroy, Graphics::SurfaceID surface);
 
 	VTFunc(Graphics::SwapChainID, swap_chain_create, const Graphics::SwapChainCreateInfo& ci);
 	VTFunc(void, swap_chain_destroy, Graphics::SwapChainID swap_chain);
@@ -28,9 +41,6 @@ struct Adapter
 	VTFunc(Graphics::PipelineID, pipeline_create, const Graphics::PipelineCreateInfo& ci);
 	VTFunc(void, pipeline_destroy, Graphics::PipelineID pipeline);
 	
-	VTFunc(Graphics::ProgramID, program_create, const Graphics::ProgramCreateInfo& ci);
-	VTFunc(void, program_destroy, Graphics::ProgramID program);
-
 	VTFunc(Graphics::CommandBufferID, command_buffer_create, const Graphics::CommandBufferCreateInfo& ci);
 	VTFunc(void, command_buffer_destroy, Graphics::CommandBufferID cmd);
 	VTFunc(void, command_buffer_begin, Graphics::CommandBufferID cmd);
@@ -52,3 +62,4 @@ struct Adapter
 	VTFunc(void, queue_execute_command_buffer, Graphics::QueueID queue, const Slice<Graphics::CommandBufferID>& command_buffers);
 };
 
+}

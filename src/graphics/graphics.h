@@ -1,6 +1,6 @@
 #pragma once
+#include "core/header.h"
 #include "collections/string_view.h"
-#include "display/display.h"
 #include "mem/allocator.h"
 #include "math/vec2.h"
 #include "math/rect_2d.h"
@@ -14,14 +14,32 @@ struct Graphics
 	*	Graphics API
 	*/
 
+	using PhysicalDeviceID = ID<u32, struct _PhysicalDeviceTag>;
+	using DeviceID = ID<u32, struct _DeviceTag>;
+	using SurfaceID = ID<u32, struct _SurfaceTag>;
 	using SwapChainID = ID<u32, struct _SwapChainTag>;
 	using BufferID = ID<u32, struct _BufferTag>;
 	using TextureID = ID<u32, struct _TextureTag>;
 	using RenderTargetID = ID<u32, struct _RenderTargetTag>;
 	using PipelineID = ID<u32, struct _PipelineTag>;
-	using ProgramID = ID<u32, struct _ProgramTag>;
-	using CommandBufferID = ID<u32, struct _CommandBufferTag>;
 	using QueueID = ID<u32, struct _CommandBufferTag>;
+	using CommandBufferID = ID<u32, struct _CommandBufferTag>;
+
+	enum DeviceType
+	{
+		DEVICE_TYPE_UNKNOWN = 0,
+		DEVICE_TYPE_INTEGRATED_GPU,
+		DEVICE_TYPE_DISCRETE_GPU,
+	};
+
+	enum SurfaceFormat
+	{
+		SURFACE_FORMAT_UNKNOWN = 0,
+		SURFACE_FORMAT_RGBA8_UNORM,
+		SURFACE_FORMAT_RGBA8_SRGB,
+		SURFACE_FORMAT_BGRA8_UNORM,
+		SURFACE_FORMAT_BGRA8_SRGB,
+	};
 
 	enum PresentMode
 	{
@@ -134,6 +152,16 @@ struct Graphics
 		TEXTURE_FILTER_LINEAR,
 	};
 
+	struct PhysicalDeviceSurfaceInfo
+	{
+	};
+
+	struct PhysicalDeviceInfo
+	{
+		DeviceType device_type;
+		PhysicalDeviceSurfaceInfo surface;
+	};
+
 	struct DeviceInfo
 	{
 		StringView vendor_name;
@@ -173,11 +201,22 @@ struct Graphics
 		Slice<const u8> code;
 	};
 
+	struct DeviceCreateInfo
+	{
+		PhysicalDeviceID physical_device;
+	};
+
+	struct SurfaceCreateInfo
+	{
+		MemoryAddress window_native_handle;
+	};
+
 	struct SwapChainCreateInfo
 	{
-		Display::WindowID window;
+		DeviceID device;
+		SurfaceID surface;
 		PresentMode present_mode;
-		TextureFormat format;
+		SurfaceFormat format;
 		u32 image_count;
 		Vector2I size;
 	};
@@ -213,12 +252,11 @@ struct Graphics
 		PipelineUsage usage;
 		PrimitiveTopology topology;
 		InputAssembly input_assembly;
-		ProgramID pipeline_program;
 	};
-
-	struct ProgramCreateInfo
+	
+	struct QueueCreateInfo
 	{
-		Slice<ShaderInfo> shaders;
+		QueueUsage usage;
 	};
 
 	struct CommandBufferCreateInfo
@@ -226,13 +264,26 @@ struct Graphics
 		CommandBufferUsage usage;
 	};
 
-	struct QueueCreateInfo
-	{
-		QueueUsage usage;
-	};
-
     static void initialize(const mem::Allocator& allocator);
     static void shutdown();
+
+	/*
+	* Physical Device API
+	*/
+	static Slice<PhysicalDeviceID> physical_devices_enumerate();
+	static PhysicalDeviceInfo physical_device_get_info(PhysicalDeviceID physical_device);
+
+	/*
+	* Device API
+	*/
+	static DeviceID device_create(const DeviceCreateInfo& ci);
+	static void device_destroy(DeviceID device);
+
+	/*
+	* Surface API
+	*/
+	static SurfaceID surface_create(const SurfaceCreateInfo& ci);
+	static void surface_destroy(SurfaceID surface);
 
 	/*
 	* SwapChain API
@@ -274,12 +325,6 @@ struct Graphics
 	*/
 	static PipelineID pipeline_create(const PipelineCreateInfo& ci);
 	static void pipeline_destroy(PipelineID pipeline);
-
-	/*
-	* Program API
-	*/
-	static ProgramID program_create(const ProgramCreateInfo& ci);
-	static void program_destroy(ProgramID program);
 
 	/*
 	* CommandBuffer API

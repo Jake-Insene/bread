@@ -19,6 +19,12 @@ struct OS
 
     using VoidFunction = void(*)();
 
+    struct QueryMemory
+    {
+        MemoryAddress base_address;
+        usize region_size;
+    };
+
     static void initialize(const mem::Allocator& allocator);
     static void shutdown();
 
@@ -33,6 +39,7 @@ struct OS
 
     static Slice<u8> map_memory(usize memory_size, MapAccess access);
     static void unmap_memory(Slice<u8> memory);
+    static QueryMemory query_memory(Slice<u8> memory);
 
     static ThreadID thread_create(ThreadFn fn, Opaque* arg);
     static void thread_destroy(ThreadID tid);

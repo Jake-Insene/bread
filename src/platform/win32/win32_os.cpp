@@ -1,5 +1,6 @@
 #include "platform/win32/win32_os.h"
 
+#include "core/types.h"
 #include "debug/fail.h"
 
 
@@ -144,6 +145,18 @@ Slice<u8> Win32OS::map_memory(usize memory_size, OS::MapAccess access)
 void Win32OS::unmap_memory(Slice<u8> memory)
 {
     VirtualFreeEx(GetCurrentProcess(), memory.items, 0, MEM_RELEASE);
+}
+
+OS::QueryMemory Win32OS::query_memory(Slice<u8> memory)
+{
+    MEMORY_BASIC_INFORMATION mem_info;
+    VirtualQueryEx(GetCurrentProcess(), memory.items, &mem_info, sizeof(mem_info));
+    
+    return OS::QueryMemory
+    {
+        .base_address = MemoryAddress(mem_info.BaseAddress),
+        .region_size = usize(mem_info.RegionSize),
+    };    
 }
 
 OS::ThreadID Win32OS::thread_create(OS::ThreadFn fn, Opaque* arg)

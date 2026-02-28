@@ -183,8 +183,15 @@ void Display::initialize(const mem::Allocator& allocator)
 	wc.hIcon = LoadIconA(0, IDI_APPLICATION);
 	wc.hCursor = LoadCursorA(0, IDC_ARROW);
 	wc.hIconSm = LoadIconA(0, IDI_APPLICATION);
-
 	RegisterClassExA(&wc);
+
+	wc.cbSize = sizeof(wc);
+	wc.lpfnWndProc = &DefWindowProcA;
+	wc.lpszClassName = Win32Display::WindowClassNameHeadless;
+	wc.hIcon = LoadIconA(0, IDI_APPLICATION);
+	wc.hCursor = LoadCursorA(0, IDC_ARROW);
+	wc.hIconSm = LoadIconA(0, IDI_APPLICATION);
+	RegisterClassExA(&wc); // Headless
 
 	GetClientRect(GetDesktopWindow(), &Win32Display::data.fullscreen_rect);
 }
@@ -216,12 +223,25 @@ Display::WindowID Display::window_create()
 
 	ShowWindow(new_window.handle, SW_SHOW);
 
+	new_window.surface = Graphics::surface_create({.window_native_handle = window_get_native_handle(new_id)});
+
 	return new_id;
 }
 
-Vector2I Display::window_get_size(Display::WindowID wid)
+void Display::window_destroy(WindowID window_id)
 {
-	Win32Display::WindowData& window_data = _get_window_data(wid);
+	Win32Display::WindowData& window_data = _get_window_data(window_id);
+
+	Graphics::surface_destroy(window_data.surface);
+	
+	DestroyWindow(window_data.handle);
+
+	Win32Display::data.windows.remove(window_id);
+}
+
+Vector2I Display::window_get_size(Display::WindowID window_id)
+{
+	Win32Display::WindowData& window_data = _get_window_data(window_id);
 	RECT rect;
 	GetClientRect(window_data.handle, &rect);
 
@@ -231,9 +251,9 @@ Vector2I Display::window_get_size(Display::WindowID wid)
 	);
 }
 
-void Display::window_set_size(Display::WindowID wid, const Vector2I& new_size)
+void Display::window_set_size(Display::WindowID window_id, const Vector2I& new_size)
 {
-	Win32Display::WindowData& window_data = _get_window_data(wid);
+	Win32Display::WindowData& window_data = _get_window_data(window_id);
 
 	RECT rect = { 0, 0, new_size.x, new_size.y };
 	AdjustWindowRectEx(&rect, WS_OVERLAPPEDWINDOW, FALSE, WS_EX_OVERLAPPEDWINDOW);
@@ -247,10 +267,15 @@ void Display::window_set_size(Display::WindowID wid, const Vector2I& new_size)
 	);
 }
 
-MemoryAddress Display::window_get_native_handle(Display::WindowID wid)
+MemoryAddress Display::window_get_native_handle(Display::WindowID window_id)
 {
-	Win32Display::WindowData& window_data = _get_window_data(wid);
+	Win32Display::WindowData& window_data = _get_window_data(window_id);
 	return MemoryAddress(window_data.handle);
 }
 
+Graphics::SurfaceID Display::window_get_surface(WindowID window_id)
+{
+	Win32Display::WindowData& window_data = _get_window_data(window_id);
+	return window_data.surface;
+}
 

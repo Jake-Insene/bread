@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+	<Type Name="Slice&lt;*&gt;">
+        <DisplayString>{{ len={len} }}</DisplayString>
+        <Expand>
+			<Item Name="[address]" ExcludeView="simple">items,X</Item>
+			<Item Name="[count]" ExcludeView="simple">len</Item>
+            <ArrayItems>
+                <Size>len</Size>
+                <ValuePointer>items</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+
     <Type Name="Array&lt;*&gt;">
         <DisplayString>{{ count={count} }}</DisplayString>
         <Expand>
@@ -11,6 +23,7 @@
             </ArrayItems>
         </Expand>
     </Type>
+
 	<Type Name="StaticArray&lt;*&gt;">
 		<DisplayString>{{ count={count} }}</DisplayString>
 		<Expand>
@@ -22,6 +35,7 @@
 			</ArrayItems>
 		</Expand>
 	</Type>
+
 	<Type Name="Stack&lt;*&gt;">
 		<DisplayString>{{ count={sp} }}</DisplayString>
 		<Expand>
@@ -33,18 +47,6 @@
 			</ArrayItems>
 		</Expand>
 	</Type>
-	
-    <Type Name="Slice&lt;*&gt;">
-        <DisplayString>{{ len={len} }}</DisplayString>
-        <Expand>
-			<Item Name="[address]" ExcludeView="simple">items,X</Item>
-			<Item Name="[count]" ExcludeView="simple">len</Item>
-            <ArrayItems>
-                <Size>len</Size>
-                <ValuePointer>items</ValuePointer>
-            </ArrayItems>
-        </Expand>
-    </Type>
 	
 	<Type Name="StringView">
 		<DisplayString>{items,[len]na}</DisplayString>

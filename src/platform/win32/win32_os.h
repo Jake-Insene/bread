@@ -74,6 +74,7 @@ struct Win32OS
 
     static Slice<u8> map_memory(usize memory_size, OS::MapAccess access);
     static void unmap_memory(Slice<u8> memory);
+    static OS::QueryMemory query_memory(Slice<u8> memory);
 
     static OS::ThreadID thread_create(OS::ThreadFn fn, Opaque* arg);
     static void thread_destroy(OS::ThreadID tid);

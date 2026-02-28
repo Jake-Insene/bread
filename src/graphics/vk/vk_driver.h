@@ -1,4 +1,5 @@
 #pragma once
+#include "collections/free_list.h"
 #include "graphics/adapter.h"
 #include "graphics/vk/vk_header.h"
 #include "log/log.h"
@@ -14,9 +15,56 @@
 
 struct VulkanDriver
 {
+	struct PhysicalDevice
+	{
+		VkPhysicalDevice vk_physical_device;
+		Graphics::PhysicalDeviceInfo info;
+	};
+
+	struct LogicalDevice
+	{
+		VkDevice vk_device;
+		VkPhysicalDevice vk_physical_device;
+
+		struct
+		{
+			uint32_t graphics_index;
+			uint32_t present_index;
+
+			VkQueue graphics;
+			VkQueue present;
+		} queue;
+
+		DeviceVulkanTable vk;
+	};
+
+	struct Surface
+	{
+		VkSurfaceKHR vk_surface;
+		MemoryAddress window_native_handle;
+	};
+
+	struct SwapChain
+	{
+		VkDevice vk_device;
+		VkSurfaceKHR vk_surface;
+		VkSwapchainKHR vk_swapchain;
+
+		u32 image_count;
+
+		Graphics::SurfaceID surface;
+		Graphics::DeviceID device;
+	};
+
     struct InternalData
     {
         mem::Allocator allocator;
+
+		Slice<PhysicalDevice> physical_devices;
+		Slice<Graphics::PhysicalDeviceID> physical_device_ids;
+		FreeList<LogicalDevice, Graphics::DeviceID> devices;
+		FreeList<Surface, Graphics::SurfaceID> surfaces;
+		FreeList<SwapChain, Graphics::SwapChainID> swap_chains;
 
 		struct
 		{
@@ -26,6 +74,7 @@ struct VulkanDriver
 		MemoryAddress vk_lib;
 
 		VkInstance instance;
+		VkSurfaceKHR dummy_surface;
 		VkDebugUtilsMessengerEXT messenger;
     };
 
@@ -33,10 +82,19 @@ struct VulkanDriver
 
     [[nodiscard]] static mem::Allocator& get_allocator() { return data.allocator; }
 
-    static Adapter get_adapter();
+    static InternalGraphics::Adapter get_adapter();
 
     static void initialize(const mem::Allocator& allocator);
     static void shutdown();
+
+	static Slice<Graphics::PhysicalDeviceID> physical_devices_enumerate();
+	static Graphics::PhysicalDeviceInfo physical_device_get_info(Graphics::PhysicalDeviceID physical_device);
+
+	static Graphics::DeviceID device_create(const Graphics::DeviceCreateInfo& ci);
+	static void device_destroy(Graphics::DeviceID device);
+
+	static Graphics::SurfaceID surface_create(const Graphics::SurfaceCreateInfo& ci);
+	static void surface_destroy(Graphics::SurfaceID surface);
 
     static Graphics::SwapChainID swap_chain_create(const Graphics::SwapChainCreateInfo& ci);
 	static void swap_chain_destroy(Graphics::SwapChainID swap_chain);
@@ -59,9 +117,6 @@ struct VulkanDriver
 	static Graphics::PipelineID pipeline_create(const Graphics::PipelineCreateInfo& ci);
 	static void pipeline_destroy(Graphics::PipelineID pipeline);
 
-	static Graphics::ProgramID program_create(const Graphics::ProgramCreateInfo& ci);
-	static void program_destroy(Graphics::ProgramID program);
-
 	static Graphics::CommandBufferID command_buffer_create(const Graphics::CommandBufferCreateInfo& ci);
 	static void command_buffer_destroy(Graphics::CommandBufferID cmd);
 
@@ -82,4 +137,19 @@ struct VulkanDriver
 	static Graphics::QueueID queue_create(const Graphics::QueueCreateInfo& ci);
 	static void queue_destroy(Graphics::QueueID queue);
 	static void queue_execute_command_buffer(Graphics::QueueID queue, const Slice<Graphics::CommandBufferID>& command_buffers);
+
+	static LogicalDevice& _get_logical_device(Graphics::DeviceID device) { return data.devices.get(device); }
+	static Surface& _get_surface(Graphics::SurfaceID surface) { return data.surfaces.get(surface); }
+	static SwapChain& _get_swap_chain(Graphics::SwapChainID swap_chain) { return data.swap_chains.get(swap_chain); }
+
+	static void _get_physical_devices();
+	
+	static void _surface_format_to_vk_swapchain_info(Graphics::SurfaceFormat sf, VkFormat* imgf, VkColorSpaceKHR* cs);
+	static VkPresentModeKHR _present_mode_to_vk_present_mode(Graphics::PresentMode present_mode);
+	static VkSurfaceCapabilitiesKHR _surface_get_capabilities(VkPhysicalDevice physical_device, VkSurfaceKHR surface); 
+	static VkExtent2D _swap_chain_get_extent(const Vector2I& size, const VkSurfaceCapabilitiesKHR& capabilities);
+
+	static Graphics::DeviceType _vk_device_type_to_device_type(VkPhysicalDeviceType vk_dt);
+	static Graphics::SurfaceFormat _vk_surface_format_to_surface_format(VkSurfaceFormatKHR vk_sf);
+	static Graphics::PresentMode _vk_present_mode_to_present_mode(VkPresentModeKHR vk_pm);
 };

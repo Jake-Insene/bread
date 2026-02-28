@@ -91,15 +91,17 @@ static inline void _end_sprite_batch(Graphics::CommandBufferID cmd, SceneRendere
 
 
 // Global quad index buffer
+#if 0
 static constexpr const u8 indices[] =
 {
 	0, 1, 2, 2, 3, 0
 };
+#endif
 
 void SceneRenderer::initialize(const mem::Allocator& allocator)
 {
     data.allocator = allocator;
-
+#if 0
 	data.usable_texture_units = 16;
 
     // SwapChain
@@ -230,10 +232,12 @@ void SceneRenderer::initialize(const mem::Allocator& allocator)
 		.usage = Graphics::QUEUE_USAGE_GRAPHICS,
 	};
 	data.queue = Graphics::queue_create(queueci);
+#endif
 }
 
 void SceneRenderer::shutdown()
 {
+#if 0
     Graphics::swap_chain_destroy(data.sc);
 	Graphics::queue_destroy(data.queue);
 	Graphics::command_buffer_destroy(data.command_buffer);
@@ -255,10 +259,12 @@ void SceneRenderer::shutdown()
 
 	Graphics::buffer_destroy(data.circles_batch.vb);
 	get_allocator().free(mem::to_bytes(data.circles_batch.instances));
+#endif
 }
 
 void SceneRenderer::recreate_window()
 {
+#if 0
     Graphics::swap_chain_destroy(data.sc);
 
 	Graphics::SwapChainCreateInfo scci =
@@ -278,10 +284,12 @@ void SceneRenderer::recreate_window()
 	data.draw_index = 1;
 
 	data.render_target_size = Engine::get_configuration().viewport_size;
+#endif
 }
 
-void SceneRenderer::render_scene(Viewport* main_viewport)
+void SceneRenderer::render_scene(Viewport*)
 {
+#if 0
     data.scene_data.time += SceneManager::get_delta_time();
 	data.scene_data_ubo_update = true;
 	//Graphics::RenderTargetID rt_id = main_viewport->rt;
@@ -361,13 +369,16 @@ void SceneRenderer::render_scene(Viewport* main_viewport)
 	data.quads_batch.buffer_offset = 0;
 	data.lines_batch.buffer_offset = 0;
 	data.circles_batch.buffer_offset = 0;
+#endif
 }
 
 void SceneRenderer::present_scene()
 {
+#if 0
     Graphics::swap_chain_present(data.sc, data.present_index);
 	data.present_index ^= 1;
 	data.draw_index ^= 1;
+#endif
 }
 
 void SceneRenderer::_bind_material()

@@ -30,13 +30,6 @@ struct MaterialManager
         Graphics::PipelineID lines_pipeline;
         Graphics::PipelineID circles_pipeline;
         Graphics::PipelineID screen_pipeline;
-
-        Graphics::ProgramID sprite_program;
-        Graphics::ProgramID sprite_ui_program;
-        Graphics::ProgramID quads_program;
-        Graphics::ProgramID lines_program;
-        Graphics::ProgramID circles_program;
-        Graphics::ProgramID screen_program;
     };
 
     struct InternalData

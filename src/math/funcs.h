@@ -21,14 +21,14 @@ namespace math
 {
 
 template<typename Result, typename T>
-    requires(IsInteger<Result> && IsArithmetic<T>)
+requires(IsInteger<Result> && IsArithmetic<T>)
 [[nodiscard]] constexpr Result trunc(T value)
 {
     return Result(value);
 }
 
 template<typename T>
-    requires(IsArithmetic<T>)
+requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T ceil(T x)
 {
     i64 xi = i64(x);
@@ -48,14 +48,14 @@ template<typename T>
 }
 
 template<typename T>
-    requires(IsArithmetic<T>)
+requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T sign(T v)
 {
     return v > 0 ? T(1) : v < 0 ? T(-1) : T(0);
 }
 
 template<typename T>
-    requires(IsArithmetic<T>)
+requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T clamp(T value, T min, T max)
 {
     return value < min ? min
@@ -64,14 +64,14 @@ template<typename T>
 }
 
 template<typename T>
-    requires(IsArithmetic<T>)
+requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T dist(T a, T b)
 {
     return ::math::abs(b - a);
 }
 
 template<typename T>
-    requires(IsArithmetic<T>)
+requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T next_pow2(const T n)
 {
     if (n == 0)
@@ -90,7 +90,7 @@ template<typename T>
 
 
 template<typename T, typename... TArgs>
-    requires(IsArithmetic<T> && (IsArithmetic<TArgs> && ...))
+requires(IsArithmetic<T> && (IsArithmetic<TArgs> && ...))
 [[nodiscard]] constexpr T min(T a, TArgs... args)
 {
     if constexpr (sizeof...(args) == 0)
@@ -104,7 +104,7 @@ template<typename T, typename... TArgs>
 }
 
 template<typename T, typename... TArgs>
-    requires(IsArithmetic<T> && (IsArithmetic<TArgs> && ...))
+requires(IsArithmetic<T> && (IsArithmetic<TArgs> && ...))
 [[nodiscard]] constexpr T max(T a, TArgs... args)
 {
     if constexpr (sizeof...(args) == 0)
@@ -118,7 +118,7 @@ template<typename T, typename... TArgs>
 }
 
 template<typename T>
-    requires(IsArithmetic<T>)
+requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T lerp(const T start, const T end, const T step)
 {
     return start + (end - start) * step;
@@ -126,7 +126,7 @@ template<typename T>
 
 template<typename T>
 [[nodiscard]] constexpr T move_to(const T start, const T end, T step)
-    requires(IsArithmetic<T>)
+requires(IsArithmetic<T>)
 {
     return dist<T>(start, end) <= step ? end : start + sign(end - start) * step;
 }
@@ -134,7 +134,7 @@ template<typename T>
 // Mod
 
 template<typename T>
-    requires(IsArithmetic<T>)
+requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T mod(T a, T b)
 {
     if constexpr (IsInteger<T>)
@@ -150,14 +150,14 @@ template<typename T>
 // Angles
 
 template<typename T>
-    requires(IsArithmetic<T>)
+requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T rads(const T degrees)
 {
     return (PI<T> / T(180)) * degrees;
 }
 
 template<typename T>
-    requires(IsArithmetic<T>)
+requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T degrees(const T rads)
 {
     return (T(180) / PI<T>) * rads;
@@ -167,7 +167,7 @@ template<typename T>
 * @param r Angle in radians, compute the sine(x)
 */
 template<typename T>
-    requires(IsArithmetic<T>)
+requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T sin(T r)
 {
     return impl::sin<T>(r);
@@ -177,14 +177,14 @@ template<typename T>
 * @param r Angle in radians, compute the cosine(x)
 */
 template<typename T>
-    requires(IsArithmetic<T>)
+requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T cos(T r)
 {
     return impl::cos<T>(r);
 }
 
 template<typename T>
-    requires(IsArithmetic<T>)
+requires(IsArithmetic<T>)
 constexpr void sincos(T& s, T& c, T r)
 {
     impl::sincos<T>(s, c, r);
@@ -194,7 +194,7 @@ constexpr void sincos(T& s, T& c, T r)
 * @param r Angle in radians, compute the tan(x)
 */
 template<typename T>
-    requires(IsArithmetic<T>)
+requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T tan(T r)
 {
     return impl::tan_approx<T>(r);
@@ -204,14 +204,14 @@ template<typename T>
 * @param r Angle in radians, compute the acos(x)
 */
 template<typename T>
-    requires(IsArithmetic<T>)
+requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T acos(T r)
 {
     return impl::acos_approx(r);
 }
 
 template<typename T>
-    requires(IsArithmetic<T>)
+requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T atan2(T y, T x)
 {
     return impl::atan2_approx<T>(y, x);

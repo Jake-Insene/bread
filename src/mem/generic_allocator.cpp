@@ -284,13 +284,25 @@ void GenericAllocator::free(Slice<u8> ptr)
 
     check_integrity();
 }
+
+usize GenericAllocator::get_size_of(Slice<u8> ptr) const
+{
+    DebugAssert(ptr.ptr() != nullptr, "can't delete a null pointer");
+    
+    Header* header = get_header(ptr);
+    DebugAssert(header->tags & Allocated, "the given block is freed.");
+
+    return header->len;
+}
     
 static inline Allocator::VTable ga_vtable = 
 {
     .alloc = reinterpret_cast<decltype(Allocator::VTable::alloc)>(&GenericAllocator::alloc),
     .realloc = reinterpret_cast<decltype(Allocator::VTable::realloc)>(&GenericAllocator::realloc),
     .free = reinterpret_cast<decltype(Allocator::VTable::free)>(&GenericAllocator::free),
+    .get_size_of = reinterpret_cast<decltype(Allocator::VTable::get_size_of)>(&GenericAllocator::get_size_of),
 };
+
 Allocator GenericAllocator::allocator()
 {
     return Allocator

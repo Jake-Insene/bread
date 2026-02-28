@@ -9,6 +9,7 @@
 #include "render/scene_renderer.h"
 
 
+#if 0
 constexpr StringView glsl_version_header =
 #if defined(BREAD_ANDROID)
     "#version 310 es\n";
@@ -18,6 +19,7 @@ constexpr StringView glsl_version_header =
 
 constexpr StringView glsl_vertex_header = "#define VERTEX_SHADER\n";
 constexpr StringView glsl_fragment_header = "precision mediump float;\n#define FRAGMENT_SHADER\n";
+#endif
 
 
 enum CompileFlags
@@ -35,6 +37,8 @@ enum CompileFlags
 #define ADVANCE_NO_C(text, count) \
     text = text.add(count);
 
+
+#if 0
 static inline void _get_start_end(StringView source, StringView* start, StringView* end, StringView name)
 {
     StringView current_text = source;
@@ -106,8 +110,8 @@ static inline void _parse_gles_shader(const StringView& program, StringView* vss
 #undef ADVANCE
 #undef ADVANCE_NO_C
 
-static inline Graphics::ProgramID _compile_shader_for(const MaterialManager::MaterialCompileInfo& cmp_info, StringView type_defines, 
-    StringView formed_vs, StringView formed_fs)
+static inline void _compile_shader_for(const MaterialManager::MaterialCompileInfo&, StringView, 
+    StringView, StringView)
 {
     auto all_defines = Scoped<String>(MaterialManager::get_allocator());
     all_defines.add(cmp_info.defines);
@@ -150,7 +154,7 @@ static inline Graphics::ProgramID _compile_shader_for(const MaterialManager::Mat
     return program;
 }
 
-static inline void _compile_shaders(MaterialManager::Material& material, const MaterialManager::MaterialCompileInfo& cmp_info)
+static inline void _compile_shaders(MaterialManager::Material&, const MaterialManager::MaterialCompileInfo&)
 {
     constexpr StringView type_defines[] =
     {
@@ -248,10 +252,8 @@ static inline void _compile_shaders(MaterialManager::Material& material, const M
 			.usage = Graphics::PIPELINE_USAGE_GRAPHICS,
 			.topology = Graphics::PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			.input_assembly = input_assembly,
-			.pipeline_program = Graphics::ProgramID::invalid(),
 		};
 
-        sprite_pipeline_ci.pipeline_program = material.sprite_program;
 	    material.sprite_pipeline = Graphics::pipeline_create(sprite_pipeline_ci);
 	}
 
@@ -282,10 +284,8 @@ static inline void _compile_shaders(MaterialManager::Material& material, const M
 			.usage = Graphics::PIPELINE_USAGE_GRAPHICS,
 			.topology = Graphics::PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			.input_assembly = input_assembly,
-			.pipeline_program = Graphics::ProgramID::invalid(),
 		};
 
-        sprite_ui_pipeline_ci.pipeline_program = material.sprite_ui_program;
 	    material.sprite_ui_pipeline = Graphics::pipeline_create(sprite_ui_pipeline_ci);
 	}
 
@@ -315,10 +315,8 @@ static inline void _compile_shaders(MaterialManager::Material& material, const M
 			.usage = Graphics::PIPELINE_USAGE_GRAPHICS,
 			.topology = Graphics::PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			.input_assembly = input_assembly,
-			.pipeline_program = Graphics::ProgramID::invalid(),
 		};
 
-        quads_pipeline_ci.pipeline_program = material.quads_program;
 	    material.quads_pipeline = Graphics::pipeline_create(quads_pipeline_ci);
 	}
 
@@ -345,10 +343,8 @@ static inline void _compile_shaders(MaterialManager::Material& material, const M
 			.usage = Graphics::PIPELINE_USAGE_GRAPHICS,
 			.topology = Graphics::PRIMITIVE_TOPOLOGY_LINE_LIST,
 			.input_assembly = input_assembly,
-			.pipeline_program = Graphics::ProgramID::invalid(),
 		};
 
-        lines_pipeline_ci.pipeline_program = material.lines_program;
 	    material.lines_pipeline = Graphics::pipeline_create(lines_pipeline_ci);
 	}
 
@@ -375,11 +371,9 @@ static inline void _compile_shaders(MaterialManager::Material& material, const M
 			.usage = Graphics::PIPELINE_USAGE_GRAPHICS,
 			.topology = Graphics::PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			.input_assembly = input_assembly,
-			.pipeline_program = Graphics::ProgramID::invalid(),
 		};
 
-        circles_pipeline_ci.pipeline_program = material.circles_program;
-	    material.circles_pipeline = Graphics::pipeline_create(circles_pipeline_ci);
+        material.circles_pipeline = Graphics::pipeline_create(circles_pipeline_ci);
 	}
 
     // Screen Pipeline
@@ -395,16 +389,16 @@ static inline void _compile_shaders(MaterialManager::Material& material, const M
             .usage = Graphics::PIPELINE_USAGE_GRAPHICS,
             .topology = Graphics::PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
             .input_assembly = input_assembly,
-            .pipeline_program = Graphics::ProgramID::invalid(),
         };
 
-        screen_pipeline_ci.pipeline_program = material.screen_program;
         material.screen_pipeline = Graphics::pipeline_create(screen_pipeline_ci);
     }
 }
+#endif
 
-static inline void _destroy_shaders(MaterialManager::Material& material)
+static inline void _destroy_shaders(MaterialManager::Material&)
 {
+#if 0
     if (material.sprite_program != Graphics::ProgramID::invalid())
     {
         Graphics::program_destroy(material.sprite_program);
@@ -452,14 +446,16 @@ static inline void _destroy_shaders(MaterialManager::Material& material)
         Graphics::pipeline_destroy(material.screen_pipeline);
         material.screen_pipeline = Graphics::PipelineID::invalid();
     }
+#endif
 }
 
 void MaterialManager::initialize(const mem::Allocator& allocator)
 {
 	data.allocator = allocator;
+#if 0
 
     data.glsl_shader_header = File::read_all(allocator, "shaders/bread/header.gles.glsl");
-
+    
     // Batch shader
     data.batch_shader = File::read_all(allocator, "shaders/bread/batch.gles.glsl");
     _parse_gles_shader(mem::from_bytes<char>(data.batch_shader), &data.vs_batch_shader, &data.fs_batch_shader);
@@ -477,10 +473,12 @@ void MaterialManager::initialize(const mem::Allocator& allocator)
         cmp_info.source_path = "__default__";
         (void)material_compile_shader(data.render_material, cmp_info);
     }
+#endif
 }
 
 void MaterialManager::shutdown()
 {
+#if 0
     material_destroy(data.render_material);
 
     get_allocator().free(data.glsl_shader_header);
@@ -489,6 +487,7 @@ void MaterialManager::shutdown()
 
     FailOn(data.materials.count != 0, "MaterialManager::shutdown: materials list is not empty");
 	data.materials.destroy();
+#endif
 }
 
 MaterialManager::Material& MaterialManager::material_get(MaterialID material_id)
@@ -500,13 +499,6 @@ MaterialManager::Material& MaterialManager::material_get(MaterialID material_id)
 MaterialManager::MaterialID MaterialManager::material_create(const MaterialCreateInfo&)
 {
 	MaterialID new_material = data.materials.add(Material());
-    Material& material = material_get(new_material);
-    material.sprite_program = Graphics::ProgramID::invalid();
-    material.sprite_ui_program = Graphics::ProgramID::invalid();
-    material.quads_program = Graphics::ProgramID::invalid();
-    material.lines_program = Graphics::ProgramID::invalid();
-    material.circles_program = Graphics::ProgramID::invalid();
-
 	return new_material;
 }
 
@@ -517,12 +509,13 @@ void MaterialManager::material_destroy(MaterialID material_id)
 	data.materials.remove(material_id);
 }
 
-Error MaterialManager::material_compile_shader(MaterialID material_id, const MaterialCompileInfo& cmp_info)
+Error MaterialManager::material_compile_shader(MaterialID, const MaterialCompileInfo&)
 {
+#if 0
     Material& material = material_get(material_id);
     _destroy_shaders(material);
     _compile_shaders(material, cmp_info);
-
+#endif
     return Ok;
 }
 

@@ -9,40 +9,46 @@ struct Slice;
 
 namespace mem
 {
-    struct Allocator
+
+struct Allocator
+{
+    static constexpr usize DefaultAlignment = sizeof(MemoryAddress) * 2;
+
+    struct VTable
     {
-        static constexpr usize DefaultAlignment = sizeof(MemoryAddress) * 2;
-
-        struct VTable
-        {
-            Slice<u8>(Allocator::*alloc)(usize, usize);
-            bool(Allocator::*realloc)(Slice<u8>, usize, usize);
-            void(Allocator::*free)(Slice<u8>);
-        };
-        
-        Slice<u8> alloc(usize size, usize alignment) const;
-        bool realloc(Slice<u8> ptr, usize new_size, usize alignment) const;
-        void free(Slice<u8> ptr) const;
-
-        template<typename T>
-        Slice<T> array(usize count) const;
-
-        template<typename T>
-        constexpr void construct_array(Slice<T> array) const;
-
-        template<typename T, typename... TArgs>
-        constexpr T* object(TArgs&&... args) const;
-        
-        template<typename T, typename... TArgs>
-        constexpr void construct(T* instance, TArgs&&... args) const;
-
-        template<typename T>
-        constexpr void destruct(T* instance) const;
-
-        VTable* vtable;
-        Allocator* self;
+        Slice<u8>(Allocator::*alloc)(usize, usize);
+        bool(Allocator::*realloc)(Slice<u8>, usize, usize);
+        void(Allocator::*free)(Slice<u8>);
+        usize(Allocator::*get_size_of)(Slice<u8> ptr);
     };
-    
+        
+    /*
+    * Allocator API
+    */
+    Slice<u8> alloc(usize size, usize alignment) const;
+    bool realloc(Slice<u8> ptr, usize new_size, usize alignment) const;
+    void free(Slice<u8> ptr) const;
+    usize get_size_of(Slice<u8> ptr) const;
+
+    template<typename T>
+    Slice<T> array(usize count) const;
+
+    template<typename T>
+    constexpr void construct_array(Slice<T> array) const;
+
+    template<typename T, typename... TArgs>
+    constexpr T* object(TArgs&&... args) const;
+        
+    template<typename T, typename... TArgs>
+    constexpr void construct(T* instance, TArgs&&... args) const;
+
+    template<typename T>
+    constexpr void destruct(T* instance) const;
+
+    VTable* vtable;
+    Allocator* self;
+};
+
 }
 
 #include "debug/assertion.h"
@@ -66,6 +72,12 @@ inline void mem::Allocator::free(Slice<u8> ptr) const
 {
     DebugAssert(self != nullptr, "self is null");
     (self->*vtable->free)(ptr);
+}
+
+inline usize mem::Allocator::get_size_of(Slice<u8> ptr) const
+{
+    DebugAssert(self != nullptr, "self is null");
+    return (self->*vtable->get_size_of)(ptr);
 }
 
 template<typename T>

@@ -43,14 +43,13 @@ struct [[nodiscard]] Slice
         return Forward<decltype(self)>(self).items[index];
     }
 
-    [[nodiscard]] constexpr T* begin() { return items; }
-    [[nodiscard]] constexpr T* begin() const { return items; }
+    [[nodiscard]] constexpr decltype(auto) begin(this auto&& self) { return self.items; };
 
-    [[nodiscard]] constexpr T* end() { return items + len; }
-    [[nodiscard]] constexpr const T* end() const { return items + len; }
+    [[nodiscard]] constexpr decltype(auto) end(this auto&& self) { return self.items + self.len; };
 
-    [[nodiscard]] constexpr T* ptr() { return items; };
-    [[nodiscard]] constexpr const T* ptr() const { return items; };
+    [[nodiscard]] constexpr decltype(auto) ptr(this auto&& self) { return self.items; };
+
+    [[nodiscard]] constexpr MemoryAddress address() const { return reinterpret_cast<MemoryAddress>(ptr()); } 
 
     [[nodiscard]] constexpr bool null() const { return items == nullptr; }
 

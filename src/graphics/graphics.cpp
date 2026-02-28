@@ -4,7 +4,7 @@
 #include "graphics/vk/vk_driver.h"
 
 
-static inline Adapter current_adapter;
+static inline InternalGraphics::Adapter current_adapter;
 
 void Graphics::initialize(const mem::Allocator& allocator)
 {
@@ -16,6 +16,36 @@ void Graphics::initialize(const mem::Allocator& allocator)
 void Graphics::shutdown()
 {
 	current_adapter.shutdown();
+}
+
+Slice<Graphics::PhysicalDeviceID> Graphics::physical_devices_enumerate()
+{
+	return current_adapter.physical_devices_enumerate();
+}
+
+Graphics::PhysicalDeviceInfo Graphics::physical_device_get_info(PhysicalDeviceID physical_device)
+{
+	return current_adapter.physical_device_get_info(physical_device);
+}
+
+Graphics::DeviceID Graphics::device_create(const DeviceCreateInfo &ci)
+{
+	return current_adapter.device_create(ci);
+}
+
+void Graphics::device_destroy(DeviceID device)
+{
+	current_adapter.device_destroy(device);
+}
+
+Graphics::SurfaceID Graphics::surface_create(const Graphics::SurfaceCreateInfo& ci)
+{
+	return current_adapter.surface_create(ci);
+}
+
+void Graphics::surface_destroy(Graphics::SurfaceID surface)
+{
+	current_adapter.surface_destroy(surface);
 }
 
 Graphics::SwapChainID Graphics::swap_chain_create(const SwapChainCreateInfo& ci)
@@ -98,16 +128,6 @@ Graphics::PipelineID Graphics::pipeline_create(const Graphics::PipelineCreateInf
 void Graphics::pipeline_destroy(PipelineID pipeline)
 {
 	current_adapter.pipeline_destroy(pipeline);
-}
-
-Graphics::ProgramID Graphics::program_create(const ProgramCreateInfo& ci)
-{
-	return current_adapter.program_create(ci);
-}
-
-void Graphics::program_destroy(ProgramID pipeline)
-{
-	current_adapter.program_destroy(pipeline);
 }
 
 Graphics::CommandBufferID Graphics::command_buffer_create(const CommandBufferCreateInfo& ci)

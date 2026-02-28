@@ -40,13 +40,13 @@ void Engine::initialize()
     // TODO: Find a better way to handle this.
     FailOn(OS::set_current_directory("assets") == false, "assets directory not found")
 
+    Graphics::initialize(allocator);
     Display::initialize(allocator);
 
     // Allocating main window
     data.main_window = Window(Display::window_create());
 
     Audio::initialize(allocator, Audio::DEFAULT_DRIVER);
-    Graphics::initialize(allocator);
     RenderManager::initialize(allocator);
 
     SceneManager::initialize(allocator);
@@ -73,10 +73,12 @@ void Engine::shutdown()
     ResourceManager::shutdown();
 
     RenderManager::shutdown();
-    Graphics::shutdown();
     Audio::shutdown();
-
+    
+    data.main_window.destroy();
+    
     Display::shutdown();
+    Graphics::shutdown();
 
     data.main_queue.destroy();
 

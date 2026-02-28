@@ -29,7 +29,7 @@ struct [[nodiscard]] FreeList
     SlotID last_free_element;
     u32 count;
 
-    static FreeList from_allocator(mem::Allocator& allocator)
+    static FreeList with_allocator(const mem::Allocator& allocator)
     {
         return FreeList
         {
