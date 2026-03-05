@@ -405,3 +405,9 @@ constexpr auto Invoke(Fn&& fn, TArgs&&... args)
         return fn(Forward<TArgs>(args)...);
     }
 }
+
+template<typename T>
+constexpr bool HasValue(T&& value)
+{
+    return bool(value);
+}

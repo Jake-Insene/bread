@@ -93,11 +93,11 @@ static void _load_theme(const mem::Allocator& allocator, const Slice<u8>& font_f
         theme.font_atlas = Graphics::texture_create(
             Graphics::TextureCreateInfo
             {
-                .usage = Graphics::TEXTURE_USAGE_UPLOAD_ONCE,
-                .type = Graphics::TEXTURE_2D,
-                .format = Graphics::TEXTURE_FORMAT_R8,
-                .min_filter = Graphics::TEXTURE_FILTER_NEAREST,
-                .mag_filter = Graphics::TEXTURE_FILTER_NEAREST,
+                //.usage = Graphics::TEXTURE_USAGE_UPLOAD_ONCE,
+                .type = Graphics::TextureType::Texture2D,
+                .format = Graphics::TextureFormat::R8,
+                .min_filter = Graphics::TextureFilter::Nearest,
+                .mag_filter = Graphics::TextureFilter::Nearest,
                 .size = Vector2I(width, width),
                 .pixels = pixels,
             }

@@ -28,16 +28,6 @@ Graphics::PhysicalDeviceInfo Graphics::physical_device_get_info(PhysicalDeviceID
 	return current_adapter.physical_device_get_info(physical_device);
 }
 
-Graphics::DeviceID Graphics::device_create(const DeviceCreateInfo &ci)
-{
-	return current_adapter.device_create(ci);
-}
-
-void Graphics::device_destroy(DeviceID device)
-{
-	current_adapter.device_destroy(device);
-}
-
 Graphics::SurfaceID Graphics::surface_create(const Graphics::SurfaceCreateInfo& ci)
 {
 	return current_adapter.surface_create(ci);
@@ -46,6 +36,16 @@ Graphics::SurfaceID Graphics::surface_create(const Graphics::SurfaceCreateInfo& 
 void Graphics::surface_destroy(Graphics::SurfaceID surface)
 {
 	current_adapter.surface_destroy(surface);
+}
+
+Graphics::DeviceID Graphics::device_create(const DeviceCreateInfo &ci)
+{
+	return current_adapter.device_create(ci);
+}
+
+void Graphics::device_destroy(DeviceID device)
+{
+	current_adapter.device_destroy(device);
 }
 
 Graphics::SwapChainID Graphics::swap_chain_create(const SwapChainCreateInfo& ci)
@@ -58,14 +58,69 @@ void Graphics::swap_chain_destroy(SwapChainID swap_chain)
 	current_adapter.swap_chain_destroy(swap_chain);
 }
 
-Graphics::RenderTargetID Graphics::swap_chain_get_render_target(SwapChainID swap_chain, usize render_target_index)
+Graphics::TextureID Graphics::swap_chain_get_texture(SwapChainID swap_chain, u32 image_index)
 {
-	return current_adapter.swap_chain_get_render_target(swap_chain, render_target_index);
+	return current_adapter.swap_chain_get_texture(swap_chain, image_index);
 }
 
-void Graphics::swap_chain_present(SwapChainID swap_chain, usize render_target_index)
+void Graphics::swap_chain_acquire_next_image(SwapChainID swap_chain, const AcquireInfo& acquire_info, u32* image_index)
 {
-	current_adapter.swap_chain_present(swap_chain, render_target_index);
+	current_adapter.swap_chain_acquire_next_image(swap_chain, acquire_info, image_index);
+}
+
+Graphics::FenceID Graphics::fence_create(const FenceCreateInfo &ci)
+{
+	return current_adapter.fence_create(ci);
+}
+
+void Graphics::fence_destroy(FenceID fence)
+{
+	current_adapter.fence_destroy(fence);
+}
+
+void Graphics::fence_reset(Slice<FenceID> fences)
+{
+	current_adapter.fence_reset(fences);
+}
+
+void Graphics::fence_wait_for(Slice<FenceID> fences, bool wait_for_all, u64 timeout)
+{
+	current_adapter.fence_wait_for(fences, wait_for_all, timeout);
+}
+
+Graphics::SemaphoreID Graphics::semaphore_create(const SemaphoreCreateInfo &ci)
+{
+	return current_adapter.semaphore_create(ci);
+}
+
+void Graphics::semaphore_destroy(SemaphoreID semaphore)
+{
+	current_adapter.semaphore_destroy(semaphore);
+}
+
+Graphics::QueueID Graphics::queue_create(const QueueCreateInfo& ci)
+{
+	return current_adapter.queue_create(ci);
+}
+
+void Graphics::queue_destroy(QueueID queue)
+{
+	current_adapter.queue_destroy(queue);
+}
+
+void Graphics::queue_execute_command_buffer(QueueID queue, const QueueExecuteInfo& execute_info)
+{
+	current_adapter.queue_execute_command_buffer(queue, execute_info);
+}
+
+void Graphics::queue_present(QueueID queue, const QueuePresentInfo& present_info)
+{
+	current_adapter.queue_present(queue, present_info);
+}
+
+void Graphics::queue_wait_idle(QueueID queue)
+{
+	current_adapter.queue_wait_idle(queue);
 }
 
 Graphics::BufferID Graphics::buffer_create(const BufferCreateInfo& ci)
@@ -130,14 +185,24 @@ void Graphics::pipeline_destroy(PipelineID pipeline)
 	current_adapter.pipeline_destroy(pipeline);
 }
 
-Graphics::CommandBufferID Graphics::command_buffer_create(const CommandBufferCreateInfo& ci)
+Graphics::CommandPoolID Graphics::command_pool_create(const CommandPoolCreateInfo &ci)
 {
-	return current_adapter.command_buffer_create(ci);
+	return current_adapter.command_pool_create(ci);
 }
 
-void Graphics::command_buffer_destroy(CommandBufferID cmd)
+void Graphics::command_pool_destroy(CommandPoolID command_pool)
 {
-	current_adapter.command_buffer_destroy(cmd);
+	return current_adapter.command_pool_destroy(command_pool);
+}
+
+Graphics::CommandBufferID Graphics::command_buffer_allocate(const CommandBufferAllocateInfo& ci)
+{
+	return current_adapter.command_buffer_allocate(ci);
+}
+
+void Graphics::command_buffer_free(CommandBufferID cmd)
+{
+	current_adapter.command_buffer_free(cmd);
 }
 
 void Graphics::command_buffer_begin(CommandBufferID cmd)
@@ -145,12 +210,40 @@ void Graphics::command_buffer_begin(CommandBufferID cmd)
 	current_adapter.command_buffer_begin(cmd);
 }
 
+void Graphics::command_buffer_end(CommandBufferID cmd)
+{
+	current_adapter.command_buffer_end(cmd);
+}
+
+void Graphics::command_buffer_begin_renderpass(CommandBufferID cmd, const RenderPassBeginInfo& begin_info)
+{
+	current_adapter.command_buffer_begin_renderpass(cmd, begin_info);
+}
+
+void Graphics::command_buffer_end_renderpass(CommandBufferID cmd, const RenderPassEndInfo& end_info)
+{
+	current_adapter.command_buffer_end_renderpass(cmd, end_info);
+}
+
+void Graphics::command_buffer_memory_barrier(CommandBufferID command_buffer, const PipelineMemoryBarrier& memory_barrier)
+{
+	current_adapter.command_buffer_memory_barrier(command_buffer, memory_barrier);
+}
+
+void Graphics::command_buffer_buffer_barrier(CommandBufferID command_buffer, const PipelineBufferBarrier& buffer_barrier)
+{
+	current_adapter.command_buffer_buffer_barrier(command_buffer, buffer_barrier);
+}
+
+void Graphics::command_buffer_texture_barrier(CommandBufferID command_buffer, const PipelineTextureBarrier& texture_barrier)
+{
+	current_adapter.command_buffer_texture_barrier(command_buffer, texture_barrier);
+}
+
 void Graphics::command_buffer_blit_framebuffer(CommandBufferID cmd, RenderTargetID src_render_target, RenderTargetID dst_render_target, Rect2DI src_rect, Rect2DI dst_rect, TextureFilter filter)
 {
 	current_adapter.command_buffer_blit_framebuffer(cmd, src_render_target, dst_render_target, src_rect, dst_rect, filter);
 }
-
-
 
 void Graphics::command_buffer_bind_vertex_buffers(CommandBufferID cmd, u32 binding, const Slice<BufferID>& buffers, const Slice<u32>& offsets, const Slice<u32>& strides)
 {
@@ -200,25 +293,5 @@ void Graphics::command_buffer_draw(Graphics::CommandBufferID cmd, u32 vertex_cou
 void Graphics::command_buffer_draw_indexed(Graphics::CommandBufferID cmd, u32 index_count, u32 instance_count, u32 base_index, u32 base_vertex, u32 base_instance)
 {
 	current_adapter.command_buffer_draw_indexed(cmd, index_count, instance_count, base_index, base_vertex, base_instance);
-}
-
-void Graphics::command_buffer_end(CommandBufferID cmd)
-{
-	current_adapter.command_buffer_end(cmd);
-}
-
-Graphics::QueueID Graphics::queue_create(const QueueCreateInfo& ci)
-{
-	return current_adapter.queue_create(ci);
-}
-
-void Graphics::queue_destroy(QueueID queue)
-{
-	current_adapter.queue_destroy(queue);
-}
-
-void Graphics::queue_execute_command_buffer(QueueID queue, const Slice<CommandBufferID>& command_buffers)
-{
-	current_adapter.queue_execute_command_buffer(queue, command_buffers);
 }
 

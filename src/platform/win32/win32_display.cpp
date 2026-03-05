@@ -45,7 +45,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 			Input::data.mouse_buttons[i32(btn)] = false;
 
 			InputEventMouseButton event = {};
-			event.type = INPUT_EVENT_MOUSE_BUTTON;
+			event.type = InputEventType::MouseButton;
 			event.position = Input::data.mouse_position;
 			event.pressed = false;
 			event.button = btn;
@@ -100,7 +100,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		);
 
 		InputEventMouseButton event = {};
-		event.type = INPUT_EVENT_MOUSE_BUTTON;
+		event.type = InputEventType::MouseButton;
 		event.position = pos;
 		event.pressed = Input::data.mouse_buttons[i32(button)];
 		event.button = button;
@@ -136,7 +136,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		Input::data.keys[wparam] = new_key_state;
 
 		InputEventKey event = {};
-		event.type = InputEventType::INPUT_EVENT_KEY;
+		event.type = InputEventType::KeyPress;
 		event.pressed = Input::data.keys[wparam] == KeyState::Pressed;
 		event.key = static_cast<Key>(wparam);
 
@@ -184,14 +184,6 @@ void Display::initialize(const mem::Allocator& allocator)
 	wc.hCursor = LoadCursorA(0, IDC_ARROW);
 	wc.hIconSm = LoadIconA(0, IDI_APPLICATION);
 	RegisterClassExA(&wc);
-
-	wc.cbSize = sizeof(wc);
-	wc.lpfnWndProc = &DefWindowProcA;
-	wc.lpszClassName = Win32Display::WindowClassNameHeadless;
-	wc.hIcon = LoadIconA(0, IDI_APPLICATION);
-	wc.hCursor = LoadCursorA(0, IDC_ARROW);
-	wc.hIconSm = LoadIconA(0, IDI_APPLICATION);
-	RegisterClassExA(&wc); // Headless
 
 	GetClientRect(GetDesktopWindow(), &Win32Display::data.fullscreen_rect);
 }

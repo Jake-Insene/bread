@@ -7,7 +7,6 @@
 struct Win32Display
 {
     static constexpr const char* WindowClassName = "Bread:window";
-    static constexpr const char* WindowClassNameHeadless = "Bread:windowhl";
     
     struct WindowData
     {

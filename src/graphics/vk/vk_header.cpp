@@ -76,10 +76,51 @@ void Vulkan::load_device_procs(DeviceVulkanTable& table, VkDevice device)
     // swapchain
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateSwapchainKHR);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroySwapchainKHR);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkGetSwapchainImagesKHR);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkAcquireNextImageKHR);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkAcquireNextImage2KHR);
 
     // queue
     VK_DEVICE_REQUIRED_LOAD(table, device, vkGetDeviceQueue);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkQueuePresentKHR);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkQueueSubmit);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkQueueWaitIdle);
+
+    // fence
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateFence);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyFence);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkGetFenceStatus);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkResetFences);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkWaitForFences);
+
+    // semaphore
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateSemaphore);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroySemaphore);
+
+    // command pool
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateCommandPool);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyCommandPool);
+
+    // command buffer
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkAllocateCommandBuffers);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkFreeCommandBuffers);
+
+    // commands
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkBeginCommandBuffer);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkEndCommandBuffer);
+
+    // VK_KHR_dynamic_rendering
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdBeginRenderingKHR);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdEndRendering);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdPipelineBarrier);
+
+    // image
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateImage);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyImage);
+
+    // image view
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateImageView);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyImageView);
 }
 
 uint32_t Vulkan::get_api_version()
@@ -106,10 +147,8 @@ VkInstance Vulkan::create_instance()
 
     // Validation layer
 #if defined(BREAD_SHOW_DEBUG_INFO)
-    const VkBool32 verbose_value = true;
 #else
     const VkBool32 verbose_value = false;
-#endif
     const VkLayerSettingEXT layer_setting =
     {
         .pLayerName = "VK_LAYER_KHRONOS_validation",
@@ -126,15 +165,21 @@ VkInstance Vulkan::create_instance()
         .settingCount = 1,
         .pSettings = &layer_setting,
     };
+    (void)layer_settings_create_info;
+#endif
+
+    const char* layers[] = {
+        "VK_LAYER_KHRONOS_validation"
+    };
 
     VkInstanceCreateInfo instance_info =
     {
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-        .pNext = &layer_settings_create_info,
+        .pNext = nullptr,
         .flags = 0,
         .pApplicationInfo = &application_info,
-        .enabledLayerCount = 0,
-        .ppEnabledLayerNames = nullptr,
+        .enabledLayerCount = 1,
+        .ppEnabledLayerNames = layers,
         .enabledExtensionCount = static_cast<uint32_t>(ArraySize(_vk_extensions)),
         .ppEnabledExtensionNames = _vk_extensions,
     };
@@ -164,16 +209,25 @@ VkSurfaceKHR Vulkan::create_surface(VkInstance instance, MemoryAddress native_ha
 
     if(native_handle == 0)
     {
+        static bool initialized_dummy_class = false;
+        if(initialized_dummy_class == false)
+        {
+            WNDCLASS wc = {};
+            wc.lpfnWndProc = &DefWindowProcA;
+            wc.lpszClassName = "Bread:vulkan_dummy";
+
+            RegisterClassA(&wc);
+        }
+        
         surface_info.hwnd = CreateWindowExA(
-            0, "Bread:windowhl", "-", WS_OVERLAPPEDWINDOW,
+            0, "Bread:vulkan_dummy", "-", WS_OVERLAPPEDWINDOW,
             0, 0, 200, 200, 0, 0, 0, 0
         );
     }
     
     VkResult result = vk.vkCreateWin32SurfaceKHR(instance, &surface_info, allocation_callbacks(), &surface);
 #endif
-
-    VKFailOn(result != VK_SUCCESS, "'vkCreateSurfaceKHR'({})", Vulkan::result_as_string(result));
+    VKFailOn(result != VK_SUCCESS, "vkCreateSurfaceKHR({})", Vulkan::result_as_string(result));
 
     return surface;
 }
@@ -224,7 +278,7 @@ VkBool32 VKAPI_PTR Vulkan::_vk_debug_utils_callback(
 	Unused(messageSeverity, messageTypes, pUserData);
     StringView msg_view = Vulkan::vulkan_string_to_sv(pCallbackData->pMessage);
     VKDebugInfo("{}", msg_view);
-	return VK_TRUE;
+ 	return VK_TRUE;
 }
 
 void* VKAPI_PTR Vulkan::_vk_driver_allocate(void* pUserData, size_t size, size_t alignment, VkSystemAllocationScope allocationScope)
@@ -297,7 +351,6 @@ void Vulkan::_check_instance_extensions()
     vk.vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
 
     mem::Allocator allocator = VulkanDriver::get_allocator();
-
 
     Slice<VkExtensionProperties> instance_extensions = allocator.array<VkExtensionProperties>(extension_count);
     vk.vkEnumerateInstanceExtensionProperties(

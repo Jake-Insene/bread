@@ -108,9 +108,9 @@ Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
             path,
             TextureLoadInfo
             {
-                .type = Graphics::TEXTURE_2D,
-                .min_filter = Graphics::TEXTURE_FILTER_NEAREST,
-                .mag_filter = Graphics::TEXTURE_FILTER_NEAREST,
+                .type = Graphics::TextureType::Texture2D,
+                .min_filter = Graphics::TextureFilter::Nearest,
+                .mag_filter = Graphics::TextureFilter::Nearest,
             }
         );
         break;
@@ -239,9 +239,9 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
         
         Graphics::TextureCreateInfo create_info =
         {
-            .usage = Graphics::TEXTURE_USAGE_UPLOAD_ONCE,
+            //.usage = Graphics::TEXTURE_USAGE_UPLOAD_ONCE,
             .type = load_info.type,
-            .format = image->format == Image::FORMAT_RGB8 ? Graphics::TEXTURE_FORMAT_RGB8 : Graphics::TEXTURE_FORMAT_RGBA8,
+            .format = image->format == Image::FORMAT_RGB8 ? Graphics::TextureFormat::RGB8 : Graphics::TextureFormat::RGBA8,
             .min_filter = load_info.min_filter,
             .mag_filter = load_info.mag_filter,
             .size = image->size,

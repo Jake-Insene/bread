@@ -1,14 +1,15 @@
 #pragma once
 #include "math/vec2.h"
 
-enum InputEventType
-{
-    INPUT_EVENT_NONE = 0,
 
-    INPUT_EVENT_KEY,
-    INPUT_EVENT_TOUCH,
-    INPUT_EVENT_MOUSE_MOVE,
-    INPUT_EVENT_MOUSE_BUTTON,
+enum class InputEventType
+{
+    None = 0,
+
+    KeyPress,
+    Touch,
+    MouseMove,
+    MouseButton,
 };
 
 enum class Key

@@ -17,8 +17,8 @@ void SceneManager::initialize(const mem::Allocator& allocator)
     // TODO: Create Render Target
     Graphics::RenderTargetCreateInfo rtci = 
     {
-        .format = Graphics::TEXTURE_FORMAT_RGBA8,
-        .depth_stencil_format = Graphics::TEXTURE_FORMAT_UNKNOWN,
+        .format = Graphics::TextureFormat::RGBA8,
+        .depth_stencil_format = Graphics::TextureFormat::Unknown,
         .size = Engine::get_configuration().viewport_size,
     };
 
@@ -182,7 +182,7 @@ void SceneManager::scene_handle_input(const InputEvent& event)
 
     switch (event.type)
     {
-    case INPUT_EVENT_TOUCH:
+    case InputEventType::Touch:
     {
         auto& et = event.get<InputEventTouch>();
         InputEventTouch new_event = et;
@@ -192,7 +192,7 @@ void SceneManager::scene_handle_input(const InputEvent& event)
         SceneCallRef(data.current_scene, on_event, new_event);
     }
     break;
-    case INPUT_EVENT_MOUSE_BUTTON:
+    case InputEventType::MouseButton:
     {
         auto& et = event.get<InputEventMouseButton>();
         InputEventMouseButton new_event = et;

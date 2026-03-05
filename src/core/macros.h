@@ -9,3 +9,13 @@
 #define _Concat(x, y) x##y
 #define Concat(x, y) _Concat(x, y)
 
+#define EnableBitOp(enum_type) \
+	inline constexpr enum_type operator|(enum_type lhs, enum_type rhs)\
+	{\
+		return static_cast<enum_type>(static_cast<usize>(lhs) | static_cast<usize>(rhs));\
+	}\
+	inline constexpr enum_type operator&(enum_type lhs, enum_type rhs)\
+	{\
+		return static_cast<enum_type>(static_cast<usize>(lhs) & static_cast<usize>(rhs));\
+	}\
+

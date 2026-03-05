@@ -41,7 +41,7 @@ static inline void _end_prim_batch(Graphics::CommandBufferID cmd, SceneRenderer:
 	u32 offset = batch.buffer_offset;
 
 	Graphics::command_buffer_bind_pipeline(cmd, batch.current_pipeline);
-	Graphics::command_buffer_bind_index_buffer(cmd, SceneRenderer::data.global_ib, 0, Graphics::INDEX_TYPE_UINT8);
+	Graphics::command_buffer_bind_index_buffer(cmd, SceneRenderer::data.global_ib, 0, Graphics::IndexType::UInt8);
 	Graphics::command_buffer_bind_vertex_buffers(
 		cmd,
 		0,
@@ -69,7 +69,7 @@ static inline void _end_sprite_batch(Graphics::CommandBufferID cmd, SceneRendere
 	u32 offset = batch.buffer_offset;
 
 	Graphics::command_buffer_bind_pipeline(cmd, batch.current_pipeline);
-	Graphics::command_buffer_bind_index_buffer(cmd, SceneRenderer::data.global_ib, 0, Graphics::INDEX_TYPE_UINT8);
+	Graphics::command_buffer_bind_index_buffer(cmd, SceneRenderer::data.global_ib, 0, Graphics::IndexType::UInt8);
 	Graphics::command_buffer_bind_vertex_buffers(
 		cmd,
 		0,
