@@ -123,6 +123,16 @@ void Graphics::queue_wait_idle(QueueID queue)
 	current_adapter.queue_wait_idle(queue);
 }
 
+Graphics::MemoryHeapID Graphics::memory_heap_create(const MemoryHeapCreateInfo& ci)
+{
+	return current_adapter.memory_heap_create(ci);
+}
+
+void Graphics::memory_heap_destroy(MemoryHeapID memory_heap)
+{
+	current_adapter.memory_heap_destroy(memory_heap);
+}
+
 Graphics::BufferID Graphics::buffer_create(const BufferCreateInfo& ci)
 {
 	return current_adapter.buffer_create(ci);
@@ -142,7 +152,6 @@ void Graphics::buffer_unmap_memory(Graphics::BufferID buffer, const Slice<u8>& m
 {
 	current_adapter.buffer_unmap_memory(buffer, memory);
 }
-
 
 Graphics::TextureID Graphics::texture_create(const TextureCreateInfo& ci)
 {
@@ -240,58 +249,38 @@ void Graphics::command_buffer_texture_barrier(CommandBufferID command_buffer, co
 	current_adapter.command_buffer_texture_barrier(command_buffer, texture_barrier);
 }
 
-void Graphics::command_buffer_blit_framebuffer(CommandBufferID cmd, RenderTargetID src_render_target, RenderTargetID dst_render_target, Rect2DI src_rect, Rect2DI dst_rect, TextureFilter filter)
+void Graphics::command_buffer_copy_buffer(CommandBufferID command_buffer, const BufferCopyInfo& copy_info)
 {
-	current_adapter.command_buffer_blit_framebuffer(cmd, src_render_target, dst_render_target, src_rect, dst_rect, filter);
+	current_adapter.command_buffer_copy_buffer(command_buffer, copy_info);
 }
 
-void Graphics::command_buffer_bind_vertex_buffers(CommandBufferID cmd, u32 binding, const Slice<BufferID>& buffers, const Slice<u32>& offsets, const Slice<u32>& strides)
+void Graphics::command_buffer_bind_pipeline(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineID pipeline)
 {
-	current_adapter.command_buffer_bind_vertex_buffers(cmd, binding, buffers, offsets, strides);
+	current_adapter.command_buffer_bind_pipeline(command_buffer, bind_point, pipeline);
 }
 
-void Graphics::command_buffer_bind_index_buffer(Graphics::CommandBufferID cmd, Graphics::BufferID index_buffer, u32 offset, Graphics::IndexType index_type)
+void Graphics::command_buffer_bind_vertex_buffers(CommandBufferID command_buffer, u32 base_binding, const Slice<BufferID>& buffers, const Slice<usize>& offsets)
 {
-	current_adapter.command_buffer_bind_index_buffer(cmd, index_buffer, offset, index_type);
+	current_adapter.command_buffer_bind_vertex_buffers(command_buffer, base_binding, buffers, offsets);
 }
 
-void Graphics::command_buffer_bind_pipeline(CommandBufferID cmd, PipelineID pipeline)
+void Graphics::command_buffer_constant_block(Graphics::CommandBufferID command_buffer, Graphics::PipelineID pipeline, Graphics::ShaderStage stage, u32 offset, u32 size, MemoryAddress block_address)
 {
-	current_adapter.command_buffer_bind_pipeline(cmd, pipeline);
+	current_adapter.command_buffer_constant_block(command_buffer, pipeline, stage, offset, size, block_address);
 }
 
-void Graphics::command_buffer_bind_render_target(CommandBufferID cmd, RenderTargetID render_target)
+void Graphics::command_buffer_set_viewports(CommandBufferID command_buffer, u32 base_viewport, const Slice<Viewport>& viewports)
 {
-	current_adapter.command_buffer_bind_render_target(cmd, render_target);
+	current_adapter.command_buffer_set_viewports(command_buffer, base_viewport, viewports);
 }
 
-void Graphics::command_buffer_set_texture_unit(CommandBufferID cmd, u32 set, u32 base_slot, const Slice<TextureID>& textures)
+void Graphics::command_buffer_set_scissors(CommandBufferID command_buffer, u32 base_scissor, const Slice<Scissor>& scissors)
 {
-	current_adapter.command_buffer_set_texture_unit(cmd, set, base_slot, textures);
-}
-
-void Graphics::command_buffer_set_uniform(CommandBufferID cmd, u32 set, u32 base_slot, const Slice<BufferID>& buffers)
-{
-	current_adapter.command_buffer_set_uniform(cmd, set, base_slot, buffers);
-}
-
-void Graphics::command_buffer_set_viewport(CommandBufferID cmd, Rect2DI viewport_rect)
-{
-	current_adapter.command_buffer_set_viewport(cmd, viewport_rect);
-}
-
-void Graphics::command_buffer_clear(CommandBufferID cmd, RenderTargetID render_target, Color clear_color)
-{
-	current_adapter.command_buffer_clear(cmd, render_target, clear_color);
+	current_adapter.command_buffer_set_scissors(command_buffer, base_scissor, scissors);
 }
 
 void Graphics::command_buffer_draw(Graphics::CommandBufferID cmd, u32 vertex_count, u32 instance_count, u32 base_vertex, u32 base_instance)
 {
 	current_adapter.command_buffer_draw(cmd, vertex_count, instance_count, base_vertex, base_instance);
-}
-
-void Graphics::command_buffer_draw_indexed(Graphics::CommandBufferID cmd, u32 index_count, u32 instance_count, u32 base_index, u32 base_vertex, u32 base_instance)
-{
-	current_adapter.command_buffer_draw_indexed(cmd, index_count, instance_count, base_index, base_vertex, base_instance);
 }
 

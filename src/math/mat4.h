@@ -61,11 +61,10 @@ struct [[nodiscard]] Mat4
         };
     }
 
-    static constexpr Mat4 rotation_z(const f32 degrees)
+    static constexpr Mat4 rotation_z(const f32 radians)
     {
-        const f32 r = math::rads(degrees);
-        const f32 c = math::cos(r);
-        const f32 s = math::sin(r);
+        const f32 c = math::cos(radians);
+        const f32 s = math::sin(radians);
 
         return Mat4
         {
@@ -75,13 +74,24 @@ struct [[nodiscard]] Mat4
             Vector4(0, 0, 0, 1)
         };
     }
+
+    static constexpr Mat4 rotation_y(const f32 radians)
+    {
+        const f32 c = math::cos(radians);
+        const f32 s = math::sin(radians);
+
+        return Mat4
+        {
+            Vector4(c, 0, s, 0),
+            Vector4(0, 1, 0, 0),
+            Vector4(-s, 0, c, 0),
+            Vector4(0, 0, 0, 1)
+        };
+    }
     
     constexpr Mat4()
     {
-        matrix[0] = Vector4(1, 0, 0, 0);
-        matrix[1] = Vector4(0, 1, 0, 0);
-        matrix[2] = Vector4(0, 0, 1, 0);
-        matrix[3] = Vector4(0, 0, 0, 1);
+        *this = identity();
     }
     
     constexpr Mat4(const Vector4& _00, const Vector4& _10, const Vector4& _20, const Vector4& _30)

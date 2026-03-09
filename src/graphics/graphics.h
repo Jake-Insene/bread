@@ -21,10 +21,12 @@ struct Graphics
 	using SemaphoreID = ID<u32, struct _SemaphoreD>;
 	using QueueID = ID<u32, struct _QueueID>;
 	using SwapChainID = ID<u32, struct _SwapChainTag>;
+	using MemoryHeapID = ID<u32, struct _MemoryHeapTag>;
 	using BufferID = ID<u32, struct _BufferTag>;
 	using TextureID = ID<u32, struct _TextureTag>;
 	using RenderTargetID = ID<u32, struct _RenderTargetTag>;
 	using PipelineID = ID<u32, struct _PipelineTag>;
+	using DescriptorSetID = ID<u32, struct _DescriptorSet>;
 	using CommandPoolID = ID<u32, struct _CommandPoolID>;
 	using CommandBufferID = ID<u32, struct _CommandBufferTag>;
 
@@ -181,22 +183,50 @@ struct Graphics
 	static void queue_wait_idle(QueueID queue);
 
 	// ====== Resources ======
+	/*
+	* Memory Heap API
+	*/
+
+	static constexpr usize MinHeapSize = 1024;
+	static constexpr usize MinHeapResourceAlignment = 1024;
+
+	enum class HeapUsage
+	{
+		Unknown = 0,
+		CPUExclusive,
+		GPUExclusive,
+		CPUGPUCoherent,
+	};
+
+	struct MemoryHeapCreateInfo
+	{
+		DeviceID device;
+		HeapUsage heap_usage;
+		usize heap_size;
+	};
+
+	static MemoryHeapID memory_heap_create(const MemoryHeapCreateInfo& ci);
+	static void memory_heap_destroy(MemoryHeapID memory_heap);
 
 	/*
 	* Buffer API
 	*/
 	enum class BufferUsage
 	{
-		Unknown = 0,
-		VertexBuffer,
-		IndexBuffer,
-		UniformBuffer,
+		VertexBuffer = Bit(0),
+		IndexBuffer = Bit(1),
+		UniformBuffer = Bit(2),
+		TransferSource = Bit(3),
+		TransferDestination = Bit(4),
 	};
 	
 	struct BufferCreateInfo
 	{
+		DeviceID device;
 		BufferUsage usage;
-		Slice<const u8> data;
+		usize size;
+		MemoryHeapID memory_heap;
+		usize heap_offset;
 	};
 
 	static BufferID buffer_create(const BufferCreateInfo& ci);
@@ -290,11 +320,41 @@ struct Graphics
 		Graphics,
 	};
 
+	enum class ShaderStage
+	{
+		Unknown = 0,
+		Vertex,
+		Fragment,
+	};
+
 	enum class PrimitiveTopology
 	{
 		Unknown = 0,
 		TriangleList,
 		LineList,
+	};
+
+	enum class PolygonMode
+	{
+		Unknown = 0,
+		Fill,
+		Line,
+		Point,
+	};
+
+	enum class CullMode
+	{
+		Unknown = 0,
+		Front,
+		Back,
+		FrontAndBack,
+	};
+
+	enum class FrontFace
+	{
+		Unknown = 0,
+		CounterClockWise,
+		ClockWise,
 	};
 
 	enum class InputRate
@@ -308,13 +368,27 @@ struct Graphics
 	{
 		Unknown = 0,
 		RGBA32Float,
+		RGB32Float,
+		RG32Float,
+		R32Float,
 	};
-	
-	enum class ShaderStage
+
+	enum class SampleCount
 	{
 		Unknown = 0,
-		Vertex,
-		Fragment,
+		Sample1,
+		Sample2,
+		Sample4,
+		Sample8,
+		Sample16,
+		Sample32,
+		Sample64,
+	};
+
+	struct ShaderStageInfo
+	{
+		ShaderStage stage;
+		Slice<const u8> code;
 	};
 
 	struct VertexBinding
@@ -328,33 +402,89 @@ struct Graphics
 	{
 		u32 location;
 		u32 binding;
-		u32 offset;
 		VertexFormat format;
+		u32 offset;
 	};
 
-	struct InputAssembly
+	struct VertexInput
 	{
 		Slice<VertexBinding> bindings;
 		Slice<VertexAttribute> attributes;
 	};
 
-	struct ShaderInfo
+	struct InputAssembly
+	{
+		PrimitiveTopology topology;
+	};
+
+	struct RasterizerState
+	{
+		bool depth_clamp_enable;
+		bool rasterizer_discard_enable;
+		PolygonMode polygon_mode;
+		CullMode cull_mode;
+		FrontFace front_face;
+		f32 line_width;
+	};
+
+	struct MultisampleState
+	{
+		SampleCount sample_count;
+		f32 min_sample_shading;
+		bool sample_shading_enable;
+		bool alpha_to_coverage_enable;
+		bool alpha_one_enable;
+	};
+
+	struct DepthStencilState
+	{
+		bool depth_test_enable;
+		bool depth_write_enable;
+		bool depth_bounds_test_enable;
+		bool stencil_test_enable;
+		f32 min_depth_bounds;		
+		f32 max_depth_bounds;		
+	};
+
+	struct ConstantBlock
 	{
 		ShaderStage stage;
-		StringView source_path;
-		Slice<const u8> code;
+		u32 offset;
+		u32 size;
+	};
+
+	struct PipelineLayout
+	{
+		Slice<ConstantBlock> constant_blocks;
 	};
 
 	struct PipelineCreateInfo
 	{
+		DeviceID device;
 		PipelineBindPoint bind_point;
-		PrimitiveTopology topology;
+		Slice<ShaderStageInfo> shader_stages;
+		VertexInput vertex_input;
 		InputAssembly input_assembly;
-		Slice<ShaderInfo> stages;
+		RasterizerState rasterizer_state;
+		MultisampleState multisample_state;
+		DepthStencilState depth_stencil_state;
+		PipelineLayout pipeline_layout;
+		SurfaceFormat surface_format;
 	};
 
 	static PipelineID pipeline_create(const PipelineCreateInfo& ci);
 	static void pipeline_destroy(PipelineID pipeline);
+
+	/*
+	* Descriptor Set
+	*/
+	struct DescriptorSetCreateInfo
+	{
+		DeviceID device;
+	};
+
+	DescriptorSetID descriptor_set_create(const DescriptorSetCreateInfo& ci);
+	void descriptor_set_destroy(_DescriptorSet descriptor_set);
 
 	/*
 	* CommandPool
@@ -443,6 +573,38 @@ struct Graphics
 		TextureSubresourceRange subresource_range;
 	};
 
+	struct BufferCopyRegion
+	{
+		usize source_offset;
+		usize destination_offset;
+		usize size;
+	};
+
+	struct  BufferCopyInfo
+	{
+		BufferID source_buffer;
+		BufferID destination_buffer;
+		Slice<BufferCopyRegion> copy_regions;
+	};
+
+	struct Viewport
+	{
+		f32 x;
+		f32 y;
+		f32 width;
+		f32 height;
+		f32 min_depth;
+		f32 max_depth;
+	};
+
+	struct Scissor
+	{
+		i32 x;
+		i32 y;
+		u32 width;
+		u32 height;
+	};
+
 	static CommandBufferID command_buffer_allocate(const CommandBufferAllocateInfo& ci);
 	static void command_buffer_free(CommandBufferID command_buffer);
 
@@ -456,20 +618,20 @@ struct Graphics
 	static void command_buffer_buffer_barrier(CommandBufferID command_buffer, const PipelineBufferBarrier& buffer_barrier);
 	static void command_buffer_texture_barrier(CommandBufferID command_buffer, const PipelineTextureBarrier& texture_barrier);
 
-	static void command_buffer_blit_framebuffer(CommandBufferID command_buffer, RenderTargetID src_render_target, RenderTargetID dst_render_target, Rect2DI src_rect, Rect2DI dst_rect, TextureFilter filter);
-	static void command_buffer_bind_vertex_buffers(CommandBufferID command_buffer, u32 binding, const Slice<BufferID>& buffers, const Slice<u32>& offsets, const Slice<u32>& strides);
-	static void command_buffer_bind_index_buffer(CommandBufferID command_buffer, BufferID index_buffer, u32 offset, IndexType index_type);
-	static void command_buffer_bind_pipeline(CommandBufferID command_buffer, PipelineID pipeline);
-	static void command_buffer_bind_render_target(CommandBufferID command_buffer, RenderTargetID render_target);
-	static void command_buffer_set_texture_unit(CommandBufferID command_buffer, u32 set, u32 base_slot, const Slice<TextureID>& textures);
-	static void command_buffer_set_uniform(CommandBufferID command_buffer, u32 set, u32 base_slot, const Slice<BufferID>& buffers);
-	static void command_buffer_set_viewport(CommandBufferID command_buffer, Rect2DI viewport_rect);
-	static void command_buffer_clear(CommandBufferID command_buffer, RenderTargetID render_target, Color clear_color);
+	static void command_buffer_copy_buffer(CommandBufferID command_buffer, const BufferCopyInfo& copy_info);
+
+	static void command_buffer_bind_pipeline(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineID pipeline);
+	static void command_buffer_bind_vertex_buffers(CommandBufferID command_buffer, u32 base_binding, const Slice<BufferID>& buffers, const Slice<usize>& offsets);
+	static void command_buffer_constant_block(CommandBufferID command_buffer, PipelineID pipeline, ShaderStage stage, u32 offset, u32 size, MemoryAddress block_address);
+
+	static void command_buffer_set_viewports(CommandBufferID command_buffer, u32 base_viewport, const Slice<Viewport>& viewports);
+	static void command_buffer_set_scissors(CommandBufferID command_buffer, u32 base_scissor, const Slice<Scissor>& scissors);
+
 	static void command_buffer_draw(CommandBufferID command_buffer, u32 vertex_count, u32 instance_count, u32 base_vertex, u32 base_instance);
-	static void command_buffer_draw_indexed(CommandBufferID command_buffer, u32 index_count, u32 instance_count, u32 base_index, u32 base_vertex, u32 base_instance);
 };
 
 
+EnableBitOp(Graphics::BufferUsage);
 EnableBitOp(Graphics::TextureAspects);
 EnableBitOp(Graphics::PipelineStages);
 EnableBitOp(Graphics::AccessMasks);

@@ -53,7 +53,8 @@ struct SharedVulkanTable
     PFN_vkEnumerateDeviceExtensionProperties vkEnumerateDeviceExtensionProperties;
     PFN_vkGetPhysicalDeviceFeatures2 vkGetPhysicalDeviceFeatures2;
     PFN_vkGetPhysicalDeviceProperties2 vkGetPhysicalDeviceProperties2;
-    PFN_vkGetPhysicalDeviceQueueFamilyProperties vkGetPhysicalDeviceQueueFamilyProperties;
+    PFN_vkGetPhysicalDeviceQueueFamilyProperties2 vkGetPhysicalDeviceQueueFamilyProperties2;
+    PFN_vkGetPhysicalDeviceMemoryProperties2 vkGetPhysicalDeviceMemoryProperties2;
     
     PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR vkGetPhysicalDeviceSurfaceCapabilitiesKHR;
     PFN_vkGetPhysicalDeviceSurfaceFormatsKHR vkGetPhysicalDeviceSurfaceFormatsKHR;
@@ -93,6 +94,25 @@ struct DeviceVulkanTable
     PFN_vkCreateSemaphore vkCreateSemaphore;
     PFN_vkDestroySemaphore vkDestroySemaphore;
 
+    PFN_vkAllocateMemory vkAllocateMemory;
+    PFN_vkFreeMemory vkFreeMemory;
+    PFN_vkMapMemory2 vkMapMemory2;
+    PFN_vkUnmapMemory2 vkUnmapMemory2;
+
+    PFN_vkCreateBuffer vkCreateBuffer;
+    PFN_vkDestroyBuffer vkDestroyBuffer;
+    PFN_vkBindBufferMemory2 vkBindBufferMemory2;
+
+    PFN_vkCreateBufferView vkCreateBufferView;
+    PFN_vkDestroyBufferView vkDestroyBufferView;
+
+    PFN_vkCreateGraphicsPipelines vkCreateGraphicsPipelines;
+    PFN_vkDestroyPipeline vkDestroyPipeline;
+    PFN_vkCreateShaderModule vkCreateShaderModule;
+    PFN_vkDestroyShaderModule vkDestroyShaderModule;
+    PFN_vkCreatePipelineLayout vkCreatePipelineLayout;
+    PFN_vkDestroyPipelineLayout vkDestroyPipelineLayout;
+
     PFN_vkCreateCommandPool vkCreateCommandPool;
     PFN_vkDestroyCommandPool vkDestroyCommandPool;
 
@@ -105,6 +125,13 @@ struct DeviceVulkanTable
     PFN_vkCmdBeginRenderingKHR vkCmdBeginRenderingKHR;
     PFN_vkCmdEndRendering vkCmdEndRendering;
     PFN_vkCmdPipelineBarrier vkCmdPipelineBarrier;
+    PFN_vkCmdCopyBuffer vkCmdCopyBuffer;
+    PFN_vkCmdBindPipeline vkCmdBindPipeline;
+    PFN_vkCmdBindVertexBuffers vkCmdBindVertexBuffers;
+    PFN_vkCmdPushConstants vkCmdPushConstants;
+    PFN_vkCmdSetViewport vkCmdSetViewport;
+    PFN_vkCmdSetScissor vkCmdSetScissor;
+    PFN_vkCmdDraw vkCmdDraw;
 
     PFN_vkCreateImage vkCreateImage;
     PFN_vkDestroyImage vkDestroyImage;

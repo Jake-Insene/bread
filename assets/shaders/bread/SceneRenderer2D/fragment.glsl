@@ -5,9 +5,10 @@
 #include "core/header.glsl"
 
 
+layout(location = 0) in vec4 InputColor;
 layout(location = 0) out vec4 FragmentColor;
 
 void main()
 {
-    FragmentColor = vec4(1, 0, 0, 1);
+    FragmentColor = InputColor;
 }

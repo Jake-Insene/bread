@@ -69,7 +69,11 @@ void GenericAllocator::check_integrity()
             header = header->next;
         }
 
-        DebugAssert(page_size_accumulator == page.bytes.len, "allocator corruption");
+        if(page_size_accumulator != page.bytes.len)
+        {
+            Log::debug("Page({}) with size {} was corrupted, page_size_accumulator was {}", &page, page.bytes.len, page_size_accumulator);
+            DebugAssert(page_size_accumulator == page.bytes.len, "the page was corrupted");
+        }
     }
 #endif
 }
@@ -262,25 +266,23 @@ void GenericAllocator::free(Slice<u8> ptr)
     
     header->tags = None;
 
-    if(header && header->prev && header->prev->tags == 0)
-    {
-        header->prev->len += header->len + sizeof(Header);
-        header->prev->next = header->next;
+    // TODO: Investigate page corruption.
+    //if(header && header->prev && header->prev->tags == 0)
+    //{
+    //    header->prev->len += header->len + sizeof(Header);
+    //    header->prev->next = header->next;
+    //    if (header->next)
+    //        header->next->prev = header->prev;
+    //    header = header->prev;
+    //}
 
-        if (header->next)
-            header->next->prev = header->prev;
-
-        header = header->prev;
-    }
-
-    if(header && header->next && header->next->tags == 0)
-    {
-        header->len += header->next->len + sizeof(Header);
-        header->next = header->next->next;
-        
-        if (header->next)
-            header->next->prev = header;
-    }
+    //if(header && header->next && header->next->tags == 0)
+    //{
+    //    header->len += header->next->len + sizeof(Header);
+    //    header->next = header->next->next;
+    //    if (header->next)
+    //        header->next->prev = header;
+    //}
 
     check_integrity();
 }

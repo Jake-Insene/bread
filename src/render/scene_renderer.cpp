@@ -38,6 +38,8 @@ static inline void _update_sprite_batch_vb(SceneRenderer::SpriteBatch<BatchInsta
 template<typename BatchInstance>
 static inline void _end_prim_batch(Graphics::CommandBufferID cmd, SceneRenderer::Batch<BatchInstance>& batch, u32 stride)
 {
+	Unused(cmd, batch, stride);
+#if 0
 	u32 offset = batch.buffer_offset;
 
 	Graphics::command_buffer_bind_pipeline(cmd, batch.current_pipeline);
@@ -61,11 +63,14 @@ static inline void _end_prim_batch(Graphics::CommandBufferID cmd, SceneRenderer:
 
 	batch.buffer_offset += stride * batch.current_instance_count;
 	batch.current_instance_count = 0;
+#endif
 }
 
 template<typename BatchInstance>
 static inline void _end_sprite_batch(Graphics::CommandBufferID cmd, SceneRenderer::SpriteBatch<BatchInstance>& batch, u32 stride)
 {
+	Unused(cmd, batch, stride);
+#if 0
 	u32 offset = batch.buffer_offset;
 
 	Graphics::command_buffer_bind_pipeline(cmd, batch.current_pipeline);
@@ -87,6 +92,7 @@ static inline void _end_sprite_batch(Graphics::CommandBufferID cmd, SceneRendere
 	batch.texture_index = 0;
 	batch.buffer_offset += stride * batch.current_instance_count;
 	batch.current_instance_count = 0;
+	#endif
 }
 
 
