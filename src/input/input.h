@@ -1,5 +1,6 @@
 #pragma once
 #include "math/vec2.h"
+#include "display/display.h"
 
 
 enum class InputEventType
@@ -10,6 +11,8 @@ enum class InputEventType
     Touch,
     MouseMove,
     MouseButton,
+    WindowResize,
+    WindowClose,
 };
 
 enum class Key
@@ -127,6 +130,16 @@ struct InputEventMouseButton : InputEvent
     bool pressed;
 };
 
+struct InputEventWindowResize : InputEvent
+{
+    Display::WindowID window;
+    Vector2I size;
+};
+
+struct InputEventWindowClose : InputEvent
+{
+    Display::WindowID window;
+};
 
 enum class KeyState
 {

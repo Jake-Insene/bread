@@ -182,7 +182,23 @@ struct Graphics
 	static void queue_present(QueueID queue, const QueuePresentInfo& present_info);
 	static void queue_wait_idle(QueueID queue);
 
+	// ====== Enums ======
+
+	enum class DescriptorType
+	{
+		Unknown = 0,
+		UniformBuffer,
+		StorageBuffer,
+	};
+	
+	enum class ShaderStage
+	{
+		Vertex = Bit(0),
+		Fragment = Bit(1),
+	};
+
 	// ====== Resources ======
+
 	/*
 	* Memory Heap API
 	*/
@@ -312,19 +328,55 @@ struct Graphics
 	static TextureID render_target_get_texture(RenderTargetID render_target);
 
 	/*
+	* Descriptor Set
+	*/
+
+	struct DescriptorBinding
+	{
+		DescriptorType type;
+		u32 binding;
+		u32 count;
+		ShaderStage stages;
+	};
+
+	struct DescriptorSetCreateInfo
+	{
+		DeviceID device;
+		Slice<DescriptorBinding> bindings;
+	};
+
+	struct DescriptorBufferInfo
+	{
+		BufferID buffer;
+		usize offset;
+		usize range;
+	};
+
+	struct WriteDescriptorInfo
+	{
+		u32 binding;
+		u32 array_element;
+		u32 count;
+		DescriptorType type;
+		Slice<DescriptorBufferInfo> buffers;
+	};
+
+	struct UpdateDescriptorInfo
+	{
+		Slice<WriteDescriptorInfo> write_infos;
+	};
+
+	static DescriptorSetID descriptor_set_create(const DescriptorSetCreateInfo& ci);
+	static void descriptor_set_destroy(DescriptorSetID descriptor_set);
+	static void descriptor_set_update_descriptors(DescriptorSetID descriptor_set, const UpdateDescriptorInfo& update_info);
+
+	/*
 	* Pipeline API
 	*/
 	enum class PipelineBindPoint
 	{
 		Unknown = 0,
 		Graphics,
-	};
-
-	enum class ShaderStage
-	{
-		Unknown = 0,
-		Vertex,
-		Fragment,
 	};
 
 	enum class PrimitiveTopology
@@ -448,14 +500,28 @@ struct Graphics
 
 	struct ConstantBlock
 	{
-		ShaderStage stage;
+		ShaderStage stages;
 		u32 offset;
 		u32 size;
+	};
+
+	struct PipelineDescriptorBinding
+	{
+		DescriptorType type;
+		u32 binding;
+		u32 count;
+		ShaderStage stages;
+	};
+
+	struct PipelineDescriptorSet
+	{
+		Slice<PipelineDescriptorBinding> bindings;
 	};
 
 	struct PipelineLayout
 	{
 		Slice<ConstantBlock> constant_blocks;
+		Slice<PipelineDescriptorSet> sets;
 	};
 
 	struct PipelineCreateInfo
@@ -474,17 +540,6 @@ struct Graphics
 
 	static PipelineID pipeline_create(const PipelineCreateInfo& ci);
 	static void pipeline_destroy(PipelineID pipeline);
-
-	/*
-	* Descriptor Set
-	*/
-	struct DescriptorSetCreateInfo
-	{
-		DeviceID device;
-	};
-
-	DescriptorSetID descriptor_set_create(const DescriptorSetCreateInfo& ci);
-	void descriptor_set_destroy(_DescriptorSet descriptor_set);
 
 	/*
 	* CommandPool
@@ -621,8 +676,9 @@ struct Graphics
 	static void command_buffer_copy_buffer(CommandBufferID command_buffer, const BufferCopyInfo& copy_info);
 
 	static void command_buffer_bind_pipeline(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineID pipeline);
+	static void command_buffer_bind_descriptor_sets(CommandBufferID command_buffer, PipelineBindPoint bind_point, u32 base_set, const Slice<DescriptorSetID>& descriptor_sets);
 	static void command_buffer_bind_vertex_buffers(CommandBufferID command_buffer, u32 base_binding, const Slice<BufferID>& buffers, const Slice<usize>& offsets);
-	static void command_buffer_constant_block(CommandBufferID command_buffer, PipelineID pipeline, ShaderStage stage, u32 offset, u32 size, MemoryAddress block_address);
+	static void command_buffer_constant_block(CommandBufferID command_buffer, PipelineID pipeline, ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address);
 
 	static void command_buffer_set_viewports(CommandBufferID command_buffer, u32 base_viewport, const Slice<Viewport>& viewports);
 	static void command_buffer_set_scissors(CommandBufferID command_buffer, u32 base_scissor, const Slice<Scissor>& scissors);
@@ -633,6 +689,7 @@ struct Graphics
 
 EnableBitOp(Graphics::BufferUsage);
 EnableBitOp(Graphics::TextureAspects);
+EnableBitOp(Graphics::ShaderStage);
 EnableBitOp(Graphics::PipelineStages);
 EnableBitOp(Graphics::AccessMasks);
 

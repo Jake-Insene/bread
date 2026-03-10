@@ -106,6 +106,14 @@ struct DeviceVulkanTable
     PFN_vkCreateBufferView vkCreateBufferView;
     PFN_vkDestroyBufferView vkDestroyBufferView;
 
+    PFN_vkCreateDescriptorPool vkCreateDescriptorPool;
+    PFN_vkDestroyDescriptorPool vkDestroyDescriptorPool;
+    PFN_vkAllocateDescriptorSets vkAllocateDescriptorSets;
+    PFN_vkFreeDescriptorSets vkFreeDescriptorSets;
+    PFN_vkUpdateDescriptorSets vkUpdateDescriptorSets;
+    PFN_vkCreateDescriptorSetLayout vkCreateDescriptorSetLayout;
+    PFN_vkDestroyDescriptorSetLayout vkDestroyDescriptorSetLayout;
+
     PFN_vkCreateGraphicsPipelines vkCreateGraphicsPipelines;
     PFN_vkDestroyPipeline vkDestroyPipeline;
     PFN_vkCreateShaderModule vkCreateShaderModule;
@@ -127,6 +135,7 @@ struct DeviceVulkanTable
     PFN_vkCmdPipelineBarrier vkCmdPipelineBarrier;
     PFN_vkCmdCopyBuffer vkCmdCopyBuffer;
     PFN_vkCmdBindPipeline vkCmdBindPipeline;
+    PFN_vkCmdBindDescriptorSets vkCmdBindDescriptorSets;
     PFN_vkCmdBindVertexBuffers vkCmdBindVertexBuffers;
     PFN_vkCmdPushConstants vkCmdPushConstants;
     PFN_vkCmdSetViewport vkCmdSetViewport;

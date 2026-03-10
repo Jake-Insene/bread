@@ -183,6 +183,20 @@ Graphics::TextureID Graphics::render_target_get_texture(RenderTargetID render_ta
 	return current_adapter.render_target_get_texture(render_target);
 }
 
+Graphics::DescriptorSetID Graphics::descriptor_set_create(const Graphics::DescriptorSetCreateInfo& ci)
+{
+	return current_adapter.descriptor_set_create(ci);
+}
+
+void Graphics::descriptor_set_destroy(Graphics::DescriptorSetID descriptor_set)
+{
+	current_adapter.descriptor_set_destroy(descriptor_set);
+}
+
+void Graphics::descriptor_set_update_descriptors(DescriptorSetID descriptor_set, const UpdateDescriptorInfo& update_info)
+{
+	current_adapter.descriptor_set_update_descriptors(descriptor_set, update_info);
+}
 
 Graphics::PipelineID Graphics::pipeline_create(const Graphics::PipelineCreateInfo& ci)
 {
@@ -258,6 +272,12 @@ void Graphics::command_buffer_bind_pipeline(CommandBufferID command_buffer, Pipe
 {
 	current_adapter.command_buffer_bind_pipeline(command_buffer, bind_point, pipeline);
 }
+
+void Graphics::command_buffer_bind_descriptor_sets(CommandBufferID command_buffer, PipelineBindPoint bind_point, u32 base_set, const Slice<DescriptorSetID>& descriptor_sets)
+{
+	current_adapter.command_buffer_bind_descriptor_sets(command_buffer, bind_point, base_set, descriptor_sets);
+}
+
 
 void Graphics::command_buffer_bind_vertex_buffers(CommandBufferID command_buffer, u32 base_binding, const Slice<BufferID>& buffers, const Slice<usize>& offsets)
 {

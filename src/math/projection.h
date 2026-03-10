@@ -14,7 +14,7 @@ struct [[nodiscard]] Projection : Mat4
         {
             Vector4(2.f / (right - left), 0, 0, -(right + left) / (right - left)),
             Vector4(0, 2.f / (top - bottom), 0, -(top + bottom) / (top - bottom)),
-            Vector4(0, 0, -2 / (far - near),  - (far + near) / (far - near)),
+            Vector4(0, 0, -1 / (far - near),  -near) / (far - near),
             Vector4(0, 0, 0, 1)
         };
 
@@ -30,7 +30,7 @@ struct [[nodiscard]] Projection : Mat4
         {
             Vector4((right - left) / 2.f, 0, 0, (left + right) / 2.f),
             Vector4(0, (top - bottom) / 2.f, 0, (top + bottom) / 2.f),
-            Vector4(0, 0, (far - near) / -2,  -(far + near) / 2.f),
+            Vector4(0, 0, (far - near) / -1,  -(far + near) / 1.f),
             Vector4(0, 0, 0, 1)
         };
 

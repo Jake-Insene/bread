@@ -21,6 +21,14 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
+	case WM_CLOSE:
+	{
+		InputEventWindowClose event = {};
+		event.type = InputEventType::WindowClose;
+		event.window = window_id;
+		Engine::handle_event(event);
+	}
+		break;
 	case WM_CAPTURECHANGED:
 	{
 		Win32Display::WindowData& window_data = _get_window_data(window_id);
@@ -49,7 +57,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 			event.position = Input::data.mouse_position;
 			event.pressed = false;
 			event.button = btn;
-			Engine::handle_input(event);
+			Engine::handle_event(event);
 		}
 	}
 		break;
@@ -104,7 +112,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		event.position = pos;
 		event.pressed = Input::data.mouse_buttons[i32(button)];
 		event.button = button;
-		Engine::handle_input(event);
+		Engine::handle_event(event);
 		return 0;
 	}
 	case WM_SYSKEYDOWN:
@@ -140,19 +148,25 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		event.pressed = Input::data.keys[wparam] == KeyState::Pressed;
 		event.key = static_cast<Key>(wparam);
 
-		Engine::handle_input(event);
+		Engine::handle_event(event);
 		return 0;
 	}
 	break;
 	case WM_SIZE:
 	{
 		Win32Display::WindowData& window_data = _get_window_data(window_id);
-		if (window_id == Engine::data.main_window.window_id)
-		{
-			Engine::request_recreate_window();
-		}
-
 		GetWindowRect(handle, &window_data.window_rect);
+
+		InputEventWindowResize event = {};
+		event.type = InputEventType::WindowResize;
+		event.window = window_id;
+		event.size = Vector2I(
+			window_data.window_rect.right - window_data.window_rect.left,
+			window_data.window_rect.bottom - window_data.window_rect.top
+		);
+		
+		Engine::handle_event(event);
+
 		return 0;
 	}
 	break;

@@ -49,6 +49,8 @@ struct VulkanDriver
 		} queue;
 
 		DeviceVulkanTable vk;
+
+		VkDescriptorPool vk_global_descriptor_pool;
 	};
 
 	static constexpr usize MaxSwapChainImageCount = 3;
@@ -134,11 +136,22 @@ struct VulkanDriver
 		Graphics::DeviceID device;
 	};
 
+	struct DescriptorSet
+	{
+		VkDevice vk_device;
+		VkDescriptorSetLayout vk_set_layout;
+		VkDescriptorSet vk_descriptor_set;
+
+		Graphics::DeviceID device;
+		Graphics::DescriptorSetID descriptor_set;
+	};
+
 	struct Pipeline
 	{
 		VkDevice vk_device;
 		VkPipeline vk_pipeline;
 		VkPipelineLayout vk_pipeline_layout;
+		Slice<VkDescriptorSetLayout> vk_set_layouts;
 
 		Graphics::DeviceID device;
 		Graphics::PipelineID pipeline;
@@ -159,6 +172,7 @@ struct VulkanDriver
 		VkCommandBuffer vk_command_buffer;
 
 		Graphics::DeviceID device;
+		Graphics::PipelineID last_binded_pipeline;
 	};
 
     struct InternalData
@@ -177,6 +191,7 @@ struct VulkanDriver
 		FreeList<Buffer, Graphics::BufferID> buffers;
 		FreeList<Texture, Graphics::TextureID> textures;
 		FreeList<RenderTarget, Graphics::RenderTargetID> render_targets;
+		FreeList<DescriptorSet, Graphics::DescriptorSetID> descriptor_sets;
 		FreeList<Pipeline, Graphics::PipelineID> pipelines;
 		FreeList<CommandPool, Graphics::CommandPoolID> command_pools;
 		FreeList<CommandBuffer, Graphics::CommandBufferID> command_buffers;
@@ -246,6 +261,10 @@ struct VulkanDriver
 	static void render_target_destroy(Graphics::RenderTargetID render_target);
 	static Graphics::TextureID render_target_get_texture(Graphics::RenderTargetID render_target);
 
+	static Graphics::DescriptorSetID descriptor_set_create(const Graphics::DescriptorSetCreateInfo& ci);
+	static void descriptor_set_destroy(Graphics::DescriptorSetID descriptor_set);
+	static void descriptor_set_update_descriptors(Graphics::DescriptorSetID descriptor_set, const Graphics::UpdateDescriptorInfo& update_info);
+
 	static Graphics::PipelineID pipeline_create(const Graphics::PipelineCreateInfo& ci);
 	static void pipeline_destroy(Graphics::PipelineID pipeline);
 
@@ -268,8 +287,9 @@ struct VulkanDriver
 	static void command_buffer_copy_buffer(Graphics::CommandBufferID command_buffer, const Graphics::BufferCopyInfo& copy_info);
 
 	static void command_buffer_bind_pipeline(Graphics::CommandBufferID command_buffer, Graphics::PipelineBindPoint bind_point, Graphics::PipelineID pipeline);
+	static void command_buffer_bind_descriptor_sets(Graphics::CommandBufferID command_buffer, Graphics::PipelineBindPoint bind_point, u32 base_set, const Slice<Graphics::DescriptorSetID>& descriptor_sets);
 	static void command_buffer_bind_vertex_buffers(Graphics::CommandBufferID command_buffer, u32 base_binding, const Slice<Graphics::BufferID>& buffers, const Slice<usize>& offsets);
-	static void command_buffer_constant_block(Graphics::CommandBufferID command_buffer, Graphics::PipelineID pipeline, Graphics::ShaderStage stage, u32 offset, u32 size, MemoryAddress block_address);
+	static void command_buffer_constant_block(Graphics::CommandBufferID command_buffer, Graphics::PipelineID pipeline, Graphics::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address);
 
 	static void command_buffer_set_viewports(Graphics::CommandBufferID command_buffer, u32 base_viewport, const Slice<Graphics::Viewport>& viewports);
 	static void command_buffer_set_scissors(Graphics::CommandBufferID command_buffer, u32 base_scissor, const Slice<Graphics::Scissor>& scissors);
@@ -286,6 +306,7 @@ struct VulkanDriver
 	static Buffer& _get_buffer(Graphics::BufferID buffer) { return data.buffers.get(buffer); }
 	static Texture& _get_texture(Graphics::TextureID texture) { return data.textures.get(texture); }
 	static RenderTarget& _get_render_target(Graphics::RenderTargetID render_target) { return data.render_targets.get(render_target); }
+	static DescriptorSet& _get_descriptor_set(Graphics::DescriptorSetID descriptor_set) { return data.descriptor_sets.get(descriptor_set); }
 	static Pipeline& _get_pipeline(Graphics::PipelineID pipeline) { return data.pipelines.get(pipeline); }
 	static CommandPool& _get_command_pool(Graphics::CommandPoolID command_pool) { return data.command_pools.get(command_pool); }
 	static CommandBuffer& _get_command_buffer(Graphics::CommandBufferID command_buffer) { return data.command_buffers.get(command_buffer); }
@@ -298,11 +319,12 @@ struct VulkanDriver
 	static VkExtent2D _vk_get_swap_chain_extent(const Vector2I& size, const VkSurfaceCapabilitiesKHR& vk_capabilities);
 	static VkMemoryPropertyFlags _vk_get_memory_properties(Graphics::HeapUsage heap_usage);
 	static VkBufferUsageFlags _vk_get_buffer_usage(Graphics::BufferUsage buffer_usage);
+	static VkDescriptorType _vk_get_descriptor_type(Graphics::DescriptorType descriptor_type);
 	static VkPipelineStageFlags _vk_get_pipeline_stages(Graphics::PipelineStages stages);
 	static VkImageAspectFlags _vk_get_aspect_masks(Graphics::TextureAspects aspects);
 	static VkAccessFlags _vk_get_access_masks(Graphics::AccessMasks access_masks);
 	static VkImageLayout _vk_get_image_layout(Graphics::TextureLayout texture_layout);
-	static VkShaderStageFlagBits _vk_get_shader_stage(Graphics::ShaderStage shader_stage);
+	static VkShaderStageFlags _vk_get_shader_stage(Graphics::ShaderStage shader_stage);
 	static VkVertexInputRate _vk_get_input_rate(Graphics::InputRate input_rate);
 	static VkFormat _vk_get_vertex_format(Graphics::VertexFormat vertex_format);
 	static VkPrimitiveTopology _vk_get_topology(Graphics::PrimitiveTopology primitive_topology);
@@ -313,6 +335,7 @@ struct VulkanDriver
 	static VkPipelineBindPoint _vk_get_bind_point(Graphics::PipelineBindPoint bind_point);
 
 	static VkShaderModule _vk_create_shader_module(LogicalDevice& ld, const Graphics::ShaderStageInfo& shader_stage_info);
+	static VkDescriptorSetLayout _vk_create_set_layout(LogicalDevice& ld, const Graphics::PipelineDescriptorSet& set_info);
 
 	static Graphics::DeviceType _vk_device_type_to_device_type(VkPhysicalDeviceType vk_device_type);
 	static Graphics::SurfaceFormat _vk_surface_format_to_surface_format(VkSurfaceFormatKHR vk_surface_format);

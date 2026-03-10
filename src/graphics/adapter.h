@@ -55,6 +55,10 @@ struct Adapter
 	VTFunc(void, render_target_destroy, Graphics::RenderTargetID render_target);
 	VTFunc(Graphics::TextureID, render_target_get_texture, Graphics::RenderTargetID render_target);
 
+	VTFunc(Graphics::DescriptorSetID, descriptor_set_create, const Graphics::DescriptorSetCreateInfo& ci);
+	VTFunc(void, descriptor_set_destroy, Graphics::DescriptorSetID descriptor_set);
+	VTFunc(void, descriptor_set_update_descriptors, Graphics::DescriptorSetID descriptor_set, const Graphics::UpdateDescriptorInfo& update_info);
+
 	VTFunc(Graphics::PipelineID, pipeline_create, const Graphics::PipelineCreateInfo& ci);
 	VTFunc(void, pipeline_destroy, Graphics::PipelineID pipeline);
 
@@ -76,8 +80,9 @@ struct Adapter
 	VTFunc(void, command_buffer_copy_buffer, Graphics::CommandBufferID command_buffer, const Graphics::BufferCopyInfo& copy_info);
 
 	VTFunc(void, command_buffer_bind_pipeline, Graphics::CommandBufferID command_buffer, Graphics::PipelineBindPoint bind_point, Graphics::PipelineID pipeline);
+	VTFunc(void, command_buffer_bind_descriptor_sets, Graphics::CommandBufferID command_buffer, Graphics::PipelineBindPoint bind_point, u32 base_set, const Slice<Graphics::DescriptorSetID>& descriptor_sets);
 	VTFunc(void, command_buffer_bind_vertex_buffers, Graphics::CommandBufferID command_buffer, u32 base_binding, const Slice<Graphics::BufferID>& buffers, const Slice<usize>& offsets);
-	VTFunc(void, command_buffer_constant_block, Graphics::CommandBufferID command_buffer, Graphics::PipelineID pipeline, Graphics::ShaderStage stage, u32 offset, u32 size, MemoryAddress block_address);
+	VTFunc(void, command_buffer_constant_block, Graphics::CommandBufferID command_buffer, Graphics::PipelineID pipeline, Graphics::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address);
 	
 	VTFunc(void, command_buffer_set_viewports, Graphics::CommandBufferID command_buffer, u32 base_viewport, const Slice<Graphics::Viewport>& viewports);
 	VTFunc(void, command_buffer_set_scissors, Graphics::CommandBufferID command_buffer, u32 base_scissor, const Slice<Graphics::Scissor>& scissors);

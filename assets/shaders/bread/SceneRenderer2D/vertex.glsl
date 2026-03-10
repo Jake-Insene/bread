@@ -14,8 +14,15 @@ layout(push_constant, std430) uniform PushConstants
     mat4 transform;
 };
 
+layout(set = 0, binding = 0) uniform UniformBuffer
+{
+    mat4 projection;
+};
+
 void main()
 {
-    gl_Position = transform * vec4(InputPosition, 0, 1);
+    vec4 position = transform * vec4(InputPosition, 0, 1);
+    position = projection * position;
+    gl_Position = position;
     OutputColor = vec4(InputColor, 1);
 }

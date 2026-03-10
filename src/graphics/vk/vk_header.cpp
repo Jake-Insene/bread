@@ -111,6 +111,15 @@ void Vulkan::load_device_procs(DeviceVulkanTable& table, VkDevice device)
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateBufferView);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyBufferView);
 
+    // descriptors
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateDescriptorPool);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyDescriptorPool);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkAllocateDescriptorSets);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkFreeDescriptorSets);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkUpdateDescriptorSets);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateDescriptorSetLayout);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyDescriptorSetLayout);
+
     // pipeline
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateGraphicsPipelines);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyPipeline);
@@ -137,6 +146,7 @@ void Vulkan::load_device_procs(DeviceVulkanTable& table, VkDevice device)
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdPipelineBarrier);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdCopyBuffer);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdBindPipeline);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdBindDescriptorSets);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdBindVertexBuffers);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdPushConstants);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdSetViewport);

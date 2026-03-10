@@ -110,7 +110,7 @@ struct Engine
     static void destroy();
     
     static void step();
-    static void handle_input(const InputEvent& event);
+    static void handle_event(const InputEvent& event);
 
     static void request_recreate_window();
 

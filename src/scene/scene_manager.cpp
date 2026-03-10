@@ -175,7 +175,7 @@ void SceneManager::set_viewport_size(const Vector2I& new_vp_size)
     data.main_viewport.set_size(new_vp_size);
 }
 
-void SceneManager::scene_handle_input(const InputEvent& event)
+void SceneManager::scene_handle_event(const InputEvent& event)
 {
     if (data.current_scene == nullptr)
         return;
@@ -203,7 +203,9 @@ void SceneManager::scene_handle_input(const InputEvent& event)
     }
     break;
     default:
+    {
         SceneCallRef(data.current_scene, on_event, event);
+    }
         break;
     }
 }

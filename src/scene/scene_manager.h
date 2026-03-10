@@ -75,7 +75,7 @@ struct SceneManager
     static void set_background_color(Color new_bg_color) { get_main_viewport().clear_color = new_bg_color; }
     static Color get_background_color() { return get_main_viewport().clear_color; }
 
-    static void scene_handle_input(const InputEvent& event);
+    static void scene_handle_event(const InputEvent& event);
     
     static void _render_manager_tick();
 

@@ -47,6 +47,9 @@ InternalGraphics::Adapter VulkanDriver::get_adapter()
         .render_target_create = &VulkanDriver::render_target_create,
         .render_target_destroy = &VulkanDriver::render_target_destroy,
         .render_target_get_texture = &VulkanDriver::render_target_get_texture,
+        .descriptor_set_create = &VulkanDriver::descriptor_set_create,
+        .descriptor_set_destroy = &VulkanDriver::descriptor_set_destroy,
+        .descriptor_set_update_descriptors = &VulkanDriver::descriptor_set_update_descriptors,
         .pipeline_create = &VulkanDriver::pipeline_create,
         .pipeline_destroy = &VulkanDriver::pipeline_destroy,
         .command_pool_create = &VulkanDriver::command_pool_create,
@@ -62,6 +65,7 @@ InternalGraphics::Adapter VulkanDriver::get_adapter()
         .command_buffer_texture_barrier = &VulkanDriver::command_buffer_texture_barrier,
         .command_buffer_copy_buffer = &VulkanDriver::command_buffer_copy_buffer,
         .command_buffer_bind_pipeline = &VulkanDriver::command_buffer_bind_pipeline,
+        .command_buffer_bind_descriptor_sets = &VulkanDriver::command_buffer_bind_descriptor_sets,
         .command_buffer_bind_vertex_buffers = &VulkanDriver::command_buffer_bind_vertex_buffers,
         .command_buffer_constant_block = &VulkanDriver::command_buffer_constant_block,
         .command_buffer_set_viewports = &VulkanDriver::command_buffer_set_viewports,
@@ -84,6 +88,7 @@ void VulkanDriver::initialize(const mem::Allocator &allocator)
     data.buffers = FreeList<Buffer, Graphics::BufferID>::with_allocator(allocator);
     data.textures = FreeList<Texture, Graphics::TextureID>::with_allocator(allocator);
     data.render_targets = FreeList<RenderTarget, Graphics::RenderTargetID>::with_allocator(allocator);
+    data.descriptor_sets = FreeList<DescriptorSet, Graphics::DescriptorSetID>::with_allocator(allocator);
     data.pipelines = FreeList<Pipeline, Graphics::PipelineID>::with_allocator(allocator);
     data.command_pools = FreeList<CommandPool, Graphics::CommandPoolID>::with_allocator(allocator);
     data.command_buffers = FreeList<CommandBuffer, Graphics::CommandBufferID>::with_allocator(get_allocator());
@@ -149,6 +154,7 @@ void VulkanDriver::shutdown()
     data.buffers.destroy();
     data.textures.destroy();
     data.render_targets.destroy();
+    data.descriptor_sets.destroy();
     data.pipelines.destroy();
     data.command_pools.destroy();
     data.command_buffers.destroy();
@@ -369,6 +375,26 @@ Graphics::DeviceID VulkanDriver::device_create(const Graphics::DeviceCreateInfo&
         present_queue.queue_index = ld.queue.present_index;
     }
 
+    // Global pool
+    VkDescriptorPoolSize vk_pool_sizes[] =
+    {
+        { .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, .descriptorCount = 1000, },
+        { .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, .descriptorCount = 1000, },
+    };
+
+    VkDescriptorPoolCreateInfo vk_global_pool_info = 
+    {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
+        .maxSets = 1000,
+        .poolSizeCount = static_cast<uint32_t>(ArraySize(vk_pool_sizes)),
+        .pPoolSizes = vk_pool_sizes,
+    };
+
+    result = ld.vk.vkCreateDescriptorPool(ld.vk_device, &vk_global_pool_info, Vulkan::allocation_callbacks(), &ld.vk_global_descriptor_pool);
+    VKFailOn(result != VK_SUCCESS, "vkCreateDescriptorPool({})", Vulkan::result_as_string(result));
+    
     return device_id;
 }
 
@@ -376,6 +402,8 @@ void VulkanDriver::device_destroy(Graphics::DeviceID device)
 {
     VKFailOn(device.is_valid() == false, "invalid device");
     LogicalDevice& ld = _get_logical_device(device);
+
+    ld.vk.vkDestroyDescriptorPool(ld.vk_device, ld.vk_global_descriptor_pool, Vulkan::allocation_callbacks());
     
     data.queues.remove(ld.queue.graphics_queue_id);
     if(ld.queue.graphics_queue_id != ld.queue.present_queue_id)
@@ -1004,6 +1032,147 @@ Graphics::TextureID VulkanDriver::render_target_get_texture(Graphics::RenderTarg
     return Graphics::TextureID();
 }
 
+Graphics::DescriptorSetID VulkanDriver::descriptor_set_create(const Graphics::DescriptorSetCreateInfo& ci)
+{
+    VKFailOn(ci.device.is_valid() == false, "invalid device");
+    VKFailOn(ci.bindings.len == 0, "invalid binding count");
+
+    Graphics::DescriptorSetID descriptor_set_id = data.descriptor_sets.add(DescriptorSet());
+    DescriptorSet& set = _get_descriptor_set(descriptor_set_id);
+    LogicalDevice& ld = _get_logical_device(ci.device);
+
+    set.vk_device = ld.vk_device;
+    set.device = ci.device;
+    set.descriptor_set = descriptor_set_id;
+
+    Slice<VkDescriptorSetLayoutBinding> vk_bindings = get_allocator().array<VkDescriptorSetLayoutBinding>(ci.bindings.len);
+    for(usize i = 0; i < ci.bindings.len; i++)
+    {
+        vk_bindings[i] =
+        {
+            .binding = ci.bindings[i].binding,
+            .descriptorType = _vk_get_descriptor_type(ci.bindings[i].type),
+            .descriptorCount = ci.bindings[i].count,
+            .stageFlags = _vk_get_shader_stage(ci.bindings[i].stages),
+            .pImmutableSamplers = nullptr,
+        };
+    }
+
+    VkDescriptorSetLayoutCreateInfo vk_set_layout_info =
+    {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .bindingCount = static_cast<uint32_t>(vk_bindings.len),
+        .pBindings = vk_bindings.ptr(),
+    };
+
+    VkResult result = ld.vk.vkCreateDescriptorSetLayout(ld.vk_device, &vk_set_layout_info, Vulkan::allocation_callbacks(), &set.vk_set_layout);
+    VKFailOn(result != VK_SUCCESS, "vkCreateDescriptorSetLayout({})", Vulkan::result_as_string(result));
+
+    VkDescriptorSetAllocateInfo vk_allocate_set_info =
+    {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+        .pNext = nullptr,
+        .descriptorPool = ld.vk_global_descriptor_pool,
+        .descriptorSetCount = 1,
+        .pSetLayouts = &set.vk_set_layout,
+    };
+
+    result = ld.vk.vkAllocateDescriptorSets(ld.vk_device, &vk_allocate_set_info, &set.vk_descriptor_set);
+    VKFailOn(result != VK_SUCCESS, "vkAllocateDescriptorSets({})", Vulkan::result_as_string(result));
+
+    get_allocator().free(mem::to_bytes(vk_bindings));
+    return descriptor_set_id;
+}
+
+void VulkanDriver::descriptor_set_destroy(Graphics::DescriptorSetID descriptor_set)
+{
+    VKFailOn(descriptor_set.is_valid() == false, "invalid device");
+
+    DescriptorSet& set = _get_descriptor_set(descriptor_set);
+    LogicalDevice& ld = _get_logical_device(set.device);
+
+    ld.vk.vkDestroyDescriptorSetLayout(set.vk_device, set.vk_set_layout, Vulkan::allocation_callbacks());
+    VkResult result = ld.vk.vkFreeDescriptorSets(set.vk_device, ld.vk_global_descriptor_pool, 1, &set.vk_descriptor_set);
+    VKFailOn(result != VK_SUCCESS, "vkFreeDescriptorSets({})", Vulkan::result_as_string(result));
+
+    data.descriptor_sets.remove(descriptor_set);
+}
+
+void VulkanDriver::descriptor_set_update_descriptors(Graphics::DescriptorSetID descriptor_set, const Graphics::UpdateDescriptorInfo& update_info)
+{
+    VKFailOn(descriptor_set.is_valid() == false, "invalid device");
+
+    DescriptorSet& set = _get_descriptor_set(descriptor_set);
+    LogicalDevice& ld = _get_logical_device(set.device);
+
+    Slice<VkWriteDescriptorSet> vk_write_descriptor = get_allocator().array<VkWriteDescriptorSet>(update_info.write_infos.len);
+
+    usize total_buffer_infos = 0;
+    for(usize i = 0; i < update_info.write_infos.len; i++)
+    {
+        if(update_info.write_infos[i].type == Graphics::DescriptorType::UniformBuffer
+            || update_info.write_infos[i].type == Graphics::DescriptorType::StorageBuffer)
+        {
+            total_buffer_infos += update_info.write_infos[i].count;
+        }
+    }
+
+    Slice<VkDescriptorBufferInfo> vk_buffer_infos = get_allocator().array<VkDescriptorBufferInfo>(total_buffer_infos);
+    usize vk_buffer_infos_index = 0;
+
+    for(usize i = 0; i < update_info.write_infos.len; i++)
+    {
+        const Graphics::WriteDescriptorInfo& write_info = update_info.write_infos[i];
+        vk_write_descriptor[i] =
+        {
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .pNext = nullptr,
+            .dstSet = set.vk_descriptor_set,
+            .dstBinding = write_info.binding,
+            .dstArrayElement = write_info.array_element,
+            .descriptorCount = write_info.count,
+            .descriptorType = _vk_get_descriptor_type(write_info.type),
+            .pImageInfo = nullptr,
+            .pBufferInfo = &vk_buffer_infos[vk_buffer_infos_index],
+            .pTexelBufferView = nullptr,
+        };
+
+        switch(update_info.write_infos[i].type)
+        {
+        case Graphics::DescriptorType::UniformBuffer:
+        case Graphics::DescriptorType::StorageBuffer:
+        {
+            for(usize buffer_i = 0; i < write_info.buffers.len; i++)
+            {
+                const Graphics::DescriptorBufferInfo& buffer_info = write_info.buffers[buffer_i];
+
+                vk_buffer_infos[vk_buffer_infos_index] =
+                {
+                    .buffer = _get_buffer(buffer_info.buffer).vk_buffer,
+                    .offset = buffer_info.offset,
+                    .range = buffer_info.range,
+                };
+                vk_buffer_infos_index++;
+            }
+        }
+            break;
+        default:
+            VKFailOn(true, "invalid descriptor type");
+            break;
+        }   
+    }
+
+    ld.vk.vkUpdateDescriptorSets(
+        set.vk_device, static_cast<uint32_t>(vk_write_descriptor.len), vk_write_descriptor.ptr(),
+        0, nullptr
+    );
+
+    get_allocator().free(mem::to_bytes(vk_buffer_infos));
+    get_allocator().free(mem::to_bytes(vk_write_descriptor));
+}
+
 Graphics::PipelineID VulkanDriver::pipeline_create(const Graphics::PipelineCreateInfo& ci)
 {
     VKFailOn(ci.device.is_valid() == false, "invalid device");
@@ -1027,7 +1196,7 @@ Graphics::PipelineID VulkanDriver::pipeline_create(const Graphics::PipelineCreat
             .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
             .pNext = nullptr,
             .flags = 0,
-            .stage = _vk_get_shader_stage(ci.shader_stages[i].stage),
+            .stage = VkShaderStageFlagBits(_vk_get_shader_stage(ci.shader_stages[i].stage)),
             .module = _vk_create_shader_module(ld, ci.shader_stages[i]),
             .pName = "main",
             .pSpecializationInfo = nullptr,
@@ -1195,10 +1364,16 @@ Graphics::PipelineID VulkanDriver::pipeline_create(const Graphics::PipelineCreat
     {
         vk_push_ranges[i] =
         {
-            .stageFlags = VkShaderStageFlags(_vk_get_shader_stage(ci.pipeline_layout.constant_blocks[i].stage)),
+            .stageFlags = VkShaderStageFlags(_vk_get_shader_stage(ci.pipeline_layout.constant_blocks[i].stages)),
             .offset = ci.pipeline_layout.constant_blocks[i].offset,
             .size = ci.pipeline_layout.constant_blocks[i].size,
         };
+    }
+
+    pipe.vk_set_layouts = get_allocator().array<VkDescriptorSetLayout>(ci.pipeline_layout.sets.len);
+    for(usize i = 0; i < ci.pipeline_layout.sets.len; i++)
+    {
+        pipe.vk_set_layouts[i] = _vk_create_set_layout(ld, ci.pipeline_layout.sets[i]);
     }
 
     VkPipelineLayoutCreateInfo vk_pipeline_layout_info =
@@ -1206,8 +1381,8 @@ Graphics::PipelineID VulkanDriver::pipeline_create(const Graphics::PipelineCreat
         .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
-        .setLayoutCount = 0,
-        .pSetLayouts = nullptr,
+        .setLayoutCount = static_cast<uint32_t>(pipe.vk_set_layouts.len),
+        .pSetLayouts = pipe.vk_set_layouts.ptr(),
         .pushConstantRangeCount = static_cast<uint32_t>(vk_push_ranges.len),
         .pPushConstantRanges = vk_push_ranges.ptr(),
     };
@@ -1267,6 +1442,12 @@ void VulkanDriver::pipeline_destroy(Graphics::PipelineID pipeline)
 
     ld.vk.vkDestroyPipeline(pipe.vk_device, pipe.vk_pipeline, Vulkan::allocation_callbacks());
     ld.vk.vkDestroyPipelineLayout(pipe.vk_device, pipe.vk_pipeline_layout, Vulkan::allocation_callbacks());
+
+    for(usize i = 0; i < pipe.vk_set_layouts.len; i++)
+    {
+        ld.vk.vkDestroyDescriptorSetLayout(pipe.vk_device, pipe.vk_set_layouts[i], Vulkan::allocation_callbacks());
+    }
+    get_allocator().free(mem::to_bytes(pipe.vk_set_layouts));   
 
     data.pipelines.remove(pipeline);
 }
@@ -1545,10 +1726,35 @@ void VulkanDriver::command_buffer_bind_pipeline(Graphics::CommandBufferID comman
 
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
+    cmd_buffer.last_binded_pipeline = pipeline;
 
     Pipeline& pipe = _get_pipeline(pipeline);
 
     ld.vk.vkCmdBindPipeline(cmd_buffer.vk_command_buffer, _vk_get_bind_point(bind_point), pipe.vk_pipeline);
+}
+
+void VulkanDriver::command_buffer_bind_descriptor_sets(Graphics::CommandBufferID command_buffer, Graphics::PipelineBindPoint bind_point, u32 base_set, const Slice<Graphics::DescriptorSetID>& descriptor_sets)
+{
+    VKFailOn(command_buffer.is_valid() == false, "invalid command buffer");
+    VKFailOn(bind_point == Graphics::PipelineBindPoint::Unknown, "invalid bind point");
+    VKFailOn(descriptor_sets.len == 0, "invalid descriptor set count");
+
+    CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
+    LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
+    Pipeline& current_pipe = _get_pipeline(cmd_buffer.last_binded_pipeline);
+
+    Slice<VkDescriptorSet> vk_descriptor_sets = get_allocator().array<VkDescriptorSet>(descriptor_sets.len);
+    for(usize i = 0; i < descriptor_sets.len; i++)
+    {
+        vk_descriptor_sets[i] = _get_descriptor_set(descriptor_sets[i]).vk_descriptor_set;
+    }
+
+    ld.vk.vkCmdBindDescriptorSets(
+        cmd_buffer.vk_command_buffer, _vk_get_bind_point(bind_point), current_pipe.vk_pipeline_layout,
+        base_set, static_cast<uint32_t>(vk_descriptor_sets.len), vk_descriptor_sets.ptr(), 0, nullptr 
+    );
+
+    get_allocator().free(mem::to_bytes(vk_descriptor_sets));
 }
 
 void VulkanDriver::command_buffer_bind_vertex_buffers(Graphics::CommandBufferID command_buffer, u32 base_binding, const Slice<Graphics::BufferID>& buffers, const Slice<usize>& offsets)
@@ -1573,10 +1779,10 @@ void VulkanDriver::command_buffer_bind_vertex_buffers(Graphics::CommandBufferID 
     get_allocator().free(mem::to_bytes(vk_buffers));
 }
 
-void VulkanDriver::command_buffer_constant_block(Graphics::CommandBufferID command_buffer, Graphics::PipelineID pipeline, Graphics::ShaderStage stage, u32 offset, u32 size, MemoryAddress block_address)
+void VulkanDriver::command_buffer_constant_block(Graphics::CommandBufferID command_buffer, Graphics::PipelineID pipeline, Graphics::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address)
 {   
     VKFailOn(command_buffer.is_valid() == false, "invalid command buffer");
-    VKFailOn(stage == Graphics::ShaderStage::Unknown, "invalid shader stage");
+    VKFailOn(stages == Graphics::ShaderStage(0), "invalid shader stage");
     VKFailOn(size == 0, "invalid block size");
 
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
@@ -1584,7 +1790,7 @@ void VulkanDriver::command_buffer_constant_block(Graphics::CommandBufferID comma
     Pipeline& pipe = _get_pipeline(pipeline);
 
     ld.vk.vkCmdPushConstants(
-        cmd_buffer.vk_command_buffer, pipe.vk_pipeline_layout, _vk_get_shader_stage(stage),
+        cmd_buffer.vk_command_buffer, pipe.vk_pipeline_layout, _vk_get_shader_stage(stages),
         offset, size, reinterpret_cast<void*>(block_address)
     );
 }
@@ -1602,9 +1808,9 @@ void VulkanDriver::command_buffer_set_viewports(Graphics::CommandBufferID comman
         vk_viewports[i] =
         {
             .x = viewports[i].x,
-            .y = viewports[i].y,
+            .y = viewports[i].y + viewports[i].height,
             .width = viewports[i].width,
-            .height = viewports[i].height,
+            .height = -viewports[i].height,
             .minDepth = viewports[i].min_depth,
             .maxDepth = viewports[i].max_depth,
         };
@@ -1788,6 +1994,22 @@ VkBufferUsageFlags VulkanDriver::_vk_get_buffer_usage(Graphics::BufferUsage buff
     return vk_flags;
 }
 
+VkDescriptorType VulkanDriver::_vk_get_descriptor_type(Graphics::DescriptorType descriptor_type)
+{
+    switch(descriptor_type)
+    {
+    case Graphics::DescriptorType::UniformBuffer:
+        return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    case Graphics::DescriptorType::StorageBuffer:
+        return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    default:
+        break;
+    }
+
+    VKFailOn(true, "invalid descriptor type");
+    return VkDescriptorType(0);
+}
+
 VkPipelineStageFlags VulkanDriver::_vk_get_pipeline_stages(Graphics::PipelineStages stages)
 {
     VkPipelineStageFlags vk_flags = 0;
@@ -1874,20 +2096,21 @@ VkImageLayout VulkanDriver::_vk_get_image_layout(Graphics::TextureLayout texture
     return VK_IMAGE_LAYOUT_UNDEFINED;
 }
 
-VkShaderStageFlagBits VulkanDriver::_vk_get_shader_stage(Graphics::ShaderStage shader_stage)
+VkShaderStageFlags VulkanDriver::_vk_get_shader_stage(Graphics::ShaderStage shader_stage)
 {
-    switch(shader_stage)
+    VkShaderStageFlags vk_flags = 0;
+    
+    if(HasValue(shader_stage & Graphics::ShaderStage::Vertex))
     {
-    case Graphics::ShaderStage::Vertex:
-        return VK_SHADER_STAGE_VERTEX_BIT;
-    case Graphics::ShaderStage::Fragment:
-        return VK_SHADER_STAGE_FRAGMENT_BIT;
-    default:
-        break;
-    };
+        vk_flags |= VK_SHADER_STAGE_VERTEX_BIT;
+    }
 
-    VKFailOn(true, "invalid shader stage");
-    return VkShaderStageFlagBits();
+    if(HasValue(shader_stage & Graphics::ShaderStage::Fragment))
+    {
+        vk_flags |= VK_SHADER_STAGE_FRAGMENT_BIT;
+    }
+
+    return vk_flags;
 }
 
 VkVertexInputRate VulkanDriver::_vk_get_input_rate(Graphics::InputRate input_rate)
@@ -2049,6 +2272,39 @@ VkShaderModule VulkanDriver::_vk_create_shader_module(LogicalDevice& ld, const G
     VKFailOn(result != VK_SUCCESS, "vkCreateShaderModule({})", Vulkan::result_as_string(result));
 
     return vk_module;
+}
+
+VkDescriptorSetLayout VulkanDriver::_vk_create_set_layout(LogicalDevice& ld, const Graphics::PipelineDescriptorSet& set_info)
+{
+    VkDescriptorSetLayout vk_set_layout;
+    
+    Slice<VkDescriptorSetLayoutBinding> vk_bindings = get_allocator().array<VkDescriptorSetLayoutBinding>(set_info.bindings.len);
+    for(usize i = 0; i < set_info.bindings.len; i++)
+    {
+        vk_bindings[i] = 
+        {
+            .binding = set_info.bindings[i].binding,
+            .descriptorType = _vk_get_descriptor_type(set_info.bindings[i].type),
+            .descriptorCount = set_info.bindings[i].count,
+            .stageFlags = _vk_get_shader_stage(set_info.bindings[i].stages),
+            .pImmutableSamplers = nullptr,
+        };
+    }
+
+    VkDescriptorSetLayoutCreateInfo vk_set_layout_info =
+    {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .bindingCount = static_cast<uint32_t>(vk_bindings.len),
+        .pBindings = vk_bindings.ptr(),
+    };
+
+    VkResult result = ld.vk.vkCreateDescriptorSetLayout(ld.vk_device, &vk_set_layout_info, Vulkan::allocation_callbacks(), &vk_set_layout);
+    VKFailOn(result != VK_SUCCESS, "vkCreateDescriptorSetLayout({})", Vulkan::result_as_string(result));
+
+    get_allocator().free(mem::to_bytes(vk_bindings));
+    return vk_set_layout;
 }
 
 Graphics::DeviceType VulkanDriver::_vk_device_type_to_device_type(VkPhysicalDeviceType vk_device_type)

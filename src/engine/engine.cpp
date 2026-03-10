@@ -97,9 +97,17 @@ void Engine::step()
     data.main_queue.run();
 }
 
-void Engine::handle_input(const InputEvent& event)
+void Engine::handle_event(const InputEvent& event)
 {
-    SceneManager::scene_handle_input(event);
+    if(event.type == InputEventType::WindowResize)
+    {
+        const InputEventWindowResize& resize_event = event.get<InputEventWindowResize>();
+        if(resize_event.window == get_main_window().window_id)
+        {
+            Engine::request_recreate_window();
+        }
+    }
+    SceneManager::scene_handle_event(event);
 }
 
 void Engine::request_recreate_window()
