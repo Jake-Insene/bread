@@ -109,8 +109,8 @@ Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
             TextureLoadInfo
             {
                 .type = Graphics::TextureType::Texture2D,
-                .min_filter = Graphics::TextureFilter::Nearest,
-                .mag_filter = Graphics::TextureFilter::Nearest,
+                .min_filter = Graphics::Filter::Nearest,
+                .mag_filter = Graphics::Filter::Nearest,
             }
         );
         break;
@@ -190,16 +190,15 @@ Result<Resource*, Error> ResourceManager::_load_image(StringView path)
     }
     else
     {
-        Image tmp_image = {};
+        image = _create_resource<Image>();
 
-        Error load_result = tmp_image.load(path);
+        Error load_result = image->load(path);
         if (!load_result)
         {
+            get_allocator().free(mem::to_bytes(Slice(image, 1)));
             return load_result;
         }
 
-        image = _create_resource<Image>();
-        *image = tmp_image;
         image->path.set(path);
         (void)place_resource(path, image);
     }
@@ -210,6 +209,7 @@ Result<Resource*, Error> ResourceManager::_load_image(StringView path)
 
 Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, const TextureLoadInfo& load_info)
 {
+    Unused(load_info);
     Image* image = nullptr;
     if(data.resources.has(path))
     {
@@ -239,13 +239,16 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
         
         Graphics::TextureCreateInfo create_info =
         {
+#if 0
             //.usage = Graphics::TEXTURE_USAGE_UPLOAD_ONCE,
             .type = load_info.type,
             .format = image->format == Image::FORMAT_RGB8 ? Graphics::TextureFormat::RGB8 : Graphics::TextureFormat::RGBA8,
-            .min_filter = load_info.min_filter,
-            .mag_filter = load_info.mag_filter,
+            //.min_filter = load_info.min_filter,
+            //.mag_filter = load_info.mag_filter,
             .size = image->size,
-            .pixels = image->pixels,
+            .memory_heap = Graphics::MemoryHeapID(),
+            .heap_offset = 0,
+#endif
         };
         tex->texture_id = Graphics::texture_create(create_info);
 

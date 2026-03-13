@@ -1,8 +1,14 @@
 #pragma once
 #include "core/header.h"
 #include "collections/string_view.h"
+#include "debug/fail.h"
 #include "graphics/vk/vk_vtable.h"
+#include "log/log.h"
 
+
+#define VKDebugInfo(...) Log::debug("[VKDriver]: " __VA_ARGS__)
+#define VKFatal(...) Fatal("[VKDriver]: " __VA_ARGS__)
+#define VKFailOn(cond, ...) FailOn(cond, "[VKDriver]: " __VA_ARGS__)
 
 
 struct Vulkan

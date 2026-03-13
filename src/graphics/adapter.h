@@ -47,6 +47,9 @@ struct Adapter
 	VTFunc(Slice<u8>, buffer_map_memory, Graphics::BufferID buffer, usize offset, usize len);
 	VTFunc(void, buffer_unmap_memory, Graphics::BufferID buffer, const Slice<u8>& memory);
 
+	VTFunc(Graphics::SamplerID, sampler_create, const Graphics::SamplerCreateInfo& ci);
+	VTFunc(void, sampler_destroy, Graphics::SamplerID sampler);
+
 	VTFunc(Graphics::TextureID, texture_create, const Graphics::TextureCreateInfo& ci);
 	VTFunc(void, texture_destroy, Graphics::TextureID texture);
 	VTFunc(Vector2I, texture_get_size, Graphics::TextureID texture);
@@ -54,6 +57,9 @@ struct Adapter
 	VTFunc(Graphics::RenderTargetID, render_target_create, const Graphics::RenderTargetCreateInfo& ci);
 	VTFunc(void, render_target_destroy, Graphics::RenderTargetID render_target);
 	VTFunc(Graphics::TextureID, render_target_get_texture, Graphics::RenderTargetID render_target);
+
+	VTFunc(Graphics::DescriptorSetLayoutID, descriptor_set_layout_create, const Graphics::DescriptorSetLayoutCreateInfo& ci);
+	VTFunc(void, descriptor_set_layout_destroy, Graphics::DescriptorSetLayoutID descriptor_set_layout);
 
 	VTFunc(Graphics::DescriptorSetID, descriptor_set_create, const Graphics::DescriptorSetCreateInfo& ci);
 	VTFunc(void, descriptor_set_destroy, Graphics::DescriptorSetID descriptor_set);
@@ -77,6 +83,7 @@ struct Adapter
 	VTFunc(void, command_buffer_buffer_barrier, Graphics::CommandBufferID command_buffer, const Graphics::PipelineBufferBarrier& buffer_barrier);
 	VTFunc(void, command_buffer_texture_barrier, Graphics::CommandBufferID command_buffer, const Graphics::PipelineTextureBarrier& texture_barrier);
 
+	VTFunc(void, command_buffer_copy_buffer_to_texture, Graphics::CommandBufferID command_buffer, const Graphics::CopyBufferToTextureInfo& copy_info);
 	VTFunc(void, command_buffer_copy_buffer, Graphics::CommandBufferID command_buffer, const Graphics::BufferCopyInfo& copy_info);
 
 	VTFunc(void, command_buffer_bind_pipeline, Graphics::CommandBufferID command_buffer, Graphics::PipelineBindPoint bind_point, Graphics::PipelineID pipeline);

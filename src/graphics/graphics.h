@@ -3,6 +3,7 @@
 #include "collections/string_view.h"
 #include "mem/allocator.h"
 #include "math/vec2.h"
+#include "math/vec3.h"
 #include "math/rect_2d.h"
 #include "math/color.h"
 
@@ -23,10 +24,12 @@ struct Graphics
 	using SwapChainID = ID<u32, struct _SwapChainTag>;
 	using MemoryHeapID = ID<u32, struct _MemoryHeapTag>;
 	using BufferID = ID<u32, struct _BufferTag>;
+	using SamplerID = ID<u32, struct _SamplerTag>;
 	using TextureID = ID<u32, struct _TextureTag>;
 	using RenderTargetID = ID<u32, struct _RenderTargetTag>;
-	using PipelineID = ID<u32, struct _PipelineTag>;
+	using DescriptorSetLayoutID = ID<u32, struct _DescriptorSetLayout>;
 	using DescriptorSetID = ID<u32, struct _DescriptorSet>;
+	using PipelineID = ID<u32, struct _PipelineTag>;
 	using CommandPoolID = ID<u32, struct _CommandPoolID>;
 	using CommandBufferID = ID<u32, struct _CommandBufferTag>;
 
@@ -105,7 +108,7 @@ struct Graphics
 		PresentMode present_mode;
 		SurfaceFormat format;
 		u32 image_count;
-		Vector2I size;
+		Vector2U size;
 	};
 
 	struct AcquireInfo
@@ -189,6 +192,7 @@ struct Graphics
 		Unknown = 0,
 		UniformBuffer,
 		StorageBuffer,
+		CombinedTextureSampler,
 	};
 	
 	enum class ShaderStage
@@ -197,14 +201,28 @@ struct Graphics
 		Fragment = Bit(1),
 	};
 
+	enum class CompareOp
+	{
+		Unknown = 0,
+		Never,
+		Always,
+    	Equal,
+    	NotEqual,
+    	Less,
+    	LessOrEqual,
+    	Greater,
+    	GreaterOrEqual,
+	};
+
 	// ====== Resources ======
 
 	/*
 	* Memory Heap API
 	*/
 
-	static constexpr usize MinHeapSize = 1024;
-	static constexpr usize MinHeapResourceAlignment = 1024;
+	static constexpr usize MinHeapSize = 4096;
+	static constexpr usize HeapAlignment = 4096;
+	static constexpr usize MinHeapResourceAlignment = 4096;
 
 	enum class HeapUsage
 	{
@@ -252,6 +270,55 @@ struct Graphics
 	static void buffer_unmap_memory(BufferID buffer, const Slice<u8>& memory);
 
 	/*
+	* Sampler API
+	*/
+
+	enum class Filter
+	{
+		Unknown = 0,
+		Nearest,
+		Linear,
+	};
+
+	enum class SamplerMipMapMode
+	{
+		Unknown = 0,
+		Nearest,
+		Linear,
+	};
+
+	enum class SamplerAddressMode
+	{
+		Unknown = 0,
+ 		Repeat,
+    	MirroredRepeat,
+    	ClampToEdge,
+    	ClampToBorder,
+	};
+
+	struct SamplerCreateInfo
+	{
+		DeviceID device;
+		Filter min_filter;
+		Filter mag_filter;
+		SamplerMipMapMode mipmap_mode;
+		SamplerAddressMode address_mode_u;
+		SamplerAddressMode address_mode_v;
+		SamplerAddressMode address_mode_w;
+		f32 mip_lod_bias;
+		bool anisotropy_enable;
+		f32 max_anisotropy;
+		bool compare_enable;
+		CompareOp compare_op;
+		f32 min_lod;
+		f32 max_lod;
+	};
+
+	static SamplerID sampler_create(const SamplerCreateInfo& ci);
+	static void sampler_destroy(SamplerID sampler);
+	
+
+	/*
 	* Texture API
 	*/
 	enum class TextureType
@@ -263,19 +330,41 @@ struct Graphics
 	enum class TextureFormat
 	{
 		Unknown = 0,
-		RGBA8,
-		RGB8,
-		R8,
+		RGBA8Srgb,
+		RGB8Srgb,
+		RG8Srgb,
+		R8Srgb,
 	};
 
-	enum class TextureFilter
+	enum class SampleCount
 	{
 		Unknown = 0,
-		Nearest,
+		Sample1,
+		Sample2,
+		Sample4,
+		Sample8,
+		Sample16,
+		Sample32,
+		Sample64,
+	};
+
+	enum class TextureTiling
+	{
+		Unknown = 0,
+		Optimal,
 		Linear,
 	};
 
-	enum class TextureAspects
+	enum class TextureUsage
+	{
+		TransferSource = Bit(0),
+		TransferDestination = Bit(1),
+		Sampled = Bit(2),
+		Storage = Bit(3),
+		RenderOutput = Bit(4),
+	};
+
+	enum class TextureAspect
 	{
 		Color = Bit(0),
 		Depth = Bit(1),
@@ -287,25 +376,43 @@ struct Graphics
 		Unknown = 0,
 		RenderOutput,
 		Present,
+		ShaderReadOnly,
+		TransferSource,
+		TransferDestination,
 	};
 
-	struct TextureSubresourceRange
+	struct TextureSubresourceRanges
 	{
-		TextureAspects aspects;
+		TextureAspect aspect;
 		u32 base_mip_level;
 		u32 level_count;
 		u32 base_array_layer;
 		u32 layer_count;
 	};
 
+	struct TextureSubresourceLayers
+	{
+    	TextureAspect aspect;
+    	uint32_t mip_level;
+    	uint32_t base_array_layer;
+    	uint32_t layer_count;
+	};
+
 	struct TextureCreateInfo
 	{
+		DeviceID device;
 		TextureType type;
 		TextureFormat format;
-		TextureFilter min_filter;
-		TextureFilter mag_filter;
-		Vector2I size;
-		Slice<const u8> pixels;
+		Vector3U extent;
+		u32 mip_levels;
+		u32 array_levels;
+		SampleCount sample_count;
+		TextureTiling tiling;
+		TextureUsage usage;
+		TextureLayout initial_layout;
+
+		MemoryHeapID memory_heap;
+		usize heap_offset;
 	};
 
 	static TextureID texture_create(const TextureCreateInfo& ci);
@@ -330,7 +437,6 @@ struct Graphics
 	/*
 	* Descriptor Set
 	*/
-
 	struct DescriptorBinding
 	{
 		DescriptorType type;
@@ -339,10 +445,30 @@ struct Graphics
 		ShaderStage stages;
 	};
 
-	struct DescriptorSetCreateInfo
+	struct DescriptorSetLayoutCreateInfo
 	{
 		DeviceID device;
 		Slice<DescriptorBinding> bindings;
+	};
+
+	static DescriptorSetLayoutID descriptor_set_layout_create(const DescriptorSetLayoutCreateInfo& ci);
+	static void descriptor_set_layout_destroy(DescriptorSetLayoutID descriptor_set_layout);
+
+	/*
+	* Descriptor Set
+	*/
+
+	struct DescriptorSetCreateInfo
+	{
+		DeviceID device;
+		DescriptorSetLayoutID set_layout;	
+	};
+
+	struct DescriptorTextureInfo
+	{
+		TextureID texture;
+		TextureLayout layout;
+		SamplerID sampler;
 	};
 
 	struct DescriptorBufferInfo
@@ -358,6 +484,7 @@ struct Graphics
 		u32 array_element;
 		u32 count;
 		DescriptorType type;
+		Slice<DescriptorTextureInfo> textures;
 		Slice<DescriptorBufferInfo> buffers;
 	};
 
@@ -423,18 +550,6 @@ struct Graphics
 		RGB32Float,
 		RG32Float,
 		R32Float,
-	};
-
-	enum class SampleCount
-	{
-		Unknown = 0,
-		Sample1,
-		Sample2,
-		Sample4,
-		Sample8,
-		Sample16,
-		Sample32,
-		Sample64,
 	};
 
 	struct ShaderStageInfo
@@ -505,23 +620,10 @@ struct Graphics
 		u32 size;
 	};
 
-	struct PipelineDescriptorBinding
-	{
-		DescriptorType type;
-		u32 binding;
-		u32 count;
-		ShaderStage stages;
-	};
-
-	struct PipelineDescriptorSet
-	{
-		Slice<PipelineDescriptorBinding> bindings;
-	};
-
 	struct PipelineLayout
 	{
 		Slice<ConstantBlock> constant_blocks;
-		Slice<PipelineDescriptorSet> sets;
+		Slice<DescriptorSetLayoutID> set_layouts;
 	};
 
 	struct PipelineCreateInfo
@@ -577,7 +679,11 @@ struct Graphics
 		VertexInput = Bit(1),
 		VertexShader = Bit(2),
 		FragmentShader = Bit(3),
-		RenderOutput = Bit(4),
+		EarlyFragmentTestShader = Bit(4),
+		LateFragmentTestShader = Bit(5),
+		ComputeShader = Bit(6),
+		RenderOutput = Bit(7),
+		Transfer = Bit(8),
 		
 		End = Bit(31),
 	};
@@ -586,6 +692,10 @@ struct Graphics
 	{
 		RenderOutputRead = Bit(0),
 		RenderOutputWrite = Bit(1),
+		TransferRead = Bit(2),
+		TransferWrite = Bit(3),
+		ShaderRead = Bit(4),
+		ShaderWrite = Bit(5),
 	};
 
 	struct CommandBufferAllocateInfo
@@ -625,7 +735,7 @@ struct Graphics
 		TextureLayout src_layout;
 		TextureLayout dest_layout;
 		Graphics::TextureID texture;
-		TextureSubresourceRange subresource_range;
+		TextureSubresourceRanges subresource_range;
 	};
 
 	struct BufferCopyRegion
@@ -633,6 +743,19 @@ struct Graphics
 		usize source_offset;
 		usize destination_offset;
 		usize size;
+	};
+	
+	struct CopyBufferToTextureInfo
+	{
+		BufferID source_buffer;
+		usize source_offset;
+		u32 row_length;
+		u32 image_height;
+		TextureID destination_texture;
+		TextureLayout destination_layout;
+		TextureSubresourceLayers subresource_layer;
+		Vector3I offset;
+		Vector3U extent;
 	};
 
 	struct  BufferCopyInfo
@@ -673,6 +796,7 @@ struct Graphics
 	static void command_buffer_buffer_barrier(CommandBufferID command_buffer, const PipelineBufferBarrier& buffer_barrier);
 	static void command_buffer_texture_barrier(CommandBufferID command_buffer, const PipelineTextureBarrier& texture_barrier);
 
+	static void command_buffer_copy_buffer_to_texture(CommandBufferID command_buffer, const CopyBufferToTextureInfo& copy_info);
 	static void command_buffer_copy_buffer(CommandBufferID command_buffer, const BufferCopyInfo& copy_info);
 
 	static void command_buffer_bind_pipeline(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineID pipeline);
@@ -688,7 +812,8 @@ struct Graphics
 
 
 EnableBitOp(Graphics::BufferUsage);
-EnableBitOp(Graphics::TextureAspects);
+EnableBitOp(Graphics::TextureUsage);
+EnableBitOp(Graphics::TextureAspect);
 EnableBitOp(Graphics::ShaderStage);
 EnableBitOp(Graphics::PipelineStages);
 EnableBitOp(Graphics::AccessMasks);

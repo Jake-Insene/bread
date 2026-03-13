@@ -17,7 +17,7 @@ void SceneManager::initialize(const mem::Allocator& allocator)
     // TODO: Create Render Target
     Graphics::RenderTargetCreateInfo rtci = 
     {
-        .format = Graphics::TextureFormat::RGBA8,
+        .format = Graphics::TextureFormat::RGBA8Srgb,
         .depth_stencil_format = Graphics::TextureFormat::Unknown,
         .size = Engine::get_configuration().viewport_size,
     };

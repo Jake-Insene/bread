@@ -2,14 +2,8 @@
 #include "collections/free_list.h"
 #include "graphics/adapter.h"
 #include "graphics/vk/vk_header.h"
-#include "log/log.h"
-#include "debug/fail.h"
 #include "platform/platform_header.h"
 
-
-#define VKDebugInfo(...) Log::debug("[VKDriver]: " __VA_ARGS__)
-#define VKFatal(...) Fatal("[VKDriver]: " __VA_ARGS__)
-#define VKFailOn(cond, ...) FailOn(cond, "[VKDriver]: " __VA_ARGS__)
 
 
 
@@ -120,12 +114,23 @@ struct VulkanDriver
 		Graphics::MemoryHeapID memory_heap;
 	};
 
+	struct Sampler
+	{
+		VkDevice vk_device;
+		VkSampler vk_sampler;
+
+		Graphics::DeviceID device;
+		Graphics::SamplerID sampler;
+	};
+
 	struct Texture
 	{
 		VkDevice vk_device;
 		VkImage vk_image;
+		VkImageView vk_image_view;
 
 		Graphics::DeviceID device;
+		Graphics::TextureID texture;
 	};
 
 	struct RenderTarget
@@ -136,10 +141,18 @@ struct VulkanDriver
 		Graphics::DeviceID device;
 	};
 
-	struct DescriptorSet
+	struct DescriptorSetLayout
 	{
 		VkDevice vk_device;
 		VkDescriptorSetLayout vk_set_layout;
+
+		Graphics::DeviceID device;
+		Graphics::DescriptorSetLayoutID descriptor_set_layout;
+	};
+
+	struct DescriptorSet
+	{
+		VkDevice vk_device;
 		VkDescriptorSet vk_descriptor_set;
 
 		Graphics::DeviceID device;
@@ -151,7 +164,6 @@ struct VulkanDriver
 		VkDevice vk_device;
 		VkPipeline vk_pipeline;
 		VkPipelineLayout vk_pipeline_layout;
-		Slice<VkDescriptorSetLayout> vk_set_layouts;
 
 		Graphics::DeviceID device;
 		Graphics::PipelineID pipeline;
@@ -189,8 +201,10 @@ struct VulkanDriver
 		FreeList<Queue, Graphics::QueueID> queues;
 		FreeList<MemoryHeap, Graphics::MemoryHeapID> memory_heaps;
 		FreeList<Buffer, Graphics::BufferID> buffers;
+		FreeList<Sampler, Graphics::SamplerID> samplers;
 		FreeList<Texture, Graphics::TextureID> textures;
 		FreeList<RenderTarget, Graphics::RenderTargetID> render_targets;
+		FreeList<DescriptorSetLayout, Graphics::DescriptorSetLayoutID> descriptor_set_layouts;
 		FreeList<DescriptorSet, Graphics::DescriptorSetID> descriptor_sets;
 		FreeList<Pipeline, Graphics::PipelineID> pipelines;
 		FreeList<CommandPool, Graphics::CommandPoolID> command_pools;
@@ -252,6 +266,9 @@ struct VulkanDriver
 	static void buffer_destroy(Graphics::BufferID buffer);
 	static Slice<u8> buffer_map_memory(Graphics::BufferID buffer, usize offset, usize len);
 	static void buffer_unmap_memory(Graphics::BufferID buffer, const Slice<u8>& memory);
+
+	static Graphics::SamplerID sampler_create(const Graphics::SamplerCreateInfo& ci);
+	static void sampler_destroy(Graphics::SamplerID sampler);
 	
 	static Graphics::TextureID texture_create(const Graphics::TextureCreateInfo& ci);
 	static void texture_destroy(Graphics::TextureID texture);
@@ -260,6 +277,9 @@ struct VulkanDriver
 	static Graphics::RenderTargetID render_target_create(const Graphics::RenderTargetCreateInfo& ci);
 	static void render_target_destroy(Graphics::RenderTargetID render_target);
 	static Graphics::TextureID render_target_get_texture(Graphics::RenderTargetID render_target);
+
+	static Graphics::DescriptorSetLayoutID descriptor_set_layout_create(const Graphics::DescriptorSetLayoutCreateInfo& ci);
+	static void descriptor_set_layout_destroy(Graphics::DescriptorSetLayoutID descriptor_set_layout);
 
 	static Graphics::DescriptorSetID descriptor_set_create(const Graphics::DescriptorSetCreateInfo& ci);
 	static void descriptor_set_destroy(Graphics::DescriptorSetID descriptor_set);
@@ -284,6 +304,7 @@ struct VulkanDriver
 	static void command_buffer_buffer_barrier(Graphics::CommandBufferID command_buffer, const Graphics::PipelineBufferBarrier& buffer_barrier);
 	static void command_buffer_texture_barrier(Graphics::CommandBufferID command_buffer, const Graphics::PipelineTextureBarrier& texture_barrier);
 
+	static void command_buffer_copy_buffer_to_texture(Graphics::CommandBufferID command_buffer, const Graphics::CopyBufferToTextureInfo& copy_info);
 	static void command_buffer_copy_buffer(Graphics::CommandBufferID command_buffer, const Graphics::BufferCopyInfo& copy_info);
 
 	static void command_buffer_bind_pipeline(Graphics::CommandBufferID command_buffer, Graphics::PipelineBindPoint bind_point, Graphics::PipelineID pipeline);
@@ -304,8 +325,10 @@ struct VulkanDriver
 	static Queue& _get_queue(Graphics::QueueID queue) { return data.queues.get(queue); }
 	static MemoryHeap& _get_memory_heap(Graphics::MemoryHeapID memory_heap) { return data.memory_heaps.get(memory_heap); }
 	static Buffer& _get_buffer(Graphics::BufferID buffer) { return data.buffers.get(buffer); }
+	static Sampler& _get_sampler(Graphics::SamplerID sampler) { return data.samplers.get(sampler); }
 	static Texture& _get_texture(Graphics::TextureID texture) { return data.textures.get(texture); }
 	static RenderTarget& _get_render_target(Graphics::RenderTargetID render_target) { return data.render_targets.get(render_target); }
+	static DescriptorSetLayout& _get_descriptor_set_layout(Graphics::DescriptorSetLayoutID descriptor_set_layout) { return data.descriptor_set_layouts.get(descriptor_set_layout); }
 	static DescriptorSet& _get_descriptor_set(Graphics::DescriptorSetID descriptor_set) { return data.descriptor_sets.get(descriptor_set); }
 	static Pipeline& _get_pipeline(Graphics::PipelineID pipeline) { return data.pipelines.get(pipeline); }
 	static CommandPool& _get_command_pool(Graphics::CommandPoolID command_pool) { return data.command_pools.get(command_pool); }
@@ -314,28 +337,10 @@ struct VulkanDriver
 	static void _get_physical_devices();
 	
 	static void _vk_get_surface_format(Graphics::SurfaceFormat surface_format, VkFormat* vk_image_format, VkColorSpaceKHR* vk_color_space);
-	static VkPresentModeKHR _vk_get_present_mode(Graphics::PresentMode present_mode);
 	static VkSurfaceCapabilitiesKHR _vk_get_surface_capabilities(VkPhysicalDevice vk_physical_device, VkSurfaceKHR vk_surface);
-	static VkExtent2D _vk_get_swap_chain_extent(const Vector2I& size, const VkSurfaceCapabilitiesKHR& vk_capabilities);
-	static VkMemoryPropertyFlags _vk_get_memory_properties(Graphics::HeapUsage heap_usage);
-	static VkBufferUsageFlags _vk_get_buffer_usage(Graphics::BufferUsage buffer_usage);
-	static VkDescriptorType _vk_get_descriptor_type(Graphics::DescriptorType descriptor_type);
-	static VkPipelineStageFlags _vk_get_pipeline_stages(Graphics::PipelineStages stages);
-	static VkImageAspectFlags _vk_get_aspect_masks(Graphics::TextureAspects aspects);
-	static VkAccessFlags _vk_get_access_masks(Graphics::AccessMasks access_masks);
-	static VkImageLayout _vk_get_image_layout(Graphics::TextureLayout texture_layout);
-	static VkShaderStageFlags _vk_get_shader_stage(Graphics::ShaderStage shader_stage);
-	static VkVertexInputRate _vk_get_input_rate(Graphics::InputRate input_rate);
-	static VkFormat _vk_get_vertex_format(Graphics::VertexFormat vertex_format);
-	static VkPrimitiveTopology _vk_get_topology(Graphics::PrimitiveTopology primitive_topology);
-	static VkPolygonMode _vk_get_polygon_mode(Graphics::PolygonMode polygon_mode);
-	static VkCullModeFlags _vk_get_cull_mode(Graphics::CullMode cull_mode);
-	static VkFrontFace _vk_get_front_face(Graphics::FrontFace front_face);
-	static VkSampleCountFlagBits _vk_get_samples(Graphics::SampleCount sample_count);
-	static VkPipelineBindPoint _vk_get_bind_point(Graphics::PipelineBindPoint bind_point);
+	static VkExtent2D _vk_get_swap_chain_extent(const Vector2U& size, const VkSurfaceCapabilitiesKHR& vk_capabilities);
 
 	static VkShaderModule _vk_create_shader_module(LogicalDevice& ld, const Graphics::ShaderStageInfo& shader_stage_info);
-	static VkDescriptorSetLayout _vk_create_set_layout(LogicalDevice& ld, const Graphics::PipelineDescriptorSet& set_info);
 
 	static Graphics::DeviceType _vk_device_type_to_device_type(VkPhysicalDeviceType vk_device_type);
 	static Graphics::SurfaceFormat _vk_surface_format_to_surface_format(VkSurfaceFormatKHR vk_surface_format);

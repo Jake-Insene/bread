@@ -106,6 +106,16 @@ struct DeviceVulkanTable
     PFN_vkCreateBufferView vkCreateBufferView;
     PFN_vkDestroyBufferView vkDestroyBufferView;
 
+    PFN_vkCreateSampler vkCreateSampler;
+    PFN_vkDestroySampler vkDestroySampler;
+
+    PFN_vkCreateImage vkCreateImage;
+    PFN_vkDestroyImage vkDestroyImage;
+    PFN_vkBindImageMemory2 vkBindImageMemory2;
+
+    PFN_vkCreateImageView vkCreateImageView;
+    PFN_vkDestroyImageView vkDestroyImageView;
+
     PFN_vkCreateDescriptorPool vkCreateDescriptorPool;
     PFN_vkDestroyDescriptorPool vkDestroyDescriptorPool;
     PFN_vkAllocateDescriptorSets vkAllocateDescriptorSets;
@@ -133,6 +143,7 @@ struct DeviceVulkanTable
     PFN_vkCmdBeginRenderingKHR vkCmdBeginRenderingKHR;
     PFN_vkCmdEndRendering vkCmdEndRendering;
     PFN_vkCmdPipelineBarrier vkCmdPipelineBarrier;
+    PFN_vkCmdCopyBufferToImage vkCmdCopyBufferToImage;
     PFN_vkCmdCopyBuffer vkCmdCopyBuffer;
     PFN_vkCmdBindPipeline vkCmdBindPipeline;
     PFN_vkCmdBindDescriptorSets vkCmdBindDescriptorSets;
@@ -141,12 +152,6 @@ struct DeviceVulkanTable
     PFN_vkCmdSetViewport vkCmdSetViewport;
     PFN_vkCmdSetScissor vkCmdSetScissor;
     PFN_vkCmdDraw vkCmdDraw;
-
-    PFN_vkCreateImage vkCreateImage;
-    PFN_vkDestroyImage vkDestroyImage;
-
-    PFN_vkCreateImageView vkCreateImageView;
-    PFN_vkDestroyImageView vkDestroyImageView;
 };
 
 inline SharedVulkanTable vk = {};

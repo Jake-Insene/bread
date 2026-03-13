@@ -111,6 +111,19 @@ void Vulkan::load_device_procs(DeviceVulkanTable& table, VkDevice device)
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateBufferView);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyBufferView);
 
+    // sampler
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateSampler);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroySampler);
+
+    // image
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateImage);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyImage);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkBindImageMemory2)
+
+    // image view
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateImageView);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyImageView);
+
     // descriptors
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateDescriptorPool);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyDescriptorPool);
@@ -144,6 +157,7 @@ void Vulkan::load_device_procs(DeviceVulkanTable& table, VkDevice device)
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdBeginRenderingKHR);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdEndRendering);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdPipelineBarrier);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdCopyBufferToImage);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdCopyBuffer);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdBindPipeline);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdBindDescriptorSets);
@@ -152,14 +166,6 @@ void Vulkan::load_device_procs(DeviceVulkanTable& table, VkDevice device)
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdSetViewport);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdSetScissor);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdDraw);
-
-    // image
-    VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateImage);
-    VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyImage);
-
-    // image view
-    VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateImageView);
-    VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyImageView);
 }
 
 uint32_t Vulkan::get_api_version()

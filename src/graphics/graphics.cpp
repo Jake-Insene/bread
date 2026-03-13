@@ -153,6 +153,16 @@ void Graphics::buffer_unmap_memory(Graphics::BufferID buffer, const Slice<u8>& m
 	current_adapter.buffer_unmap_memory(buffer, memory);
 }
 
+Graphics::SamplerID Graphics::sampler_create(const SamplerCreateInfo& ci)
+{
+	return current_adapter.sampler_create(ci);
+}
+
+void Graphics::sampler_destroy(SamplerID sampler)
+{
+	current_adapter.sampler_destroy(sampler);
+}
+
 Graphics::TextureID Graphics::texture_create(const TextureCreateInfo& ci)
 {
 	return current_adapter.texture_create(ci);
@@ -181,6 +191,16 @@ void Graphics::render_target_destroy(RenderTargetID render_target)
 Graphics::TextureID Graphics::render_target_get_texture(RenderTargetID render_target)
 {
 	return current_adapter.render_target_get_texture(render_target);
+}
+
+Graphics::DescriptorSetLayoutID Graphics::descriptor_set_layout_create(const DescriptorSetLayoutCreateInfo& ci)
+{
+	return current_adapter.descriptor_set_layout_create(ci);
+}
+
+void Graphics::descriptor_set_layout_destroy(DescriptorSetLayoutID descriptor_set_layout)
+{
+	current_adapter.descriptor_set_layout_destroy(descriptor_set_layout);
 }
 
 Graphics::DescriptorSetID Graphics::descriptor_set_create(const Graphics::DescriptorSetCreateInfo& ci)
@@ -261,6 +281,11 @@ void Graphics::command_buffer_buffer_barrier(CommandBufferID command_buffer, con
 void Graphics::command_buffer_texture_barrier(CommandBufferID command_buffer, const PipelineTextureBarrier& texture_barrier)
 {
 	current_adapter.command_buffer_texture_barrier(command_buffer, texture_barrier);
+}
+
+void Graphics::command_buffer_copy_buffer_to_texture(CommandBufferID command_buffer, const CopyBufferToTextureInfo& copy_info)
+{
+	current_adapter.command_buffer_copy_buffer_to_texture(command_buffer, copy_info);
 }
 
 void Graphics::command_buffer_copy_buffer(CommandBufferID command_buffer, const BufferCopyInfo& copy_info)

@@ -20,8 +20,8 @@ struct ResourceManager
     struct TextureLoadInfo
     {
         Graphics::TextureType type;
-        Graphics::TextureFilter min_filter;
-        Graphics::TextureFilter mag_filter;
+        Graphics::Filter min_filter;
+        Graphics::Filter mag_filter;
     };
 
     struct InternalData

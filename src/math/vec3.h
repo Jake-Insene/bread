@@ -160,3 +160,5 @@ union [[nodiscard]] Vector3T
 };
 
 using Vector3 = Vector3T<f32>;
+using Vector3I = Vector3T<i32>;
+using Vector3U = Vector3T<u32>;

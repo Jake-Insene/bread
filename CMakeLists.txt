@@ -110,6 +110,7 @@ file(GLOB ENGINE_SRC
 file(GLOB VULKAN_ADAPTER_SRC
     src/graphics/vk/vk_driver.cpp
     src/graphics/vk/vk_header.cpp
+    src/graphics/vk/vk_utils.cpp
 )
 
 set(PLATFORM_LIBRARIES "")
@@ -153,7 +154,7 @@ add_library(
     "bread"
     STATIC
     ${SOURCE_FILES}
- "src/graphics/vk/vk_header.h")
+)
 
 target_compile_definitions("bread" PUBLIC ${BREAD_BUILD_DEFINITIONS})
 target_compile_options("bread" PUBLIC ${BREAD_COMPILE_OPTIONS})

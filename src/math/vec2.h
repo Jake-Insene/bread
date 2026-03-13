@@ -237,6 +237,7 @@ union [[nodiscard]] Vector2T
 
 using Vector2 = Vector2T<f32>;
 using Vector2I = Vector2T<i32>;
+using Vector2U = Vector2T<u32>;
 
 namespace io
 {
