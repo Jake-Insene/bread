@@ -1,10 +1,25 @@
 #pragma once
 #include "collections/free_list.h"
+#include "collections/hash_map.h"
 #include "graphics/adapter.h"
 #include "graphics/vk/vk_header.h"
 #include "platform/platform_header.h"
 
 
+
+template<>
+struct HashOfType<VkFormat>
+{
+    [[nodiscard]] static constexpr u64 hashfunc(const VkFormat& k)
+    {
+        return k;
+    }
+
+    [[nodiscard]] static constexpr bool compare(const VkFormat& k1, const VkFormat& k2)
+    {
+        return k1 == k2;
+    }
+};
 
 
 struct VulkanDriver
@@ -20,6 +35,15 @@ struct VulkanDriver
 		VkSurfaceKHR vk_surface;
 		MemoryAddress window_native_handle;
 	};
+
+	struct RenderPassCache
+	{
+		VkRenderPass vk_render_pass;
+
+		Graphics::DeviceID device;
+	};
+
+	using RenderPassEntry = HashMap<VkFormat, RenderPassCache>::KeyValue;
 
 	struct LogicalDevice
 	{
@@ -45,14 +69,18 @@ struct VulkanDriver
 		DeviceVulkanTable vk;
 
 		VkDescriptorPool vk_global_descriptor_pool;
-	};
 
-	static constexpr usize MaxSwapChainImageCount = 3;
+		// device resources
+		HashMap<VkFormat, RenderPassCache> render_pass_cache;
+
+		Graphics::DeviceID device;
+	};
 
 	struct SwapChainImage
 	{
 		VkImage vk_image;
 		VkImageView vk_image_view;
+		VkFramebuffer vk_framebuffer;
 		Graphics::TextureID texture;
 	};
 
@@ -61,9 +89,10 @@ struct VulkanDriver
 		VkDevice vk_device;
 		VkSurfaceKHR vk_surface;
 		VkSwapchainKHR vk_swapchain;
+		VkRenderPass vk_render_pass;
 
 		u32 image_count;
-		SwapChainImage images[MaxSwapChainImageCount];
+        Slice<SwapChainImage> images;
 
 		Graphics::SurfaceID surface;
 		Graphics::DeviceID device;
@@ -98,6 +127,8 @@ struct VulkanDriver
 	{
 		VkDevice vk_device;
 		VkDeviceMemory vk_memory;
+        u32 vk_type_index;
+        VkMemoryPropertyFlags vk_memory_flags;
 
 		Graphics::DeviceID device;
 		Graphics::MemoryHeapID memory_heap;
@@ -242,6 +273,7 @@ struct VulkanDriver
 
 	static Graphics::SwapChainID swap_chain_create(const Graphics::SwapChainCreateInfo& ci);
 	static void swap_chain_destroy(Graphics::SwapChainID swap_chain);
+	static u32 swap_chain_get_image_count(Graphics::SwapChainID swap_chain);
 	static Graphics::TextureID swap_chain_get_texture(Graphics::SwapChainID swap_chain, u32 image_index);
 	static void swap_chain_acquire_next_image(Graphics::SwapChainID swap_chain, const Graphics::AcquireInfo& acquire_info, u32* image_index);
 
@@ -341,6 +373,8 @@ struct VulkanDriver
 	static VkExtent2D _vk_get_swap_chain_extent(const Vector2U& size, const VkSurfaceCapabilitiesKHR& vk_capabilities);
 
 	static VkShaderModule _vk_create_shader_module(LogicalDevice& ld, const Graphics::ShaderStageInfo& shader_stage_info);
+
+	static RenderPassCache& _get_render_pass_for(LogicalDevice& ld, VkFormat format);
 
 	static Graphics::DeviceType _vk_device_type_to_device_type(VkPhysicalDeviceType vk_device_type);
 	static Graphics::SurfaceFormat _vk_surface_format_to_surface_format(VkSurfaceFormatKHR vk_surface_format);

@@ -57,11 +57,16 @@ struct AndroidOS
 
     static f64 get_time();
 
+    static MemoryAddress load_library(StringView lib_path);
+    static void unload_library(MemoryAddress library);
+    static OS::VoidFunction get_proc_address(MemoryAddress library, StringView symbol_name);
+
     static void exit(u64 code);
     static usize get_page_size();
 
     static Slice<u8> map_memory(usize memory_size, OS::MapAccess access);
     static void unmap_memory(Slice<u8> memory);
+    static OS::QueryMemory query_memory(Slice<u8> memory);
 
     static OS::ThreadID thread_create(OS::ThreadFn fn, Opaque* arg);
     static void thread_destroy(OS::ThreadID tid);

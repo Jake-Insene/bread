@@ -63,10 +63,12 @@ static void* __bread_memset(void* dest, int value, size_t len)
 #pragma clang diagnostic ignored "-Wold-style-cast"
 #endif
 
+#if !defined(BREAD_ANDROID)
 static u32 _lrotl(u32 x, int y)
 {
     return (((x) << (y)) | ((x) >> (-(y) & 31)));
 }
+#endif
 
 #define stbi_err(x) DebugAssert(x, "stb_image assertion fail");
 

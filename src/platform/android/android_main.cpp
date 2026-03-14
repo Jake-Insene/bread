@@ -14,7 +14,7 @@ struct SaveState
 SaveState save_state = {};
 
 bool running = true;
-
+bool initialized = false;
 
 static int32_t engine_handle_input(android_app*, AInputEvent* event)
 {
@@ -34,7 +34,7 @@ static int32_t engine_handle_input(android_app*, AInputEvent* event)
                 InputEventTouch e = {};
 
                 // Y positive is up
-                e.type = INPUT_EVENT_TOUCH;
+                e.type = InputEventType::Touch;
                 e.position = Vector2
                         (
                                 AMotionEvent_getX(event, p),
@@ -45,7 +45,7 @@ static int32_t engine_handle_input(android_app*, AInputEvent* event)
                              || action == AMOTION_EVENT_ACTION_POINTER_DOWN);
                 e.pointer = i32(p);
 
-                Engine::handle_input(e);
+                Engine::handle_event(e);
 
                 Log::debug("action pointer: {}, action: {}, pointer: {}", action_pointer, action, p);
             }
@@ -82,7 +82,9 @@ static void engine_handle_cmd(android_app*, int32_t cmd)
         // The window is being shown, get it ready.
         if (AndroidEngine::data.app->window != nullptr)
         {
+            Engine::initialize();
             Engine::request_recreate_window();
+            initialized = true;
     	}
         break;
     case APP_CMD_TERM_WINDOW:
@@ -127,8 +129,6 @@ void android_main(android_app* app)
     );
     Log::debug("Obb path: {}", obb_path);
 
-    AndroidEngine::initialize();
-
     while (!app->destroyRequested) {
         android_poll_source *source = nullptr;
         auto result = ALooper_pollOnce(0, nullptr, nullptr, reinterpret_cast<void **>(&source));
@@ -147,7 +147,7 @@ void android_main(android_app* app)
             break;
         }
         
-        if(running)
+        if(running && initialized)
         {
             AndroidEngine::step();
         }

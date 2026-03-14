@@ -8,15 +8,12 @@
 
 #if defined(BREAD_WIN32)
 #include <vulkan/vulkan_win32.h>
+#elif defined(BREAD_ANDROID)
+#include <vulkan/vulkan_android.h>
 #endif
 
 
 using VkFuncGeneric = void(*)();
-#if defined(BREAD_ANDROID)
-static_assert(false, "implement this!");
-#elif defined(BREAD_WIN32)
-inline VkFuncGeneric(*platform_get_proc)(const char* name) = nullptr;
-#endif 
 
 #define VK_REQUIRED_LOAD(name, lib) \
     vk.name = reinterpret_cast<decltype(vk.name)>(OS::get_proc_address(lib, #name)); \
@@ -64,6 +61,8 @@ struct SharedVulkanTable
 #if defined(BREAD_WIN32)
     PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR;
     PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR vkGetPhysicalDeviceWin32PresentationSupportKHR;
+#elif defined(BREAD_ANDROID)
+    PFN_vkCreateAndroidSurfaceKHR vkCreateAndroidSurfaceKHR;
 #endif
     PFN_vkDestroySurfaceKHR vkDestroySurfaceKHR;
 
@@ -96,8 +95,8 @@ struct DeviceVulkanTable
 
     PFN_vkAllocateMemory vkAllocateMemory;
     PFN_vkFreeMemory vkFreeMemory;
-    PFN_vkMapMemory2 vkMapMemory2;
-    PFN_vkUnmapMemory2 vkUnmapMemory2;
+    PFN_vkMapMemory vkMapMemory;
+    PFN_vkUnmapMemory vkUnmapMemory;
 
     PFN_vkCreateBuffer vkCreateBuffer;
     PFN_vkDestroyBuffer vkDestroyBuffer;
@@ -116,6 +115,9 @@ struct DeviceVulkanTable
     PFN_vkCreateImageView vkCreateImageView;
     PFN_vkDestroyImageView vkDestroyImageView;
 
+    PFN_vkCreateFramebuffer vkCreateFramebuffer;
+    PFN_vkDestroyFramebuffer vkDestroyFramebuffer;
+
     PFN_vkCreateDescriptorPool vkCreateDescriptorPool;
     PFN_vkDestroyDescriptorPool vkDestroyDescriptorPool;
     PFN_vkAllocateDescriptorSets vkAllocateDescriptorSets;
@@ -123,6 +125,9 @@ struct DeviceVulkanTable
     PFN_vkUpdateDescriptorSets vkUpdateDescriptorSets;
     PFN_vkCreateDescriptorSetLayout vkCreateDescriptorSetLayout;
     PFN_vkDestroyDescriptorSetLayout vkDestroyDescriptorSetLayout;
+
+    PFN_vkCreateRenderPass2KHR vkCreateRenderPass2KHR;
+    PFN_vkDestroyRenderPass vkDestroyRenderPass;
 
     PFN_vkCreateGraphicsPipelines vkCreateGraphicsPipelines;
     PFN_vkDestroyPipeline vkDestroyPipeline;
@@ -140,8 +145,8 @@ struct DeviceVulkanTable
     PFN_vkBeginCommandBuffer vkBeginCommandBuffer;
     PFN_vkEndCommandBuffer vkEndCommandBuffer;
 
-    PFN_vkCmdBeginRenderingKHR vkCmdBeginRenderingKHR;
-    PFN_vkCmdEndRendering vkCmdEndRendering;
+    PFN_vkCmdBeginRenderPass vkCmdBeginRenderPass;
+    PFN_vkCmdEndRenderPass vkCmdEndRenderPass;
     PFN_vkCmdPipelineBarrier vkCmdPipelineBarrier;
     PFN_vkCmdCopyBufferToImage vkCmdCopyBufferToImage;
     PFN_vkCmdCopyBuffer vkCmdCopyBuffer;

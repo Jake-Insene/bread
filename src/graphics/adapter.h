@@ -22,6 +22,7 @@ struct Adapter
 
 	VTFunc(Graphics::SwapChainID, swap_chain_create, const Graphics::SwapChainCreateInfo& ci);
 	VTFunc(void, swap_chain_destroy, Graphics::SwapChainID swap_chain);
+	VTFunc(u32, swap_chain_get_image_count, Graphics::SwapChainID swap_chain);
 	VTFunc(Graphics::TextureID, swap_chain_get_texture, Graphics::SwapChainID swap_chain, u32 image_index);
 	VTFunc(void, swap_chain_acquire_next_image, Graphics::SwapChainID swap_chain, const Graphics::AcquireInfo& acquire_info, u32* image_index);
 

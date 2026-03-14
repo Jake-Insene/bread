@@ -117,7 +117,6 @@ set(PLATFORM_LIBRARIES "")
 if(ANDROID)
     file(GLOB PLATFORM_SRC
         src/platform/android/android_display.cpp
-        src/platform/android/android_egl.cpp
         src/platform/android/android_engine.cpp
         src/platform/android/android_file.cpp
         src/platform/android/android_log.cpp

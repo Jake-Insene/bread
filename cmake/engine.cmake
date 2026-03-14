@@ -67,11 +67,15 @@ else()
     set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS}
         "-fno-rtti" "-fno-exceptions" "-Wall" "-Wextra" "-ffast-math" "-Werror" "-Wpedantic"
         "-Wno-language-extension-token" "-Wno-gnu-anonymous-struct" "-Wno-error=gnu-anonymous-struct"
-        "-Wuninitialized" "-Wconditional-uninitialized" "-flto"
-        "-fuse-ld=lld-link"
+        "-Wuninitialized" "-Wconditional-uninitialized" "-Wno-strict-prototypes"
     )
-    set(BREAD_LINK_OPTIONS ${BREAD_LINK_OPTIONS} "-flto")
-    
+    if(NOT ANDROID)
+        set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS}
+            "-fuse-ld=lld-link" "-flto"
+        )
+        set(BREAD_LINK_OPTIONS ${BREAD_LINK_OPTIONS} "-flto")
+    endif()
+
     set(BREAD_BUILD_DEFINITIONS ${BREAD_BUILD_DEFINITIONS} "-DBREAD_CLANG")
 endif()
 

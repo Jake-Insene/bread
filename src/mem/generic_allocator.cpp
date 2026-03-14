@@ -80,7 +80,7 @@ void GenericAllocator::check_integrity()
     
 Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
 {
-    DebugAssert(alignment == mem::align_up<usize>(alignment, 2), "alignment must be a power of 2");
+    DebugAssert(alignment == 1 || alignment == mem::align_up<usize>(alignment, 2), "alignment must be a power of 2");
 
     if(allocated_pages.null())
     {

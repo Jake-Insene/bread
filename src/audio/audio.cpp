@@ -22,7 +22,9 @@ void Audio::initialize(const mem::Allocator& allocator, DriverType driver)
 		break;
 	}
 
-#if !defined(BREAD_ANDROID)
+#if defined(BREAD_WIN32)
 	vtable.initialize(allocator);
+#else
+    Unused(allocator);
 #endif
 }

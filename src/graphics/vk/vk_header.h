@@ -19,7 +19,7 @@ struct Vulkan
     static constexpr const char* VkCoreDeviceExtensions[] =
     {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-        VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+        VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
     };
 
     static StringView result_as_string(VkResult result)

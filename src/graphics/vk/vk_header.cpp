@@ -9,12 +9,14 @@
 
 static constexpr const char* _vk_extensions[] =
 {
-#if defined(BREAD_SHOW_DEBUG_INFO)
+#if defined(BREAD_SHOW_DEBUG_INFO) && defined(BREAD_WIN32)
     VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #endif
     VK_KHR_SURFACE_EXTENSION_NAME,
 #if defined(BREAD_WIN32)
     VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+#elif defined(BREAD_ANDROID)
+    VK_KHR_ANDROID_SURFACE_EXTENSION_NAME,
 #endif
 };
 
@@ -63,7 +65,11 @@ void Vulkan::load_instance_procs(VkInstance instance)
     VK_INSTANCE_REQUIRED_LOAD(instance, vkGetPhysicalDeviceSurfaceSupportKHR);
 
     // surface
+#if defined(BREAD_WIN32)
     VK_INSTANCE_REQUIRED_LOAD(instance, vkCreateWin32SurfaceKHR);
+#elif defined(BREAD_ANDROID)
+    VK_INSTANCE_REQUIRED_LOAD(instance, vkCreateAndroidSurfaceKHR);
+#endif
     VK_INSTANCE_REQUIRED_LOAD(instance, vkDestroySurfaceKHR);
     
     // device
@@ -101,8 +107,8 @@ void Vulkan::load_device_procs(DeviceVulkanTable& table, VkDevice device)
     // memory
     VK_DEVICE_REQUIRED_LOAD(table, device, vkAllocateMemory);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkFreeMemory);
-    VK_DEVICE_REQUIRED_LOAD(table, device, vkMapMemory2);
-    VK_DEVICE_REQUIRED_LOAD(table, device, vkUnmapMemory2);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkMapMemory);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkUnmapMemory);
 
     // buffer
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateBuffer);
@@ -124,6 +130,10 @@ void Vulkan::load_device_procs(DeviceVulkanTable& table, VkDevice device)
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateImageView);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyImageView);
 
+    // framebuffer
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateFramebuffer);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyFramebuffer);
+
     // descriptors
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateDescriptorPool);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyDescriptorPool);
@@ -132,6 +142,10 @@ void Vulkan::load_device_procs(DeviceVulkanTable& table, VkDevice device)
     VK_DEVICE_REQUIRED_LOAD(table, device, vkUpdateDescriptorSets);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateDescriptorSetLayout);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyDescriptorSetLayout);
+
+    // render pass
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateRenderPass2KHR);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyRenderPass);
 
     // pipeline
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateGraphicsPipelines);
@@ -153,9 +167,8 @@ void Vulkan::load_device_procs(DeviceVulkanTable& table, VkDevice device)
     VK_DEVICE_REQUIRED_LOAD(table, device, vkBeginCommandBuffer);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkEndCommandBuffer);
 
-    // VK_KHR_dynamic_rendering
-    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdBeginRenderingKHR);
-    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdEndRendering);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdBeginRenderPass);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdEndRenderPass);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdPipelineBarrier);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdCopyBufferToImage);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdCopyBuffer);
@@ -213,9 +226,11 @@ VkInstance Vulkan::create_instance()
     (void)layer_settings_create_info;
 #endif
 
-    const char* layers[] = {
+#if defined(BREAD_SHOW_DEBUG_INFO) && defined(BREAD_WIN32)
+    const char* vk_layers[] = {
         "VK_LAYER_KHRONOS_validation"
     };
+#endif
 
     VkInstanceCreateInfo instance_info =
     {
@@ -223,8 +238,13 @@ VkInstance Vulkan::create_instance()
         .pNext = nullptr,
         .flags = 0,
         .pApplicationInfo = &application_info,
-        .enabledLayerCount = 1,
-        .ppEnabledLayerNames = layers,
+#if defined(BREAD_SHOW_DEBUG_INFO) && defined(BREAD_WIN32)
+        .enabledLayerCount = static_cast<uint32_t>(ArraySize(vk_layers)),
+        .ppEnabledLayerNames = vk_layers,
+#else
+        .enabledLayerCount = 0,
+        .ppEnabledLayerNames = nullptr,
+#endif
         .enabledExtensionCount = static_cast<uint32_t>(ArraySize(_vk_extensions)),
         .ppEnabledExtensionNames = _vk_extensions,
     };
@@ -240,10 +260,10 @@ VkInstance Vulkan::create_instance()
 
 VkSurfaceKHR Vulkan::create_surface(VkInstance instance, MemoryAddress native_handle)
 {
-    VkSurfaceKHR surface = VK_NULL_HANDLE;
+    VkSurfaceKHR vk_surface = VK_NULL_HANDLE;
 
 #if defined(BREAD_WIN32)
-    VkWin32SurfaceCreateInfoKHR surface_info =
+    VkWin32SurfaceCreateInfoKHR vk_surface_info =
     {
         .sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
         .pNext = nullptr,
@@ -264,17 +284,28 @@ VkSurfaceKHR Vulkan::create_surface(VkInstance instance, MemoryAddress native_ha
             RegisterClassA(&wc);
         }
         
-        surface_info.hwnd = CreateWindowExA(
+        vk_surface_info.hwnd = CreateWindowExA(
             0, "Bread:vulkan_dummy", "-", WS_OVERLAPPEDWINDOW,
             0, 0, 200, 200, 0, 0, 0, 0
         );
     }
     
-    VkResult result = vk.vkCreateWin32SurfaceKHR(instance, &surface_info, allocation_callbacks(), &surface);
+    VkResult result = vk.vkCreateWin32SurfaceKHR(instance, &vk_surface_info, allocation_callbacks(), &vk_surface);
+#elif defined(BREAD_ANDROID)
+    VkAndroidSurfaceCreateInfoKHR vk_surface_info =
+    {
+        .sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR,
+        .pNext = nullptr,
+        .flags = 0,
+        .window = reinterpret_cast<ANativeWindow*>(native_handle),
+    };
+
+    VkResult result = vk.vkCreateAndroidSurfaceKHR(instance, &vk_surface_info, allocation_callbacks(), &vk_surface);
 #endif
+
     VKFailOn(result != VK_SUCCESS, "vkCreateSurfaceKHR({})", Vulkan::result_as_string(result));
 
-    return surface;
+    return vk_surface;
 }
 
 void Vulkan::destroy_surface(VkInstance instance, VkSurfaceKHR surface)

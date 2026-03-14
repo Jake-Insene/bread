@@ -25,7 +25,7 @@ Slice<u8> File::read_all(const mem::Allocator& allocator, StringView path)
     usize length = AAsset_getLength64(asset);
     
     Slice<u8> bytes = allocator.alloc(length, alignof(usize));
-    mem::copy(bytes, Slice(reinterpret_cast<u8*>(buffer), length));
+    mem::copy(bytes, Slice(reinterpret_cast<const u8*>(buffer), length));
     
     AAsset_close(asset);
     

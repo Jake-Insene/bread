@@ -9,11 +9,11 @@ struct AndroidDisplay
     {
         mem::Allocator allocator;
 
-        // GLES use this for the viewport
+        Graphics::SurfaceID window_surface;
         Vector2I window_size;
     };
 
     static inline InternalData data;
 
-    static void update_native_size(Vector2I new_size);
+    static void update_native_size(const Vector2I& new_size);
 };

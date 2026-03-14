@@ -1,6 +1,7 @@
 #include "platform/android/android_os.h"
 
 #include "core/header.h"
+#include "debug/fail.h"
 #include "platform/platform_header.h"
 
 
@@ -30,12 +31,30 @@ f64 AndroidOS::get_time()
 }
 
 void AndroidOS::exit(u64 code)
-{}
+{
+    Unused(code);
+}
 
 usize AndroidOS::get_page_size()
 {
     return (usize)sysconf(_SC_PAGESIZE);
 }
+
+MemoryAddress AndroidOS::load_library(StringView lib_path)
+{
+    return reinterpret_cast<MemoryAddress>(dlopen(lib_path.ptr(), RTLD_NOW | RTLD_NOW));
+}
+
+void AndroidOS::unload_library(MemoryAddress library)
+{
+    dlclose(reinterpret_cast<void*>(library));
+}
+
+OS::VoidFunction AndroidOS::get_proc_address(MemoryAddress library, StringView symbol_name)
+{
+    return reinterpret_cast<OS::VoidFunction>(dlsym(reinterpret_cast<void*>(library), symbol_name.ptr()));
+}
+
 
 Slice<u8> AndroidOS::map_memory(usize memory_size, OS::MapAccess access)
 {
@@ -48,7 +67,7 @@ Slice<u8> AndroidOS::map_memory(usize memory_size, OS::MapAccess access)
         break;
     case OS::MapReadWrtie:
     {
-        ptr.items = reinterpret_cast<char*>(mmap(
+        ptr.items = reinterpret_cast<u8*>(mmap(
             0, aligned_size,
             PROT_READ | PROT_WRITE,
             MAP_ANONYMOUS | MAP_PRIVATE,
@@ -57,6 +76,9 @@ Slice<u8> AndroidOS::map_memory(usize memory_size, OS::MapAccess access)
         ptr.len = aligned_size;
     }
     break;
+    default:
+        FailOn(true, "implement this!");
+        break;
     }
 
     return ptr;
@@ -67,26 +89,37 @@ void AndroidOS::unmap_memory(Slice<u8> memory)
     munmap(memory.items, memory.len);
 }
 
+OS::QueryMemory AndroidOS::query_memory(Slice<u8> memory)
+{
+    Unused(memory);
+    return OS::QueryMemory();
+}
+
 OS::ThreadID AndroidOS::thread_create(OS::ThreadFn fn, Opaque* arg)
 {
+    Unused(fn, arg);
     return OS::ThreadID();
 }
 
 void AndroidOS::thread_destroy(OS::ThreadID tid)
 {
+    Unused(tid);
 }
 
 bool AndroidOS::thread_join(OS::ThreadID tid)
 {
+    Unused(tid);
     return false;
 }
 
 void AndroidOS::thread_set_name(OS::ThreadID tid, StringView new_name)
 {
+    Unused(tid, new_name);
 }
 
 StringView AndroidOS::thread_get_name(OS::ThreadID tid)
 {
+    Unused(tid);
     return StringView();
 }
 
@@ -97,41 +130,50 @@ OS::MutexID AndroidOS::mutex_create()
 
 void AndroidOS::mutex_destroy(OS::MutexID mid)
 {
+    Unused(mid);
 }
 
 void AndroidOS::mutex_lock(OS::MutexID mid)
 {
+    Unused(mid);
 }
 
 bool AndroidOS::mutex_try_lock(OS::MutexID mid)
 {
+    Unused(mid);
     return false;
 }
 
 void AndroidOS::mutex_unlock(OS::MutexID mid)
 {
+    Unused(mid);
 }
 
 
 OS::SemaphoreID AndroidOS::semaphore_create(usize initial_value)
 {
+    Unused(initial_value);
     return OS::SemaphoreID();
 }
 
 void AndroidOS::semaphore_destroy(OS::SemaphoreID sid)
 {
+    Unused(sid);
 }
 
 void AndroidOS::semaphore_signal(OS::SemaphoreID sid)
 {
+    Unused(sid);
 }
 
 void AndroidOS::semaphore_wait(OS::SemaphoreID sid)
 {
+    Unused(sid);
 }
 
 bool AndroidOS::set_current_directory(StringView dir)
 {
+    Unused(dir);
     return true;
 }
 

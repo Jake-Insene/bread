@@ -58,6 +58,11 @@ void Graphics::swap_chain_destroy(SwapChainID swap_chain)
 	current_adapter.swap_chain_destroy(swap_chain);
 }
 
+u32 Graphics::swap_chain_get_image_count(SwapChainID swap_chain)
+{
+	return current_adapter.swap_chain_get_image_count(swap_chain);
+}
+
 Graphics::TextureID Graphics::swap_chain_get_texture(SwapChainID swap_chain, u32 image_index)
 {
 	return current_adapter.swap_chain_get_texture(swap_chain, image_index);

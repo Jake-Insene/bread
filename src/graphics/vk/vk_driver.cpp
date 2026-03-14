@@ -1,6 +1,7 @@
 #include "graphics/vk/vk_driver.h"
 
 #include "core/templates.h"
+#include "display/display.h"
 #include "graphics/graphics.h"
 #include "graphics/vk/vk_utils.h"
 #include "math/funcs.h"
@@ -22,6 +23,7 @@ InternalGraphics::Adapter VulkanDriver::get_adapter()
         .device_destroy = &VulkanDriver::device_destroy,
         .swap_chain_create = &VulkanDriver::swap_chain_create,
         .swap_chain_destroy = &VulkanDriver::swap_chain_destroy,
+        .swap_chain_get_image_count = &VulkanDriver::swap_chain_get_image_count,
         .swap_chain_get_texture = &VulkanDriver::swap_chain_get_texture,
         .swap_chain_acquire_next_image = &VulkanDriver::swap_chain_acquire_next_image,
         .fence_create = &VulkanDriver::fence_create,
@@ -99,7 +101,12 @@ void VulkanDriver::initialize(const mem::Allocator &allocator)
     data.pipelines = FreeList<Pipeline, Graphics::PipelineID>::with_allocator(allocator);
     data.command_pools = FreeList<CommandPool, Graphics::CommandPoolID>::with_allocator(allocator);
     data.command_buffers = FreeList<CommandBuffer, Graphics::CommandBufferID>::with_allocator(get_allocator());
+
+#if defined(BREAD_ANDROID)
+    data.vk_lib = OS::load_library("libvulkan.so");
+#else
     data.vk_lib = OS::load_library("vulkan-1.dll");
+#endif
 
     Vulkan::load_core_procs(data.vk_lib);
 
@@ -115,8 +122,7 @@ void VulkanDriver::initialize(const mem::Allocator &allocator)
     Vulkan::load_instance_procs(data.instance);
 
     // VK_ext_debug_util
-#if defined(BREAD_SHOW_DEBUG_INFO)
-
+#if defined(BREAD_SHOW_DEBUG_INFO) && defined(BREAD_WIN32)
     VkDebugUtilsMessengerCreateInfoEXT debug_messenger_info =
     {
         .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
@@ -144,7 +150,11 @@ void VulkanDriver::initialize(const mem::Allocator &allocator)
     // Getting physical devices
     _get_physical_devices();
 
+#if defined(BREAD_WIN32)
     data.dummy_surface = Vulkan::create_surface(data.instance, 0);
+#elif defined(BREAD_ANDROID)
+    data.dummy_surface = VK_NULL_HANDLE;
+#endif
 }
 
 void VulkanDriver::shutdown()
@@ -171,7 +181,7 @@ void VulkanDriver::shutdown()
     get_allocator().free(mem::to_bytes(data.physical_device_ids));
     get_allocator().free(mem::to_bytes(data.physical_devices));
 
-#if defined(BREAD_SHOW_DEBUG_INFO)
+#if defined(BREAD_SHOW_DEBUG_INFO) && defined(BREAD_WIN32)
     vk.vkDestroyDebugUtilsMessengerEXT(
         data.instance, data.messenger, Vulkan::allocation_callbacks()
     );
@@ -199,9 +209,17 @@ Graphics::SurfaceID VulkanDriver::surface_create(const Graphics::SurfaceCreateIn
 {
     Graphics::SurfaceID surface_id = data.surfaces.add(Surface());
     Surface& surface = _get_surface(surface_id);
+#if defined(BREAD_WIN32)
     surface.window_native_handle = ci.window_native_handle;
     surface.vk_surface = Vulkan::create_surface(data.instance, ci.window_native_handle);
-
+#elif defined(BREAD_ANDROID)
+    if(data.dummy_surface == VK_NULL_HANDLE)
+    {
+        data.dummy_surface = Vulkan::create_surface(data.instance, Display::window_get_native_handle(Display::WindowID()));
+    }
+    Unused(ci);
+    surface.vk_surface = data.dummy_surface;
+#endif
     return surface_id;
 }
 
@@ -209,9 +227,13 @@ void VulkanDriver::surface_destroy(Graphics::SurfaceID surface)
 {
     VKFailOn(surface.is_valid() == false, "invalid surface");
 
+#if defined(BREAD_WIN32)
     Surface& s = _get_surface(surface);
     vk.vkDestroySurfaceKHR(data.instance, s.vk_surface, Vulkan::allocation_callbacks());
 
+#elif defined(BREAD_ANDROID)
+    Unused(surface);
+#endif
     data.surfaces.remove(surface);
 }
 
@@ -298,17 +320,10 @@ Graphics::DeviceID VulkanDriver::device_create(const Graphics::DeviceCreateInfo&
         };
     }
 
-    VkPhysicalDeviceDynamicRenderingFeatures vk_dynamic_rendering =
-    {
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES,
-        .pNext = nullptr,
-        .dynamicRendering = VK_TRUE,
-    };
-
     VkPhysicalDeviceFeatures2 vk_features =
     {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
-        .pNext = &vk_dynamic_rendering,
+        .pNext = nullptr,
         .features = {},
     };
     vk_features.features.samplerAnisotropy = VK_TRUE;
@@ -408,6 +423,9 @@ Graphics::DeviceID VulkanDriver::device_create(const Graphics::DeviceCreateInfo&
     result = ld.vk.vkCreateDescriptorPool(ld.vk_device, &vk_global_pool_info, Vulkan::allocation_callbacks(), &ld.vk_global_descriptor_pool);
     VKFailOn(result != VK_SUCCESS, "vkCreateDescriptorPool({})", Vulkan::result_as_string(result));
     
+    ld.render_pass_cache = HashMap<VkFormat, RenderPassCache>::with_allocator(get_allocator());
+
+    ld.device = device_id;
     return device_id;
 }
 
@@ -424,8 +442,13 @@ void VulkanDriver::device_destroy(Graphics::DeviceID device)
         data.queues.remove(ld.queue.present_queue_id);
     }
     
-    vk.vkDestroyDevice(ld.vk_device, Vulkan::allocation_callbacks());
+    for(RenderPassEntry& it : ld.render_pass_cache.iter())
+    {
+        ld.vk.vkDestroyRenderPass(ld.vk_device, it.second.vk_render_pass, Vulkan::allocation_callbacks());
+    }
+    ld.render_pass_cache.destroy();
     
+    vk.vkDestroyDevice(ld.vk_device, Vulkan::allocation_callbacks());
     data.devices.remove(device);
 }
 
@@ -448,7 +471,7 @@ Graphics::SwapChainID VulkanDriver::swap_chain_create(const Graphics::SwapChainC
     swap_chain.vk_surface = surface.vk_surface;
     swap_chain.surface = ci.surface;
     swap_chain.device = ci.device;
-    swap_chain.image_count = ci.image_count;
+    swap_chain.image_count = 0;
 
     VkFormat vk_swapchain_format;
     VkColorSpaceKHR vk_swap_chain_color_space;
@@ -483,19 +506,25 @@ Graphics::SwapChainID VulkanDriver::swap_chain_create(const Graphics::SwapChainC
     VkResult result = ld.vk.vkCreateSwapchainKHR(ld.vk_device, &swap_chain_info, Vulkan::allocation_callbacks(), &swap_chain.vk_swapchain);
     VKFailOn(result != VK_SUCCESS, "vkCreateSwapchainKHR({})", Vulkan::result_as_string(result));
 
+    swap_chain.vk_render_pass = _get_render_pass_for(ld, vk_swapchain_format).vk_render_pass;
+
     {
-        // image
-        VkImage vk_images[MaxSwapChainImageCount] = {};
+        // images
         ld.vk.vkGetSwapchainImagesKHR(ld.vk_device, swap_chain.vk_swapchain, &swap_chain.image_count, nullptr);
-        ld.vk.vkGetSwapchainImagesKHR(ld.vk_device, swap_chain.vk_swapchain, &swap_chain.image_count, vk_images);
+
+        Slice<VkImage> vk_images = get_allocator().array<VkImage>(swap_chain.image_count);
+        swap_chain.images = get_allocator().array<SwapChainImage>(swap_chain.image_count);
+        ld.vk.vkGetSwapchainImagesKHR(ld.vk_device, swap_chain.vk_swapchain, &swap_chain.image_count, vk_images.ptr());
         for (u32 i = 0; i < swap_chain.image_count; i++)
         {
             swap_chain.images[i].vk_image = vk_images[i];
         }
+
+        get_allocator().free(mem::to_bytes(vk_images));
     }
 
     {
-        VkImageViewCreateInfo image_view_info =
+        VkImageViewCreateInfo vk_image_view_info =
         {
             .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
             .pNext = nullptr,
@@ -521,10 +550,26 @@ Graphics::SwapChainID VulkanDriver::swap_chain_create(const Graphics::SwapChainC
         };
 
         // image views
+        VkFramebufferCreateInfo vk_framebuffer_info =
+        {
+            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .renderPass = swap_chain.vk_render_pass,
+            .attachmentCount = 1,
+            .pAttachments = nullptr,
+            .width = vk_swap_chain_extent.width,
+            .height = vk_swap_chain_extent.height,
+            .layers = 1,
+        };
+
         for(u32 i = 0; i < swap_chain.image_count; i++)
         {
-            image_view_info.image = swap_chain.images[i].vk_image;
-            ld.vk.vkCreateImageView(ld.vk_device, &image_view_info, Vulkan::allocation_callbacks(), &swap_chain.images[i].vk_image_view);
+            vk_image_view_info.image = swap_chain.images[i].vk_image;
+            ld.vk.vkCreateImageView(ld.vk_device, &vk_image_view_info, Vulkan::allocation_callbacks(), &swap_chain.images[i].vk_image_view);
+
+            vk_framebuffer_info.pAttachments = &swap_chain.images[i].vk_image_view;
+            ld.vk.vkCreateFramebuffer(ld.vk_device, &vk_framebuffer_info, Vulkan::allocation_callbacks(), &swap_chain.images[i].vk_framebuffer);
         }
 
         // texture object
@@ -551,12 +596,22 @@ void VulkanDriver::swap_chain_destroy(Graphics::SwapChainID swap_chain)
     for(u32 i = 0; i < sc.image_count; i++)
     {
         ld.vk.vkDestroyImageView(sc.vk_device, sc.images[i].vk_image_view, Vulkan::allocation_callbacks());
+        ld.vk.vkDestroyFramebuffer(sc.vk_device, sc.images[i].vk_framebuffer, Vulkan::allocation_callbacks());
         data.textures.remove(sc.images[i].texture);
     }
+    get_allocator().free(mem::to_bytes(sc.images));
     
     ld.vk.vkDestroySwapchainKHR(ld.vk_device, sc.vk_swapchain, Vulkan::allocation_callbacks());
 
     data.swap_chains.remove(swap_chain);
+}
+
+u32 VulkanDriver::swap_chain_get_image_count(Graphics::SwapChainID swap_chain)
+{
+    VKFailOn(swap_chain.is_valid() == false, "invalid swap chain");
+
+    SwapChain& sc = _get_swap_chain(swap_chain);
+    return sc.image_count; 
 }
 
 Graphics::TextureID VulkanDriver::swap_chain_get_texture(Graphics::SwapChainID swap_chain, u32 image_index)
@@ -873,11 +928,25 @@ Graphics::MemoryHeapID VulkanDriver::memory_heap_create(const Graphics::MemoryHe
     for(uint32_t i = 0; i < ld.vk_physical_device_memory_properties.memoryTypeCount; i++)
     {
         VkMemoryType mem_type = ld.vk_physical_device_memory_properties.memoryTypes[i];
-        VkMemoryPropertyFlags masked = (mem_type.propertyFlags & vk_memory_flags);
-        if(masked == mem_type.propertyFlags)
+        if((mem_type.propertyFlags & vk_memory_flags) == vk_memory_flags)
         {
             vk_type_index = i;
-        }   
+            break;
+        }
+    }
+
+    if(vk_type_index == MaxValue<uint32_t> && ci.heap_usage == Graphics::HeapUsage::CPUGPUCoherent)
+    {
+        vk_memory_flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+        for(uint32_t i = 0; i < ld.vk_physical_device_memory_properties.memoryTypeCount; i++)
+        {
+            VkMemoryType mem_type = ld.vk_physical_device_memory_properties.memoryTypes[i];
+            if((mem_type.propertyFlags & vk_memory_flags) == vk_memory_flags)
+            {
+                vk_type_index = i;
+                break;
+            }
+        }
     }
 
     VkMemoryAllocateInfo vk_allocate_info =
@@ -887,6 +956,9 @@ Graphics::MemoryHeapID VulkanDriver::memory_heap_create(const Graphics::MemoryHe
         .allocationSize = ci.heap_size,
         .memoryTypeIndex = vk_type_index,
     };
+
+    heap.vk_type_index = vk_type_index;
+    heap.vk_memory_flags = vk_memory_flags;
 
     VkResult result = ld.vk.vkAllocateMemory(ld.vk_device, &vk_allocate_info, Vulkan::allocation_callbacks(), &heap.vk_memory);
     VKFailOn(result != VK_SUCCESS, "vkAllocateMemory({})", Vulkan::result_as_string(result));
@@ -975,18 +1047,9 @@ Slice<u8> VulkanDriver::buffer_map_memory(Graphics::BufferID buffer, usize offse
     LogicalDevice& ld = _get_logical_device(b.device);
 
     void* ptr = nullptr;
-    VkMemoryMapInfo vk_map_info =
-    {
-        .sType = VK_STRUCTURE_TYPE_MEMORY_MAP_INFO,
-        .pNext = nullptr,
-        .flags = 0,
-        .memory = heap.vk_memory,
-        .offset = offset,
-        .size = len,
-    };
 
-    VkResult result = ld.vk.vkMapMemory2(ld.vk_device, &vk_map_info, &ptr);
-    VKFailOn(result != VK_SUCCESS, "vkMapMemory2({})", Vulkan::result_as_string(result));
+    VkResult result = ld.vk.vkMapMemory(ld.vk_device, heap.vk_memory, offset, len, 0, &ptr);
+    VKFailOn(result != VK_SUCCESS, "vkMapMemory({})", Vulkan::result_as_string(result));
 
     return Slice<u8>(reinterpret_cast<u8*>(ptr), len);
 }
@@ -1000,16 +1063,7 @@ void VulkanDriver::buffer_unmap_memory(Graphics::BufferID buffer, const Slice<u8
     MemoryHeap& heap = _get_memory_heap(b.memory_heap);
     LogicalDevice& ld = _get_logical_device(b.device);
 
-    VkMemoryUnmapInfo vk_unmap_info =
-    {
-        .sType = VK_STRUCTURE_TYPE_MEMORY_UNMAP_INFO,
-        .pNext = nullptr,
-        .flags = 0,
-        .memory = heap.vk_memory,
-    };
-
-    VkResult result = ld.vk.vkUnmapMemory2(ld.vk_device, &vk_unmap_info);
-    VKFailOn(result != VK_SUCCESS, "vkUnmapMemory2({})", Vulkan::result_as_string(result));
+    ld.vk.vkUnmapMemory(ld.vk_device, heap.vk_memory);
 }
 
 Graphics::SamplerID VulkanDriver::sampler_create(const Graphics::SamplerCreateInfo& ci)
@@ -1551,21 +1605,6 @@ Graphics::PipelineID VulkanDriver::pipeline_create(const Graphics::PipelineCreat
         .pDynamicStates = vk_dynamic_states,
     };
 
-    VkFormat vk_attachment_format;
-    VkColorSpaceKHR vk_color_space;
-    _vk_get_surface_format(ci.surface_format, &vk_attachment_format, &vk_color_space);
-
-    VkPipelineRenderingCreateInfo vk_rendering_info =
-    {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
-        .pNext = nullptr,
-        .viewMask = 0,
-        .colorAttachmentCount = 1,
-        .pColorAttachmentFormats = &vk_attachment_format,
-        .depthAttachmentFormat = VK_FORMAT_UNDEFINED,
-        .stencilAttachmentFormat = VK_FORMAT_UNDEFINED,
-    };
-
     // Creating the layout
 
     Slice<VkPushConstantRange> vk_push_ranges = get_allocator().array<VkPushConstantRange>(ci.pipeline_layout.constant_blocks.len);
@@ -1598,11 +1637,17 @@ Graphics::PipelineID VulkanDriver::pipeline_create(const Graphics::PipelineCreat
 
     VkResult result = ld.vk.vkCreatePipelineLayout(ld.vk_device, &vk_pipeline_layout_info, Vulkan::allocation_callbacks(), &pipe.vk_pipeline_layout);
     VKFailOn(result != VK_SUCCESS, "vkCreatePipelineLayout({})", Vulkan::result_as_string(result));
+
+    VkFormat vk_swap_chain_format;
+    VkColorSpaceKHR vk_color_space;
+    _vk_get_surface_format(ci.surface_format, &vk_swap_chain_format, &vk_color_space);
+
+    RenderPassCache& render_pass = _get_render_pass_for(ld, vk_swap_chain_format);
     
     VkGraphicsPipelineCreateInfo vk_graphics_pipeline_info =
     {
         .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-        .pNext = &vk_rendering_info,
+        .pNext = nullptr,
         .flags = 0,
         .stageCount = static_cast<uint32_t>(vk_shader_stages.len),
         .pStages = vk_shader_stages.ptr(),
@@ -1616,7 +1661,7 @@ Graphics::PipelineID VulkanDriver::pipeline_create(const Graphics::PipelineCreat
         .pColorBlendState = &vk_color_blend_state,
         .pDynamicState = &vk_dynamic_state,
         .layout = pipe.vk_pipeline_layout,
-        .renderPass = VK_NULL_HANDLE,
+        .renderPass = render_pass.vk_render_pass,
         .subpass = 0,
         .basePipelineHandle = VK_NULL_HANDLE,
         .basePipelineIndex = 0,
@@ -1792,37 +1837,21 @@ void VulkanDriver::command_buffer_begin_renderpass(Graphics::CommandBufferID com
     };
 
     VKFailOn(begin_info.image_index >= sc.image_count, "invalid image index");
-    VkImageView vk_image_view = sc.images[begin_info.image_index].vk_image_view;
+    SwapChainImage& sc_image = sc.images[begin_info.image_index];
+    VkFramebuffer vk_framebuffer = sc_image.vk_framebuffer;
 
-    VkRenderingAttachmentInfo color_attachment =
+    VkRenderPassBeginInfo vk_begin_info =
     {
-        .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
         .pNext = nullptr,
-        .imageView = vk_image_view,
-        .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        .resolveMode = VK_RESOLVE_MODE_NONE,
-        .resolveImageView = VK_NULL_HANDLE,
-        .resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-        .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-        .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-        .clearValue = clear_value,
-    };
-
-    VkRenderingInfoKHR rendering_info =
-    {
-        .sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR,
-        .pNext = nullptr,
-        .flags = 0,
+        .renderPass = sc.vk_render_pass,
+        .framebuffer = vk_framebuffer,
         .renderArea = render_area,
-        .layerCount = 1,
-        .viewMask = 0,
-        .colorAttachmentCount = 1,
-        .pColorAttachments = &color_attachment,
-        .pDepthAttachment = nullptr,
-        .pStencilAttachment = nullptr,
+        .clearValueCount = 1,
+        .pClearValues = &clear_value,
     };
 
-    ld.vk.vkCmdBeginRenderingKHR(cmd_buffer.vk_command_buffer, &rendering_info);
+    ld.vk.vkCmdBeginRenderPass(cmd_buffer.vk_command_buffer, &vk_begin_info, VK_SUBPASS_CONTENTS_INLINE);    
 }
 
 void VulkanDriver::command_buffer_end_renderpass(Graphics::CommandBufferID command_buffer, const Graphics::RenderPassEndInfo& end_info)
@@ -1833,7 +1862,7 @@ void VulkanDriver::command_buffer_end_renderpass(Graphics::CommandBufferID comma
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
 
-    ld.vk.vkCmdEndRendering(cmd_buffer.vk_command_buffer);
+    ld.vk.vkCmdEndRenderPass(cmd_buffer.vk_command_buffer);
 }
 
 void VulkanDriver::command_buffer_memory_barrier(Graphics::CommandBufferID command_buffer, const Graphics::PipelineMemoryBarrier& memory_barrier)
@@ -2023,7 +2052,7 @@ void VulkanDriver::command_buffer_bind_vertex_buffers(Graphics::CommandBufferID 
 
     ld.vk.vkCmdBindVertexBuffers(
         cmd_buffer.vk_command_buffer, base_binding,
-        static_cast<uint32_t>(vk_buffers.len), vk_buffers.ptr(), offsets.ptr()
+        static_cast<uint32_t>(vk_buffers.len), vk_buffers.ptr(), reinterpret_cast<const VkDeviceSize*>(offsets.ptr())
     );
 
     get_allocator().free(mem::to_bytes(vk_buffers));
@@ -2199,6 +2228,76 @@ VkShaderModule VulkanDriver::_vk_create_shader_module(LogicalDevice& ld, const G
     VKFailOn(result != VK_SUCCESS, "vkCreateShaderModule({})", Vulkan::result_as_string(result));
 
     return vk_module;
+}
+
+VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice& ld, VkFormat format)
+{
+    if(ld.render_pass_cache.has(format))
+    {
+        return ld.render_pass_cache.get(format);
+    }
+
+    VkAttachmentDescription2 vk_attachment_info =
+    {
+        .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
+        .pNext = nullptr,
+        .flags = 0,
+        .format = format,
+        .samples = VK_SAMPLE_COUNT_1_BIT,
+        .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+        .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+        .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+        .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        .finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+    };
+
+    VkAttachmentReference2 vk_color_attachment =
+    {
+        .sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2,
+        .pNext = nullptr,
+        .attachment = 0,
+        .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        .aspectMask = 0,
+    };
+
+    VkSubpassDescription2 vk_subpass =
+    {
+        .sType = VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_2,
+        .pNext = nullptr,
+        .flags = 0,
+        .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+        .viewMask = 0,
+        .inputAttachmentCount = 0,
+        .pInputAttachments = nullptr,
+        .colorAttachmentCount = 1,
+        .pColorAttachments = &vk_color_attachment,
+        .pResolveAttachments = nullptr,
+        .pDepthStencilAttachment = nullptr,
+        .preserveAttachmentCount = 0,
+        .pPreserveAttachments = nullptr,
+    };
+
+    VkRenderPassCreateInfo2 vk_render_pass_info =
+    {
+        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO_2,
+        .pNext = nullptr,
+        .flags = 0,
+        .attachmentCount = 1,
+        .pAttachments = &vk_attachment_info,
+        .subpassCount = 1,
+        .pSubpasses = &vk_subpass,
+        .dependencyCount = 0,
+        .pDependencies = nullptr,
+        .correlatedViewMaskCount = 0,
+        .pCorrelatedViewMasks = nullptr,
+    };
+
+    RenderPassCache& render_pass_cache = ld.render_pass_cache.insert(format, RenderPassCache());
+    render_pass_cache.device = ld.device;
+    ld.vk.vkCreateRenderPass2KHR(ld.vk_device, &vk_render_pass_info, Vulkan::allocation_callbacks(), &render_pass_cache.vk_render_pass);
+
+    return render_pass_cache;
 }
 
 Graphics::DeviceType VulkanDriver::_vk_device_type_to_device_type(VkPhysicalDeviceType vk_device_type)
