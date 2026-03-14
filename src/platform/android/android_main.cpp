@@ -2,6 +2,7 @@
 #include "debug/fail.h"
 #include "log/log.h"
 #include "scene/scene_manager.h"
+#include "platform/android/android_display.h"
 #include "platform/android/android_engine.h"
 #include "platform/android/android_mapped_keycodes.h"
 
@@ -82,8 +83,8 @@ static void engine_handle_cmd(android_app*, int32_t cmd)
         // The window is being shown, get it ready.
         if (AndroidEngine::data.app->window != nullptr)
         {
-            Engine::initialize();
-            Engine::request_recreate_window();
+            AndroidEngine::initialize();
+            AndroidEngine::request_recreate_window();
             initialized = true;
     	}
         break;

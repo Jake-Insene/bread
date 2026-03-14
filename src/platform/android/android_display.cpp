@@ -7,7 +7,12 @@ void Display::initialize(const mem::Allocator &allocator)
 {
     Display::data.allocator = allocator;
 
-    AndroidDisplay::data.window_size = Engine::get_configuration().viewport_size;
+    AndroidDisplay::update_native_size(
+            Vector2I(
+                    ANativeWindow_getWidth(AndroidEngine::data.app->window),
+                    ANativeWindow_getHeight(AndroidEngine::data.app->window)
+            )
+    );
     AndroidDisplay::data.window_surface = Graphics::surface_create(
         {
             .window_native_handle = Display::window_get_native_handle(WindowID()),
