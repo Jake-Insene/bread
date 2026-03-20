@@ -23,16 +23,16 @@ static constexpr const char* _vk_extensions[] =
 
 VkAllocationCallbacks* Vulkan::allocation_callbacks()
 {
-    static VkAllocationCallbacks _vk_allocation_callbacks =
-    {
-        .pUserData = nullptr,
-        .pfnAllocation = &_vk_driver_allocate,
-        .pfnReallocation = &_vk_driver_reallocate,
-        .pfnFree = &_vk_driver_free,
-        .pfnInternalAllocation = &_vk_driver_internal_allocate,
-        .pfnInternalFree = &_vk_driver_internal_free,
-    };
-    return &_vk_allocation_callbacks;
+    //static VkAllocationCallbacks _vk_allocation_callbacks =
+    //{
+    //    .pUserData = nullptr,
+    //    .pfnAllocation = &_vk_driver_allocate,
+    //    .pfnReallocation = &_vk_driver_reallocate,
+    //    .pfnFree = &_vk_driver_free,
+    //    .pfnInternalAllocation = &_vk_driver_internal_allocate,
+    //    .pfnInternalFree = &_vk_driver_internal_free,
+    //};
+    return nullptr;
 }
 
 void Vulkan::load_core_procs(MemoryAddress vk_lib)
@@ -354,7 +354,7 @@ VkBool32 VKAPI_PTR Vulkan::_vk_debug_utils_callback(
 	Unused(messageSeverity, messageTypes, pUserData);
     StringView msg_view = Vulkan::vulkan_string_to_sv(pCallbackData->pMessage);
     VKDebugInfo("{}", msg_view);
- 	return VK_TRUE;
+ 	return VK_FALSE;
 }
 
 void* VKAPI_PTR Vulkan::_vk_driver_allocate(void* pUserData, size_t size, size_t alignment, VkSystemAllocationScope allocationScope)
@@ -384,6 +384,7 @@ void* VKAPI_PTR Vulkan::_vk_driver_reallocate(void* pUserData, void* pOriginal, 
         return nullptr;
     }
 
+    usize old_size = allocator.get_size_of(old_mem);
 	bool realloc_result = allocator.realloc(
 		old_mem, size, alignment
 	);
@@ -394,7 +395,7 @@ void* VKAPI_PTR Vulkan::_vk_driver_reallocate(void* pUserData, void* pOriginal, 
 	}
 
 	Slice<u8> bytes = allocator.alloc(size, alignment);
-    mem::copy(bytes, Slice<const u8>(reinterpret_cast<const u8*>(pOriginal), allocator.get_size_of(old_mem)));
+    mem::copy(bytes, Slice<const u8>(reinterpret_cast<const u8*>(pOriginal), old_size));
     allocator.free(old_mem);
 	return bytes.ptr();
 }

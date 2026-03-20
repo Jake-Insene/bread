@@ -92,7 +92,7 @@ struct [[nodiscard]] FreeList
         count--;
 
         T& item = get(slot);
-        array.allocator.destruct(&item);
+        DestructObject(item);
 
         if(last_free_element == InvalidSlot)
         {

@@ -85,7 +85,7 @@ void SceneManager::step()
     if (data.time_acum >= 1.0)
     {
         data.fps_counter = data.fps_acum;
-        Engine::data.fps = data.fps_counter;
+        Engine::local_data.engine_runtime->fps = data.fps_counter;
         Log::info(
             "Frame Info: FPS: {}\n"
             "\tAvg Frame Time: {}\n"

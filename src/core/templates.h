@@ -1,6 +1,9 @@
 #pragma once
 #include "core/types.h"
 
+// Required in Clang.
+#include <new>
+
 
 // Type comparison
 template<typename A, typename B>
@@ -333,6 +336,8 @@ template<typename T>
 struct FunctionDecomposed : FunctionDecomposed<decltype(&T::operator())> {};
 
 
+// Generic Functions
+
 template<typename... TArgs>
 constexpr void Unused(TArgs...) {}
 
@@ -387,6 +392,19 @@ constexpr auto ArraySize(T(&array)[N])
     return N;
 }
 
+template<typename T>
+constexpr auto AddressOf(T& reference)
+{
+    if constexpr(IsPointer<T>)
+    {
+        return reference;
+    }
+    else
+    {
+        return &reference;
+    }
+}
+
 template<typename Fn, typename T, typename... TArgs>
 constexpr auto InvokeMember(Fn&& fn, T* instance, TArgs&&... args)
 {
@@ -410,4 +428,22 @@ template<typename T>
 constexpr bool HasValue(T&& value)
 {
     return bool(value);
+}
+
+template<typename T, typename... TArgs>
+constexpr void ConstructObject(T& object, TArgs&&... args)
+{
+    ::new(AddressOf(object)) T(args...);
+}
+
+template<typename T>
+constexpr void DestructObject(T& object)
+{
+    object.~T();
+}
+
+template<typename T>
+constexpr void ConstructArray(T* array_ref, usize len)
+{
+    ::new(array_ref) T[len]{};
 }

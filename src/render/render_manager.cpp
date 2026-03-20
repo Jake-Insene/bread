@@ -27,7 +27,7 @@ RenderManager::RenderItem::Command* RenderManager::RenderItem::alloc_base(usize 
 
 	DebugAssert(offset < command_buffer.len, "command buffer full!");
 	Command* new_cmd = reinterpret_cast<Command*>(command_buffer.add(offset).ptr());
-	allocator.construct(new_cmd);
+	ConstructObject(*new_cmd);
 	usize cmd_offset = usize(new_cmd) - usize(begin());
 	offset += command_size;
 	new_cmd->next = offset;

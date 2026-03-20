@@ -54,17 +54,20 @@ struct VulkanDriver
 		VkPhysicalDeviceProperties vk_physical_device_properties;
 		VkPhysicalDeviceMemoryProperties vk_physical_device_memory_properties;
 
-		struct
+		struct QueueFamily
 		{
-			uint32_t graphics_index;
-			uint32_t present_index;
+			Graphics::QueueUsage usage;
+			uint32_t vk_family_index;
+			Slice<VkQueue> vk_queues;
+		};
 
-			VkQueue graphics;
-			VkQueue present;
+		struct DeviceQueue
+		{
+			usize family_index;
+		};
 
-			Graphics::QueueID graphics_queue_id;
-			Graphics::QueueID present_queue_id;
-		} queue;
+		Slice<QueueFamily> families;
+		Slice<DeviceQueue> device_queues;
 
 		DeviceVulkanTable vk;
 
@@ -119,8 +122,9 @@ struct VulkanDriver
 		VkDevice vk_device;
 		VkQueue vk_queue;
 
-		uint32_t queue_index;
+		usize device_queue_index;
 		Graphics::DeviceID device;
+		Graphics::QueueID queue;
 	};
 
 	struct MemoryHeap

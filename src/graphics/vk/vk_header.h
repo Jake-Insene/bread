@@ -20,6 +20,7 @@ struct Vulkan
     {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
         VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
+        VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME,
     };
 
     static StringView result_as_string(VkResult result)

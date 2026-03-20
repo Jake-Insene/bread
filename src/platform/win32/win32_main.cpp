@@ -1,5 +1,6 @@
 #include "platform/platform_header.h"
 
+#include "engine/engine.h"
 #include "log/log.h"
 #include "platform/win32/win32_engine.h"
 
@@ -137,9 +138,12 @@ LONG _exception_handler(EXCEPTION_POINTERS* ep)
 	return EXCEPTION_CONTINUE_SEARCH;
 }
 
+
+Win32Engine engine = {};
+
 void engine_loop()
 {
-	if (Engine::get_configuration().enable_debug_console)
+	if (engine.get_configuration().enable_debug_console)
 	{
 		if (!AttachConsole(ATTACH_PARENT_PROCESS))
 		{
@@ -147,7 +151,8 @@ void engine_loop()
 		}
 	}
 
-	Win32Engine::initialize();
+	Engine::local_data.engine_runtime = &engine;
+	engine.init();
 
 	while (true)
 	{
@@ -160,10 +165,10 @@ void engine_loop()
 				break;
 		}
 
-		Win32Engine::step();
+		engine.step();
 	}
 
-	Win32Engine::shutdown();
+	engine.destroy();
 }
 
 // Default for Windows

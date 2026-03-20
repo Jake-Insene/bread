@@ -201,7 +201,6 @@ Graphics::PhysicalDeviceInfo VulkanDriver::physical_device_get_info(Graphics::Ph
 {
     VKFailOn(physical_device.integer() >= data.physical_devices.len);
     PhysicalDevice& pd = data.physical_devices[physical_device.integer()];
-
     return pd.info;
 }
 
@@ -266,47 +265,105 @@ Graphics::DeviceID VulkanDriver::device_create(const Graphics::DeviceCreateInfo&
     // Checking for required extensions for the driver.
     Vulkan::check_device_extensions(pd.vk_physical_device);
 
-    u32 family_count;
-    vk.vkGetPhysicalDeviceQueueFamilyProperties2(pd.vk_physical_device, &family_count, nullptr);
+    u32 vk_family_count;
+    vk.vkGetPhysicalDeviceQueueFamilyProperties2(pd.vk_physical_device, &vk_family_count, nullptr);
 
-    Slice<VkQueueFamilyProperties2> families = get_allocator().array<VkQueueFamilyProperties2>(family_count);
-    for(VkQueueFamilyProperties2& family : families)
+    Slice<VkQueueFamilyProperties2> vk_families = get_allocator().array<VkQueueFamilyProperties2>(vk_family_count);
+    for(VkQueueFamilyProperties2& vk_family : vk_families)
     {
-        family.sType = VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2;
-        family.pNext = nullptr;
+        vk_family.sType = VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2;
+        vk_family.pNext = nullptr;
     }
-    vk.vkGetPhysicalDeviceQueueFamilyProperties2(pd.vk_physical_device, &family_count, families.ptr());    
+    vk.vkGetPhysicalDeviceQueueFamilyProperties2(pd.vk_physical_device, &vk_family_count, vk_families.ptr());    
 
     // 0->graphics, 1->present
-    uint32_t queue_families[] = {MaxValue<uint32_t>, MaxValue<uint32_t>};
-    for(usize i = 0; i < families.len; i++)
-    {
-        VkQueueFamilyProperties2 family = families[i];
-        if(family.queueFamilyProperties.queueCount >= 1 && family.queueFamilyProperties.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-        {
-            queue_families[0] = static_cast<uint32_t>(i);
-            VkBool32 supported = false;
-            vk.vkGetPhysicalDeviceSurfaceSupportKHR(pd.vk_physical_device, static_cast<uint32_t>(i), data.dummy_surface, &supported);
-            if(supported)
-            {
-                queue_families[1] = static_cast<uint32_t>(i);
-            }
+    uint32_t vk_graphics_index = MaxValue<uint32_t>;
+    uint32_t vk_compute_index = MaxValue<uint32_t>;
+    uint32_t vk_copy_index = MaxValue<uint32_t>;
+    uint32_t vk_present_index = MaxValue<uint32_t>;
 
-            break;
+    for(usize i = 0; i < vk_families.len; i++)
+    {
+        VkQueueFamilyProperties2 family = vk_families[i];
+        bool has_graphics = HasValue(family.queueFamilyProperties.queueFlags & VK_QUEUE_GRAPHICS_BIT);
+        bool has_compute = HasValue(family.queueFamilyProperties.queueFlags & VK_QUEUE_COMPUTE_BIT);
+        bool has_copy = HasValue(family.queueFamilyProperties.queueFlags & VK_QUEUE_TRANSFER_BIT);
+
+        if(vk_graphics_index == MaxValue<uint32_t> && has_graphics)
+        {
+            // graphics
+            vk_graphics_index = static_cast<uint32_t>(i);
+        }
+        if(vk_compute_index == MaxValue<uint32_t> && has_compute && !has_graphics)
+        {
+            // exclusive compute
+            vk_compute_index = static_cast<uint32_t>(i);
+        }
+        if(vk_copy_index == MaxValue<uint32_t> && has_copy && !has_graphics)
+        {
+            // exclusive copy
+            vk_copy_index = static_cast<uint32_t>(i);
+        }
+
+        VkBool32 supported = false;
+        vk.vkGetPhysicalDeviceSurfaceSupportKHR(pd.vk_physical_device, static_cast<uint32_t>(i), data.dummy_surface, &supported);
+        if(vk_present_index == MaxValue<uint32_t> && supported)
+        {
+            vk_present_index = static_cast<uint32_t>(i);
         }
     }
-    get_allocator().free(mem::to_bytes(families));
+    VKFailOn(vk_graphics_index == MaxValue<uint32_t> || vk_present_index == MaxValue<uint32_t>,
+        "graphics and present is required");
 
-    VKFailOn(queue_families[0] != queue_families[1], "graphics and present queue must be the same for now");
-
-    VkDeviceQueueCreateInfo queue_infos[ArraySize(queue_families)] = {};
-    uint32_t queue_count = static_cast<uint32_t>(ArraySize(queue_families));
-    if(queue_families[0] == queue_families[1])
+    // Default to graphics queue, graphics and present are expected to be.
+    if(vk_compute_index == MaxValue<uint32_t>
+        && vk_families[vk_graphics_index].queueFamilyProperties.queueFlags & VK_QUEUE_COMPUTE_BIT)
     {
-        queue_count--;
+        vk_compute_index = vk_graphics_index;
     }
 
-    for(usize i = 0; i < queue_count; i++)
+    if(vk_copy_index == MaxValue<uint32_t>
+        && vk_families[vk_graphics_index].queueFamilyProperties.queueFlags & VK_QUEUE_TRANSFER_BIT)
+    {
+        vk_copy_index = vk_graphics_index;
+    }
+    
+    get_allocator().free(mem::to_bytes(vk_families));
+
+    static constexpr usize VkFamilyCount = 4; // Graphics, Compute, Copy, Present
+
+    uint32_t vk_family_indices[] =
+    {
+        vk_graphics_index, vk_compute_index, vk_copy_index, vk_present_index
+    };
+    ArrayIterator<uint32_t> iterator = {.base = vk_family_indices, .extent = ArraySize(vk_family_indices) };
+
+    uint32_t uniques[VkFamilyCount] = {};
+    uint32_t unique_count = 0;
+
+    (void)iterator.for_each(
+        [&](uint32_t v)
+        {
+            bool finded = false;;
+            for(usize i = 0; i < unique_count; i++)
+            {
+                if(uniques[i] == v && v != MaxValue<uint32_t>)
+                {
+                    finded = true;
+                    break;
+                }
+            }
+
+            if(finded == false)
+            {
+                uniques[unique_count] = v;
+                unique_count++;
+            }
+        }
+    );
+    
+    VkDeviceQueueCreateInfo queue_infos[VkFamilyCount] = {};
+    for(usize i = 0; i < unique_count; i++)
     {
         f32 priority = 1.f;
         queue_infos[i] =
@@ -314,16 +371,26 @@ Graphics::DeviceID VulkanDriver::device_create(const Graphics::DeviceCreateInfo&
             .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
             .pNext = nullptr,
             .flags = 0,
-            .queueFamilyIndex = queue_families[i],
+            .queueFamilyIndex = uniques[i],
             .queueCount = 1,
             .pQueuePriorities = &priority,
         };
     }
 
+    VkPhysicalDeviceShaderFloat16Int8FeaturesKHR vk_float16_features = {};
+    vk_float16_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES_KHR;
+    vk_float16_features.shaderFloat16 = VK_TRUE;
+
+    VkPhysicalDeviceVulkan11Features vk_1_1_features = {};
+    vk_1_1_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+    vk_1_1_features.pNext = &vk_float16_features;
+    vk_1_1_features.shaderDrawParameters = VK_TRUE;
+    vk_1_1_features.storageInputOutput16 = VK_TRUE;
+
     VkPhysicalDeviceFeatures2 vk_features =
     {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
-        .pNext = nullptr,
+        .pNext = &vk_1_1_features,
         .features = {},
     };
     vk_features.features.samplerAnisotropy = VK_TRUE;
@@ -333,7 +400,7 @@ Graphics::DeviceID VulkanDriver::device_create(const Graphics::DeviceCreateInfo&
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext = &vk_features,
         .flags = 0,
-        .queueCreateInfoCount = queue_count,
+        .queueCreateInfoCount = unique_count,
         .pQueueCreateInfos = queue_infos,
         .enabledLayerCount = 0,
         .ppEnabledLayerNames = nullptr,
@@ -376,28 +443,37 @@ Graphics::DeviceID VulkanDriver::device_create(const Graphics::DeviceCreateInfo&
     ld.vk_physical_device_memory_properties = vk_physical_memory_properties.memoryProperties;
 
     // Queues
-    ld.queue.graphics_index = queue_families[0];
-    ld.queue.present_index = queue_families[1];
-
-    ld.vk.vkGetDeviceQueue(ld.vk_device, queue_families[0], 0, &ld.queue.graphics);
-    ld.vk.vkGetDeviceQueue(ld.vk_device, queue_families[1], 0, &ld.queue.present);
-
+    Graphics::QueueUsage queue_usages[VkFamilyCount] =
     {
-        ld.queue.graphics_queue_id = data.queues.add(Queue());
-        Queue& graphics_queue = _get_queue(ld.queue.graphics_queue_id);
-        graphics_queue.vk_device = ld.vk_device;
-        graphics_queue.vk_queue = ld.queue.graphics;
-        graphics_queue.device = device_id;
-        graphics_queue.queue_index = ld.queue.graphics_index;
+        Graphics::QueueUsage::Graphics,
+        Graphics::QueueUsage::Compute,
+        Graphics::QueueUsage::Copy,
+        Graphics::QueueUsage::Present,
+    };
+
+    ld.families = get_allocator().array<LogicalDevice::QueueFamily>(unique_count);
+    for(usize i = 0; i < ld.families.len; i++)
+    {
+        LogicalDevice::QueueFamily& family = ld.families[i];
+
+        family.usage = queue_usages[i];
+        family.vk_family_index = vk_family_indices[i];
+
+        family.vk_queues = get_allocator().array<VkQueue>(1);
+        ld.vk.vkGetDeviceQueue(ld.vk_device, family.vk_family_index, 0, family.vk_queues.ptr());
     }
-    
+
+    ld.device_queues = get_allocator().array<LogicalDevice::DeviceQueue>(VkFamilyCount);
+    for(usize i = 0; i < ld.device_queues.len; i++)
     {
-        ld.queue.present_queue_id = data.queues.add(Queue());
-        Queue& present_queue = _get_queue(ld.queue.present_queue_id);
-        present_queue.vk_device = ld.vk_device;
-        present_queue.vk_queue = ld.queue.present;
-        present_queue.device = device_id;
-        present_queue.queue_index = ld.queue.present_index;
+        for(usize family_i = 0; family_i < ld.families.len; family_i++)
+        {
+            if(vk_family_indices[i] == ld.families[family_i].vk_family_index)
+            {
+                ld.device_queues[i].family_index = family_i;
+                continue;
+            }
+        }
     }
 
     // Global pool
@@ -422,7 +498,7 @@ Graphics::DeviceID VulkanDriver::device_create(const Graphics::DeviceCreateInfo&
 
     result = ld.vk.vkCreateDescriptorPool(ld.vk_device, &vk_global_pool_info, Vulkan::allocation_callbacks(), &ld.vk_global_descriptor_pool);
     VKFailOn(result != VK_SUCCESS, "vkCreateDescriptorPool({})", Vulkan::result_as_string(result));
-    
+
     ld.render_pass_cache = HashMap<VkFormat, RenderPassCache>::with_allocator(get_allocator());
 
     ld.device = device_id;
@@ -433,14 +509,17 @@ void VulkanDriver::device_destroy(Graphics::DeviceID device)
 {
     VKFailOn(device.is_valid() == false, "invalid device");
     LogicalDevice& ld = _get_logical_device(device);
-
+    
     ld.vk.vkDestroyDescriptorPool(ld.vk_device, ld.vk_global_descriptor_pool, Vulkan::allocation_callbacks());
     
-    data.queues.remove(ld.queue.graphics_queue_id);
-    if(ld.queue.graphics_queue_id != ld.queue.present_queue_id)
+    for(usize i = 0; i < ld.families.len; i++)
     {
-        data.queues.remove(ld.queue.present_queue_id);
+        LogicalDevice::QueueFamily& queue_family = ld.families[i];
+
+        get_allocator().free(mem::to_bytes(queue_family.vk_queues));
     }
+    get_allocator().free(mem::to_bytes(ld.device_queues));
+    get_allocator().free(mem::to_bytes(ld.families));
     
     for(RenderPassEntry& it : ld.render_pass_cache.iter())
     {
@@ -458,7 +537,7 @@ Graphics::SwapChainID VulkanDriver::swap_chain_create(const Graphics::SwapChainC
     VKFailOn(ci.surface.is_valid() == false, "invalid surface");
     VKFailOn(ci.present_mode == Graphics::PresentMode::Unknown, "invalid present mode");
     VKFailOn(ci.format == Graphics::SurfaceFormat::Unknown, "invalid surface format");
-    VKFailOn(ci.image_count != 2 && ci.image_count != 3, "invalid image count");
+    VKFailOn(ci.min_image_count == 0, "invalid min image count");
 
     LogicalDevice& ld = _get_logical_device(ci.device);
 
@@ -487,7 +566,7 @@ Graphics::SwapChainID VulkanDriver::swap_chain_create(const Graphics::SwapChainC
         .pNext = nullptr,
         .flags = 0,
         .surface = surface.vk_surface,
-        .minImageCount = ci.image_count,
+        .minImageCount = ci.min_image_count,
         .imageFormat = vk_swapchain_format,
         .imageColorSpace = vk_swap_chain_color_space,
         .imageExtent = vk_swap_chain_extent,
@@ -495,7 +574,7 @@ Graphics::SwapChainID VulkanDriver::swap_chain_create(const Graphics::SwapChainC
         .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
         .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
         .queueFamilyIndexCount = 1,
-        .pQueueFamilyIndices = & ld.queue.present_index,
+        .pQueueFamilyIndices = & ld.families[ld.device_queues[3].family_index].vk_family_index,
         .preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
         .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
         .presentMode = vk_present_mode,
@@ -780,36 +859,44 @@ Graphics::QueueID VulkanDriver::queue_create(const Graphics::QueueCreateInfo& ci
 
     LogicalDevice& ld = _get_logical_device(ci.device);
 
-    if(ci.usage == Graphics::QueueUsage::Graphics)
-    {
-        return ld.queue.graphics_queue_id;
-    }
-    else if(ci.usage == Graphics::QueueUsage::Present)
-    {
-        return ld.queue.present_queue_id;
-    }
+    usize device_queue_index = usize(ci.usage) - 1;
+    LogicalDevice::QueueFamily& family = ld.families[ld.device_queues[device_queue_index].family_index];
+    Graphics::QueueID queue_id = data.queues.add(Queue());
+    Queue& q = _get_queue(queue_id);
 
-    VKFailOn(true, "invalid queue usage");
-    return Graphics::QueueID();
+    q.vk_device = ld.vk_device;
+    q.vk_queue = family.vk_queues[0];
+    q.device_queue_index = device_queue_index;
+    q.device = ld.device;
+    q.queue = queue_id;
+
+    return queue_id;
 }
 
 void VulkanDriver::queue_destroy(Graphics::QueueID queue)
 {
-    Unused(queue);
+    VKFailOn(queue.is_valid() == false, "invalid queue");
+    data.queues.remove(queue);
 }
 
 void VulkanDriver::queue_execute_command_buffer(Graphics::QueueID queue, const Graphics::QueueExecuteInfo& execute_info)
 {
     VKFailOn(queue.is_valid() == false, "invalid queue");
+    VKFailOn(
+        execute_info.wait_stages.len != 0 && execute_info.wait_semaphores.len != execute_info.wait_stages.len,
+        "wait stages must be equal in len to wait semaphores or empty"
+    );
 
     Queue& q = _get_queue(queue);
     LogicalDevice& ld = _get_logical_device(q.device);
 
     Slice<VkSemaphore> vk_wait_sem = get_allocator().array<VkSemaphore>(execute_info.wait_semaphores.len);
+    Slice<VkPipelineStageFlags> vk_wait_stages = get_allocator().array<VkPipelineStageFlags>(execute_info.wait_stages.len);
     for(usize i = 0; i < execute_info.wait_semaphores.len; i++)
     {
         Semaphore& sem = _get_semaphore(execute_info.wait_semaphores[i]);
         vk_wait_sem[i] = sem.vk_semaphore;
+        vk_wait_stages[i] = VkUtils::_vk_get_pipeline_stages(execute_info.wait_stages[i]);
     }
 
     Slice<VkSemaphore> vk_signal_sem = get_allocator().array<VkSemaphore>(execute_info.signal_semaphores.len);
@@ -833,14 +920,13 @@ void VulkanDriver::queue_execute_command_buffer(Graphics::QueueID queue, const G
         vk_fence = f.vk_fence;
     }
 
-    VkPipelineStageFlags wait_dest_mask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     VkSubmitInfo submit_info =
     {
         .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
         .pNext = nullptr,
         .waitSemaphoreCount = static_cast<uint32_t>(vk_wait_sem.len),
         .pWaitSemaphores = vk_wait_sem.ptr(),
-        .pWaitDstStageMask = &wait_dest_mask,
+        .pWaitDstStageMask = vk_wait_stages.ptr(),
         .commandBufferCount = static_cast<uint32_t>(vk_cmd_buffers.len),
         .pCommandBuffers = vk_cmd_buffers.ptr(),
         .signalSemaphoreCount = static_cast<uint32_t>(vk_signal_sem.len),
@@ -851,6 +937,7 @@ void VulkanDriver::queue_execute_command_buffer(Graphics::QueueID queue, const G
     VKFailOn(result != VK_SUCCESS, "vkQueueSubmit({})", Vulkan::result_as_string(result));
 
     get_allocator().free(mem::to_bytes(vk_wait_sem));
+    get_allocator().free(mem::to_bytes(vk_wait_stages));
     get_allocator().free(mem::to_bytes(vk_signal_sem));
     get_allocator().free(mem::to_bytes(vk_cmd_buffers));
 }
@@ -1461,7 +1548,7 @@ Graphics::PipelineID VulkanDriver::pipeline_create(const Graphics::PipelineCreat
             .flags = 0,
             .stage = VkShaderStageFlagBits(VkUtils::_vk_get_shader_stage(ci.shader_stages[i].stage)),
             .module = _vk_create_shader_module(ld, ci.shader_stages[i]),
-            .pName = "main",
+            .pName = ci.shader_stages[i].name.ptr(),
             .pSpecializationInfo = nullptr,
         };
     }
@@ -1712,12 +1799,13 @@ Graphics::CommandPoolID VulkanDriver::command_pool_create(const Graphics::Comman
     Graphics::CommandPoolID cmd_pool_id = data.command_pools.add(CommandPool());
     CommandPool& cmd_pool = _get_command_pool(cmd_pool_id);
 
+    LogicalDevice::QueueFamily& family = ld.families[ld.device_queues[queue.device_queue_index].family_index];
     VkCommandPoolCreateInfo cmd_pool_info =
     {
         .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
         .pNext = nullptr,
         .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-        .queueFamilyIndex = queue.queue_index,
+        .queueFamilyIndex = family.vk_family_index,
     };
 
     VkResult result = ld.vk.vkCreateCommandPool(ld.vk_device, &cmd_pool_info, Vulkan::allocation_callbacks(), &cmd_pool.vk_command_pool);

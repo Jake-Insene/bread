@@ -114,16 +114,27 @@ endif()
 
 # Utility functions
 
-function(bread_project name)
+function(bread_project)
+    set(options)
+    set(oneValueArgs NAME)
+    set(multiValueArgs SYSTEMS SOURCES)
+
+    cmake_parse_arguments(PROJECT
+        "${options}"
+        "${oneValueArgs}"
+        "${multiValueArgs}"
+        ${ARGN}
+    )
+
     if(ANDROID)
-        add_library(${name} SHARED ${ARGN})
+        add_library(${PROJECT_NAME} SHARED ${PROJECT_SOURCES})
     elseif(WIN32)
-        add_executable(${name} WIN32 ${ARGN})
+        add_executable(${PROJECT_NAME} WIN32 ${PROJECT_SOURCES})
     endif()
-    
+
     # Copying the bread assets to the game assets folder by default
     add_custom_command(
-        TARGET ${name}
+        TARGET ${PROJECT_NAME}
         PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/bread/assets ${CMAKE_SOURCE_DIR}/assets
     )
@@ -141,18 +152,24 @@ function(bread_project name)
         endforeach()
     endif()
 
-    target_compile_definitions(${name} PUBLIC ${BREAD_BUILD_DEFINITIONS})
-    target_compile_options(${name} PUBLIC ${BREAD_COMPILE_OPTIONS} ${BREAD_EXE_BUILD_OPTIONS})
-    target_link_options(${name} PUBLIC ${BREAD_EXE_LINK_OPTIONS})
+    target_compile_definitions(${PROJECT_NAME} PUBLIC ${BREAD_BUILD_DEFINITIONS})
+
+    foreach(enabled_system "${PROJECT_SYSTEMS}")
+        string(TOUPPER ${enabled_system} upper_system)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC "BREAD_SYSTEM_${upper_system}")
+    endforeach()
+
+    target_compile_options(${PROJECT_NAME} PUBLIC ${BREAD_COMPILE_OPTIONS} ${BREAD_EXE_BUILD_OPTIONS})
+    target_link_options(${PROJECT_NAME} PUBLIC ${BREAD_EXE_LINK_OPTIONS})
 
     target_include_directories(
-        ${name}
+        ${PROJECT_NAME}
         PUBLIC
         "${CMAKE_SOURCE_DIR}/bread/"
         "${CMAKE_SOURCE_DIR}/bread/src"
         "${CMAKE_SOURCE_DIR}"
     )
 
-    target_link_libraries(${name} "bread")
+    target_link_libraries(${PROJECT_NAME} "bread")
 
 endfunction()

@@ -1,12 +1,8 @@
 #pragma once
 #include "platform/platform_header.h"
-#include "engine/engine.h"
+#include "engine/engine_runtime.h"
 
-struct Win32Engine : Engine
+
+struct Win32Engine : EngineRuntime
 {
-	struct InternalData
-	{
-	};
-
-	static InternalData data;
 };

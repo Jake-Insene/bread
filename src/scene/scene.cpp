@@ -6,7 +6,7 @@ Scene::SceneClass* Scene::get_class()
     static VTable vtable = []()
     {
         VTable tmp = {};
-        tmp.construct.bind([](Scene* scene) -> void { ::new (scene) Scene(); });
+        tmp.construct.bind([](Scene* scene) -> void { ConstructObject(*scene); });
         tmp.on_create.bind(&Scene::on_create);
         tmp.on_destroy.bind(&Scene::on_destroy);
         tmp.on_enter.bind(&Scene::on_enter);

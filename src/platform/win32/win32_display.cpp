@@ -26,7 +26,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		InputEventWindowClose event = {};
 		event.type = InputEventType::WindowClose;
 		event.window = window_id;
-		Engine::handle_event(event);
+		Engine::local_data.engine_runtime->handle_event(event);
 	}
 		break;
 	case WM_CAPTURECHANGED:
@@ -57,7 +57,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 			event.position = Input::data.mouse_position;
 			event.pressed = false;
 			event.button = btn;
-			Engine::handle_event(event);
+			Engine::local_data.engine_runtime->handle_event(event);
 		}
 	}
 		break;
@@ -112,7 +112,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		event.position = pos;
 		event.pressed = Input::data.mouse_buttons[i32(button)];
 		event.button = button;
-		Engine::handle_event(event);
+		Engine::local_data.engine_runtime->handle_event(event);
 		return 0;
 	}
 	case WM_SYSKEYDOWN:
@@ -148,7 +148,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		event.pressed = Input::data.keys[wparam] == KeyState::Pressed;
 		event.key = static_cast<Key>(wparam);
 
-		Engine::handle_event(event);
+		Engine::local_data.engine_runtime->handle_event(event);
 		return 0;
 	}
 	break;
@@ -165,7 +165,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 			window_data.window_rect.bottom - window_data.window_rect.top
 		);
 		
-		Engine::handle_event(event);
+		Engine::local_data.engine_runtime->handle_event(event);
 
 		return 0;
 	}

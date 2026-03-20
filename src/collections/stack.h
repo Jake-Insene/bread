@@ -75,7 +75,8 @@ struct [[nodiscard]] Stack
 		else
 		{
 			items.len = new_cap;
-			allocator.construct_array(items.add(sp));
+			Slice<Type> items_to_construct = items.add(sp);
+			ConstructArray(items_to_construct.ptr(), items_to_construct.len);
 		}
 	}
 

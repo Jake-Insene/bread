@@ -21,7 +21,8 @@ struct GenericAllocator
     {
         usize len;
         usize page_index : 16;
-        usize tags : 48;
+        usize tags : 16;
+        usize index : 32;
         Header* prev;
         Header* next;
     };
@@ -39,6 +40,7 @@ struct GenericAllocator
     Slice<Page> allocated_pages;
     usize page_count = 0;
     usize next_page_size = DefaultNextPageSize;
+    u32 index = 0;
 
     void destroy();
     

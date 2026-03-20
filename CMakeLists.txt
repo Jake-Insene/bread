@@ -33,7 +33,7 @@ file(GLOB ENGINE_SRC
     src/display/display.cpp
     src/display/window.cpp
     
-    src/engine/engine.cpp
+    src/engine/engine_runtime.cpp
 
     src/graphics/graphics.cpp
 
@@ -88,8 +88,11 @@ file(GLOB ENGINE_SRC
     
     src/platform/intrinsics.cpp
 
+    src/render/2d/scene_renderer_2d.cpp
+
     src/render/material_manager.cpp
     src/render/render_manager.cpp
+    src/render/render_device.cpp
     src/render/scene_renderer.cpp
     src/render/viewport.cpp
 
@@ -105,6 +108,8 @@ file(GLOB ENGINE_SRC
 
     src/scene/scene_manager.cpp
     src/scene/scene.cpp
+
+    src/systems/system_manager.cpp
 )
 
 file(GLOB VULKAN_ADAPTER_SRC

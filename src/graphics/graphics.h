@@ -36,6 +36,51 @@ struct Graphics
     static void initialize(const mem::Allocator& allocator);
     static void shutdown();
 
+	// ====== Enums ======
+
+	enum class DescriptorType
+	{
+		Unknown = 0,
+		UniformBuffer,
+		StorageBuffer,
+		CombinedTextureSampler,
+	};
+	
+	enum class ShaderStage
+	{
+		Vertex = Bit(0),
+		Fragment = Bit(1),
+	};
+
+	enum class CompareOp
+	{
+		Unknown = 0,
+		Never,
+		Always,
+    	Equal,
+    	NotEqual,
+    	Less,
+    	LessOrEqual,
+    	Greater,
+    	GreaterOrEqual,
+	};
+
+	enum class PipelineStages
+	{
+		Begin = Bit(0),
+		
+		VertexInput = Bit(1),
+		VertexShader = Bit(2),
+		FragmentShader = Bit(3),
+		EarlyFragmentTestShader = Bit(4),
+		LateFragmentTestShader = Bit(5),
+		ComputeShader = Bit(6),
+		RenderOutput = Bit(7),
+		Transfer = Bit(8),
+		
+		End = Bit(31),
+	};
+
 	/*
 	* Physical Device API
 	*/
@@ -107,7 +152,7 @@ struct Graphics
 		SurfaceID surface;
 		PresentMode present_mode;
 		SurfaceFormat format;
-		u32 image_count;
+		u32 min_image_count;
 		Vector2U size;
 	};
 
@@ -156,18 +201,21 @@ struct Graphics
 	{
 		Unknown = 0,
 		Graphics,
+		Compute,
+		Copy,
 		Present,
 	};
 
 	struct QueueCreateInfo
 	{
-		QueueUsage usage;
 		DeviceID device;
+		QueueUsage usage;
 	};
 
 	struct QueueExecuteInfo
 	{
 		Slice<SemaphoreID> wait_semaphores;
+		Slice<PipelineStages> wait_stages;
 		Slice<Graphics::CommandBufferID> command_buffers;
 		Slice<SemaphoreID> signal_semaphores;
 		Graphics::FenceID fence;
@@ -185,35 +233,6 @@ struct Graphics
 	static void queue_execute_command_buffer(QueueID queue, const QueueExecuteInfo& execute_info);
 	static void queue_present(QueueID queue, const QueuePresentInfo& present_info);
 	static void queue_wait_idle(QueueID queue);
-
-	// ====== Enums ======
-
-	enum class DescriptorType
-	{
-		Unknown = 0,
-		UniformBuffer,
-		StorageBuffer,
-		CombinedTextureSampler,
-	};
-	
-	enum class ShaderStage
-	{
-		Vertex = Bit(0),
-		Fragment = Bit(1),
-	};
-
-	enum class CompareOp
-	{
-		Unknown = 0,
-		Never,
-		Always,
-    	Equal,
-    	NotEqual,
-    	Less,
-    	LessOrEqual,
-    	Greater,
-    	GreaterOrEqual,
-	};
 
 	// ====== Resources ======
 
@@ -557,6 +576,7 @@ struct Graphics
 	{
 		ShaderStage stage;
 		Slice<const u8> code;
+		StringView name;
 	};
 
 	struct VertexBinding
@@ -671,22 +691,6 @@ struct Graphics
 		UInt8,
 		UInt16,
 		UInt32,
-	};
-
-	enum class PipelineStages
-	{
-		Begin = Bit(0),
-		
-		VertexInput = Bit(1),
-		VertexShader = Bit(2),
-		FragmentShader = Bit(3),
-		EarlyFragmentTestShader = Bit(4),
-		LateFragmentTestShader = Bit(5),
-		ComputeShader = Bit(6),
-		RenderOutput = Bit(7),
-		Transfer = Bit(8),
-		
-		End = Bit(31),
 	};
 
 	enum class AccessMasks

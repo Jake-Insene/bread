@@ -58,4 +58,17 @@ struct [[nodiscard]] BaseIterator
 		return Forward<decltype(self)>(self);
 	}
 
+	template<typename Self, typename Fn>
+	constexpr auto filter(this auto&& self, Fn&& op, Fn&& fn)
+	{
+		for (auto it = self.begin(); it != self.end(); ++it)
+		{
+			if(op(*it))
+			{
+				fn(*it);
+			}
+		}
+		
+		return Forward<decltype(self)>(self);
+	}
 };

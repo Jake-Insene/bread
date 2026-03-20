@@ -185,6 +185,8 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
                     allocated_mem->tags |= Allocated;
                     check_integrity();
 
+                    index++;
+                    allocated_mem->index = index;
                     return Slice<u8>
                     {
                         aligned_base,
@@ -233,6 +235,9 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
     }
     
     check_integrity();
+
+    index++;
+    allocation_header->index = index;
 
     return Slice<u8>
     {

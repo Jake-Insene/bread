@@ -156,7 +156,8 @@ struct [[nodiscard]] Array
         else
         {
             items.len = new_cap;
-            allocator.construct_array(items.add(count));
+            Slice<Type> items_to_construct = items.add(count);
+            ConstructArray(items_to_construct.ptr(), items_to_construct.len);
         }
     }
 
@@ -196,7 +197,7 @@ struct [[nodiscard]] Array
     void remove_at(usize index)
     {
         DebugAssert(index < count && count != 0, "index out of range");
-        allocator.destruct(&items[index]);
+        DestructObject(items[index]);
 
         if (count == 1 || index == count - 1)
         {

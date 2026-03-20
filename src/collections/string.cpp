@@ -72,7 +72,8 @@ void String::resize(usize new_size)
     else
     {
         chars.len = new_size;
-        allocator.construct_array(chars.add(count));
+        Slice<char> chars_to_construct = chars.add(count);
+        ConstructArray(chars_to_construct.ptr(), chars_to_construct.len);
     }
 
     count = new_size;

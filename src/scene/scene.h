@@ -65,7 +65,7 @@ struct Viewport;
             vtable = []()\
             {\
                 CLASS::VTable tmp = {};\
-                tmp.construct.bind([](Scene* scene) -> void { ::new (reinterpret_cast<CLASS*>(scene)) CLASS(); });\
+                tmp.construct.bind([](Scene* scene) -> void { ConstructObject(*reinterpret_cast<CLASS*>(scene)); });\
                 tmp.on_create.bind(&CLASS::on_createv);\
                 tmp.on_destroy.bind(&CLASS::on_destroyv);\
                 tmp.on_enter.bind(&CLASS::on_enterv);\
