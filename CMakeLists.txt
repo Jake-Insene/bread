@@ -35,7 +35,7 @@ file(GLOB ENGINE_SRC
     
     src/engine/engine_runtime.cpp
 
-    src/graphics/graphics.cpp
+    src/gpu/gpu.cpp
 
     src/input/input.cpp
     
@@ -100,9 +100,9 @@ file(GLOB ENGINE_SRC
 )
 
 file(GLOB VULKAN_ADAPTER_SRC
-    src/graphics/vk/vk_driver.cpp
-    src/graphics/vk/vk_header.cpp
-    src/graphics/vk/vk_utils.cpp
+    src/gpu/vk/vk_driver.cpp
+    src/gpu/vk/vk_header.cpp
+    src/gpu/vk/vk_utils.cpp
 )
 
 set(PLATFORM_LIBRARIES "")

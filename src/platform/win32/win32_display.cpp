@@ -229,7 +229,7 @@ Display::WindowID Display::window_create()
 
 	ShowWindow(new_window.handle, SW_SHOW);
 
-	new_window.surface = Graphics::surface_create({.window_native_handle = window_get_native_handle(new_id)});
+	new_window.surface = GPU::surface_create({.window_native_handle = window_get_native_handle(new_id)});
 
 	return new_id;
 }
@@ -238,7 +238,7 @@ void Display::window_destroy(WindowID window_id)
 {
 	Win32Display::WindowData& window_data = _get_window_data(window_id);
 
-	Graphics::surface_destroy(window_data.surface);
+	GPU::surface_destroy(window_data.surface);
 	
 	DestroyWindow(window_data.handle);
 
@@ -279,7 +279,7 @@ MemoryAddress Display::window_get_native_handle(Display::WindowID window_id)
 	return MemoryAddress(window_data.handle);
 }
 
-Graphics::SurfaceID Display::window_get_surface(WindowID window_id)
+GPU::SurfaceID Display::window_get_surface(WindowID window_id)
 {
 	Win32Display::WindowData& window_data = _get_window_data(window_id);
 	return window_data.surface;

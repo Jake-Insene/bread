@@ -1,7 +1,7 @@
-#include "graphics/vk/vk_header.h"
+#include "gpu/vk/vk_header.h"
 
-#include "graphics/vk/vk_driver.h"
-#include "graphics/vk/vk_vtable.h"
+#include "gpu/vk/vk_driver.h"
+#include "gpu/vk/vk_vtable.h"
 #include "mem/utils.h"
 #include "os/os.h"
 

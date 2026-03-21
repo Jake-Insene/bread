@@ -1,6 +1,5 @@
 #include "resource/font.h"
 
-#include "graphics/graphics.h"
 #include "resource/resource_manager.h"
 #include "resource/resource_manager_internal.h"
 
@@ -90,8 +89,8 @@ static void _load_theme(const mem::Allocator& allocator, const Slice<u8>& font_f
         }
 
         flip_atlas_vertical(allocator, pixels, width, width);
-        theme.font_atlas = Graphics::texture_create(
-            Graphics::TextureCreateInfo
+        theme.font_atlas = GPU::texture_create(
+            GPU::TextureCreateInfo
             {
 #if 0
                 //.usage = Graphics::TEXTURE_USAGE_UPLOAD_ONCE,
@@ -126,10 +125,10 @@ void Font::destroy()
     
     for (FontTheme& theme : data.themes.iter())
     {
-        if (theme.font_atlas == Graphics::TextureID::invalid())
+        if (theme.font_atlas == GPU::TextureID::invalid())
             continue;
 
-        Graphics::texture_destroy(theme.font_atlas);
+        GPU::texture_destroy(theme.font_atlas);
 
         theme.glyphs.destroy();
     }

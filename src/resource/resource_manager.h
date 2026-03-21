@@ -2,7 +2,7 @@
 #include "collections/error.h"
 #include "collections/hash_map.h"
 #include "collections/string_map.h"
-#include "graphics/graphics.h"
+#include "gpu/gpu.h"
 #include "mem/allocator.h"
 #include "resource/resource.h"
 
@@ -19,9 +19,9 @@ struct ResourceManager
 
     struct TextureLoadInfo
     {
-        Graphics::TextureType type;
-        Graphics::Filter min_filter;
-        Graphics::Filter mag_filter;
+        GPU::TextureType type;
+        GPU::Filter min_filter;
+        GPU::Filter mag_filter;
     };
 
     struct InternalData

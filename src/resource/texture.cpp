@@ -1,6 +1,5 @@
 #include "resource/texture.h"
 
-#include "graphics/graphics.h"
 #include "resource/resource_manager.h"
 
 
@@ -12,12 +11,12 @@ void Texture::init()
 void Texture::destroy()
 {
     Resource::destroy();
-    Graphics::texture_destroy(texture_id);
+    GPU::texture_destroy(texture_id);
 }
 
 Vector2I Texture::get_size() const
 {
-    return Graphics::texture_get_size(texture_id);
+    return GPU::texture_get_size(texture_id);
 }
 
 void Texture2D::init()

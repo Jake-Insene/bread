@@ -2,7 +2,7 @@
 
 #include "audio/audio.h"
 #include "display/display.h"
-#include "graphics/graphics.h"
+#include "gpu/gpu.h"
 #include "log/log.h"
 #include "scene/scene_manager.h"
 #include "os/os.h"
@@ -42,7 +42,7 @@ void EngineRuntime::init()
     // TODO: Find a better way to handle this.
     FailOn(OS::set_current_directory("assets") == false, "assets directory not found")
 
-    Graphics::initialize(allocator_ref);
+    GPU::initialize(allocator_ref);
     Display::initialize(allocator_ref);
 
     _select_physical_device();
@@ -86,7 +86,7 @@ void EngineRuntime::destroy()
     main_window.destroy();
     
     Display::shutdown();
-    Graphics::shutdown();
+    GPU::shutdown();
 
     main_queue.destroy();
 
@@ -136,23 +136,23 @@ void EngineRuntime::set_vsync(bool vsync)
 
 void EngineRuntime::_select_physical_device()
 {
-    Slice<Graphics::PhysicalDeviceID> physical_devices = Graphics::physical_devices_enumerate();
+    Slice<GPU::PhysicalDeviceID> physical_devices = GPU::physical_devices_enumerate();
 
     bool finded = false;
-    Graphics::PhysicalDeviceID integrated = Graphics::PhysicalDeviceID();
-    for(Graphics::PhysicalDeviceID pd : physical_devices)
+    GPU::PhysicalDeviceID integrated = GPU::PhysicalDeviceID();
+    for(GPU::PhysicalDeviceID pd : physical_devices)
     {
         if(finded == true)
             break;
 
-        Graphics::PhysicalDeviceInfo pd_info = Graphics::physical_device_get_info(pd);
-        if(pd_info.device_type == Graphics::DeviceType::DiscreteGPU)
+        GPU::PhysicalDeviceInfo pd_info = GPU::physical_device_get_info(pd);
+        if(pd_info.device_type == GPU::DeviceType::DiscreteGPU)
         {
             physical_device = pd;
             finded = true;
             break;
         }
-        else if(pd_info.device_type == Graphics::DeviceType::IntegratedGPU)
+        else if(pd_info.device_type == GPU::DeviceType::IntegratedGPU)
         {
             integrated = pd;
         }

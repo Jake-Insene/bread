@@ -1,6 +1,5 @@
 #include "resource/resource_manager.h"
 
-#include "graphics/graphics.h"
 #include "io/file.h"
 #include "resource/resource_manager_internal.h"
 #include "resource/font.h"
@@ -108,9 +107,9 @@ Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
             path,
             TextureLoadInfo
             {
-                .type = Graphics::TextureType::Texture2D,
-                .min_filter = Graphics::Filter::Nearest,
-                .mag_filter = Graphics::Filter::Nearest,
+                .type = GPU::TextureType::Texture2D,
+                .min_filter = GPU::Filter::Nearest,
+                .mag_filter = GPU::Filter::Nearest,
             }
         );
         break;
@@ -237,20 +236,20 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
         tex = _create_resource<Texture2D>();
         tex->path.set(path);
         
-        Graphics::TextureCreateInfo create_info =
+        GPU::TextureCreateInfo create_info =
         {
 #if 0
-            //.usage = Graphics::TEXTURE_USAGE_UPLOAD_ONCE,
+            //.usage = GPU::TEXTURE_USAGE_UPLOAD_ONCE,
             .type = load_info.type,
-            .format = image->format == Image::FORMAT_RGB8 ? Graphics::TextureFormat::RGB8 : Graphics::TextureFormat::RGBA8,
+            .format = image->format == Image::FORMAT_RGB8 ? GPU::TextureFormat::RGB8 : GPU::TextureFormat::RGBA8,
             //.min_filter = load_info.min_filter,
             //.mag_filter = load_info.mag_filter,
             .size = image->size,
-            .memory_heap = Graphics::MemoryHeapID(),
+            .memory_heap = GPU::MemoryHeapID(),
             .heap_offset = 0,
 #endif
         };
-        tex->texture_id = Graphics::texture_create(create_info);
+        tex->texture_id = GPU::texture_create(create_info);
 
         data.cached_images.insert(image, tex);
     }

@@ -47,21 +47,21 @@ struct [[nodiscard]] Event
 
 	template<typename T>
 	constexpr void bind(T func)
-		requires(!IsMemberFunction<Fn>)
+	requires(!IsMemberFunction<Fn>)
 	{
 		storage.func = static_cast<Fn>(func);
 	}
 
 	template<typename T>
 	constexpr void bind(T func)
-		requires(!UseInstance)
+	requires(!UseInstance)
 	{
 		storage.func = Fn(func);
 	}
 
 	template<typename T, typename Fn2>
 	constexpr void bind(T* instance, Fn2 func)
-		requires(IsMemberFunction<Fn> && UseInstance)
+	requires(IsMemberFunction<Fn> && UseInstance)
 	{
 		storage.instance = reinterpret_cast<decltype(storage.instance)>(instance);
 		storage.func = reinterpret_cast<Fn>(func);

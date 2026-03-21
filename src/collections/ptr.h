@@ -76,13 +76,13 @@ struct Ptr
         DebugAssert(allocator.self == allocator_self, "allocator mismatch");
         DebugAssert(memory != nullptr, "memory is null");
 
-        allocator.destruct(memory);
+        DestructObject(*memory);
 
         allocator.free(mem::to_bytes(Slice<T>(memory, 1)));
         memory = nullptr;
     }
 
-    inline T* operator->() const
+    inline T* get() const
     { 
         DebugAssert(memory != nullptr, "memory is null"); 
         return memory; 

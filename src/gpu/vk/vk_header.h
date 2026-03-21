@@ -2,7 +2,7 @@
 #include "core/header.h"
 #include "collections/string_view.h"
 #include "debug/fail.h"
-#include "graphics/vk/vk_vtable.h"
+#include "gpu/vk/vk_vtable.h"
 #include "log/log.h"
 
 

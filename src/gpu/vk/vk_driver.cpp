@@ -1,17 +1,17 @@
-#include "graphics/vk/vk_driver.h"
+#include "gpu/vk/vk_driver.h"
 
 #include "core/templates.h"
 #include "display/display.h"
-#include "graphics/graphics.h"
-#include "graphics/vk/vk_utils.h"
+#include "gpu/gpu.h"
+#include "gpu/vk/vk_utils.h"
 #include "math/funcs.h"
 #include "os/os.h"
 
 
 
-InternalGraphics::Adapter VulkanDriver::get_adapter()
+InternalGPU::GPUAdapter VulkanDriver::get_adapter()
 {
-    return InternalGraphics::Adapter
+    return InternalGPU::GPUAdapter
     {
         .initialize = &VulkanDriver::initialize,
         .shutdown = &VulkanDriver::shutdown,
@@ -85,22 +85,22 @@ void VulkanDriver::initialize(const mem::Allocator &allocator)
 {
     data.allocator = allocator;
     
-    data.surfaces = FreeList<Surface, Graphics::SurfaceID>::with_allocator(allocator);
-    data.devices = FreeList<LogicalDevice, Graphics::DeviceID>::with_allocator(allocator);
-    data.swap_chains = FreeList<SwapChain, Graphics::SwapChainID>::with_allocator(allocator);
-    data.fences = FreeList<Fence, Graphics::FenceID>::with_allocator(allocator);
-    data.semaphores = FreeList<Semaphore, Graphics::SemaphoreID>::with_allocator(allocator);
-    data.queues = FreeList<Queue, Graphics::QueueID>::with_allocator(allocator);
-    data.memory_heaps = FreeList<MemoryHeap, Graphics::MemoryHeapID>::with_allocator(allocator);
-    data.buffers = FreeList<Buffer, Graphics::BufferID>::with_allocator(allocator);
-    data.samplers = FreeList<Sampler, Graphics::SamplerID>::with_allocator(allocator);
-    data.textures = FreeList<Texture, Graphics::TextureID>::with_allocator(allocator);
-    data.render_targets = FreeList<RenderTarget, Graphics::RenderTargetID>::with_allocator(allocator);
-    data.descriptor_set_layouts = FreeList<DescriptorSetLayout, Graphics::DescriptorSetLayoutID>::with_allocator(allocator);
-    data.descriptor_sets = FreeList<DescriptorSet, Graphics::DescriptorSetID>::with_allocator(allocator);
-    data.pipelines = FreeList<Pipeline, Graphics::PipelineID>::with_allocator(allocator);
-    data.command_pools = FreeList<CommandPool, Graphics::CommandPoolID>::with_allocator(allocator);
-    data.command_buffers = FreeList<CommandBuffer, Graphics::CommandBufferID>::with_allocator(get_allocator());
+    data.surfaces = FreeList<Surface, GPU::SurfaceID>::with_allocator(allocator);
+    data.devices = FreeList<LogicalDevice, GPU::DeviceID>::with_allocator(allocator);
+    data.swap_chains = FreeList<SwapChain, GPU::SwapChainID>::with_allocator(allocator);
+    data.fences = FreeList<Fence, GPU::FenceID>::with_allocator(allocator);
+    data.semaphores = FreeList<Semaphore, GPU::SemaphoreID>::with_allocator(allocator);
+    data.queues = FreeList<Queue, GPU::QueueID>::with_allocator(allocator);
+    data.memory_heaps = FreeList<MemoryHeap, GPU::MemoryHeapID>::with_allocator(allocator);
+    data.buffers = FreeList<Buffer, GPU::BufferID>::with_allocator(allocator);
+    data.samplers = FreeList<Sampler, GPU::SamplerID>::with_allocator(allocator);
+    data.textures = FreeList<Texture, GPU::TextureID>::with_allocator(allocator);
+    data.render_targets = FreeList<RenderTarget, GPU::RenderTargetID>::with_allocator(allocator);
+    data.descriptor_set_layouts = FreeList<DescriptorSetLayout, GPU::DescriptorSetLayoutID>::with_allocator(allocator);
+    data.descriptor_sets = FreeList<DescriptorSet, GPU::DescriptorSetID>::with_allocator(allocator);
+    data.pipelines = FreeList<Pipeline, GPU::PipelineID>::with_allocator(allocator);
+    data.command_pools = FreeList<CommandPool, GPU::CommandPoolID>::with_allocator(allocator);
+    data.command_buffers = FreeList<CommandBuffer, GPU::CommandBufferID>::with_allocator(get_allocator());
 
 #if defined(BREAD_ANDROID)
     data.vk_lib = OS::load_library("libvulkan.so");
@@ -192,21 +192,21 @@ void VulkanDriver::shutdown()
     OS::unload_library(data.vk_lib);
 }
 
-Slice<Graphics::PhysicalDeviceID> VulkanDriver::physical_devices_enumerate()
+Slice<GPU::PhysicalDeviceID> VulkanDriver::physical_devices_enumerate()
 {
     return data.physical_device_ids;
 }
 
-Graphics::PhysicalDeviceInfo VulkanDriver::physical_device_get_info(Graphics::PhysicalDeviceID physical_device)
+GPU::PhysicalDeviceInfo VulkanDriver::physical_device_get_info(GPU::PhysicalDeviceID physical_device)
 {
     VKFailOn(physical_device.integer() >= data.physical_devices.len);
     PhysicalDevice& pd = data.physical_devices[physical_device.integer()];
     return pd.info;
 }
 
-Graphics::SurfaceID VulkanDriver::surface_create(const Graphics::SurfaceCreateInfo &ci)
+GPU::SurfaceID VulkanDriver::surface_create(const GPU::SurfaceCreateInfo &ci)
 {
-    Graphics::SurfaceID surface_id = data.surfaces.add(Surface());
+    GPU::SurfaceID surface_id = data.surfaces.add(Surface());
     Surface& surface = _get_surface(surface_id);
 #if defined(BREAD_WIN32)
     surface.window_native_handle = ci.window_native_handle;
@@ -222,7 +222,7 @@ Graphics::SurfaceID VulkanDriver::surface_create(const Graphics::SurfaceCreateIn
     return surface_id;
 }
 
-void VulkanDriver::surface_destroy(Graphics::SurfaceID surface)
+void VulkanDriver::surface_destroy(GPU::SurfaceID surface)
 {
     VKFailOn(surface.is_valid() == false, "invalid surface");
 
@@ -236,7 +236,7 @@ void VulkanDriver::surface_destroy(Graphics::SurfaceID surface)
     data.surfaces.remove(surface);
 }
 
-Graphics::DeviceID VulkanDriver::device_create(const Graphics::DeviceCreateInfo& ci)
+GPU::DeviceID VulkanDriver::device_create(const GPU::DeviceCreateInfo& ci)
 {
     VKFailOn(
         ci.physical_device.is_valid() == false || ci.physical_device.integer() >= data.physical_devices.len, 
@@ -245,7 +245,7 @@ Graphics::DeviceID VulkanDriver::device_create(const Graphics::DeviceCreateInfo&
 
     PhysicalDevice& pd = data.physical_devices[ci.physical_device.integer()];
 
-    Graphics::DeviceID device_id = data.devices.add(LogicalDevice());
+    GPU::DeviceID device_id = data.devices.add(LogicalDevice());
     LogicalDevice& ld = _get_logical_device(device_id);
     ld.vk_physical_device = pd.vk_physical_device;
 
@@ -443,12 +443,12 @@ Graphics::DeviceID VulkanDriver::device_create(const Graphics::DeviceCreateInfo&
     ld.vk_physical_device_memory_properties = vk_physical_memory_properties.memoryProperties;
 
     // Queues
-    Graphics::QueueUsage queue_usages[VkFamilyCount] =
+    GPU::QueueUsage queue_usages[VkFamilyCount] =
     {
-        Graphics::QueueUsage::Graphics,
-        Graphics::QueueUsage::Compute,
-        Graphics::QueueUsage::Copy,
-        Graphics::QueueUsage::Present,
+        GPU::QueueUsage::Graphics,
+        GPU::QueueUsage::Compute,
+        GPU::QueueUsage::Copy,
+        GPU::QueueUsage::Present,
     };
 
     ld.families = get_allocator().array<LogicalDevice::QueueFamily>(unique_count);
@@ -505,7 +505,7 @@ Graphics::DeviceID VulkanDriver::device_create(const Graphics::DeviceCreateInfo&
     return device_id;
 }
 
-void VulkanDriver::device_destroy(Graphics::DeviceID device)
+void VulkanDriver::device_destroy(GPU::DeviceID device)
 {
     VKFailOn(device.is_valid() == false, "invalid device");
     LogicalDevice& ld = _get_logical_device(device);
@@ -531,17 +531,17 @@ void VulkanDriver::device_destroy(Graphics::DeviceID device)
     data.devices.remove(device);
 }
 
-Graphics::SwapChainID VulkanDriver::swap_chain_create(const Graphics::SwapChainCreateInfo& ci)
+GPU::SwapChainID VulkanDriver::swap_chain_create(const GPU::SwapChainCreateInfo& ci)
 {
     VKFailOn(ci.device.is_valid() == false, "invalid device");
     VKFailOn(ci.surface.is_valid() == false, "invalid surface");
-    VKFailOn(ci.present_mode == Graphics::PresentMode::Unknown, "invalid present mode");
-    VKFailOn(ci.format == Graphics::SurfaceFormat::Unknown, "invalid surface format");
+    VKFailOn(ci.present_mode == GPU::PresentMode::Unknown, "invalid present mode");
+    VKFailOn(ci.format == GPU::SurfaceFormat::Unknown, "invalid surface format");
     VKFailOn(ci.min_image_count == 0, "invalid min image count");
 
     LogicalDevice& ld = _get_logical_device(ci.device);
 
-    Graphics::SwapChainID sc_id = data.swap_chains.add(SwapChain());
+    GPU::SwapChainID sc_id = data.swap_chains.add(SwapChain());
     SwapChain& swap_chain = _get_swap_chain(sc_id);
     Surface& surface = _get_surface(ci.surface);
 
@@ -665,7 +665,7 @@ Graphics::SwapChainID VulkanDriver::swap_chain_create(const Graphics::SwapChainC
     return sc_id;
 }
 
-void VulkanDriver::swap_chain_destroy(Graphics::SwapChainID swap_chain)
+void VulkanDriver::swap_chain_destroy(GPU::SwapChainID swap_chain)
 {
     VKFailOn(swap_chain.is_valid() == false, "invalid swap chain");
 
@@ -685,7 +685,7 @@ void VulkanDriver::swap_chain_destroy(Graphics::SwapChainID swap_chain)
     data.swap_chains.remove(swap_chain);
 }
 
-u32 VulkanDriver::swap_chain_get_image_count(Graphics::SwapChainID swap_chain)
+u32 VulkanDriver::swap_chain_get_image_count(GPU::SwapChainID swap_chain)
 {
     VKFailOn(swap_chain.is_valid() == false, "invalid swap chain");
 
@@ -693,7 +693,7 @@ u32 VulkanDriver::swap_chain_get_image_count(Graphics::SwapChainID swap_chain)
     return sc.image_count; 
 }
 
-Graphics::TextureID VulkanDriver::swap_chain_get_texture(Graphics::SwapChainID swap_chain, u32 image_index)
+GPU::TextureID VulkanDriver::swap_chain_get_texture(GPU::SwapChainID swap_chain, u32 image_index)
 {
     VKFailOn(swap_chain.is_valid() == false, "invalid swap chain");
 
@@ -703,7 +703,7 @@ Graphics::TextureID VulkanDriver::swap_chain_get_texture(Graphics::SwapChainID s
     return sc.images[image_index].texture;
 }
 
-void VulkanDriver::swap_chain_acquire_next_image(Graphics::SwapChainID swap_chain, const Graphics::AcquireInfo& acquire_info, u32* image_index)
+void VulkanDriver::swap_chain_acquire_next_image(GPU::SwapChainID swap_chain, const GPU::AcquireInfo& acquire_info, u32* image_index)
 {
     VKFailOn(swap_chain.is_valid() == false, "invalid swap chain");
     VKFailOn(
@@ -732,13 +732,13 @@ void VulkanDriver::swap_chain_acquire_next_image(Graphics::SwapChainID swap_chai
     VKFailOn(result != VK_SUCCESS, "vkAcquireNextImageKHR({})", Vulkan::result_as_string(result));
 }
 
-Graphics::FenceID VulkanDriver::fence_create(const Graphics::FenceCreateInfo& ci)
+GPU::FenceID VulkanDriver::fence_create(const GPU::FenceCreateInfo& ci)
 {
     VKFailOn(ci.device.is_valid() == false, "invalid device");
 
     LogicalDevice& ld = _get_logical_device(ci.device);
     
-    Graphics::FenceID fence_id = data.fences.add(Fence());
+    GPU::FenceID fence_id = data.fences.add(Fence());
     Fence& fence = _get_fence(fence_id);
 
     fence.vk_device = ld.vk_device;
@@ -758,7 +758,7 @@ Graphics::FenceID VulkanDriver::fence_create(const Graphics::FenceCreateInfo& ci
     return fence_id;
 }
 
-void VulkanDriver::fence_destroy(Graphics::FenceID fence)
+void VulkanDriver::fence_destroy(GPU::FenceID fence)
 {
     VKFailOn(fence.is_valid() == false, "invalid fence");
 
@@ -770,11 +770,11 @@ void VulkanDriver::fence_destroy(Graphics::FenceID fence)
     data.fences.remove(fence);
 }
 
-void VulkanDriver::fence_reset(Slice<Graphics::FenceID> fences)
+void VulkanDriver::fence_reset(Slice<GPU::FenceID> fences)
 {
     VKFailOn(fences.len == 0, "at least one fence is expected");
 
-    Graphics::DeviceID first_device = _get_fence(fences[0]).device;
+    GPU::DeviceID first_device = _get_fence(fences[0]).device;
     Slice<VkFence> vk_fences = get_allocator().array<VkFence>(fences.len);
     LogicalDevice& ld = _get_logical_device(first_device);
 
@@ -792,11 +792,11 @@ void VulkanDriver::fence_reset(Slice<Graphics::FenceID> fences)
     get_allocator().free(mem::to_bytes(vk_fences));
 }
 
-void VulkanDriver::fence_wait_for(Slice<Graphics::FenceID> fences, bool wait_for_all, u64 timeout)
+void VulkanDriver::fence_wait_for(Slice<GPU::FenceID> fences, bool wait_for_all, u64 timeout)
 {
      VKFailOn(fences.len == 0, "at least one fence is expected");
 
-    Graphics::DeviceID first_device = _get_fence(fences[0]).device;
+    GPU::DeviceID first_device = _get_fence(fences[0]).device;
     Slice<VkFence> vk_fences = get_allocator().array<VkFence>(fences.len);
     LogicalDevice& ld = _get_logical_device(first_device);
 
@@ -817,11 +817,11 @@ void VulkanDriver::fence_wait_for(Slice<Graphics::FenceID> fences, bool wait_for
     get_allocator().free(mem::to_bytes(vk_fences));
 }
 
-Graphics::SemaphoreID VulkanDriver::semaphore_create(const Graphics::SemaphoreCreateInfo &ci)
+GPU::SemaphoreID VulkanDriver::semaphore_create(const GPU::SemaphoreCreateInfo &ci)
 {
     VKFailOn(ci.device.is_valid() == false, "invalid device");
 
-    Graphics::SemaphoreID semaphore_id = data.semaphores.add(Semaphore());
+    GPU::SemaphoreID semaphore_id = data.semaphores.add(Semaphore());
     Semaphore& sem = _get_semaphore(semaphore_id);
     LogicalDevice& ld = _get_logical_device(ci.device);
 
@@ -841,7 +841,7 @@ Graphics::SemaphoreID VulkanDriver::semaphore_create(const Graphics::SemaphoreCr
     return semaphore_id;
 }
 
-void VulkanDriver::semaphore_destroy(Graphics::SemaphoreID semaphore)
+void VulkanDriver::semaphore_destroy(GPU::SemaphoreID semaphore)
 {
     VKFailOn(semaphore.is_valid() == false, "invalid semaphore");
 
@@ -853,15 +853,15 @@ void VulkanDriver::semaphore_destroy(Graphics::SemaphoreID semaphore)
     data.semaphores.remove(semaphore);
 }
 
-Graphics::QueueID VulkanDriver::queue_create(const Graphics::QueueCreateInfo& ci)
+GPU::QueueID VulkanDriver::queue_create(const GPU::QueueCreateInfo& ci)
 {
-    VKFailOn(ci.usage == Graphics::QueueUsage::Unknown, "invalid queue usage");
+    VKFailOn(ci.usage == GPU::QueueUsage::Unknown, "invalid queue usage");
 
     LogicalDevice& ld = _get_logical_device(ci.device);
 
     usize device_queue_index = usize(ci.usage) - 1;
     LogicalDevice::QueueFamily& family = ld.families[ld.device_queues[device_queue_index].family_index];
-    Graphics::QueueID queue_id = data.queues.add(Queue());
+    GPU::QueueID queue_id = data.queues.add(Queue());
     Queue& q = _get_queue(queue_id);
 
     q.vk_device = ld.vk_device;
@@ -873,13 +873,13 @@ Graphics::QueueID VulkanDriver::queue_create(const Graphics::QueueCreateInfo& ci
     return queue_id;
 }
 
-void VulkanDriver::queue_destroy(Graphics::QueueID queue)
+void VulkanDriver::queue_destroy(GPU::QueueID queue)
 {
     VKFailOn(queue.is_valid() == false, "invalid queue");
     data.queues.remove(queue);
 }
 
-void VulkanDriver::queue_execute_command_buffer(Graphics::QueueID queue, const Graphics::QueueExecuteInfo& execute_info)
+void VulkanDriver::queue_execute_command_buffer(GPU::QueueID queue, const GPU::QueueExecuteInfo& execute_info)
 {
     VKFailOn(queue.is_valid() == false, "invalid queue");
     VKFailOn(
@@ -942,7 +942,7 @@ void VulkanDriver::queue_execute_command_buffer(Graphics::QueueID queue, const G
     get_allocator().free(mem::to_bytes(vk_cmd_buffers));
 }
 
-void VulkanDriver::queue_present(Graphics::QueueID queue, const Graphics::QueuePresentInfo& present_info)
+void VulkanDriver::queue_present(GPU::QueueID queue, const GPU::QueuePresentInfo& present_info)
 {
     VKFailOn(queue.is_valid() == false, "invalid queue");
 
@@ -983,7 +983,7 @@ void VulkanDriver::queue_present(Graphics::QueueID queue, const Graphics::QueueP
     get_allocator().free(mem::to_bytes(vk_swapchains));
 }
 
-void VulkanDriver::queue_wait_idle(Graphics::QueueID queue)
+void VulkanDriver::queue_wait_idle(GPU::QueueID queue)
 {
     VKFailOn(queue.is_valid() == false, "invalid queue");
 
@@ -994,16 +994,16 @@ void VulkanDriver::queue_wait_idle(Graphics::QueueID queue)
     VKFailOn(result != VK_SUCCESS, "vkQueueWaitIdle({})", Vulkan::result_as_string(result));
 }
 
-Graphics::MemoryHeapID VulkanDriver::memory_heap_create(const Graphics::MemoryHeapCreateInfo& ci)
+GPU::MemoryHeapID VulkanDriver::memory_heap_create(const GPU::MemoryHeapCreateInfo& ci)
 {
     VKFailOn(ci.device.is_valid() == false, "invalid device");
-    VKFailOn(ci.heap_usage == Graphics::HeapUsage::CPUExclusive, "invalid heap usage");
+    VKFailOn(ci.heap_usage == GPU::HeapUsage::CPUExclusive, "invalid heap usage");
     VKFailOn(ci.heap_size == 0, "invalid heap size");
-    VKFailOn(ci.heap_size < Graphics::MinHeapSize, "invalid heap size");
-    VKFailOn(mem::align_up(ci.heap_size, Graphics::HeapAlignment) != ci.heap_size, "invalid heap alignment");
+    VKFailOn(ci.heap_size < GPU::MinHeapSize, "invalid heap size");
+    VKFailOn(mem::align_up(ci.heap_size, GPU::HeapAlignment) != ci.heap_size, "invalid heap alignment");
 
     LogicalDevice& ld = _get_logical_device(ci.device);
-    Graphics::MemoryHeapID memory_heap_id = data.memory_heaps.add(MemoryHeap());
+    GPU::MemoryHeapID memory_heap_id = data.memory_heaps.add(MemoryHeap());
     MemoryHeap& heap = _get_memory_heap(memory_heap_id);
     heap.vk_device = ld.vk_device;
     heap.device = ci.device;
@@ -1022,7 +1022,7 @@ Graphics::MemoryHeapID VulkanDriver::memory_heap_create(const Graphics::MemoryHe
         }
     }
 
-    if(vk_type_index == MaxValue<uint32_t> && ci.heap_usage == Graphics::HeapUsage::CPUGPUCoherent)
+    if(vk_type_index == MaxValue<uint32_t> && ci.heap_usage == GPU::HeapUsage::CPUGPUCoherent)
     {
         vk_memory_flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
         for(uint32_t i = 0; i < ld.vk_physical_device_memory_properties.memoryTypeCount; i++)
@@ -1053,7 +1053,7 @@ Graphics::MemoryHeapID VulkanDriver::memory_heap_create(const Graphics::MemoryHe
     return memory_heap_id;
 }
 
-void VulkanDriver::memory_heap_destroy(Graphics::MemoryHeapID memory_heap)
+void VulkanDriver::memory_heap_destroy(GPU::MemoryHeapID memory_heap)
 {
     VKFailOn(memory_heap.is_valid() == false, "invalid memory heap");
 
@@ -1065,15 +1065,15 @@ void VulkanDriver::memory_heap_destroy(Graphics::MemoryHeapID memory_heap)
     data.memory_heaps.remove(memory_heap);
 }
 
-Graphics::BufferID VulkanDriver::buffer_create(const Graphics::BufferCreateInfo& ci)
+GPU::BufferID VulkanDriver::buffer_create(const GPU::BufferCreateInfo& ci)
 {
     VKFailOn(ci.device.is_valid() == false, "invalid device");
-    VKFailOn(ci.usage == Graphics::BufferUsage(0), "invalid buffer usage");
-    VKFailOn(ci.size < Graphics::MinHeapResourceAlignment, "invalid buffer size");
+    VKFailOn(ci.usage == GPU::BufferUsage(0), "invalid buffer usage");
+    VKFailOn(ci.size < GPU::MinHeapResourceAlignment, "invalid buffer size");
     VKFailOn(ci.memory_heap.is_valid() == false, "invalid memory heap");
 
     LogicalDevice& ld = _get_logical_device(ci.device);
-    Graphics::BufferID buffer_id = data.buffers.add(Buffer());
+    GPU::BufferID buffer_id = data.buffers.add(Buffer());
     Buffer& buffer = _get_buffer(buffer_id);
     MemoryHeap& heap = _get_memory_heap(ci.memory_heap);
 
@@ -1112,7 +1112,7 @@ Graphics::BufferID VulkanDriver::buffer_create(const Graphics::BufferCreateInfo&
     return buffer_id;
 }
 
-void VulkanDriver::buffer_destroy(Graphics::BufferID buffer)
+void VulkanDriver::buffer_destroy(GPU::BufferID buffer)
 {
     VKFailOn(buffer.is_valid() == false, "invalid buffer");
 
@@ -1124,7 +1124,7 @@ void VulkanDriver::buffer_destroy(Graphics::BufferID buffer)
     data.buffers.remove(buffer);
 }
 
-Slice<u8> VulkanDriver::buffer_map_memory(Graphics::BufferID buffer, usize offset, usize len)
+Slice<u8> VulkanDriver::buffer_map_memory(GPU::BufferID buffer, usize offset, usize len)
 {
     VKFailOn(buffer.is_valid() == false, "invalid buffer");
     VKFailOn(len == 0, "invalid buffer len");
@@ -1141,7 +1141,7 @@ Slice<u8> VulkanDriver::buffer_map_memory(Graphics::BufferID buffer, usize offse
     return Slice<u8>(reinterpret_cast<u8*>(ptr), len);
 }
 
-void VulkanDriver::buffer_unmap_memory(Graphics::BufferID buffer, const Slice<u8>& memory)
+void VulkanDriver::buffer_unmap_memory(GPU::BufferID buffer, const Slice<u8>& memory)
 {
     VKFailOn(buffer.is_valid() == false, "invalid buffer");
     VKFailOn(memory.ptr() == nullptr, "invalid memory address");
@@ -1153,11 +1153,11 @@ void VulkanDriver::buffer_unmap_memory(Graphics::BufferID buffer, const Slice<u8
     ld.vk.vkUnmapMemory(ld.vk_device, heap.vk_memory);
 }
 
-Graphics::SamplerID VulkanDriver::sampler_create(const Graphics::SamplerCreateInfo& ci)
+GPU::SamplerID VulkanDriver::sampler_create(const GPU::SamplerCreateInfo& ci)
 {
     VKFailOn(ci.device.is_valid() == false, "invalid device");
 
-    Graphics::SamplerID sampler_id = data.samplers.add(Sampler());
+    GPU::SamplerID sampler_id = data.samplers.add(Sampler());
     Sampler& sam = _get_sampler(sampler_id);
     LogicalDevice& ld = _get_logical_device(ci.device);
 
@@ -1192,7 +1192,7 @@ Graphics::SamplerID VulkanDriver::sampler_create(const Graphics::SamplerCreateIn
     return sampler_id;
 }
 
-void VulkanDriver::sampler_destroy(Graphics::SamplerID sampler)
+void VulkanDriver::sampler_destroy(GPU::SamplerID sampler)
 {
     VKFailOn(sampler.is_valid() == false, "invalid sampler");
 
@@ -1204,20 +1204,20 @@ void VulkanDriver::sampler_destroy(Graphics::SamplerID sampler)
     data.samplers.remove(sampler);
 }
 
-Graphics::TextureID VulkanDriver::texture_create(const Graphics::TextureCreateInfo& ci)
+GPU::TextureID VulkanDriver::texture_create(const GPU::TextureCreateInfo& ci)
 {
     VKFailOn(ci.device.is_valid() == false, "invalid device");
-    VKFailOn(ci.type == Graphics::TextureType::Unknown, "invalid texture type");
-    VKFailOn(ci.format == Graphics::TextureFormat::Unknown, "invalid texture format");
+    VKFailOn(ci.type == GPU::TextureType::Unknown, "invalid texture type");
+    VKFailOn(ci.format == GPU::TextureFormat::Unknown, "invalid texture format");
     VKFailOn(ci.extent.x == 0 || ci.extent.y == 0 || ci.extent.z == 0, "invalid texture size");
     VKFailOn(ci.mip_levels == 0, "invalid texture mip levels");
     VKFailOn(ci.array_levels == 0, "invalid texture array levels");
-    VKFailOn(ci.sample_count == Graphics::SampleCount::Unknown, "invalid texture sample count");
-    VKFailOn(ci.tiling == Graphics::TextureTiling::Unknown, "invalid texture tiling");
-    VKFailOn(ci.usage == Graphics::TextureUsage(0), "invalid texture usage");
+    VKFailOn(ci.sample_count == GPU::SampleCount::Unknown, "invalid texture sample count");
+    VKFailOn(ci.tiling == GPU::TextureTiling::Unknown, "invalid texture tiling");
+    VKFailOn(ci.usage == GPU::TextureUsage(0), "invalid texture usage");
     VKFailOn(ci.memory_heap.is_valid() == false, "invalid texture memory heap");
 
-    Graphics::TextureID texture_id = data.textures.add(Texture());
+    GPU::TextureID texture_id = data.textures.add(Texture());
     Texture& tex = _get_texture(texture_id);
     LogicalDevice& ld = _get_logical_device(ci.device);
     tex.vk_device = ld.vk_device;
@@ -1291,7 +1291,7 @@ Graphics::TextureID VulkanDriver::texture_create(const Graphics::TextureCreateIn
     return texture_id;
 }
 
-void VulkanDriver::texture_destroy(Graphics::TextureID texture)
+void VulkanDriver::texture_destroy(GPU::TextureID texture)
 {
     VKFailOn(texture.is_valid() == false, "invalid texture");
 
@@ -1304,35 +1304,35 @@ void VulkanDriver::texture_destroy(Graphics::TextureID texture)
     data.textures.remove(texture);
 }
 
-Vector2I VulkanDriver::texture_get_size(Graphics::TextureID texture)
+Vector2I VulkanDriver::texture_get_size(GPU::TextureID texture)
 {
     Unused(texture);
     return Vector2I();
 }
 
-Graphics::RenderTargetID VulkanDriver::render_target_create(const Graphics::RenderTargetCreateInfo& ci)
+GPU::RenderTargetID VulkanDriver::render_target_create(const GPU::RenderTargetCreateInfo& ci)
 {
     Unused(ci);
-    return Graphics::RenderTargetID();
+    return GPU::RenderTargetID();
 }
 
-void VulkanDriver::render_target_destroy(Graphics::RenderTargetID render_target)
+void VulkanDriver::render_target_destroy(GPU::RenderTargetID render_target)
 {
     Unused(render_target);
 }
 
-Graphics::TextureID VulkanDriver::render_target_get_texture(Graphics::RenderTargetID render_target)
+GPU::TextureID VulkanDriver::render_target_get_texture(GPU::RenderTargetID render_target)
 {
     Unused(render_target);
-    return Graphics::TextureID();
+    return GPU::TextureID();
 }
 
-Graphics::DescriptorSetLayoutID VulkanDriver::descriptor_set_layout_create(const Graphics::DescriptorSetLayoutCreateInfo& ci)
+GPU::DescriptorSetLayoutID VulkanDriver::descriptor_set_layout_create(const GPU::DescriptorSetLayoutCreateInfo& ci)
 {
     VKFailOn(ci.device.is_valid() == false, "invalid device");
     VKFailOn(ci.bindings.len == 0, "invalid binding count");
 
-    Graphics::DescriptorSetLayoutID descriptor_set_layout_id = data.descriptor_set_layouts.add(DescriptorSetLayout());
+    GPU::DescriptorSetLayoutID descriptor_set_layout_id = data.descriptor_set_layouts.add(DescriptorSetLayout());
     DescriptorSetLayout& layout = _get_descriptor_set_layout(descriptor_set_layout_id);
     LogicalDevice& ld = _get_logical_device(ci.device);
 
@@ -1370,7 +1370,7 @@ Graphics::DescriptorSetLayoutID VulkanDriver::descriptor_set_layout_create(const
     return descriptor_set_layout_id;
 }
 
-void VulkanDriver::descriptor_set_layout_destroy(Graphics::DescriptorSetLayoutID descriptor_set_layout)
+void VulkanDriver::descriptor_set_layout_destroy(GPU::DescriptorSetLayoutID descriptor_set_layout)
 {
     VKFailOn(descriptor_set_layout.is_valid() == false, "invalid descriptor set layout");
 
@@ -1382,12 +1382,12 @@ void VulkanDriver::descriptor_set_layout_destroy(Graphics::DescriptorSetLayoutID
     data.descriptor_set_layouts.remove(descriptor_set_layout);
 }
 
-Graphics::DescriptorSetID VulkanDriver::descriptor_set_create(const Graphics::DescriptorSetCreateInfo& ci)
+GPU::DescriptorSetID VulkanDriver::descriptor_set_create(const GPU::DescriptorSetCreateInfo& ci)
 {
     VKFailOn(ci.device.is_valid() == false, "invalid device");
     VKFailOn(ci.set_layout.is_valid() == false, "invalid set layout");
 
-    Graphics::DescriptorSetID descriptor_set_id = data.descriptor_sets.add(DescriptorSet());
+    GPU::DescriptorSetID descriptor_set_id = data.descriptor_sets.add(DescriptorSet());
     DescriptorSet& set = _get_descriptor_set(descriptor_set_id);
     DescriptorSetLayout& layout = _get_descriptor_set_layout(ci.set_layout);
     LogicalDevice& ld = _get_logical_device(ci.device);
@@ -1411,7 +1411,7 @@ Graphics::DescriptorSetID VulkanDriver::descriptor_set_create(const Graphics::De
     return descriptor_set_id;
 }
 
-void VulkanDriver::descriptor_set_destroy(Graphics::DescriptorSetID descriptor_set)
+void VulkanDriver::descriptor_set_destroy(GPU::DescriptorSetID descriptor_set)
 {
     VKFailOn(descriptor_set.is_valid() == false, "invalid descriptor set");
 
@@ -1424,7 +1424,7 @@ void VulkanDriver::descriptor_set_destroy(Graphics::DescriptorSetID descriptor_s
     data.descriptor_sets.remove(descriptor_set);
 }
 
-void VulkanDriver::descriptor_set_update_descriptors(Graphics::DescriptorSetID descriptor_set, const Graphics::UpdateDescriptorInfo& update_info)
+void VulkanDriver::descriptor_set_update_descriptors(GPU::DescriptorSetID descriptor_set, const GPU::UpdateDescriptorInfo& update_info)
 {
     VKFailOn(descriptor_set.is_valid() == false, "invalid device");
 
@@ -1437,12 +1437,12 @@ void VulkanDriver::descriptor_set_update_descriptors(Graphics::DescriptorSetID d
     usize total_image_infos = 0;
     for(usize i = 0; i < update_info.write_infos.len; i++)
     {
-        if(update_info.write_infos[i].type == Graphics::DescriptorType::UniformBuffer
-            || update_info.write_infos[i].type == Graphics::DescriptorType::StorageBuffer)
+        if(update_info.write_infos[i].type == GPU::DescriptorType::UniformBuffer
+            || update_info.write_infos[i].type == GPU::DescriptorType::StorageBuffer)
         {
             total_buffer_infos += update_info.write_infos[i].count;
         }
-        else if(update_info.write_infos[i].type == Graphics::DescriptorType::CombinedTextureSampler)
+        else if(update_info.write_infos[i].type == GPU::DescriptorType::CombinedTextureSampler)
         {
             total_image_infos += update_info.write_infos[i].count;
         }
@@ -1455,7 +1455,7 @@ void VulkanDriver::descriptor_set_update_descriptors(Graphics::DescriptorSetID d
 
     for(usize i = 0; i < update_info.write_infos.len; i++)
     {
-        const Graphics::WriteDescriptorInfo& write_info = update_info.write_infos[i];
+        const GPU::WriteDescriptorInfo& write_info = update_info.write_infos[i];
         vk_write_descriptor[i] =
         {
             .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
@@ -1472,13 +1472,13 @@ void VulkanDriver::descriptor_set_update_descriptors(Graphics::DescriptorSetID d
 
         switch(update_info.write_infos[i].type)
         {
-        case Graphics::DescriptorType::UniformBuffer:
-        case Graphics::DescriptorType::StorageBuffer:
+        case GPU::DescriptorType::UniformBuffer:
+        case GPU::DescriptorType::StorageBuffer:
         {
             vk_write_descriptor[i].pBufferInfo = &vk_buffer_infos[vk_buffer_infos_index];
             for(usize buffer_i = 0; buffer_i < write_info.buffers.len; buffer_i++)
             {
-                const Graphics::DescriptorBufferInfo& buffer_info = write_info.buffers[buffer_i];
+                const GPU::DescriptorBufferInfo& buffer_info = write_info.buffers[buffer_i];
 
                 vk_buffer_infos[vk_buffer_infos_index] =
                 {
@@ -1490,12 +1490,12 @@ void VulkanDriver::descriptor_set_update_descriptors(Graphics::DescriptorSetID d
             }
         }
             break;
-        case Graphics::DescriptorType::CombinedTextureSampler:
+        case GPU::DescriptorType::CombinedTextureSampler:
         {
             vk_write_descriptor[i].pImageInfo = &vk_image_infos[vk_image_infos_index];
             for(usize texture_i = 0; texture_i < write_info.textures.len; texture_i++)
             {
-                const Graphics::DescriptorTextureInfo& texture_info = write_info.textures[texture_i];
+                const GPU::DescriptorTextureInfo& texture_info = write_info.textures[texture_i];
 
                 vk_image_infos[vk_image_infos_index] =
                 {
@@ -1523,15 +1523,15 @@ void VulkanDriver::descriptor_set_update_descriptors(Graphics::DescriptorSetID d
     get_allocator().free(mem::to_bytes(vk_write_descriptor));
 }
 
-Graphics::PipelineID VulkanDriver::pipeline_create(const Graphics::PipelineCreateInfo& ci)
+GPU::PipelineID VulkanDriver::pipeline_create(const GPU::PipelineCreateInfo& ci)
 {
     VKFailOn(ci.device.is_valid() == false, "invalid device");
-    VKFailOn(ci.bind_point == Graphics::PipelineBindPoint::Unknown, "invalid pipeline bind point");
-    VKFailOn(ci.input_assembly.topology == Graphics::PrimitiveTopology::Unknown, "invalid topology");
+    VKFailOn(ci.bind_point == GPU::PipelineBindPoint::Unknown, "invalid pipeline bind point");
+    VKFailOn(ci.input_assembly.topology == GPU::PrimitiveTopology::Unknown, "invalid topology");
     VKFailOn(ci.shader_stages.len == 0, "at least one shader stage was expected");
 
     LogicalDevice& ld = _get_logical_device(ci.device);
-    Graphics::PipelineID pipeline_id = data.pipelines.add(Pipeline());
+    GPU::PipelineID pipeline_id = data.pipelines.add(Pipeline());
     Pipeline& pipe = _get_pipeline(pipeline_id);
     pipe.vk_device = ld.vk_device;
     pipe.device = ci.device;
@@ -1775,7 +1775,7 @@ Graphics::PipelineID VulkanDriver::pipeline_create(const Graphics::PipelineCreat
     return pipeline_id;
 }
 
-void VulkanDriver::pipeline_destroy(Graphics::PipelineID pipeline)
+void VulkanDriver::pipeline_destroy(GPU::PipelineID pipeline)
 {
     VKFailOn(pipeline.is_valid() == false, "invalid pipeline");
 
@@ -1788,7 +1788,7 @@ void VulkanDriver::pipeline_destroy(Graphics::PipelineID pipeline)
     data.pipelines.remove(pipeline);
 }
 
-Graphics::CommandPoolID VulkanDriver::command_pool_create(const Graphics::CommandPoolCreateInfo& ci)
+GPU::CommandPoolID VulkanDriver::command_pool_create(const GPU::CommandPoolCreateInfo& ci)
 {
     VKFailOn(ci.device.is_valid() == false, "invalid device");
     VKFailOn(ci.queue.is_valid() == false, "invalid queue");
@@ -1796,7 +1796,7 @@ Graphics::CommandPoolID VulkanDriver::command_pool_create(const Graphics::Comman
     LogicalDevice& ld = _get_logical_device(ci.device);
     Queue& queue = _get_queue(ci.queue);
     
-    Graphics::CommandPoolID cmd_pool_id = data.command_pools.add(CommandPool());
+    GPU::CommandPoolID cmd_pool_id = data.command_pools.add(CommandPool());
     CommandPool& cmd_pool = _get_command_pool(cmd_pool_id);
 
     LogicalDevice::QueueFamily& family = ld.families[ld.device_queues[queue.device_queue_index].family_index];
@@ -1817,7 +1817,7 @@ Graphics::CommandPoolID VulkanDriver::command_pool_create(const Graphics::Comman
     return cmd_pool_id;
 }
 
-void VulkanDriver::command_pool_destroy(Graphics::CommandPoolID command_pool)
+void VulkanDriver::command_pool_destroy(GPU::CommandPoolID command_pool)
 {
     VKFailOn(command_pool.is_valid() == false, "invalid command pool");
 
@@ -1829,14 +1829,14 @@ void VulkanDriver::command_pool_destroy(Graphics::CommandPoolID command_pool)
     data.command_pools.remove(command_pool);
 }
 
-Graphics::CommandBufferID VulkanDriver::command_buffer_allocate(const Graphics::CommandBufferAllocateInfo& ci)
+GPU::CommandBufferID VulkanDriver::command_buffer_allocate(const GPU::CommandBufferAllocateInfo& ci)
 {
     VKFailOn(ci.pool.is_valid() == false, "invalid command pool");
 
     CommandPool& cmd_pool = _get_command_pool(ci.pool);
     LogicalDevice& ld = _get_logical_device(cmd_pool.device);
 
-    Graphics::CommandBufferID cmd_buffer_id = data.command_buffers.add(CommandBuffer());
+    GPU::CommandBufferID cmd_buffer_id = data.command_buffers.add(CommandBuffer());
     CommandBuffer& cmd_buffer = _get_command_buffer(cmd_buffer_id);
 
     cmd_buffer.vk_device = cmd_pool.vk_device;
@@ -1858,7 +1858,7 @@ Graphics::CommandBufferID VulkanDriver::command_buffer_allocate(const Graphics::
     return cmd_buffer_id;
 }
 
-void VulkanDriver::command_buffer_free(Graphics::CommandBufferID command_buffer)
+void VulkanDriver::command_buffer_free(GPU::CommandBufferID command_buffer)
 {
     VKFailOn(command_buffer.is_valid() == false, "invalid command buffer");
 
@@ -1869,7 +1869,7 @@ void VulkanDriver::command_buffer_free(Graphics::CommandBufferID command_buffer)
     data.command_buffers.remove(command_buffer);
 }
 
-void VulkanDriver::command_buffer_begin(Graphics::CommandBufferID command_buffer)
+void VulkanDriver::command_buffer_begin(GPU::CommandBufferID command_buffer)
 {
     VKFailOn(command_buffer.is_valid() == false, "invalid command buffer");
 
@@ -1888,7 +1888,7 @@ void VulkanDriver::command_buffer_begin(Graphics::CommandBufferID command_buffer
     VKFailOn(result != VK_SUCCESS, "vkBeginCommandBuffer({})", Vulkan::result_as_string(result));
 }
 
-void VulkanDriver::command_buffer_end(Graphics::CommandBufferID command_buffer)
+void VulkanDriver::command_buffer_end(GPU::CommandBufferID command_buffer)
 {
     VKFailOn(command_buffer.is_valid() == false, "invalid command buffer");
 
@@ -1899,7 +1899,7 @@ void VulkanDriver::command_buffer_end(Graphics::CommandBufferID command_buffer)
     VKFailOn(result != VK_SUCCESS, "vkEndCommandBuffer({})", Vulkan::result_as_string(result));
 }
 
-void VulkanDriver::command_buffer_begin_renderpass(Graphics::CommandBufferID command_buffer, const Graphics::RenderPassBeginInfo& begin_info)
+void VulkanDriver::command_buffer_begin_renderpass(GPU::CommandBufferID command_buffer, const GPU::RenderPassBeginInfo& begin_info)
 {
     VKFailOn(command_buffer.is_valid() == false, "invalid command buffer");
     VKFailOn(begin_info.swap_chain.is_valid() == false, "invalid swap chain");
@@ -1942,7 +1942,7 @@ void VulkanDriver::command_buffer_begin_renderpass(Graphics::CommandBufferID com
     ld.vk.vkCmdBeginRenderPass(cmd_buffer.vk_command_buffer, &vk_begin_info, VK_SUBPASS_CONTENTS_INLINE);    
 }
 
-void VulkanDriver::command_buffer_end_renderpass(Graphics::CommandBufferID command_buffer, const Graphics::RenderPassEndInfo& end_info)
+void VulkanDriver::command_buffer_end_renderpass(GPU::CommandBufferID command_buffer, const GPU::RenderPassEndInfo& end_info)
 {
     VKFailOn(command_buffer.is_valid() == false, "invalid command buffer");
     Unused(end_info);
@@ -1953,19 +1953,19 @@ void VulkanDriver::command_buffer_end_renderpass(Graphics::CommandBufferID comma
     ld.vk.vkCmdEndRenderPass(cmd_buffer.vk_command_buffer);
 }
 
-void VulkanDriver::command_buffer_memory_barrier(Graphics::CommandBufferID command_buffer, const Graphics::PipelineMemoryBarrier& memory_barrier)
+void VulkanDriver::command_buffer_memory_barrier(GPU::CommandBufferID command_buffer, const GPU::PipelineMemoryBarrier& memory_barrier)
 {
     VKFailOn(command_buffer.is_valid() == false, "invalid command buffer");
     Unused(memory_barrier);
 }
 
-void VulkanDriver::command_buffer_buffer_barrier(Graphics::CommandBufferID command_buffer, const Graphics::PipelineBufferBarrier& buffer_barrier)
+void VulkanDriver::command_buffer_buffer_barrier(GPU::CommandBufferID command_buffer, const GPU::PipelineBufferBarrier& buffer_barrier)
 {
     VKFailOn(command_buffer.is_valid() == false, "invalid command buffer");
     Unused(buffer_barrier);
 }
 
-void VulkanDriver::command_buffer_texture_barrier(Graphics::CommandBufferID command_buffer, const Graphics::PipelineTextureBarrier& texture_barrier)
+void VulkanDriver::command_buffer_texture_barrier(GPU::CommandBufferID command_buffer, const GPU::PipelineTextureBarrier& texture_barrier)
 {
     VKFailOn(command_buffer.is_valid() == false, "invalid command buffer");
 
@@ -2007,7 +2007,7 @@ void VulkanDriver::command_buffer_texture_barrier(Graphics::CommandBufferID comm
     );
 }
 
-void VulkanDriver::command_buffer_copy_buffer_to_texture(Graphics::CommandBufferID command_buffer, const Graphics::CopyBufferToTextureInfo& copy_info)
+void VulkanDriver::command_buffer_copy_buffer_to_texture(GPU::CommandBufferID command_buffer, const GPU::CopyBufferToTextureInfo& copy_info)
 {
     VKFailOn(command_buffer.is_valid() == false, "invalid command buffer");
     VKFailOn(copy_info.source_buffer.is_valid() == false, "invalid source buffer");
@@ -2053,7 +2053,7 @@ void VulkanDriver::command_buffer_copy_buffer_to_texture(Graphics::CommandBuffer
     );
 }
     
-void VulkanDriver::command_buffer_copy_buffer(Graphics::CommandBufferID command_buffer, const Graphics::BufferCopyInfo& copy_info)
+void VulkanDriver::command_buffer_copy_buffer(GPU::CommandBufferID command_buffer, const GPU::BufferCopyInfo& copy_info)
 {
     VKFailOn(command_buffer.is_valid() == false, "invalid command buffer");
     VKFailOn(copy_info.source_buffer.is_valid() == false, "invalid source buffer");
@@ -2085,10 +2085,10 @@ void VulkanDriver::command_buffer_copy_buffer(Graphics::CommandBufferID command_
     get_allocator().free(mem::to_bytes(vk_regions));
 }
 
-void VulkanDriver::command_buffer_bind_pipeline(Graphics::CommandBufferID command_buffer, Graphics::PipelineBindPoint bind_point, Graphics::PipelineID pipeline)
+void VulkanDriver::command_buffer_bind_pipeline(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineID pipeline)
 {
     VKFailOn(command_buffer.is_valid() == false, "invalid command buffer");
-    VKFailOn(bind_point == Graphics::PipelineBindPoint::Unknown, "invalid bind point");
+    VKFailOn(bind_point == GPU::PipelineBindPoint::Unknown, "invalid bind point");
     VKFailOn(pipeline.is_valid() == false, "invalid pipeline");
 
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
@@ -2100,10 +2100,10 @@ void VulkanDriver::command_buffer_bind_pipeline(Graphics::CommandBufferID comman
     ld.vk.vkCmdBindPipeline(cmd_buffer.vk_command_buffer, VkUtils::_vk_get_bind_point(bind_point), pipe.vk_pipeline);
 }
 
-void VulkanDriver::command_buffer_bind_descriptor_sets(Graphics::CommandBufferID command_buffer, Graphics::PipelineBindPoint bind_point, u32 base_set, const Slice<Graphics::DescriptorSetID>& descriptor_sets)
+void VulkanDriver::command_buffer_bind_descriptor_sets(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, u32 base_set, const Slice<GPU::DescriptorSetID>& descriptor_sets)
 {
     VKFailOn(command_buffer.is_valid() == false, "invalid command buffer");
-    VKFailOn(bind_point == Graphics::PipelineBindPoint::Unknown, "invalid bind point");
+    VKFailOn(bind_point == GPU::PipelineBindPoint::Unknown, "invalid bind point");
     VKFailOn(descriptor_sets.len == 0, "invalid descriptor set count");
 
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
@@ -2124,7 +2124,7 @@ void VulkanDriver::command_buffer_bind_descriptor_sets(Graphics::CommandBufferID
     get_allocator().free(mem::to_bytes(vk_descriptor_sets));
 }
 
-void VulkanDriver::command_buffer_bind_vertex_buffers(Graphics::CommandBufferID command_buffer, u32 base_binding, const Slice<Graphics::BufferID>& buffers, const Slice<usize>& offsets)
+void VulkanDriver::command_buffer_bind_vertex_buffers(GPU::CommandBufferID command_buffer, u32 base_binding, const Slice<GPU::BufferID>& buffers, const Slice<usize>& offsets)
 {
     VKFailOn(command_buffer.is_valid() == false, "invalid command buffer");
     VKFailOn(buffers.len != offsets.len, "inconsistent buffers and offsets count");
@@ -2146,10 +2146,10 @@ void VulkanDriver::command_buffer_bind_vertex_buffers(Graphics::CommandBufferID 
     get_allocator().free(mem::to_bytes(vk_buffers));
 }
 
-void VulkanDriver::command_buffer_constant_block(Graphics::CommandBufferID command_buffer, Graphics::PipelineID pipeline, Graphics::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address)
+void VulkanDriver::command_buffer_constant_block(GPU::CommandBufferID command_buffer, GPU::PipelineID pipeline, GPU::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address)
 {   
     VKFailOn(command_buffer.is_valid() == false, "invalid command buffer");
-    VKFailOn(stages == Graphics::ShaderStage(0), "invalid shader stage");
+    VKFailOn(stages == GPU::ShaderStage(0), "invalid shader stage");
     VKFailOn(size == 0, "invalid block size");
 
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
@@ -2162,7 +2162,7 @@ void VulkanDriver::command_buffer_constant_block(Graphics::CommandBufferID comma
     );
 }
 
-void VulkanDriver::command_buffer_set_viewports(Graphics::CommandBufferID command_buffer, u32 base_viewport, const Slice<Graphics::Viewport>& viewports)
+void VulkanDriver::command_buffer_set_viewports(GPU::CommandBufferID command_buffer, u32 base_viewport, const Slice<GPU::Viewport>& viewports)
 {
     VKFailOn(command_buffer.is_valid() == false, "invalid command buffer");
 
@@ -2187,7 +2187,7 @@ void VulkanDriver::command_buffer_set_viewports(Graphics::CommandBufferID comman
     get_allocator().free(mem::to_bytes(vk_viewports));
 }
 
-void VulkanDriver::command_buffer_set_scissors(Graphics::CommandBufferID command_buffer, u32 base_scissor, const Slice<Graphics::Scissor>& scissors)
+void VulkanDriver::command_buffer_set_scissors(GPU::CommandBufferID command_buffer, u32 base_scissor, const Slice<GPU::Scissor>& scissors)
 {
     VKFailOn(command_buffer.is_valid() == false, "invalid command buffer");
 
@@ -2208,7 +2208,7 @@ void VulkanDriver::command_buffer_set_scissors(Graphics::CommandBufferID command
     get_allocator().free(mem::to_bytes(vk_scissors));
 }
 
-void VulkanDriver::command_buffer_draw(Graphics::CommandBufferID command_buffer, u32 vertex_count, u32 instance_count, u32 base_vertex, u32 base_instance)
+void VulkanDriver::command_buffer_draw(GPU::CommandBufferID command_buffer, u32 vertex_count, u32 instance_count, u32 base_vertex, u32 base_instance)
 {
     VKFailOn(command_buffer.is_valid() == false, "invalid command buffer");
 
@@ -2229,10 +2229,10 @@ void VulkanDriver::_get_physical_devices()
     Slice<VkPhysicalDevice> vk_physical_devices = get_allocator().array<VkPhysicalDevice>(physical_device_count);
     vk.vkEnumeratePhysicalDevices(data.instance, &physical_device_count, vk_physical_devices.ptr());
 
-    data.physical_device_ids = get_allocator().array<Graphics::PhysicalDeviceID>(data.physical_devices.len);
+    data.physical_device_ids = get_allocator().array<GPU::PhysicalDeviceID>(data.physical_devices.len);
     for(usize i = 0; i < data.physical_device_ids.len; i++)
     {
-        data.physical_device_ids[i] = Graphics::PhysicalDeviceID(static_cast<u32>(i));
+        data.physical_device_ids[i] = GPU::PhysicalDeviceID(static_cast<u32>(i));
     }
 
     for(usize device_index = 0; device_index < data.physical_devices.len; device_index++)
@@ -2252,23 +2252,23 @@ void VulkanDriver::_get_physical_devices()
     get_allocator().free(mem::to_bytes(vk_physical_devices));
 }
 
-void VulkanDriver::_vk_get_surface_format(Graphics::SurfaceFormat surface_format, VkFormat* vk_image_format, VkColorSpaceKHR* vk_color_space)
+void VulkanDriver::_vk_get_surface_format(GPU::SurfaceFormat surface_format, VkFormat* vk_image_format, VkColorSpaceKHR* vk_color_space)
 {
     switch(surface_format)
     {
-    case Graphics::SurfaceFormat::RGBA8Unorm:
+    case GPU::SurfaceFormat::RGBA8Unorm:
         *vk_image_format = VK_FORMAT_R8G8B8A8_UNORM;
         *vk_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
         return;
-    case Graphics::SurfaceFormat::RGBA8Srgb:
+    case GPU::SurfaceFormat::RGBA8Srgb:
         *vk_image_format = VK_FORMAT_R8G8B8A8_SRGB;
         *vk_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
         return;
-    case Graphics::SurfaceFormat::BGRA8Unorm:
+    case GPU::SurfaceFormat::BGRA8Unorm:
         *vk_image_format = VK_FORMAT_B8G8R8A8_UNORM;
         *vk_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
         return;
-    case Graphics::SurfaceFormat::BGRA8Srgb:
+    case GPU::SurfaceFormat::BGRA8Srgb:
         *vk_image_format = VK_FORMAT_B8G8R8A8_SRGB;
         *vk_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
         return;
@@ -2299,7 +2299,7 @@ VkExtent2D VulkanDriver::_vk_get_swap_chain_extent(const Vector2U& size, const V
     return vk_extent;
 }
 
-VkShaderModule VulkanDriver::_vk_create_shader_module(LogicalDevice& ld, const Graphics::ShaderStageInfo& shader_stage_info)
+VkShaderModule VulkanDriver::_vk_create_shader_module(LogicalDevice& ld, const GPU::ShaderStageInfo& shader_stage_info)
 {
     VkShaderModule vk_module;
 
@@ -2388,55 +2388,55 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice&
     return render_pass_cache;
 }
 
-Graphics::DeviceType VulkanDriver::_vk_device_type_to_device_type(VkPhysicalDeviceType vk_device_type)
+GPU::DeviceType VulkanDriver::_vk_device_type_to_device_type(VkPhysicalDeviceType vk_device_type)
 {
     switch(vk_device_type)
     {
     case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
-        return Graphics::DeviceType::IntegratedGPU;
+        return GPU::DeviceType::IntegratedGPU;
     case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
-        return Graphics::DeviceType::DiscreteGPU;
+        return GPU::DeviceType::DiscreteGPU;
     default:
         break;
     }
 
     VKFailOn(true, "invalid vulkan physical device type");
-    return Graphics::DeviceType::Unknown;
+    return GPU::DeviceType::Unknown;
 }
 
-Graphics::SurfaceFormat VulkanDriver::_vk_surface_format_to_surface_format(VkSurfaceFormatKHR vk_surface_format)
+GPU::SurfaceFormat VulkanDriver::_vk_surface_format_to_surface_format(VkSurfaceFormatKHR vk_surface_format)
 {
     switch(vk_surface_format.format)
     {
     case VK_FORMAT_R8G8B8A8_UNORM:
-        return Graphics::SurfaceFormat::RGBA8Unorm;
+        return GPU::SurfaceFormat::RGBA8Unorm;
     case VK_FORMAT_R8G8B8A8_SRGB:
-        return Graphics::SurfaceFormat::RGBA8Srgb;
+        return GPU::SurfaceFormat::RGBA8Srgb;
     case VK_FORMAT_B8G8R8A8_UNORM:
-        return Graphics::SurfaceFormat::BGRA8Unorm;
+        return GPU::SurfaceFormat::BGRA8Unorm;
     case VK_FORMAT_B8G8R8A8_SRGB:
-        return Graphics::SurfaceFormat::BGRA8Srgb;
+        return GPU::SurfaceFormat::BGRA8Srgb;
     default:
         break;
     }
 
     VKFailOn(true, "invalid vulkan surface format");
-    return Graphics::SurfaceFormat::Unknown;
+    return GPU::SurfaceFormat::Unknown;
 }
 
-Graphics::PresentMode VulkanDriver::_vk_present_mode_to_present_mode(VkPresentModeKHR vk_present_mode)
+GPU::PresentMode VulkanDriver::_vk_present_mode_to_present_mode(VkPresentModeKHR vk_present_mode)
 {
     switch(vk_present_mode)
     {
     case VK_PRESENT_MODE_IMMEDIATE_KHR:
-        return Graphics::PresentMode::Immediate;
+        return GPU::PresentMode::Immediate;
     case VK_PRESENT_MODE_FIFO_KHR:
-        return Graphics::PresentMode::VSync;
+        return GPU::PresentMode::VSync;
     default:
         break;
     }
 
     VKFailOn(true, "invalid vulkan present mode");
-    return Graphics::PresentMode::Unknown;
+    return GPU::PresentMode::Unknown;
 }
 

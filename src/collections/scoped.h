@@ -59,11 +59,11 @@ struct [[nodiscard]] Scoped : T
 
 	template<typename... TArgs>
 	Scoped(TArgs&&... args)
-		requires(CanBeCreated<T, TArgs...>)
+	requires(CanBeCreated<T, TArgs...>)
 	: T(T::create(Forward<TArgs>(args)...)), data(Forward<TArgs>(args)...) {}
 
 	Scoped(const mem::Allocator& allocator)
-		requires(CanBeCreatedWithAllocator<T>)
+	requires(CanBeCreatedWithAllocator<T>)
 	: T(T::with_allocator(allocator)), data(allocator) {}
 
 	Scoped(T scoped_value) : T(scoped_value), data() {}

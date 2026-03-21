@@ -55,7 +55,7 @@ struct [[nodiscard]] Result
 	}
 
 	template<typename F, typename FunctionType = FunctionDecomposed<F>>
-		requires(IsSame<typename FunctionType::ReturnType, T>)
+	requires(IsSame<typename FunctionType::ReturnType, T>)
 	constexpr auto or_else(F&& f) const
 	{
 		if (has_value)

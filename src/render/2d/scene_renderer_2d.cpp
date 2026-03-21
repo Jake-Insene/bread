@@ -16,61 +16,61 @@ void SceneRenderer2D::initialize(const SystemInitializeInfo& info)
 
     present_queue = Engine::get_system_manager().get_system<RenderDevice>()->get_present_queue();
 
-    command_pool = Graphics::command_pool_create(
+    command_pool = GPU::command_pool_create(
         {
             .device = device,
             .queue = graphics_queue,
         }
     );
     
-    swap_chain = Graphics::SwapChainID();
+    swap_chain = GPU::SwapChainID();
     _recreate_swap_chain();
     
-    render_image_finish_semaphore = get_allocator().array<Graphics::SemaphoreID>(Graphics::swap_chain_get_image_count(swap_chain));
+    render_image_finish_semaphore = get_allocator().array<GPU::SemaphoreID>(GPU::swap_chain_get_image_count(swap_chain));
     for(usize i = 0; i < render_image_finish_semaphore.len; i++)
     {
-        render_image_finish_semaphore[i] = Graphics::semaphore_create({.device = device});
+        render_image_finish_semaphore[i] = GPU::semaphore_create({.device = device});
     }
 
-    memory.vertex_buffer_heap = Graphics::memory_heap_create(
+    memory.vertex_buffer_heap = GPU::memory_heap_create(
         {
             .device = device,
-            .heap_usage = Graphics::HeapUsage::CPUGPUCoherent,
-            .heap_size = mem::align_up(VertexBufferHeapSize, Graphics::HeapAlignment),
+            .heap_usage = GPU::HeapUsage::CPUGPUCoherent,
+            .heap_size = mem::align_up(VertexBufferHeapSize, GPU::HeapAlignment),
         }
     );
 
-    memory.vertex_buffer = Graphics::buffer_create(
+    memory.vertex_buffer = GPU::buffer_create(
         {
             .device = device,
-            .usage = Graphics::BufferUsage::VertexBuffer,
-            .size = mem::align_up(VertexBufferHeapSize, Graphics::MinHeapResourceAlignment),
+            .usage = GPU::BufferUsage::VertexBuffer,
+            .size = mem::align_up(VertexBufferHeapSize, GPU::MinHeapResourceAlignment),
             .memory_heap = memory.vertex_buffer_heap,
             .heap_offset = 0,
         }
     );
 
-    memory.mapped_vertex_buffer = Graphics::buffer_map_memory(memory.vertex_buffer, 0, VertexBufferHeapSize);
+    memory.mapped_vertex_buffer = GPU::buffer_map_memory(memory.vertex_buffer, 0, VertexBufferHeapSize);
 
-    memory.frame_uniform_heap = Graphics::memory_heap_create(
+    memory.frame_uniform_heap = GPU::memory_heap_create(
         {
             .device = device,
-            .heap_usage = Graphics::HeapUsage::CPUGPUCoherent,
-            .heap_size = mem::align_up(FrameUniformBufferHeapSize, Graphics::HeapAlignment),
+            .heap_usage = GPU::HeapUsage::CPUGPUCoherent,
+            .heap_size = mem::align_up(FrameUniformBufferHeapSize, GPU::HeapAlignment),
         }
     );
 
-    memory.frame_uniform_buffer = Graphics::buffer_create(
+    memory.frame_uniform_buffer = GPU::buffer_create(
         {
             .device = device,
-            .usage = Graphics::BufferUsage::UniformBuffer,
-            .size = mem::align_up(usize(sizeof(FrameUniformInfo)), Graphics::MinHeapResourceAlignment),
+            .usage = GPU::BufferUsage::UniformBuffer,
+            .size = mem::align_up(usize(sizeof(FrameUniformInfo)), GPU::MinHeapResourceAlignment),
             .memory_heap = memory.frame_uniform_heap,
             .heap_offset = 0,
         }
     );
 
-    memory.mapped_frame_uniform_buffer = Graphics::buffer_map_memory(memory.frame_uniform_buffer, 0, FrameUniformBufferHeapSize);
+    memory.mapped_frame_uniform_buffer = GPU::buffer_map_memory(memory.frame_uniform_buffer, 0, FrameUniformBufferHeapSize);
     
     _create_pipelines();
 
@@ -87,8 +87,8 @@ void SceneRenderer2D::initialize(const SystemInitializeInfo& info)
 
 void SceneRenderer2D::shutdown()
 {
-    Graphics::queue_wait_idle(graphics_queue);
-    Graphics::queue_wait_idle(present_queue);
+    GPU::queue_wait_idle(graphics_queue);
+    GPU::queue_wait_idle(present_queue);
 
     _destroy_pipelines();
 
@@ -98,23 +98,23 @@ void SceneRenderer2D::shutdown()
     }
     get_allocator().free(mem::to_bytes(frames_in_flight));
 
-    Graphics::buffer_unmap_memory(memory.frame_uniform_buffer, memory.mapped_frame_uniform_buffer);
-    Graphics::buffer_destroy(memory.frame_uniform_buffer);
-    Graphics::memory_heap_destroy(memory.frame_uniform_heap);
+    GPU::buffer_unmap_memory(memory.frame_uniform_buffer, memory.mapped_frame_uniform_buffer);
+    GPU::buffer_destroy(memory.frame_uniform_buffer);
+    GPU::memory_heap_destroy(memory.frame_uniform_heap);
 
-    Graphics::buffer_unmap_memory(memory.vertex_buffer, memory.mapped_vertex_buffer);
-    Graphics::buffer_destroy(memory.vertex_buffer);
-    Graphics::memory_heap_destroy(memory.vertex_buffer_heap);
+    GPU::buffer_unmap_memory(memory.vertex_buffer, memory.mapped_vertex_buffer);
+    GPU::buffer_destroy(memory.vertex_buffer);
+    GPU::memory_heap_destroy(memory.vertex_buffer_heap);
 
     for(usize i = 0; i < render_image_finish_semaphore.len; i++)
     {
-        Graphics::semaphore_destroy(render_image_finish_semaphore[i]);
+        GPU::semaphore_destroy(render_image_finish_semaphore[i]);
     }
     get_allocator().free(mem::to_bytes(render_image_finish_semaphore));
 
-    Graphics::swap_chain_destroy(swap_chain);
+    GPU::swap_chain_destroy(swap_chain);
 
-    Graphics::command_pool_destroy(command_pool);
+    GPU::command_pool_destroy(command_pool);
 }
 
 void SceneRenderer2D::draw_rect(const Transform2D& transform, const Color& color, const Rect2D& rect)
@@ -141,11 +141,11 @@ void SceneRenderer2D::dispatch()
 
     FrameInFlightInfo& frame_info = frames_in_flight[frame_index];
 
-    Graphics::fence_wait_for(Slice(&frame_info.draw_fence, 1), true, MaxValue<u64>);
-    Graphics::fence_reset(Slice(&frame_info.draw_fence, 1));
+    GPU::fence_wait_for(Slice(&frame_info.draw_fence, 1), true, MaxValue<u64>);
+    GPU::fence_reset(Slice(&frame_info.draw_fence, 1));
 
     u32 image_index;
-    Graphics::swap_chain_acquire_next_image(
+    GPU::swap_chain_acquire_next_image(
         swap_chain,
         {
             .timeout = MaxValue<u64>,
@@ -166,8 +166,8 @@ void SceneRenderer2D::dispatch()
     frame_uniform_info.projection.transpose();
     frame_uniform_info.view_projection.transpose();
 
-    Graphics::command_buffer_begin(frame_info.command_buffer);
-    Graphics::command_buffer_begin_renderpass(
+    GPU::command_buffer_begin(frame_info.command_buffer);
+    GPU::command_buffer_begin_renderpass(
         frame_info.command_buffer,
         {
             .size = Engine::get_main_window().get_size(),
@@ -179,19 +179,19 @@ void SceneRenderer2D::dispatch()
 
     if(frame_info.quad_count != 0)
     {
-        Graphics::command_buffer_bind_pipeline(
-            frame_info.command_buffer, Graphics::PipelineBindPoint::Graphics, pipelines.quad_pipeline
+        GPU::command_buffer_bind_pipeline(
+            frame_info.command_buffer, GPU::PipelineBindPoint::Graphics, pipelines.quad_pipeline
         );
-        Graphics::command_buffer_bind_descriptor_sets(
-            frame_info.command_buffer, Graphics::PipelineBindPoint::Graphics, 0, Slice(&frame_info.quad_frame_set, 1)
+        GPU::command_buffer_bind_descriptor_sets(
+            frame_info.command_buffer, GPU::PipelineBindPoint::Graphics, 0, Slice(&frame_info.quad_frame_set, 1)
         );
 
-        Graphics::command_buffer_bind_vertex_buffers(
+        GPU::command_buffer_bind_vertex_buffers(
             frame_info.command_buffer, 0, Slice(&memory.vertex_buffer, 1),
             Slice(&frame_info.vertex_heap_offset, 1)
         );
 
-        Graphics::Viewport viewport =
+        GPU::Viewport viewport =
         {
             .x = 0,
             .y = 0,
@@ -201,7 +201,7 @@ void SceneRenderer2D::dispatch()
             .max_depth = 1.f,
         };
 
-        Graphics::Scissor scissor =
+        GPU::Scissor scissor =
         {
             .x = 0,
             .y = 0,
@@ -209,18 +209,18 @@ void SceneRenderer2D::dispatch()
             .height = static_cast<u32>(window_size.height),
         };
 
-        Graphics::command_buffer_set_viewports(frame_info.command_buffer, 0, Slice(&viewport, 1));
-        Graphics::command_buffer_set_scissors(frame_info.command_buffer, 0, Slice(&scissor, 1));
+        GPU::command_buffer_set_viewports(frame_info.command_buffer, 0, Slice(&viewport, 1));
+        GPU::command_buffer_set_scissors(frame_info.command_buffer, 0, Slice(&scissor, 1));
 
-        Graphics::command_buffer_draw(frame_info.command_buffer, 6, frame_info.quad_count, 0, 0);
+        GPU::command_buffer_draw(frame_info.command_buffer, 6, frame_info.quad_count, 0, 0);
         frame_info.quad_count = 0;
     }
 
-    Graphics::command_buffer_end_renderpass(frame_info.command_buffer, {});
-    Graphics::command_buffer_end(frame_info.command_buffer);
+    GPU::command_buffer_end_renderpass(frame_info.command_buffer, {});
+    GPU::command_buffer_end(frame_info.command_buffer);
 
-    Graphics::PipelineStages wait_stage = Graphics::PipelineStages::RenderOutput;
-    Graphics::queue_execute_command_buffer(
+    GPU::PipelineStages wait_stage = GPU::PipelineStages::RenderOutput;
+    GPU::queue_execute_command_buffer(
         graphics_queue,
         {
             .wait_semaphores = Slice(&frame_info.present_semaphore, 1),
@@ -231,7 +231,7 @@ void SceneRenderer2D::dispatch()
         }
     );
 
-    Graphics::queue_present(
+    GPU::queue_present(
         present_queue,
         {
             .wait_semaphores = Slice(&render_image_finish_semaphore[image_index], 1),
@@ -245,8 +245,8 @@ void SceneRenderer2D::dispatch()
 
 void SceneRenderer2D::_recreate_swap_chain()
 {
-    Graphics::queue_wait_idle(graphics_queue);
-    Graphics::queue_wait_idle(present_queue);
+    GPU::queue_wait_idle(graphics_queue);
+    GPU::queue_wait_idle(present_queue);
 
     can_render = false;
     Vector2I window_size = Engine::get_main_window().get_size();
@@ -257,15 +257,15 @@ void SceneRenderer2D::_recreate_swap_chain()
 
     if(swap_chain.is_valid())
     {
-        Graphics::swap_chain_destroy(swap_chain);
-        swap_chain = Graphics::SwapChainID();
+        GPU::swap_chain_destroy(swap_chain);
+        swap_chain = GPU::SwapChainID();
     }
     
-    swap_chain = Graphics::swap_chain_create(
+    swap_chain = GPU::swap_chain_create(
         {
             .device = device,
             .surface = Engine::get_main_window().get_surface(),
-            .present_mode = Graphics::PresentMode::Immediate,
+            .present_mode = GPU::PresentMode::Immediate,
             .format = SwapChainFormat,
             .min_image_count = SwapChainMinImageCount,
             .size = Vector2U(window_size),
@@ -275,47 +275,47 @@ void SceneRenderer2D::_recreate_swap_chain()
     can_render = true;
 }
 
-SceneRenderer2D::FrameInFlightInfo SceneRenderer2D::_create_frame_info(Graphics::CommandPoolID command_pool, u32 frame_index)
+SceneRenderer2D::FrameInFlightInfo SceneRenderer2D::_create_frame_info(GPU::CommandPoolID command_pool, u32 frame_index)
 {
     FrameInFlightInfo frame_info = {};
 
-    frame_info.command_buffer = Graphics::command_buffer_allocate(
+    frame_info.command_buffer = GPU::command_buffer_allocate(
         {
             .pool = command_pool,
         }
     );
 
-    frame_info.draw_fence = Graphics::fence_create(
+    frame_info.draw_fence = GPU::fence_create(
         {
             .device = device,
             .signaled = true,
         }
     );
 
-    frame_info.present_semaphore = Graphics::semaphore_create(
+    frame_info.present_semaphore = GPU::semaphore_create(
         {
             .device = device,
         }
     );
 
-    frame_info.quad_frame_set = Graphics::descriptor_set_create(
+    frame_info.quad_frame_set = GPU::descriptor_set_create(
         {
             .device = device,
             .set_layout = pipelines.quad_layout,
         }
     );
 
-    Graphics::DescriptorBufferInfo buffers[] =
+    GPU::DescriptorBufferInfo buffers[] =
     {
         { .buffer = memory.frame_uniform_buffer, .offset = frame_index * sizeof(FrameUniformInfo), .range = sizeof(FrameUniformInfo), },
     };
 
-    Graphics::WriteDescriptorInfo write_infos[] =
+    GPU::WriteDescriptorInfo write_infos[] =
     {
-        { .binding = 0, .array_element = 0, .count = 1, .type = Graphics::DescriptorType::UniformBuffer, .textures = {}, .buffers = buffers, },
+        { .binding = 0, .array_element = 0, .count = 1, .type = GPU::DescriptorType::UniformBuffer, .textures = {}, .buffers = buffers, },
     };
 
-    Graphics::descriptor_set_update_descriptors(
+    GPU::descriptor_set_update_descriptors(
         frame_info.quad_frame_set,
         {
             .write_infos = write_infos,
@@ -330,21 +330,21 @@ SceneRenderer2D::FrameInFlightInfo SceneRenderer2D::_create_frame_info(Graphics:
 
 void SceneRenderer2D::_destroy_frame_info(FrameInFlightInfo& frame_info)
 {
-    Graphics::command_buffer_free(frame_info.command_buffer);
-    Graphics::fence_destroy(frame_info.draw_fence);
-    Graphics::semaphore_destroy(frame_info.present_semaphore);
-    Graphics::descriptor_set_destroy(frame_info.quad_frame_set);
+    GPU::command_buffer_free(frame_info.command_buffer);
+    GPU::fence_destroy(frame_info.draw_fence);
+    GPU::semaphore_destroy(frame_info.present_semaphore);
+    GPU::descriptor_set_destroy(frame_info.quad_frame_set);
 }
 
 void SceneRenderer2D::_create_pipelines()
 {
     {
-        Graphics::DescriptorBinding quad_bindings[] =
+        GPU::DescriptorBinding quad_bindings[] =
         {
-            { .type = Graphics::DescriptorType::UniformBuffer, .binding = 0, .count = 1, .stages = Graphics::ShaderStage::Vertex },
+            { .type = GPU::DescriptorType::UniformBuffer, .binding = 0, .count = 1, .stages = GPU::ShaderStage::Vertex },
         };
 
-        pipelines.quad_layout = Graphics::descriptor_set_layout_create(
+        pipelines.quad_layout = GPU::descriptor_set_layout_create(
             {
                 .device = device,
                 .bindings = quad_bindings,
@@ -353,33 +353,33 @@ void SceneRenderer2D::_create_pipelines()
         
         Slice<u8> shader_code = File::read_all(get_allocator(), "shaders/bread/SceneRenderer2D/Quad.slang.spirv");
 
-        Graphics::ShaderStageInfo quad_stages[] =
+        GPU::ShaderStageInfo quad_stages[] =
         {
-            { .stage = Graphics::ShaderStage::Vertex, .code = shader_code, .name = "VertexMain", },
-            { .stage = Graphics::ShaderStage::Fragment, .code = shader_code, .name = "FragmentMain", },
+            { .stage = GPU::ShaderStage::Vertex, .code = shader_code, .name = "VertexMain", },
+            { .stage = GPU::ShaderStage::Fragment, .code = shader_code, .name = "FragmentMain", },
         };
 
-        Graphics::VertexBinding quad_binding[] =
+        GPU::VertexBinding quad_binding[] =
         {
-            { .binding = 0, .stride = sizeof(QuadInstance), .input_rate = Graphics::InputRate::Instance },
+            { .binding = 0, .stride = sizeof(QuadInstance), .input_rate = GPU::InputRate::Instance },
         };
 
-        Graphics::VertexAttribute quad_attributes[3] = {};
+        GPU::VertexAttribute quad_attributes[3] = {};
         for(usize i = 0; i < ArraySize(quad_attributes); i++)
         {
             quad_attributes[i] = 
             {
                 .location = static_cast<u32>(i),
                 .binding = 0,
-                .format = Graphics::VertexFormat::RGBA32Float,
+                .format = GPU::VertexFormat::RGBA32Float,
                 .offset = static_cast<u32>(sizeof(Vector4) * i),
             };
         }
 
-        pipelines.quad_pipeline = Graphics::pipeline_create(
+        pipelines.quad_pipeline = GPU::pipeline_create(
             {
                 .device = device,
-                .bind_point = Graphics::PipelineBindPoint::Graphics,
+                .bind_point = GPU::PipelineBindPoint::Graphics,
                 .shader_stages = quad_stages,
                 .vertex_input =
                 {
@@ -388,20 +388,20 @@ void SceneRenderer2D::_create_pipelines()
                 },
                 .input_assembly =
                 {
-                    .topology = Graphics::PrimitiveTopology::TriangleList,
+                    .topology = GPU::PrimitiveTopology::TriangleList,
                 },
                 .rasterizer_state =
                 {
                     .depth_clamp_enable = false,
                     .rasterizer_discard_enable = false,
-                    .polygon_mode = Graphics::PolygonMode::Fill,
-                    .cull_mode = Graphics::CullMode::Front,
-                    .front_face = Graphics::FrontFace::ClockWise,
+                    .polygon_mode = GPU::PolygonMode::Fill,
+                    .cull_mode = GPU::CullMode::Front,
+                    .front_face = GPU::FrontFace::ClockWise,
                     .line_width = 1.f,
                 },
                 .multisample_state =
                 {
-                    .sample_count = Graphics::SampleCount::Sample1,
+                    .sample_count = GPU::SampleCount::Sample1,
                     .min_sample_shading = 0,
                     .sample_shading_enable = false,
                     .alpha_to_coverage_enable = false,
@@ -431,6 +431,6 @@ void SceneRenderer2D::_create_pipelines()
 
 void SceneRenderer2D::_destroy_pipelines()
 {
-    Graphics::descriptor_set_layout_destroy(pipelines.quad_layout);
-    Graphics::pipeline_destroy(pipelines.quad_pipeline);
+    GPU::descriptor_set_layout_destroy(pipelines.quad_layout);
+    GPU::pipeline_destroy(pipelines.quad_pipeline);
 }

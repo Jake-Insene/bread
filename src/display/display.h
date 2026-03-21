@@ -1,6 +1,6 @@
 #pragma once
 #include "core/header.h"
-#include "graphics/graphics.h"
+#include "gpu/gpu.h"
 #include "mem/allocator.h"
 #include "math/vec2.h"
 
@@ -45,5 +45,5 @@ struct Display
     static Vector2I window_get_size(WindowID window_id);
     static void window_set_size(WindowID window_id, const Vector2I& new_size);
     static MemoryAddress window_get_native_handle(WindowID window_id);
-    static Graphics::SurfaceID window_get_surface(WindowID window_id);
+    static GPU::SurfaceID window_get_surface(WindowID window_id);
 };

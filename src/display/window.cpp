@@ -27,7 +27,7 @@ MemoryAddress Window::get_native_handle() const
     return Display::window_get_native_handle(window_id);
 }
 
-Graphics::SurfaceID Window::get_surface() const
+GPU::SurfaceID Window::get_surface() const
 {
     return Display::window_get_surface(window_id);
 }

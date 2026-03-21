@@ -1,6 +1,6 @@
 #pragma once
 #include "collections/array.h"
-#include "graphics/graphics.h"
+#include "gpu/gpu.h"
 #include "math/color.h"
 #include "math/transform_2d.h"
 #include "math/projection.h"
@@ -21,7 +21,7 @@ struct SceneRenderer2D : System<SceneRenderer2D>
         return System::get_system_info_with_name(_name);
     }
 
-    static constexpr Graphics::SurfaceFormat SwapChainFormat = Graphics::SurfaceFormat::RGBA8Srgb;
+    static constexpr GPU::SurfaceFormat SwapChainFormat = GPU::SurfaceFormat::RGBA8Srgb;
     static constexpr usize SwapChainMinImageCount = 3;
 
     struct QuadInstance
@@ -65,12 +65,12 @@ struct SceneRenderer2D : System<SceneRenderer2D>
 
     struct FrameInFlightInfo
     {
-        Graphics::CommandBufferID command_buffer;
-        Graphics::FenceID draw_fence;
-        Graphics::SemaphoreID present_semaphore;
+        GPU::CommandBufferID command_buffer;
+        GPU::FenceID draw_fence;
+        GPU::SemaphoreID present_semaphore;
 
-        Graphics::BufferID frame_ub;
-        Graphics::DescriptorSetID quad_frame_set;
+        GPU::BufferID frame_ub;
+        GPU::DescriptorSetID quad_frame_set;
         usize quad_count;
         
         usize vertex_heap_offset;
@@ -81,30 +81,30 @@ struct SceneRenderer2D : System<SceneRenderer2D>
 
     mem::Allocator allocator;
 
-    Graphics::DeviceID device;
-    Graphics::QueueID graphics_queue;
-    Graphics::QueueID present_queue;
+    GPU::DeviceID device;
+    GPU::QueueID graphics_queue;
+    GPU::QueueID present_queue;
 
-    Graphics::CommandPoolID command_pool;
+    GPU::CommandPoolID command_pool;
     
-    Graphics::SwapChainID swap_chain;
-    Slice<Graphics::SemaphoreID> render_image_finish_semaphore;
+    GPU::SwapChainID swap_chain;
+    Slice<GPU::SemaphoreID> render_image_finish_semaphore;
     
     struct
     {
-        Graphics::MemoryHeapID vertex_buffer_heap;
-        Graphics::BufferID vertex_buffer;
+        GPU::MemoryHeapID vertex_buffer_heap;
+        GPU::BufferID vertex_buffer;
         Slice<u8> mapped_vertex_buffer;
 
-        Graphics::MemoryHeapID frame_uniform_heap;
-        Graphics::BufferID frame_uniform_buffer;
+        GPU::MemoryHeapID frame_uniform_heap;
+        GPU::BufferID frame_uniform_buffer;
         Slice<u8> mapped_frame_uniform_buffer;
     } memory;
 
     struct
     {
-        Graphics::DescriptorSetLayoutID quad_layout;
-        Graphics::PipelineID quad_pipeline;
+        GPU::DescriptorSetLayoutID quad_layout;
+        GPU::PipelineID quad_pipeline;
     } pipelines;
 
     Slice<FrameInFlightInfo> frames_in_flight;
@@ -124,7 +124,7 @@ struct SceneRenderer2D : System<SceneRenderer2D>
     void _recreate_swap_chain();
     void _disable_rendering() { can_render = false; }
 
-    FrameInFlightInfo _create_frame_info(Graphics::CommandPoolID command_pool, u32 frame_index);
+    FrameInFlightInfo _create_frame_info(GPU::CommandPoolID command_pool, u32 frame_index);
     void _destroy_frame_info(FrameInFlightInfo& frame_info);
 
     void _create_pipelines();

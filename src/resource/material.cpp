@@ -1,6 +1,5 @@
 #include "resource/material.h"
 
-#include "graphics/graphics.h"
 #include "io/file.h"
 #include "resource/resource_manager.h"
 #include "resource/resource_manager_internal.h"

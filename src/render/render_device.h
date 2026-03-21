@@ -1,5 +1,5 @@
 #pragma once
-#include "graphics/graphics.h"
+#include "gpu/gpu.h"
 #include "systems/system.h"
 
 
@@ -17,20 +17,20 @@ struct RenderDevice : System<RenderDevice>
         return System::get_system_info_with_name(_name);
     }
 
-    Graphics::DeviceID gpu_device;
+    GPU::DeviceID gpu_device;
 
-    Graphics::QueueID graphics_queue;
-    Graphics::QueueID compute_queue;
-    Graphics::QueueID copy_queue;
-    Graphics::QueueID present_queue;
+    GPU::QueueID graphics_queue;
+    GPU::QueueID compute_queue;
+    GPU::QueueID copy_queue;
+    GPU::QueueID present_queue;
 
     void initialize(const SystemInitializeInfo& info);
     void shutdown();
 
-    Graphics::DeviceID get_graphics_device() { return gpu_device; }
-    Graphics::QueueID get_graphics_queue() { return graphics_queue; }
-    Graphics::QueueID get_compute_queue() { return compute_queue; }
-    Graphics::QueueID get_copy_queue() { return copy_queue; }
-    Graphics::QueueID get_present_queue() { return present_queue; }
+    GPU::DeviceID get_graphics_device() { return gpu_device; }
+    GPU::QueueID get_graphics_queue() { return graphics_queue; }
+    GPU::QueueID get_compute_queue() { return compute_queue; }
+    GPU::QueueID get_copy_queue() { return copy_queue; }
+    GPU::QueueID get_present_queue() { return present_queue; }
 };
 

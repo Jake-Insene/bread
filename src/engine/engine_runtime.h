@@ -71,7 +71,7 @@ struct EngineRuntime
     
     SystemManager system_manager;
 
-    Graphics::PhysicalDeviceID physical_device;
+    GPU::PhysicalDeviceID physical_device;
 
     JobQueue main_queue;
         
@@ -93,7 +93,7 @@ struct EngineRuntime
     // Utility functions
     SystemManager& get_system_manager() { return system_manager; }
 
-    Graphics::PhysicalDeviceID get_selected_gpu_device() { return physical_device; }
+    GPU::PhysicalDeviceID get_selected_gpu_device() { return physical_device; }
 
     i32 get_fps() { return fps; }
 

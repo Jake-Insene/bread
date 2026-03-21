@@ -11,7 +11,7 @@ struct Win32Display
     struct WindowData
     {
         Display::WindowID self_id;
-        Graphics::SurfaceID surface;
+        GPU::SurfaceID surface;
         HWND handle;
         RECT window_rect;
         bool mouse_captured;

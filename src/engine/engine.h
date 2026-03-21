@@ -26,7 +26,7 @@ struct Engine
         return local_data.engine_runtime->get_system_manager();
     }
 
-    static Graphics::PhysicalDeviceID get_selected_gpu_device()
+    static GPU::PhysicalDeviceID get_selected_gpu_device()
     {
         return local_data.engine_runtime->get_selected_gpu_device();
     }

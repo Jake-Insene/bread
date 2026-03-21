@@ -9,7 +9,7 @@
 
 
 
-struct Graphics
+struct GPU
 {
 	/*
 	*	Graphics API
@@ -159,8 +159,8 @@ struct Graphics
 	struct AcquireInfo
 	{
 		u64 timeout;
-		Graphics::SemaphoreID semaphore;
-		Graphics::FenceID fence;
+		SemaphoreID semaphore;
+		FenceID fence;
 	};
 	
 	static SwapChainID swap_chain_create(const SwapChainCreateInfo& ci);
@@ -216,9 +216,9 @@ struct Graphics
 	{
 		Slice<SemaphoreID> wait_semaphores;
 		Slice<PipelineStages> wait_stages;
-		Slice<Graphics::CommandBufferID> command_buffers;
+		Slice<CommandBufferID> command_buffers;
 		Slice<SemaphoreID> signal_semaphores;
-		Graphics::FenceID fence;
+		FenceID fence;
 	};
 
 	struct QueuePresentInfo
@@ -739,7 +739,7 @@ struct Graphics
 		AccessMasks dest_masks;
 		TextureLayout src_layout;
 		TextureLayout dest_layout;
-		Graphics::TextureID texture;
+		TextureID texture;
 		TextureSubresourceRanges subresource_range;
 	};
 
@@ -816,10 +816,10 @@ struct Graphics
 };
 
 
-EnableBitOp(Graphics::BufferUsage);
-EnableBitOp(Graphics::TextureUsage);
-EnableBitOp(Graphics::TextureAspect);
-EnableBitOp(Graphics::ShaderStage);
-EnableBitOp(Graphics::PipelineStages);
-EnableBitOp(Graphics::AccessMasks);
+EnableBitOp(GPU::BufferUsage);
+EnableBitOp(GPU::TextureUsage);
+EnableBitOp(GPU::TextureAspect);
+EnableBitOp(GPU::ShaderStage);
+EnableBitOp(GPU::PipelineStages);
+EnableBitOp(GPU::AccessMasks);
 
