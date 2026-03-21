@@ -2,7 +2,7 @@
 #include "core/templates.h"
 
 
-enum ErrorCode : usize
+enum class ErrorCode : usize
 {
 	Ok = 0,
 
@@ -37,7 +37,7 @@ struct [[nodiscard]] Error
 	
 	constexpr operator ErrorCode() const { return code; }
 
-	constexpr operator bool() const { return code == Ok; }
+	constexpr operator bool() const { return code == ErrorCode::Ok; }
 };
 
 #define MakeError(code) Error(code, __FILE__, __LINE__)

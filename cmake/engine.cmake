@@ -154,7 +154,7 @@ function(bread_project)
 
     target_compile_definitions(${PROJECT_NAME} PUBLIC ${BREAD_BUILD_DEFINITIONS})
 
-    foreach(enabled_system "${PROJECT_SYSTEMS}")
+    foreach(enabled_system IN LISTS PROJECT_SYSTEMS)
         string(TOUPPER ${enabled_system} upper_system)
         target_compile_definitions(${PROJECT_NAME} PUBLIC "BREAD_SYSTEM_${upper_system}")
     endforeach()

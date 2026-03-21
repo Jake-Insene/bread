@@ -37,9 +37,6 @@ file(GLOB ENGINE_SRC
 
     src/graphics/graphics.cpp
 
-    src/gui/canvas_element.cpp
-    src/gui/canvas.cpp
-
     src/input/input.cpp
     
     src/io/file.cpp
@@ -61,19 +58,13 @@ file(GLOB ENGINE_SRC
 
     src/object/object.cpp
 
-    src/modifier/2d/sprite.cpp
-    src/modifier/2d/animated_sprite.cpp
     src/modifier/2d/world_transform.cpp
-
-    src/modifier/core/renderable.cpp
 
     src/object/object_pool.cpp
 
     src/object/2d/camera.cpp
-    src/object/2d/tile_map.cpp
 
     src/object/core/audio_player.cpp
-    src/object/core/render_object.cpp
     src/object/core/timer.cpp
 
     src/physics/physics_2d.cpp
@@ -90,11 +81,7 @@ file(GLOB ENGINE_SRC
 
     src/render/2d/scene_renderer_2d.cpp
 
-    src/render/material_manager.cpp
-    src/render/render_manager.cpp
     src/render/render_device.cpp
-    src/render/scene_renderer.cpp
-    src/render/viewport.cpp
 
     src/resource/font.cpp
     src/resource/image.cpp

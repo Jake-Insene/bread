@@ -7,12 +7,21 @@ struct SystemManager
 {
     mem::Allocator allocator;
 
+    enum class SystemState
+    {
+        Unknown = 0,
+        Valid,
+        Invalid,
+    };
+
     struct SystemInstance
     {
         SystemInfo info;
+        SystemState state;
         Opaque* instance;
     };
     Array<SystemInstance> systems;
+    Array<usize> flow_order;
 
     void init(const mem::Allocator& _allocator);
     void destroy();
@@ -27,8 +36,13 @@ struct SystemManager
     void allocate_systems(const Slice<SystemInfo>& requested_systems);
     void deallocate_systems();
 
+    void _create_flow_order();
+
     void _initialize_systems_instance();
     void _shutdown_systems_instance();
+
+    SystemInstance* _get_instance_by_name(StringView name);
+    usize _get_instance_index_by_name(StringView name);
 
     Opaque* _get_system(const SystemInfo& info);
 };

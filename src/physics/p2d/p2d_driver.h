@@ -3,7 +3,6 @@
 #include "collections/hash_map.h"
 #include "collections/free_list.h"
 #include "physics/physics_2d.h"
-#include "render/render_manager.h"
 
 #include "physics/p2d/p2d_area.h"
 #include "physics/p2d/p2d_body.h"
@@ -49,7 +48,6 @@ struct P2DDriver
 
         f32 fixed_step;
         f32 accumulator;
-        RenderItemID grid_item;
     };
 
     static inline InternalData data;

@@ -43,6 +43,11 @@ void RenderDevice::initialize(const SystemInitializeInfo&)
 
 void RenderDevice::shutdown()
 {
+    Graphics::queue_wait_idle(graphics_queue);
+    Graphics::queue_wait_idle(compute_queue);
+    Graphics::queue_wait_idle(copy_queue);
+    Graphics::queue_wait_idle(present_queue);
+
     Graphics::device_destroy(gpu_device);
 
     Graphics::queue_destroy(graphics_queue);

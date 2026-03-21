@@ -6,7 +6,6 @@
 #include "log/log.h"
 #include "scene/scene_manager.h"
 #include "os/os.h"
-#include "render/render_manager.h"
 #include "physics/physics_2d.h"
 #include "resource/resource_manager.h"
 
@@ -52,7 +51,6 @@ void EngineRuntime::init()
     main_window = Window(Display::window_create());
 
     Audio::initialize(allocator_ref, Audio::DEFAULT_DRIVER);
-    RenderManager::initialize(allocator_ref);
 
     SceneManager::initialize(allocator_ref);
     Physics2D::initialize(allocator_ref, Physics2D::DEFAULT_DRIVER);
@@ -83,7 +81,6 @@ void EngineRuntime::destroy()
 
     ResourceManager::shutdown();
 
-    RenderManager::shutdown();
     Audio::shutdown();
     
     main_window.destroy();

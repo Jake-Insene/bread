@@ -6,24 +6,12 @@
 #include "log/log.h"
 #include "mem/utils.h"
 #include "physics/physics_2d.h"
-#include "render/viewport.h"
-#include "render/render_manager.h"
 
 
 void SceneManager::initialize(const mem::Allocator& allocator)
 {
     data.allocator = allocator;
 
-    // TODO: Create Render Target
-    Graphics::RenderTargetCreateInfo rtci = 
-    {
-        .format = Graphics::TextureFormat::RGBA8Srgb,
-        .depth_stencil_format = Graphics::TextureFormat::Unknown,
-        .size = Engine::get_configuration().viewport_size,
-    };
-
-    data.main_viewport = Viewport::create_from_render_target(allocator, Graphics::render_target_create(rtci));
-    
     data.current_scene = nullptr;
     
     data.last_time = f32(OS::get_time());
@@ -48,16 +36,12 @@ void SceneManager::shutdown()
     }
 
     data.queue_frees.destroy();
-
-    data.main_viewport.destroy();
 }
 
 void SceneManager::change_scene(Scene* new_scene)
 {
     DebugAssert(new_scene != nullptr, "new scene can't be null");
     DebugAssert(data.change_scene.requested == false, "a change scene was already requested");
-
-    new_scene->set_viewport(&get_main_viewport());
 
     if (data.current_scene == nullptr)
     {
@@ -154,8 +138,6 @@ void SceneManager::recreate_window()
     {
         set_viewport_size(Engine::get_main_window().get_size());
     }
-
-    RenderManager::recreate_window();
 }
 
 void SceneManager::set_keep_viewport(bool keep_viewport)
@@ -172,7 +154,6 @@ void SceneManager::set_viewport_size(const Vector2I& new_vp_size)
         return;
 
     data.viewport_size = new_vp_size;
-    data.main_viewport.set_size(new_vp_size);
 }
 
 void SceneManager::scene_handle_event(const InputEvent& event)
@@ -216,15 +197,12 @@ void SceneManager::_render_manager_tick()
         PROFILE_SCOPE(
             data.debug_time.render_scene_time = duration;
         );
-
-        RenderManager::render_scene(&get_main_viewport());
     }
 
     {
         PROFILE_SCOPE(
             data.debug_time.present_scene_time = duration;
         );
-        RenderManager::present_scene();
     }
 }
 

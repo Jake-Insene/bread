@@ -6,137 +6,124 @@
 #include "io/file.h"
 
 
-void SceneRenderer2D::initialize(const mem::Allocator &allocator)
+void SceneRenderer2D::initialize(const SystemInitializeInfo& info)
 {
-    data.allocator = allocator;
+    allocator = info.allocator;
 
-    data.device = Engine::get_system_manager().get_system<RenderDevice>()->get_graphics_device();
+    device = Engine::get_system_manager().get_system<RenderDevice>()->get_graphics_device();
 
-    data.graphics_queue = Graphics::queue_create(
+    graphics_queue = Engine::get_system_manager().get_system<RenderDevice>()->get_graphics_queue();
+
+    present_queue = Engine::get_system_manager().get_system<RenderDevice>()->get_present_queue();
+
+    command_pool = Graphics::command_pool_create(
         {
-            .device = data.device,
-            .usage = Graphics::QueueUsage::Graphics,
-        }
-    );
-
-    data.present_queue = Graphics::queue_create(
-        {
-            .device = data.device,
-            .usage = Graphics::QueueUsage::Present,
-        }
-    );
-
-    data.command_pool = Graphics::command_pool_create(
-        {
-            .device = data.device,
-            .queue = data.graphics_queue,
+            .device = device,
+            .queue = graphics_queue,
         }
     );
     
-    data.swap_chain = Graphics::SwapChainID();
+    swap_chain = Graphics::SwapChainID();
     _recreate_swap_chain();
     
-    data.render_image_finish_semaphore = get_allocator().array<Graphics::SemaphoreID>(Graphics::swap_chain_get_image_count(data.swap_chain));
-    for(usize i = 0; i < data.render_image_finish_semaphore.len; i++)
+    render_image_finish_semaphore = get_allocator().array<Graphics::SemaphoreID>(Graphics::swap_chain_get_image_count(swap_chain));
+    for(usize i = 0; i < render_image_finish_semaphore.len; i++)
     {
-        data.render_image_finish_semaphore[i] = Graphics::semaphore_create({.device = data.device});
+        render_image_finish_semaphore[i] = Graphics::semaphore_create({.device = device});
     }
 
-    data.memory.vertex_buffer_heap = Graphics::memory_heap_create(
+    memory.vertex_buffer_heap = Graphics::memory_heap_create(
         {
-            .device = data.device,
+            .device = device,
             .heap_usage = Graphics::HeapUsage::CPUGPUCoherent,
             .heap_size = mem::align_up(VertexBufferHeapSize, Graphics::HeapAlignment),
         }
     );
 
-    data.memory.vertex_buffer = Graphics::buffer_create(
+    memory.vertex_buffer = Graphics::buffer_create(
         {
-            .device = data.device,
+            .device = device,
             .usage = Graphics::BufferUsage::VertexBuffer,
             .size = mem::align_up(VertexBufferHeapSize, Graphics::MinHeapResourceAlignment),
-            .memory_heap = data.memory.vertex_buffer_heap,
+            .memory_heap = memory.vertex_buffer_heap,
             .heap_offset = 0,
         }
     );
 
-    data.memory.mapped_vertex_buffer = Graphics::buffer_map_memory(data.memory.vertex_buffer, 0, VertexBufferHeapSize);
+    memory.mapped_vertex_buffer = Graphics::buffer_map_memory(memory.vertex_buffer, 0, VertexBufferHeapSize);
 
-    data.memory.frame_uniform_heap = Graphics::memory_heap_create(
+    memory.frame_uniform_heap = Graphics::memory_heap_create(
         {
-            .device = data.device,
+            .device = device,
             .heap_usage = Graphics::HeapUsage::CPUGPUCoherent,
             .heap_size = mem::align_up(FrameUniformBufferHeapSize, Graphics::HeapAlignment),
         }
     );
 
-    data.memory.frame_uniform_buffer = Graphics::buffer_create(
+    memory.frame_uniform_buffer = Graphics::buffer_create(
         {
-            .device = data.device,
+            .device = device,
             .usage = Graphics::BufferUsage::UniformBuffer,
             .size = mem::align_up(usize(sizeof(FrameUniformInfo)), Graphics::MinHeapResourceAlignment),
-            .memory_heap = data.memory.frame_uniform_heap,
+            .memory_heap = memory.frame_uniform_heap,
             .heap_offset = 0,
         }
     );
 
-    data.memory.mapped_frame_uniform_buffer = Graphics::buffer_map_memory(data.memory.frame_uniform_buffer, 0, FrameUniformBufferHeapSize);
+    memory.mapped_frame_uniform_buffer = Graphics::buffer_map_memory(memory.frame_uniform_buffer, 0, FrameUniformBufferHeapSize);
     
     _create_pipelines();
 
-    data.frames_in_flight = get_allocator().array<FrameInFlightInfo>(MaxFrameCount);
-    for(usize i = 0; i < data.frames_in_flight.len; i++)
+    frames_in_flight = get_allocator().array<FrameInFlightInfo>(MaxFrameCount);
+    for(usize i = 0; i < frames_in_flight.len; i++)
     {
-        data.frames_in_flight[i] = _create_frame_info(data.command_pool, i);
+        frames_in_flight[i] = _create_frame_info(command_pool, i);
     }
 
-    data.frame_index = 0;
+    frame_index = 0;
 
-    data.can_render = true;
+    can_render = true;
 }
 
 void SceneRenderer2D::shutdown()
 {
-    Graphics::queue_wait_idle(data.graphics_queue);
-    Graphics::queue_wait_idle(data.present_queue);
+    Graphics::queue_wait_idle(graphics_queue);
+    Graphics::queue_wait_idle(present_queue);
 
     _destroy_pipelines();
 
-    for(usize i = 0; i < data.frames_in_flight.len; i++)
+    for(usize i = 0; i < frames_in_flight.len; i++)
     {
-        _destroy_frame_info(data.frames_in_flight[i]);
+        _destroy_frame_info(frames_in_flight[i]);
     }
-    get_allocator().free(mem::to_bytes(data.frames_in_flight));
+    get_allocator().free(mem::to_bytes(frames_in_flight));
 
-    Graphics::buffer_unmap_memory(data.memory.frame_uniform_buffer, data.memory.mapped_frame_uniform_buffer);
-    Graphics::buffer_destroy(data.memory.frame_uniform_buffer);
-    Graphics::memory_heap_destroy(data.memory.frame_uniform_heap);
+    Graphics::buffer_unmap_memory(memory.frame_uniform_buffer, memory.mapped_frame_uniform_buffer);
+    Graphics::buffer_destroy(memory.frame_uniform_buffer);
+    Graphics::memory_heap_destroy(memory.frame_uniform_heap);
 
-    Graphics::buffer_unmap_memory(data.memory.vertex_buffer, data.memory.mapped_vertex_buffer);
-    Graphics::buffer_destroy(data.memory.vertex_buffer);
-    Graphics::memory_heap_destroy(data.memory.vertex_buffer_heap);
+    Graphics::buffer_unmap_memory(memory.vertex_buffer, memory.mapped_vertex_buffer);
+    Graphics::buffer_destroy(memory.vertex_buffer);
+    Graphics::memory_heap_destroy(memory.vertex_buffer_heap);
 
-    for(usize i = 0; i < data.render_image_finish_semaphore.len; i++)
+    for(usize i = 0; i < render_image_finish_semaphore.len; i++)
     {
-        Graphics::semaphore_destroy(data.render_image_finish_semaphore[i]);
+        Graphics::semaphore_destroy(render_image_finish_semaphore[i]);
     }
-    get_allocator().free(mem::to_bytes(data.render_image_finish_semaphore));
+    get_allocator().free(mem::to_bytes(render_image_finish_semaphore));
 
-    Graphics::swap_chain_destroy(data.swap_chain);
+    Graphics::swap_chain_destroy(swap_chain);
 
-    Graphics::queue_destroy(data.graphics_queue);
-    Graphics::queue_destroy(data.present_queue);
-
-    Graphics::command_pool_destroy(data.command_pool);
+    Graphics::command_pool_destroy(command_pool);
 }
 
 void SceneRenderer2D::draw_rect(const Transform2D& transform, const Color& color, const Rect2D& rect)
 {
     Unused(transform);
-    FrameInFlightInfo& frame_info = data.frames_in_flight[data.frame_index];
+    FrameInFlightInfo& frame_info = frames_in_flight[frame_index];
 
     QuadInstance& quad = *reinterpret_cast<QuadInstance*>(
-        data.memory.mapped_vertex_buffer.add(frame_info.vertex_heap_offset + frame_info.quad_count * sizeof(QuadInstance)).ptr()
+        memory.mapped_vertex_buffer.add(frame_info.vertex_heap_offset + frame_info.quad_count * sizeof(QuadInstance)).ptr()
     );
     quad.xx = transform[0];
     quad.yy = transform[1];
@@ -149,17 +136,17 @@ void SceneRenderer2D::draw_rect(const Transform2D& transform, const Color& color
 
 void SceneRenderer2D::dispatch()
 {
-    if(data.can_render == false)
+    if(can_render == false)
         return;
 
-    FrameInFlightInfo& frame_info = data.frames_in_flight[data.frame_index];
+    FrameInFlightInfo& frame_info = frames_in_flight[frame_index];
 
     Graphics::fence_wait_for(Slice(&frame_info.draw_fence, 1), true, MaxValue<u64>);
     Graphics::fence_reset(Slice(&frame_info.draw_fence, 1));
 
     u32 image_index;
     Graphics::swap_chain_acquire_next_image(
-        data.swap_chain,
+        swap_chain,
         {
             .timeout = MaxValue<u64>,
             .semaphore = frame_info.present_semaphore,
@@ -168,7 +155,7 @@ void SceneRenderer2D::dispatch()
         &image_index
     );
 
-    FrameUniformInfo& frame_uniform_info = *reinterpret_cast<FrameUniformInfo*>(data.memory.mapped_frame_uniform_buffer.add(frame_info.frame_uniform_heap_offset).ptr());
+    FrameUniformInfo& frame_uniform_info = *reinterpret_cast<FrameUniformInfo*>(memory.mapped_frame_uniform_buffer.add(frame_info.frame_uniform_heap_offset).ptr());
     Vector2I window_size = Engine::get_main_window().get_size();
 
     frame_uniform_info.view = Mat4::identity();
@@ -184,7 +171,7 @@ void SceneRenderer2D::dispatch()
         frame_info.command_buffer,
         {
             .size = Engine::get_main_window().get_size(),
-            .swap_chain = data.swap_chain,
+            .swap_chain = swap_chain,
             .image_index = image_index,
             .clear_color = Color(0, 0, 0, 255),
         }
@@ -193,14 +180,14 @@ void SceneRenderer2D::dispatch()
     if(frame_info.quad_count != 0)
     {
         Graphics::command_buffer_bind_pipeline(
-            frame_info.command_buffer, Graphics::PipelineBindPoint::Graphics, data.pipelines.quad_pipeline
+            frame_info.command_buffer, Graphics::PipelineBindPoint::Graphics, pipelines.quad_pipeline
         );
         Graphics::command_buffer_bind_descriptor_sets(
             frame_info.command_buffer, Graphics::PipelineBindPoint::Graphics, 0, Slice(&frame_info.quad_frame_set, 1)
         );
 
         Graphics::command_buffer_bind_vertex_buffers(
-            frame_info.command_buffer, 0, Slice(&data.memory.vertex_buffer, 1),
+            frame_info.command_buffer, 0, Slice(&memory.vertex_buffer, 1),
             Slice(&frame_info.vertex_heap_offset, 1)
         );
 
@@ -234,49 +221,49 @@ void SceneRenderer2D::dispatch()
 
     Graphics::PipelineStages wait_stage = Graphics::PipelineStages::RenderOutput;
     Graphics::queue_execute_command_buffer(
-        data.graphics_queue,
+        graphics_queue,
         {
             .wait_semaphores = Slice(&frame_info.present_semaphore, 1),
             .wait_stages = Slice(&wait_stage, 1),
             .command_buffers = Slice(&frame_info.command_buffer, 1),
-            .signal_semaphores = Slice(&data.render_image_finish_semaphore[image_index], 1),
+            .signal_semaphores = Slice(&render_image_finish_semaphore[image_index], 1),
             .fence = frame_info.draw_fence,
         }
     );
 
     Graphics::queue_present(
-        data.present_queue,
+        present_queue,
         {
-            .wait_semaphores = Slice(&data.render_image_finish_semaphore[image_index], 1),
-            .swapchains = Slice(&data.swap_chain, 1),
+            .wait_semaphores = Slice(&render_image_finish_semaphore[image_index], 1),
+            .swapchains = Slice(&swap_chain, 1),
             .image_indices = Slice(&image_index, 1),
         }
     );
 
-    data.frame_index = (data.frame_index + 1) % MaxFrameCount;
+    frame_index = (frame_index + 1) % MaxFrameCount;
 }
 
 void SceneRenderer2D::_recreate_swap_chain()
 {
-    Graphics::queue_wait_idle(data.graphics_queue);
-    Graphics::queue_wait_idle(data.present_queue);
+    Graphics::queue_wait_idle(graphics_queue);
+    Graphics::queue_wait_idle(present_queue);
 
-    data.can_render = false;
+    can_render = false;
     Vector2I window_size = Engine::get_main_window().get_size();
     if(window_size.width == 0 || window_size.height == 0)
     {
         return;
     }
 
-    if(data.swap_chain.is_valid())
+    if(swap_chain.is_valid())
     {
-        Graphics::swap_chain_destroy(data.swap_chain);
-        data.swap_chain = Graphics::SwapChainID();
+        Graphics::swap_chain_destroy(swap_chain);
+        swap_chain = Graphics::SwapChainID();
     }
     
-    data.swap_chain = Graphics::swap_chain_create(
+    swap_chain = Graphics::swap_chain_create(
         {
-            .device = data.device,
+            .device = device,
             .surface = Engine::get_main_window().get_surface(),
             .present_mode = Graphics::PresentMode::Immediate,
             .format = SwapChainFormat,
@@ -285,7 +272,7 @@ void SceneRenderer2D::_recreate_swap_chain()
         }
     );
 
-    data.can_render = true;
+    can_render = true;
 }
 
 SceneRenderer2D::FrameInFlightInfo SceneRenderer2D::_create_frame_info(Graphics::CommandPoolID command_pool, u32 frame_index)
@@ -300,27 +287,27 @@ SceneRenderer2D::FrameInFlightInfo SceneRenderer2D::_create_frame_info(Graphics:
 
     frame_info.draw_fence = Graphics::fence_create(
         {
-            .device = data.device,
+            .device = device,
             .signaled = true,
         }
     );
 
     frame_info.present_semaphore = Graphics::semaphore_create(
         {
-            .device = data.device,
+            .device = device,
         }
     );
 
     frame_info.quad_frame_set = Graphics::descriptor_set_create(
         {
-            .device = data.device,
-            .set_layout = data.pipelines.quad_layout,
+            .device = device,
+            .set_layout = pipelines.quad_layout,
         }
     );
 
     Graphics::DescriptorBufferInfo buffers[] =
     {
-        { .buffer = data.memory.frame_uniform_buffer, .offset = frame_index * sizeof(FrameUniformInfo), .range = sizeof(FrameUniformInfo), },
+        { .buffer = memory.frame_uniform_buffer, .offset = frame_index * sizeof(FrameUniformInfo), .range = sizeof(FrameUniformInfo), },
     };
 
     Graphics::WriteDescriptorInfo write_infos[] =
@@ -357,9 +344,9 @@ void SceneRenderer2D::_create_pipelines()
             { .type = Graphics::DescriptorType::UniformBuffer, .binding = 0, .count = 1, .stages = Graphics::ShaderStage::Vertex },
         };
 
-        data.pipelines.quad_layout = Graphics::descriptor_set_layout_create(
+        pipelines.quad_layout = Graphics::descriptor_set_layout_create(
             {
-                .device = data.device,
+                .device = device,
                 .bindings = quad_bindings,
             }
         );
@@ -389,9 +376,9 @@ void SceneRenderer2D::_create_pipelines()
             };
         }
 
-        data.pipelines.quad_pipeline = Graphics::pipeline_create(
+        pipelines.quad_pipeline = Graphics::pipeline_create(
             {
-                .device = data.device,
+                .device = device,
                 .bind_point = Graphics::PipelineBindPoint::Graphics,
                 .shader_stages = quad_stages,
                 .vertex_input =
@@ -432,7 +419,7 @@ void SceneRenderer2D::_create_pipelines()
                 .pipeline_layout =
                 {
                     .constant_blocks = {},
-                    .set_layouts = Slice(&data.pipelines.quad_layout, 1),
+                    .set_layouts = Slice(&pipelines.quad_layout, 1),
                 },
                 .surface_format = SwapChainFormat,
             }
@@ -444,6 +431,6 @@ void SceneRenderer2D::_create_pipelines()
 
 void SceneRenderer2D::_destroy_pipelines()
 {
-    Graphics::descriptor_set_layout_destroy(data.pipelines.quad_layout);
-    Graphics::pipeline_destroy(data.pipelines.quad_pipeline);
+    Graphics::descriptor_set_layout_destroy(pipelines.quad_layout);
+    Graphics::pipeline_destroy(pipelines.quad_pipeline);
 }

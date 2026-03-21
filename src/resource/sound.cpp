@@ -58,7 +58,7 @@ Error Sound::load(StringView file_path)
     if (File::exists(file_path) == false)
     {
         RMDebugInfo("Couldn't load the font '{}'", file_path);
-        return MakeError(FileNotFound);
+        return MakeError(ErrorCode::FileNotFound);
     }
 
     auto& allocator = ResourceManager::get_allocator();
@@ -91,5 +91,5 @@ Error Sound::load(StringView file_path)
     allocator.free(buffer);
     allocator.free(content);
 
-    return Ok;
+    return ErrorCode::Ok;
 }

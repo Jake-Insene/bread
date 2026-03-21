@@ -126,7 +126,7 @@ Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
         {
             return data.resources.get(path);
         }
-        return MakeError(ResourceNotFound);
+        return MakeError(ErrorCode::ResourceNotFound);
     }
     break;
     case RESOURCE_MATERIAL:
@@ -138,7 +138,7 @@ Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
         break;
     }
 
-    return MakeError(InvalidResourceType);
+    return MakeError(ErrorCode::InvalidResourceType);
 }
 
 

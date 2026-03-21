@@ -93,14 +93,10 @@ void P2DDriver::initialize(const mem::Allocator& allocator)
 
     data.fixed_step = Physics2D::get_property("/fixed_step").get<f32>();
     data.accumulator = 0.0f;
-
-    data.grid_item = RenderManager::create_item();
 }
 
 void P2DDriver::shutdown()
 {
-    RenderManager::destroy_item(data.grid_item);
-
     data.active_areas.destroy();
     data.active_bodies.destroy();
 
@@ -152,20 +148,20 @@ void P2DDriver::step(f32 dt)
     if (!data.debug_draw)
         return;
 
-    for (auto& [cid, tile] : data.world_tiles.iter())
-    {
-        const PhysicsTileCoord& coord = cid;
-        if(tile.bodies.count == 0 && tile.areas.count == 0)
-            continue;
+    //for (auto& [cid, tile] : data.world_tiles.iter())
+    //{
+    //    const PhysicsTileCoord& coord = cid;
+    //    if(tile.bodies.count == 0 && tile.areas.count == 0)
+    //        continue;
 
-        const f32 ts = f32(_get_tile_size());
-        Vector2 min = Vector2((coord.x) * ts, (coord.y) * ts);
-        Vector2 max = min + Vector2(ts, ts);
-        RenderManager::render_item_draw_line(data.grid_item, Vector2(min.x, min.y), Vector2(max.x, min.y), Color(128, 128, 128, 255));
-        RenderManager::render_item_draw_line(data.grid_item, Vector2(max.x, min.y), Vector2(max.x, max.y), Color(128, 128, 128, 255));
-        RenderManager::render_item_draw_line(data.grid_item, Vector2(max.x, max.y), Vector2(min.x, max.y), Color(128, 128, 128, 255));
-        RenderManager::render_item_draw_line(data.grid_item, Vector2(min.x, max.y), Vector2(min.x, min.y), Color(128, 128, 128, 255));
-    }
+    //    const f32 ts = f32(_get_tile_size());
+    //    Vector2 min = Vector2((coord.x) * ts, (coord.y) * ts);
+    //    Vector2 max = min + Vector2(ts, ts);
+    //    RenderManager::render_item_draw_line(data.grid_item, Vector2(min.x, min.y), Vector2(max.x, min.y), Color(128, 128, 128, 255));
+    //    RenderManager::render_item_draw_line(data.grid_item, Vector2(max.x, min.y), Vector2(max.x, max.y), Color(128, 128, 128, 255));
+    //    RenderManager::render_item_draw_line(data.grid_item, Vector2(max.x, max.y), Vector2(min.x, max.y), Color(128, 128, 128, 255));
+    //    RenderManager::render_item_draw_line(data.grid_item, Vector2(min.x, max.y), Vector2(min.x, min.y), Color(128, 128, 128, 255));
+    //}
 }
 
 Physics2D::BodyID P2DDriver::create_body(Opaque* user_data)
@@ -564,60 +560,16 @@ void P2DDriver::_step_fixed(f32 dt)
 
 void P2DDriver::_handle_debug_draw_body(P2DBody& body)
 {
+    Unused(body);
     if (data.debug_draw == false)
         return;
-
-    const P2DShape& shape = body.get_shape_transformed();
-
-    for (usize i = 0; i < shape.vertices.count; i++)
-    {
-        Vector2 point1 = shape.vertices.get(i);
-        Vector2 point2 = shape.vertices.get((i + 1) % shape.vertices.count);
-
-        RenderManager::render_item_draw_line(
-            data.grid_item,
-            point1, point2, Color(255, 0, 0, 255)
-        );
-    }
-    
-    RenderManager::render_item_draw_circle(
-        data.grid_item,
-        shape.get_centroid(), 1.f, Color(255, 0, 0, 255)
-    );
-
-    RenderManager::render_item_draw_circle(
-        data.grid_item,
-        shape.aabb.min, 1.f, Color(0, 255, 0, 255)
-    );
-
-    RenderManager::render_item_draw_circle(
-        data.grid_item,
-        shape.aabb.max, 1.f, Color(0, 0, 255, 255)
-    );
 }
 
 void P2DDriver::_handle_debug_draw_area(P2DArea& area)
 {
+    Unused(area);
     if (data.debug_draw == false)
         return;
-
-    const P2DShape& shape = area.get_shape_transformed();
-
-    for (usize i = 0; i < shape.vertices.count; i++)
-    {
-        Vector2 point1 = shape.vertices.get(i);
-        Vector2 point2 = shape.vertices.get((i + 1) % shape.vertices.count);
-
-        RenderManager::render_item_draw_line(
-            data.grid_item,
-            point1, point2, Color(0, 0, 255, 255)
-        );
-    }
-
-    RenderManager::render_item_draw_circle(
-        data.grid_item,
-        shape.get_centroid(), 1.f, Color(255, 0, 0, 255)
-    );
 }
 
 void P2DDriver::_move_body(P2DBody& body, f32 dt)

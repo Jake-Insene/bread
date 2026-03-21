@@ -143,7 +143,7 @@ Error Font::load(StringView file_path)
     if (File::exists(file_path) == false)
     {
         RMDebugInfo("Couldn't load the font '{}'", file_path);
-        return MakeError(FileNotFound);
+        return MakeError(ErrorCode::FileNotFound);
     }
 
     auto& allocator = ResourceManager::get_allocator();
@@ -163,7 +163,7 @@ Error Font::load(StringView file_path)
     
     allocator.free(content);
 
-    return Ok;
+    return ErrorCode::Ok;
 }
 
 const Font::FontTheme& Font::get_font_theme(i32 font_size)

@@ -26,7 +26,7 @@ Error Image::load(StringView file_path)
     if (File::exists(file_path) == false)
     {
         RMDebugInfo("Couldn't load the font '{}'", file_path);
-        return MakeError(FileNotFound);
+        return MakeError(ErrorCode::FileNotFound);
     }
 
     Slice<u8> buffer = File::read_all(ResourceManager::get_allocator(), file_path);
@@ -38,7 +38,7 @@ Error Image::load(StringView file_path)
 
     if(pixels.null())
     {
-        return MakeError(ImageCorrupted);
+        return MakeError(ErrorCode::ImageCorrupted);
     }
     
     if(channels == 3)
@@ -57,7 +57,7 @@ Error Image::load(StringView file_path)
     pixels.len = size.width * size.height * channels;
     ResourceManager::get_allocator().free(buffer);
     
-    return Ok;
+    return ErrorCode::Ok;
 }
 
 void Image::unload()

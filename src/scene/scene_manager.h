@@ -3,7 +3,6 @@
 #include "collections/hash_map.h"
 #include "math/color.h"
 #include "math/vec2.h"
-#include "render/viewport.h"
 #include "scene/scene.h"
 
 
@@ -22,7 +21,7 @@ struct SceneManager
         bool keep_viewport;
         
         Vector2I viewport_size;
-        Viewport main_viewport;
+        //Viewport main_viewport;
 
         Scene* current_scene;
     
@@ -68,12 +67,8 @@ struct SceneManager
     static void set_keep_viewport(bool keep_viewport);
     static bool get_keep_viewport() { return data.keep_viewport; }
 
-    static Viewport& get_main_viewport() { return data.main_viewport; }
     static void set_viewport_size(const Vector2I& new_vp_size);
     static Vector2I get_viewport_size() { return data.viewport_size; }
-
-    static void set_background_color(Color new_bg_color) { get_main_viewport().clear_color = new_bg_color; }
-    static Color get_background_color() { return get_main_viewport().clear_color; }
 
     static void scene_handle_event(const InputEvent& event);
     

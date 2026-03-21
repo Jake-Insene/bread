@@ -4,11 +4,23 @@
 #include "math/color.h"
 #include "math/transform_2d.h"
 #include "math/projection.h"
+#include "systems/system.h"
 
 
 
-struct SceneRenderer2D
+struct SceneRenderer2D : System<SceneRenderer2D>
 {
+    static constexpr SystemDependency Dependencies[] =
+    {
+        SystemDependency::of("RenderDevice")
+    };
+
+    static constexpr StringView _name = "SceneRenderer2D";
+    static constexpr SystemInfo get_system_info()
+    {
+        return System::get_system_info_with_name(_name);
+    }
+
     static constexpr Graphics::SurfaceFormat SwapChainFormat = Graphics::SurfaceFormat::RGBA8Srgb;
     static constexpr usize SwapChainMinImageCount = 3;
 
@@ -67,60 +79,55 @@ struct SceneRenderer2D
         FrameUniformInfo frame_uniform_info;
     };
 
-    struct InternalData
+    mem::Allocator allocator;
+
+    Graphics::DeviceID device;
+    Graphics::QueueID graphics_queue;
+    Graphics::QueueID present_queue;
+
+    Graphics::CommandPoolID command_pool;
+    
+    Graphics::SwapChainID swap_chain;
+    Slice<Graphics::SemaphoreID> render_image_finish_semaphore;
+    
+    struct
     {
-        mem::Allocator allocator;
+        Graphics::MemoryHeapID vertex_buffer_heap;
+        Graphics::BufferID vertex_buffer;
+        Slice<u8> mapped_vertex_buffer;
 
-        Graphics::DeviceID device;
-        Graphics::QueueID graphics_queue;
-        Graphics::QueueID present_queue;
+        Graphics::MemoryHeapID frame_uniform_heap;
+        Graphics::BufferID frame_uniform_buffer;
+        Slice<u8> mapped_frame_uniform_buffer;
+    } memory;
 
-        Graphics::CommandPoolID command_pool;
-        
-        Graphics::SwapChainID swap_chain;
-        Slice<Graphics::SemaphoreID> render_image_finish_semaphore;
-        
-        struct
-        {
-            Graphics::MemoryHeapID vertex_buffer_heap;
-            Graphics::BufferID vertex_buffer;
-            Slice<u8> mapped_vertex_buffer;
+    struct
+    {
+        Graphics::DescriptorSetLayoutID quad_layout;
+        Graphics::PipelineID quad_pipeline;
+    } pipelines;
 
-            Graphics::MemoryHeapID frame_uniform_heap;
-            Graphics::BufferID frame_uniform_buffer;
-            Slice<u8> mapped_frame_uniform_buffer;
-        } memory;
+    Slice<FrameInFlightInfo> frames_in_flight;
 
-        struct
-        {
-            Graphics::DescriptorSetLayoutID quad_layout;
-            Graphics::PipelineID quad_pipeline;
-        } pipelines;
+    u32 frame_index;
+    bool can_render;
 
-        Slice<FrameInFlightInfo> frames_in_flight;
+    [[nodiscard]] mem::Allocator get_allocator() { return allocator; }
 
-        u32 frame_index;
-        bool can_render;
-    };
+    void initialize(const SystemInitializeInfo& info);
+    void shutdown();
 
-    static inline InternalData data = {};
+    void draw_rect(const Transform2D& transform, const Color& color, const Rect2D& rect);
 
-    [[nodiscard]] static mem::Allocator get_allocator() { return data.allocator; }
+    void dispatch();
 
-    static void initialize(const mem::Allocator& allocator);
-    static void shutdown();
+    void _recreate_swap_chain();
+    void _disable_rendering() { can_render = false; }
 
-    static void draw_rect(const Transform2D& transform, const Color& color, const Rect2D& rect);
+    FrameInFlightInfo _create_frame_info(Graphics::CommandPoolID command_pool, u32 frame_index);
+    void _destroy_frame_info(FrameInFlightInfo& frame_info);
 
-    static void dispatch();
-
-    static void _recreate_swap_chain();
-    static void _disable_rendering() { data.can_render = false; }
-
-    static FrameInFlightInfo _create_frame_info(Graphics::CommandPoolID command_pool, u32 frame_index);
-    static void _destroy_frame_info(FrameInFlightInfo& frame_info);
-
-    static void _create_pipelines();
-    static void _destroy_pipelines();
+    void _create_pipelines();
+    void _destroy_pipelines();
 };
 
