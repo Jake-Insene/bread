@@ -23,16 +23,16 @@ static constexpr const char* _vk_extensions[] =
 
 VkAllocationCallbacks* Vulkan::allocation_callbacks()
 {
-    //static VkAllocationCallbacks _vk_allocation_callbacks =
-    //{
-    //    .pUserData = nullptr,
-    //    .pfnAllocation = &_vk_driver_allocate,
-    //    .pfnReallocation = &_vk_driver_reallocate,
-    //    .pfnFree = &_vk_driver_free,
-    //    .pfnInternalAllocation = &_vk_driver_internal_allocate,
-    //    .pfnInternalFree = &_vk_driver_internal_free,
-    //};
-    return nullptr;
+    static VkAllocationCallbacks _vk_allocation_callbacks =
+    {
+        .pUserData = nullptr,
+        .pfnAllocation = &_vk_driver_allocate,
+        .pfnReallocation = &_vk_driver_reallocate,
+        .pfnFree = &_vk_driver_free,
+        .pfnInternalAllocation = &_vk_driver_internal_allocate,
+        .pfnInternalFree = &_vk_driver_internal_free,
+    };
+    return &_vk_allocation_callbacks;
 }
 
 void Vulkan::load_core_procs(MemoryAddress vk_lib)
