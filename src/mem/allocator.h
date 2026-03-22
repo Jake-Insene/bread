@@ -1,6 +1,5 @@
 #pragma once
-#include "core/types.h"
-#include "core/templates.h"
+#include "core/header.h"
 
 
 template<typename T>

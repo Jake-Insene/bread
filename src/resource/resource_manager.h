@@ -20,8 +20,6 @@ struct ResourceManager
     struct TextureLoadInfo
     {
         GPU::TextureType type;
-        GPU::Filter min_filter;
-        GPU::Filter mag_filter;
     };
 
     struct InternalData

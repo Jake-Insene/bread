@@ -1,6 +1,6 @@
 #pragma once
 #include "resource/resource.h"
-#include "gpu/gpu.h"
+#include "render/resource/gpu_texture_resource.h"
 #include "math/vec2.h"
 
 
@@ -9,7 +9,8 @@ struct Texture : Resource
 {
     RESOURCE(RESOURCE_TEXTURE, LoadFromAssets, ResourceExtensions("png"))
 
-    GPU::TextureID texture_id;
+    GPUTextureRef texture_ref;
+    Vector2I size;
     
     void init();
     void destroy();

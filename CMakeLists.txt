@@ -50,6 +50,7 @@ file(GLOB ENGINE_SRC
     src/mem/utils.cpp
     src/mem/generic_allocator.cpp
     src/mem/page_allocator.cpp
+    src/mem/stack_allocator.cpp
 
     src/os/mutex.cpp
     src/os/os.cpp
@@ -79,9 +80,12 @@ file(GLOB ENGINE_SRC
     
     src/platform/intrinsics.cpp
 
-    src/render/2d/scene_renderer_2d.cpp
-
     src/render/render_device.cpp
+    
+    src/render/2d/scene_renderer_2d.cpp
+    
+    src/render/core/gpu_memory_allocator.cpp
+    src/render/core/gpu_resource_manager.cpp
 
     src/resource/font.cpp
     src/resource/image.cpp

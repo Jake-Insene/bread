@@ -3,7 +3,7 @@
 #include "collections/reverse_iterator.h"
 
 
-void SystemManager::init(const mem::Allocator& _allocator)
+void SystemManager::initialize(const mem::Allocator& _allocator)
 {
     allocator = _allocator;
 
@@ -11,7 +11,7 @@ void SystemManager::init(const mem::Allocator& _allocator)
     flow_order = Array<usize>::with_size(allocator, 4);
 }
 
-void SystemManager::destroy()
+void SystemManager::shutdown()
 {
     flow_order.destroy();
     systems.destroy();

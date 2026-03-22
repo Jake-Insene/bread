@@ -3,6 +3,7 @@
 #include "collections/hash_map.h"
 #include "gpu/gpu_adapter.h"
 #include "gpu/vk/vk_header.h"
+#include "mem/stack_allocator.h"
 #include "platform/platform_header.h"
 
 
@@ -225,6 +226,7 @@ struct VulkanDriver
     struct InternalData
     {
         mem::Allocator allocator;
+		mem::StackAllocator tmp_allocator;
 
 		Slice<PhysicalDevice> physical_devices;
 		Slice<GPU::PhysicalDeviceID> physical_device_ids;
@@ -259,7 +261,12 @@ struct VulkanDriver
 
     static inline InternalData data;
 
-    [[nodiscard]] static mem::Allocator& get_allocator() { return data.allocator; }
+    [[nodiscard]] static mem::Allocator get_allocator() { return data.allocator; }
+	[[nodiscard]]static mem::Allocator acquire_tmp_allocator()
+	{
+		data.tmp_allocator.reset();
+		return data.tmp_allocator.allocator();
+	}
 
     static InternalGPU::GPUAdapter get_adapter();
 

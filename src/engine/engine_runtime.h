@@ -82,8 +82,8 @@ struct EngineRuntime
     i32 fps;
     bool vsync_cache;
 
-    void init();
-    void destroy();
+    void initialize();
+    void shutdown();
     
     void step();
     void handle_event(const InputEvent& event);

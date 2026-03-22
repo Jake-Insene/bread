@@ -1,5 +1,6 @@
 #include "resource/resource_manager.h"
 
+#include "engine/engine.h"
 #include "io/file.h"
 #include "resource/resource_manager_internal.h"
 #include "resource/font.h"
@@ -9,6 +10,7 @@
 #include "resource/sound.h"
 #include "resource/sprite_animation.h"
 #include "resource/tile_set.h"
+#include "render/render_device.h"
 
 #include <external/stb_image.h>
 
@@ -108,8 +110,6 @@ Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
             TextureLoadInfo
             {
                 .type = GPU::TextureType::Texture2D,
-                .min_filter = GPU::Filter::Nearest,
-                .mag_filter = GPU::Filter::Nearest,
             }
         );
         break;
@@ -208,7 +208,6 @@ Result<Resource*, Error> ResourceManager::_load_image(StringView path)
 
 Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, const TextureLoadInfo& load_info)
 {
-    Unused(load_info);
     Image* image = nullptr;
     if(data.resources.has(path))
     {
@@ -236,21 +235,16 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
         tex = _create_resource<Texture2D>();
         tex->path.set(path);
         
-        GPU::TextureCreateInfo create_info =
+        GPUTextureResourceCreateInfo create_info =
         {
-#if 0
-            //.usage = GPU::TEXTURE_USAGE_UPLOAD_ONCE,
             .type = load_info.type,
-            .format = image->format == Image::FORMAT_RGB8 ? GPU::TextureFormat::RGB8 : GPU::TextureFormat::RGBA8,
-            //.min_filter = load_info.min_filter,
-            //.mag_filter = load_info.mag_filter,
-            .size = image->size,
-            .memory_heap = GPU::MemoryHeapID(),
-            .heap_offset = 0,
-#endif
+            .format = image->format == Image::FORMAT_RGB8 ? GPU::TextureFormat::RGB8Srgb : GPU::TextureFormat::RGBA8Srgb,
+            .extent = Vector3U(image->size.width, image->size.height, 1),
+            .pixels = image->pixels,
         };
-        tex->texture_id = GPU::texture_create(create_info);
-
+        
+        tex->texture_ref = Engine::get_system_manager().get_system<RenderDevice>()->get_resource_manager().create_texture(create_info);
+        tex->size = image->size;
         data.cached_images.insert(image, tex);
     }
     

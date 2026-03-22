@@ -23,8 +23,8 @@ struct SystemManager
     Array<SystemInstance> systems;
     Array<usize> flow_order;
 
-    void init(const mem::Allocator& _allocator);
-    void destroy();
+    void initialize(const mem::Allocator& _allocator);
+    void shutdown();
 
     template<typename T>
     requires IsBaseOf<System<T>, T>

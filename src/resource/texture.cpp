@@ -1,22 +1,26 @@
 #include "resource/texture.h"
 
+#include "engine/engine.h"
 #include "resource/resource_manager.h"
+#include "render/render_device.h"
 
 
 void Texture::init()
 {
     Resource::init(RESOURCE_TEXTURE);
+    texture_ref = GPUTextureRef::invalid();
+    size = Vector2I();
 }
 
 void Texture::destroy()
 {
     Resource::destroy();
-    GPU::texture_destroy(texture_id);
+    Engine::get_system_manager().get_system<RenderDevice>()->get_resource_manager().destroy_texture(texture_ref);
 }
 
 Vector2I Texture::get_size() const
 {
-    return GPU::texture_get_size(texture_id);
+    return size;
 }
 
 void Texture2D::init()

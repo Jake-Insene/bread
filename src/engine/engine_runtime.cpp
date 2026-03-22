@@ -21,7 +21,7 @@ void operator delete(void*)
     FailOn(true, "avoid 'delete' statements!");
 }
 
-void EngineRuntime::init()
+void EngineRuntime::initialize()
 {
     allocator = {};
     mem::Allocator allocator_ref = allocator.allocator();
@@ -33,7 +33,7 @@ void EngineRuntime::init()
     OS::initialize(allocator_ref);
 
     // Initializing systems manager
-    system_manager.init(allocator_ref);
+    system_manager.initialize(allocator_ref);
 
     main_queue = JobQueue::with_size(allocator_ref, DefaultMainQueueSize);
     fps = 60;
@@ -71,16 +71,14 @@ void EngineRuntime::init()
     SceneManager::change_scene(__configuration__.create_main_scene(allocator_ref));
 }
 
-void EngineRuntime::destroy()
+void EngineRuntime::shutdown()
 {
     SceneManager::shutdown();
+    ResourceManager::shutdown();
 
     system_manager.deallocate_systems();
 
     Physics2D::shutdown();
-
-    ResourceManager::shutdown();
-
     Audio::shutdown();
     
     main_window.destroy();
@@ -92,7 +90,7 @@ void EngineRuntime::destroy()
 
     OS::shutdown();
 
-    system_manager.destroy();
+    system_manager.shutdown();
 
     allocator.destroy();
 }

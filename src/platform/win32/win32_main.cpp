@@ -152,7 +152,7 @@ void engine_loop()
 	}
 
 	Engine::local_data.engine_runtime = &engine;
-	engine.init();
+	engine.initialize();
 
 	while (true)
 	{
@@ -168,7 +168,7 @@ void engine_loop()
 		engine.step();
 	}
 
-	engine.destroy();
+	engine.shutdown();
 }
 
 // Default for Windows
