@@ -16,6 +16,19 @@ void SceneRenderer2D::initialize(const SystemInitializeInfo& info)
 
     present_queue = Engine::get_system_manager().get_system<RenderDevice>()->get_present_queue();
 
+    GPU::DescriptorPoolSize pool_sizes[] =
+    {
+        { .type = GPU::DescriptorType::UniformBuffer, .count = 1000, }
+    };
+
+    descriptor_pool = GPU::descriptor_pool_create(
+        {
+            .device = device,
+            .max_sets = 100,
+            .sizes = pool_sizes,
+        }
+    );
+
     command_pool = GPU::command_pool_create(
         {
             .device = device,
@@ -114,6 +127,7 @@ void SceneRenderer2D::shutdown()
 
     GPU::swap_chain_destroy(swap_chain);
 
+    GPU::descriptor_pool_destroy(descriptor_pool);
     GPU::command_pool_destroy(command_pool);
 }
 
@@ -298,9 +312,10 @@ SceneRenderer2D::FrameInFlightInfo SceneRenderer2D::_create_frame_info(GPU::Comm
         }
     );
 
-    frame_info.quad_frame_set = GPU::descriptor_set_create(
+    frame_info.quad_frame_set = GPU::descriptor_set_allocate(
         {
             .device = device,
+            .pool = descriptor_pool,
             .set_layout = pipelines.quad_layout,
         }
     );
@@ -333,7 +348,7 @@ void SceneRenderer2D::_destroy_frame_info(FrameInFlightInfo& frame_info)
     GPU::command_buffer_free(frame_info.command_buffer);
     GPU::fence_destroy(frame_info.draw_fence);
     GPU::semaphore_destroy(frame_info.present_semaphore);
-    GPU::descriptor_set_destroy(frame_info.quad_frame_set);
+    GPU::descriptor_set_free(frame_info.quad_frame_set);
 }
 
 void SceneRenderer2D::_create_pipelines()

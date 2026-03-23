@@ -9,7 +9,7 @@ struct AndroidDisplay
     {
         mem::Allocator allocator;
 
-        Graphics::SurfaceID window_surface;
+        GPU::SurfaceID window_surface;
         Vector2I window_size;
     };
 

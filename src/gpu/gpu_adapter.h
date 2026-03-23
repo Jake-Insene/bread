@@ -61,8 +61,11 @@ struct GPUAdapter
 	VTFunc(GPU::DescriptorSetLayoutID, descriptor_set_layout_create, const GPU::DescriptorSetLayoutCreateInfo& ci);
 	VTFunc(void, descriptor_set_layout_destroy, GPU::DescriptorSetLayoutID descriptor_set_layout);
 
-	VTFunc(GPU::DescriptorSetID, descriptor_set_create, const GPU::DescriptorSetCreateInfo& ci);
-	VTFunc(void, descriptor_set_destroy, GPU::DescriptorSetID descriptor_set);
+	VTFunc(GPU::DescriptorPoolID, descriptor_pool_create, const GPU::DescriptorPoolCreateInfo& ci);
+	VTFunc(void, descriptor_pool_destroy, GPU::DescriptorPoolID descriptor_pool);
+
+	VTFunc(GPU::DescriptorSetID, descriptor_set_allocate, const GPU::DescriptorSetAllocateInfo& ci);
+	VTFunc(void, descriptor_set_free, GPU::DescriptorSetID descriptor_set);
 	VTFunc(void, descriptor_set_update_descriptors, GPU::DescriptorSetID descriptor_set, const GPU::UpdateDescriptorInfo& update_info);
 
 	VTFunc(GPU::PipelineID, pipeline_create, const GPU::PipelineCreateInfo& ci);

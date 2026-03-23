@@ -53,8 +53,10 @@ InternalGPU::GPUAdapter VulkanDriver::get_adapter()
         .render_target_get_texture = &VulkanDriver::render_target_get_texture,
         .descriptor_set_layout_create = &VulkanDriver::descriptor_set_layout_create,
         .descriptor_set_layout_destroy = &VulkanDriver::descriptor_set_layout_destroy,
-        .descriptor_set_create = &VulkanDriver::descriptor_set_create,
-        .descriptor_set_destroy = &VulkanDriver::descriptor_set_destroy,
+        .descriptor_pool_create = &VulkanDriver::descriptor_pool_create,
+        .descriptor_pool_destroy = &VulkanDriver::descriptor_pool_destroy,
+        .descriptor_set_allocate = &VulkanDriver::descriptor_set_allocate,
+        .descriptor_set_free = &VulkanDriver::descriptor_set_free,
         .descriptor_set_update_descriptors = &VulkanDriver::descriptor_set_update_descriptors,
         .pipeline_create = &VulkanDriver::pipeline_create,
         .pipeline_destroy = &VulkanDriver::pipeline_destroy,
@@ -99,6 +101,7 @@ void VulkanDriver::initialize(const mem::Allocator &allocator)
     data.textures = FreeList<Texture, GPU::TextureID>::with_allocator(allocator);
     data.render_targets = FreeList<RenderTarget, GPU::RenderTargetID>::with_allocator(allocator);
     data.descriptor_set_layouts = FreeList<DescriptorSetLayout, GPU::DescriptorSetLayoutID>::with_allocator(allocator);
+    data.descriptor_pools = FreeList<DescriptorPool, GPU::DescriptorPoolID>::with_allocator(allocator);
     data.descriptor_sets = FreeList<DescriptorSet, GPU::DescriptorSetID>::with_allocator(allocator);
     data.pipelines = FreeList<Pipeline, GPU::PipelineID>::with_allocator(allocator);
     data.command_pools = FreeList<CommandPool, GPU::CommandPoolID>::with_allocator(allocator);
@@ -177,6 +180,7 @@ void VulkanDriver::shutdown()
     data.textures.destroy();
     data.render_targets.destroy();
     data.descriptor_set_layouts.destroy();
+    data.descriptor_pools.destroy();
     data.descriptor_sets.destroy();
     data.pipelines.destroy();
     data.command_pools.destroy();
@@ -478,29 +482,6 @@ GPU::DeviceID VulkanDriver::device_create(const GPU::DeviceCreateInfo& ci)
         }
     }
 
-    // Global pool
-    VkDescriptorPoolSize vk_pool_sizes[] =
-    {
-        { .type = VK_DESCRIPTOR_TYPE_SAMPLER, .descriptorCount = 128, },
-        { .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .descriptorCount = 1000, },
-        { .type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, .descriptorCount = 1000, },
-        { .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, .descriptorCount = 1000, },
-        { .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, .descriptorCount = 1000, },
-    };
-
-    VkDescriptorPoolCreateInfo vk_global_pool_info = 
-    {
-        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-        .pNext = nullptr,
-        .flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
-        .maxSets = 1000,
-        .poolSizeCount = static_cast<uint32_t>(ArraySize(vk_pool_sizes)),
-        .pPoolSizes = vk_pool_sizes,
-    };
-
-    result = ld.vk.vkCreateDescriptorPool(ld.vk_device, &vk_global_pool_info, Vulkan::allocation_callbacks(), &ld.vk_global_descriptor_pool);
-    VKFailOn(result != VK_SUCCESS, "vkCreateDescriptorPool({})", Vulkan::result_as_string(result));
-
     ld.render_pass_cache = HashMap<VkFormat, RenderPassCache>::with_allocator(get_allocator());
 
     ld.device = device_id;
@@ -512,8 +493,6 @@ void VulkanDriver::device_destroy(GPU::DeviceID device)
 {
     VKFailOn(device.is_valid() == false, "invalid device");
     LogicalDevice& ld = _get_logical_device(device);
-    
-    ld.vk.vkDestroyDescriptorPool(ld.vk_device, ld.vk_global_descriptor_pool, Vulkan::allocation_callbacks());
     
     for(usize i = 0; i < ld.families.len; i++)
     {
@@ -1376,25 +1355,80 @@ void VulkanDriver::descriptor_set_layout_destroy(GPU::DescriptorSetLayoutID desc
     data.descriptor_set_layouts.remove(descriptor_set_layout);
 }
 
-GPU::DescriptorSetID VulkanDriver::descriptor_set_create(const GPU::DescriptorSetCreateInfo& ci)
+GPU::DescriptorPoolID VulkanDriver::descriptor_pool_create(const GPU::DescriptorPoolCreateInfo& ci)
 {
     VKFailOn(ci.device.is_valid() == false, "invalid device");
+
+    GPU::DescriptorPoolID descriptor_pool_id = data.descriptor_pools.add(DescriptorPool());
+    DescriptorPool& descriptor_pool = data.descriptor_pools.get(descriptor_pool_id);
+    LogicalDevice& ld = _get_logical_device(ci.device);
+    mem::Allocator allocator = acquire_tmp_allocator();
+
+    descriptor_pool.vk_device = ld.vk_device;
+    descriptor_pool.device = ci.device;
+    descriptor_pool.descriptor_pool = descriptor_pool_id;
+
+    Slice<VkDescriptorPoolSize> vk_pool_sizes = allocator.array<VkDescriptorPoolSize>(ci.sizes.len);
+    for(usize i = 0; i < vk_pool_sizes.len; i++)
+    {
+        vk_pool_sizes[i] =
+        {
+            .type = VkUtils::_vk_get_descriptor_type(ci.sizes[i].type),
+            .descriptorCount = ci.sizes[i].count,
+        };
+    }
+
+    VkDescriptorPoolCreateInfo vk_global_pool_info = 
+    {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
+        .maxSets = ci.max_sets,
+        .poolSizeCount = static_cast<uint32_t>(vk_pool_sizes.len),
+        .pPoolSizes = vk_pool_sizes.ptr(),
+    };
+
+    VkResult result = ld.vk.vkCreateDescriptorPool(ld.vk_device, &vk_global_pool_info, Vulkan::allocation_callbacks(), &descriptor_pool.vk_descriptor_pool);
+    VKFailOn(result != VK_SUCCESS, "vkCreateDescriptorPool({})", Vulkan::result_as_string(result));
+
+    return descriptor_pool_id;
+}
+
+void VulkanDriver::descriptor_pool_destroy(GPU::DescriptorPoolID descriptor_pool)
+{
+    VKFailOn(descriptor_pool.is_valid() == false, "invalid descriptor pool");
+
+    DescriptorPool& pool = data.descriptor_pools.get(descriptor_pool);
+    LogicalDevice& ld = _get_logical_device(pool.device);
+
+    ld.vk.vkDestroyDescriptorPool(pool.vk_device, pool.vk_descriptor_pool, Vulkan::allocation_callbacks());
+
+    data.descriptor_pools.remove(descriptor_pool);
+}
+
+GPU::DescriptorSetID VulkanDriver::descriptor_set_allocate(const GPU::DescriptorSetAllocateInfo& ci)
+{
+    VKFailOn(ci.device.is_valid() == false, "invalid device");
+    VKFailOn(ci.pool.is_valid() == false, "invalid descriptor pool");
     VKFailOn(ci.set_layout.is_valid() == false, "invalid set layout");
 
     GPU::DescriptorSetID descriptor_set_id = data.descriptor_sets.add(DescriptorSet());
     DescriptorSet& set = _get_descriptor_set(descriptor_set_id);
+    DescriptorPool& pool = _get_descriptor_pool(ci.pool);
     DescriptorSetLayout& layout = _get_descriptor_set_layout(ci.set_layout);
     LogicalDevice& ld = _get_logical_device(ci.device);
 
     set.vk_device = ld.vk_device;
+    set.vk_descriptor_pool = pool.vk_descriptor_pool;
     set.device = ci.device;
     set.descriptor_set = descriptor_set_id;
+    set.descriptor_pool = ci.pool;
 
     VkDescriptorSetAllocateInfo vk_allocate_set_info =
     {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
         .pNext = nullptr,
-        .descriptorPool = ld.vk_global_descriptor_pool,
+        .descriptorPool = pool.vk_descriptor_pool,
         .descriptorSetCount = 1,
         .pSetLayouts = &layout.vk_set_layout,
     };
@@ -1405,14 +1439,14 @@ GPU::DescriptorSetID VulkanDriver::descriptor_set_create(const GPU::DescriptorSe
     return descriptor_set_id;
 }
 
-void VulkanDriver::descriptor_set_destroy(GPU::DescriptorSetID descriptor_set)
+void VulkanDriver::descriptor_set_free(GPU::DescriptorSetID descriptor_set)
 {
     VKFailOn(descriptor_set.is_valid() == false, "invalid descriptor set");
 
     DescriptorSet& set = _get_descriptor_set(descriptor_set);
     LogicalDevice& ld = _get_logical_device(set.device);
 
-    VkResult result = ld.vk.vkFreeDescriptorSets(set.vk_device, ld.vk_global_descriptor_pool, 1, &set.vk_descriptor_set);
+    VkResult result = ld.vk.vkFreeDescriptorSets(set.vk_device, set.vk_descriptor_pool, 1, &set.vk_descriptor_set);
     VKFailOn(result != VK_SUCCESS, "vkFreeDescriptorSets({})", Vulkan::result_as_string(result));
 
     data.descriptor_sets.remove(descriptor_set);

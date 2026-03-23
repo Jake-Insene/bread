@@ -1,7 +1,7 @@
 #pragma once
 #include "collections/array.h"
 #include "collections/error.h"
-#include "gpu/gpu.h"
+#include "render/resource/gpu_texture_resource.h"
 #include "resource/resource.h"
 #include "resource/resource_id.h"
 #include "math/rect_2d.h"
@@ -28,7 +28,7 @@ struct Font : Resource
 	{
 		Array<Glyph> glyphs;
 		i32 font_size;
-		GPU::TextureID font_atlas;
+		GPUTextureRef font_atlas;
 	};
 
 	struct InternalData

@@ -1,5 +1,7 @@
 #include "resource/font.h"
 
+#include "engine/engine.h"
+#include "render/render_device.h"
 #include "resource/resource_manager.h"
 #include "resource/resource_manager_internal.h"
 
@@ -89,19 +91,13 @@ static void _load_theme(const mem::Allocator& allocator, const Slice<u8>& font_f
         }
 
         flip_atlas_vertical(allocator, pixels, width, width);
-        theme.font_atlas = GPU::texture_create(
-            GPU::TextureCreateInfo
+        theme.font_atlas = Engine::get_system_manager().get_system<RenderDevice>()->get_resource_manager().create_texture(
+            GPUTextureResourceCreateInfo
             {
-#if 0
-                //.usage = Graphics::TEXTURE_USAGE_UPLOAD_ONCE,
-                .type = Graphics::TextureType::Texture2D,
-                .format = Graphics::TextureFormat::R8,
-                .min_filter = Graphics::TextureFilter::Nearest,
-                .mag_filter = Graphics::TextureFilter::Nearest,
-                .size = Vector2I(width, width),
-                .memory_heap = Graphics::MemoryHeapID(),
-                .heap_offset = 0,
-#endif
+                .type = GPU::TextureType::Texture2D,
+                .format = GPU::TextureFormat::R8Srgb,
+                .extent = Vector3U(width, width, 1),
+                .pixels = pixels,
             }
         );
 
@@ -125,10 +121,10 @@ void Font::destroy()
     
     for (FontTheme& theme : data.themes.iter())
     {
-        if (theme.font_atlas == GPU::TextureID::invalid())
+        if (theme.font_atlas == GPUTextureRef::invalid())
             continue;
 
-        GPU::texture_destroy(theme.font_atlas);
+        Engine::get_system_manager().get_system<RenderDevice>()->get_resource_manager().destroy_texture(theme.font_atlas);
 
         theme.glyphs.destroy();
     }

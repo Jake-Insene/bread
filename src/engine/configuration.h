@@ -1,8 +1,9 @@
 #pragma once
 #include "math/vec2.h"
 #include "display/display.h"
-#include "systems/system.h"
 
+
+struct SystemInfo;
 
 struct Scene;
 
@@ -23,5 +24,4 @@ struct EngineConfiguration
     bool keep_viewport;
     bool enable_debug_console;
     bool enable_custom_rendering;
-    Slice<SystemInfo> requested_systems;
 };

@@ -85,6 +85,7 @@ struct SceneRenderer2D : System<SceneRenderer2D>
     GPU::QueueID graphics_queue;
     GPU::QueueID present_queue;
 
+    GPU::DescriptorPoolID descriptor_pool;
     GPU::CommandPoolID command_pool;
     
     GPU::SwapChainID swap_chain;

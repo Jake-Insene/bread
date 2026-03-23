@@ -62,6 +62,7 @@ struct EngineConfiguration;
 
 extern EngineConfiguration __configuration__;
 extern void __preload__();
+extern Slice<SystemInfo> __get_requested_systems__();
 
 struct EngineRuntime
 {

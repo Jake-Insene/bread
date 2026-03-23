@@ -12,7 +12,7 @@
 struct GPU
 {
 	/*
-	*	Graphics API
+	*	GPU API
 	*/
 
 	using PhysicalDeviceID = ID<u32, struct _PhysicalDeviceTag>;
@@ -28,6 +28,7 @@ struct GPU
 	using TextureID = ID<u32, struct _TextureTag>;
 	using RenderTargetID = ID<u32, struct _RenderTargetTag>;
 	using DescriptorSetLayoutID = ID<u32, struct _DescriptorSetLayout>;
+	using DescriptorPoolID = ID<u32, struct _DescriptorPoolTag>;
 	using DescriptorSetID = ID<u32, struct _DescriptorSet>;
 	using PipelineID = ID<u32, struct _PipelineTag>;
 	using CommandPoolID = ID<u32, struct _CommandPoolID>;
@@ -475,13 +476,35 @@ struct GPU
 	static void descriptor_set_layout_destroy(DescriptorSetLayoutID descriptor_set_layout);
 
 	/*
+	* Descriptor Pool
+	*/
+
+	struct DescriptorPoolSize
+	{
+		DescriptorType type;
+		u32 count;
+	};
+	
+	struct DescriptorPoolCreateInfo
+	{
+		DeviceID device;
+		u32 max_sets;
+		Slice<DescriptorPoolSize> sizes;
+	};
+
+	static DescriptorPoolID descriptor_pool_create(const DescriptorPoolCreateInfo& ci);
+	static void descriptor_pool_destroy(DescriptorPoolID descriptor_pool);
+
+
+	/*
 	* Descriptor Set
 	*/
 
-	struct DescriptorSetCreateInfo
+	struct DescriptorSetAllocateInfo
 	{
 		DeviceID device;
-		DescriptorSetLayoutID set_layout;	
+		DescriptorPoolID pool;
+		DescriptorSetLayoutID set_layout;
 	};
 
 	struct DescriptorTextureInfo
@@ -513,8 +536,8 @@ struct GPU
 		Slice<WriteDescriptorInfo> write_infos;
 	};
 
-	static DescriptorSetID descriptor_set_create(const DescriptorSetCreateInfo& ci);
-	static void descriptor_set_destroy(DescriptorSetID descriptor_set);
+	static DescriptorSetID descriptor_set_allocate(const DescriptorSetAllocateInfo& ci);
+	static void descriptor_set_free(DescriptorSetID descriptor_set);
 	static void descriptor_set_update_descriptors(DescriptorSetID descriptor_set, const UpdateDescriptorInfo& update_info);
 
 	/*

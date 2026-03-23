@@ -65,7 +65,7 @@ void EngineRuntime::initialize()
     __preload__();
 
     // Initialize subsystems first
-    system_manager.allocate_systems(__configuration__.requested_systems);
+    system_manager.allocate_systems(__get_requested_systems__());
 
     // Entry point for app
     SceneManager::change_scene(__configuration__.create_main_scene(allocator_ref));

@@ -72,8 +72,6 @@ struct VulkanDriver
 
 		DeviceVulkanTable vk;
 
-		VkDescriptorPool vk_global_descriptor_pool;
-
 		// device resources
 		HashMap<VkFormat, RenderPassCache> render_pass_cache;
 
@@ -186,13 +184,24 @@ struct VulkanDriver
 		GPU::DescriptorSetLayoutID descriptor_set_layout;
 	};
 
+	struct DescriptorPool
+	{
+		VkDevice vk_device;
+		VkDescriptorPool vk_descriptor_pool;
+
+		GPU::DeviceID device;
+		GPU::DescriptorPoolID descriptor_pool;
+	};
+
 	struct DescriptorSet
 	{
 		VkDevice vk_device;
+		VkDescriptorPool vk_descriptor_pool;
 		VkDescriptorSet vk_descriptor_set;
 
 		GPU::DeviceID device;
 		GPU::DescriptorSetID descriptor_set;
+		GPU::DescriptorPoolID descriptor_pool;
 	};
 
 	struct Pipeline
@@ -242,6 +251,7 @@ struct VulkanDriver
 		FreeList<Texture, GPU::TextureID> textures;
 		FreeList<RenderTarget, GPU::RenderTargetID> render_targets;
 		FreeList<DescriptorSetLayout, GPU::DescriptorSetLayoutID> descriptor_set_layouts;
+		FreeList<DescriptorPool, GPU::DescriptorPoolID> descriptor_pools;
 		FreeList<DescriptorSet, GPU::DescriptorSetID> descriptor_sets;
 		FreeList<Pipeline, GPU::PipelineID> pipelines;
 		FreeList<CommandPool, GPU::CommandPoolID> command_pools;
@@ -324,8 +334,11 @@ struct VulkanDriver
 	static GPU::DescriptorSetLayoutID descriptor_set_layout_create(const GPU::DescriptorSetLayoutCreateInfo& ci);
 	static void descriptor_set_layout_destroy(GPU::DescriptorSetLayoutID descriptor_set_layout);
 
-	static GPU::DescriptorSetID descriptor_set_create(const GPU::DescriptorSetCreateInfo& ci);
-	static void descriptor_set_destroy(GPU::DescriptorSetID descriptor_set);
+	static GPU::DescriptorPoolID descriptor_pool_create(const GPU::DescriptorPoolCreateInfo& ci);
+	static void descriptor_pool_destroy(GPU::DescriptorPoolID descriptor_pool);
+
+	static GPU::DescriptorSetID descriptor_set_allocate(const GPU::DescriptorSetAllocateInfo& ci);
+	static void descriptor_set_free(GPU::DescriptorSetID descriptor_set);
 	static void descriptor_set_update_descriptors(GPU::DescriptorSetID descriptor_set, const GPU::UpdateDescriptorInfo& update_info);
 
 	static GPU::PipelineID pipeline_create(const GPU::PipelineCreateInfo& ci);
@@ -372,6 +385,7 @@ struct VulkanDriver
 	static Texture& _get_texture(GPU::TextureID texture) { return data.textures.get(texture); }
 	static RenderTarget& _get_render_target(GPU::RenderTargetID render_target) { return data.render_targets.get(render_target); }
 	static DescriptorSetLayout& _get_descriptor_set_layout(GPU::DescriptorSetLayoutID descriptor_set_layout) { return data.descriptor_set_layouts.get(descriptor_set_layout); }
+	static DescriptorPool& _get_descriptor_pool(GPU::DescriptorPoolID descriptor_pool) { return data.descriptor_pools.get(descriptor_pool); }
 	static DescriptorSet& _get_descriptor_set(GPU::DescriptorSetID descriptor_set) { return data.descriptor_sets.get(descriptor_set); }
 	static Pipeline& _get_pipeline(GPU::PipelineID pipeline) { return data.pipelines.get(pipeline); }
 	static CommandPool& _get_command_pool(GPU::CommandPoolID command_pool) { return data.command_pools.get(command_pool); }

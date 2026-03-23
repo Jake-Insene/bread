@@ -208,14 +208,24 @@ void GPU::descriptor_set_layout_destroy(DescriptorSetLayoutID descriptor_set_lay
 	current_adapter.descriptor_set_layout_destroy(descriptor_set_layout);
 }
 
-GPU::DescriptorSetID GPU::descriptor_set_create(const GPU::DescriptorSetCreateInfo& ci)
+GPU::DescriptorPoolID GPU::descriptor_pool_create(const DescriptorPoolCreateInfo &ci)
 {
-	return current_adapter.descriptor_set_create(ci);
+	return current_adapter.descriptor_pool_create(ci);
 }
 
-void GPU::descriptor_set_destroy(GPU::DescriptorSetID descriptor_set)
+void GPU::descriptor_pool_destroy(DescriptorPoolID descriptor_pool)
 {
-	current_adapter.descriptor_set_destroy(descriptor_set);
+	current_adapter.descriptor_pool_destroy(descriptor_pool);
+}
+
+GPU::DescriptorSetID GPU::descriptor_set_allocate(const GPU::DescriptorSetAllocateInfo& ci)
+{
+	return current_adapter.descriptor_set_allocate(ci);
+}
+
+void GPU::descriptor_set_free(GPU::DescriptorSetID descriptor_set)
+{
+	current_adapter.descriptor_set_free(descriptor_set);
 }
 
 void GPU::descriptor_set_update_descriptors(DescriptorSetID descriptor_set, const UpdateDescriptorInfo& update_info)

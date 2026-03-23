@@ -13,7 +13,7 @@ void Display::initialize(const mem::Allocator &allocator)
                     ANativeWindow_getHeight(AndroidEngine::data.app->window)
             )
     );
-    AndroidDisplay::data.window_surface = Graphics::surface_create(
+    AndroidDisplay::data.window_surface = GPU::surface_create(
         {
             .window_native_handle = Display::window_get_native_handle(WindowID()),
         }
@@ -22,7 +22,7 @@ void Display::initialize(const mem::Allocator &allocator)
 
 void Display::shutdown()
 {
-    Graphics::surface_destroy(AndroidDisplay::data.window_surface);
+    GPU::surface_destroy(AndroidDisplay::data.window_surface);
 }
 
 Display::WindowID Display::window_create()
@@ -52,7 +52,7 @@ MemoryAddress Display::window_get_native_handle(Display::WindowID window_id)
     return reinterpret_cast<MemoryAddress>(AndroidEngine::data.app->window);
 }
 
-Graphics::SurfaceID Display::window_get_surface(WindowID window_id)
+GPU::SurfaceID Display::window_get_surface(WindowID window_id)
 {
     Unused(window_id);
     return AndroidDisplay::data.window_surface;
