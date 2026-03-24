@@ -1,11 +1,13 @@
 #include "resource/tile_set.h"
 
 #include "resource/resource_manager.h"
+#include "engine/engine.h"
+
 
 void TileSet::init()
 {
 	Resource::init(RESOURCE_TILE_SET);
-	auto allocator = ResourceManager::get_allocator();
+    mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
 
 	data.tiles = Array<TileSet::Tile>::with_allocator(allocator);
 	data.tiles_data = Array<TileSet::TileData>::with_allocator(allocator);

@@ -5,6 +5,7 @@
 #include "gpu/gpu.h"
 #include "mem/allocator.h"
 #include "resource/resource.h"
+#include "systems/system.h"
 
 
 struct Image;
@@ -13,8 +14,19 @@ struct TileSet;
 struct Texture;
 
 
-struct ResourceManager
+struct ResourceManager : System<ResourceManager>
 {
+    static constexpr SystemDependency Dependencies[] =
+    {
+        SystemDependency::of("RenderDevice")
+    };
+
+    static constexpr StringView _name = "ResourceManager";
+    static constexpr SystemInfo get_system_info()
+    {
+        return System::get_system_info_with_name(_name);
+    }
+
     static constexpr usize DefaultFontSize = 32;
 
     struct TextureLoadInfo
@@ -22,43 +34,40 @@ struct ResourceManager
         GPU::TextureType type;
     };
 
-    struct InternalData
-    {
-        mem::Allocator allocator;
-        StringMap<Resource*> resources;
-        HashMap<Image*, Texture*> cached_images;
-    };
+    mem::Allocator allocator;
+    StringMap<Resource*> resources;
+    HashMap<Image*, Texture*> cached_images;
 
-    static inline InternalData data;
+    [[nodiscard]] mem::Allocator& get_allocator() { return allocator; }
 
-    [[nodiscard]] static mem::Allocator& get_allocator() { return data.allocator; }
+    void initialize(const SystemInitializeInfo& info);
+    void shutdown();
 
-    static void initialize(mem::Allocator& allocator);
-    static void shutdown();
+    void on_event(const InputEvent&) {}
 
-    [[nodiscard]] static Result<Resource*, Error> load_resource(ResourceType type,
+    [[nodiscard]] Result<Resource*, Error> load_resource(ResourceType type,
         ResourceTypeSpecification specification, StringView path);
 
-    [[nodiscard]] static bool place_resource(StringView resource_name, Resource* resource);
+    [[nodiscard]] bool place_resource(StringView resource_name, Resource* resource);
 
-    [[nodiscard]] static SpriteAnimation* create_sprite_animation(StringView name);
-    [[nodiscard]] static TileSet* create_tile_set(StringView name, Vector2I tile_size);
+    [[nodiscard]] SpriteAnimation* create_sprite_animation(StringView name);
+    [[nodiscard]] TileSet* create_tile_set(StringView name, Vector2I tile_size);
     
     // Implementation
     template<typename T>
         requires(!IsSame<Resource, T>)
-    [[nodiscard]] static T* _create_resource()
+    [[nodiscard]] T* _create_resource()
     {
         T* resource = get_allocator().object<T>();
         resource->init();
         return resource;
     }
 
-    [[nodiscard]] static Result<Resource*, Error> _load_image(StringView path);
-    [[nodiscard]] static Result<Resource*, Error> _load_texture_2d(StringView path, const TextureLoadInfo& load_info);
-    [[nodiscard]] static Result<Resource*, Error> _load_sound(StringView path);
-    [[nodiscard]] static Result<Resource*, Error> _load_font(StringView path);
-    [[nodiscard]] static Result<Resource*, Error> _load_material(StringView path);
+    [[nodiscard]] Result<Resource*, Error> _load_image(StringView path);
+    [[nodiscard]] Result<Resource*, Error> _load_texture_2d(StringView path, const TextureLoadInfo& load_info);
+    [[nodiscard]] Result<Resource*, Error> _load_sound(StringView path);
+    [[nodiscard]] Result<Resource*, Error> _load_font(StringView path);
+    [[nodiscard]] Result<Resource*, Error> _load_material(StringView path);
 };
 
 

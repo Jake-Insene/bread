@@ -58,7 +58,11 @@ void SystemManager::_create_flow_order()
     while(flow_order.count != systems.count)
     {
         ArrayIterator<usize> iter = flow_order.iter();
-        if(iter.find(i) != iter.end()) continue;
+        if(iter.find(i) != iter.end())
+        {
+            i++;
+            continue;
+        }
 
         SystemInstance& instance = systems.get(i);
         bool can_be_inserted = true;
@@ -71,10 +75,10 @@ void SystemManager::_create_flow_order()
             for(usize dependecy_index = 0; dependecy_index < instance.info.dependencies.len; dependecy_index++)
             {
                 const SystemDependency& dependency = instance.info.dependencies[dependecy_index];
-                usize system_index = _get_instance_index_by_name(dependency.name);
-                if(system_index == MaxValue<usize>) continue;
+                usize required_system_index = _get_instance_index_by_name(dependency.name);
+                if(required_system_index == MaxValue<usize>) continue;
 
-                if(iter.find(system_index) == iter.end())
+                if(iter.find(required_system_index) == iter.end())
                 {
                     can_be_inserted = false;
                 }

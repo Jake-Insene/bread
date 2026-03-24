@@ -7,12 +7,15 @@
 #include "systems/system.h"
 
 
+struct RenderDevice;
+struct Texture2D;
 
 struct SceneRenderer2D : System<SceneRenderer2D>
 {
     static constexpr SystemDependency Dependencies[] =
     {
-        SystemDependency::of("RenderDevice")
+        SystemDependency::of("RenderDevice"),
+        SystemDependency::of("ResourceManager"),
     };
 
     static constexpr StringView _name = "SceneRenderer2D";
@@ -24,7 +27,7 @@ struct SceneRenderer2D : System<SceneRenderer2D>
     static constexpr GPU::SurfaceFormat SwapChainFormat = GPU::SurfaceFormat::RGBA8Srgb;
     static constexpr usize SwapChainMinImageCount = 3;
 
-    struct QuadInstance
+    struct DrawInstance
     {
         // attib 0
         Vector2 xx;
@@ -35,24 +38,17 @@ struct SceneRenderer2D : System<SceneRenderer2D>
         u32 material_index;
         // attrib 2
         Rect2D rect;
+        // attrib 3
+        Rect2D uv_rect;
     };
 
-    struct InstanceData
-    {
-        // attrib 0
-        Vector2 xx;
-        Vector2 yy;
-        // attrib 1
-        Vector2 zz;
-        Color color;
-        u32 texture_index;
-    };
+    static_assert(sizeof(DrawInstance) == (sizeof(Vector4) * 4), "invalid DrawInstance size");
 
     static constexpr usize MaxQuadInstancePerBatch = 1 << 14;
     static constexpr usize MaxQuadInstancePerDrawCall = MaxQuadInstancePerBatch >> 4;
-    static constexpr usize QuadInstancePerFrameSize = MaxQuadInstancePerBatch * sizeof(QuadInstance);
+    static constexpr usize InstancePerFrameSize = MaxQuadInstancePerBatch * sizeof(DrawInstance);
     static constexpr usize MaxFrameCount = 3;
-    static constexpr usize VertexBufferHeapSize = MaxFrameCount * QuadInstancePerFrameSize;
+    static constexpr usize VertexBufferHeapSize = MaxFrameCount * InstancePerFrameSize;
 
     struct FrameUniformInfo
     {
@@ -71,7 +67,10 @@ struct SceneRenderer2D : System<SceneRenderer2D>
 
         GPU::BufferID frame_ub;
         GPU::DescriptorSetID quad_frame_set;
+        GPU::DescriptorSetID sprite_frame_set;
+        
         usize quad_count;
+        usize sprite_count;
         
         usize vertex_heap_offset;
         usize frame_uniform_heap_offset;
@@ -80,6 +79,8 @@ struct SceneRenderer2D : System<SceneRenderer2D>
     };
 
     mem::Allocator allocator;
+
+    RenderDevice* render_device;
 
     GPU::DeviceID device;
     GPU::QueueID graphics_queue;
@@ -104,8 +105,12 @@ struct SceneRenderer2D : System<SceneRenderer2D>
 
     struct
     {
-        GPU::DescriptorSetLayoutID quad_layout;
+        GPU::DescriptorSetLayoutID layout_2d;
+
         GPU::PipelineID quad_pipeline;
+
+        GPU::PipelineID sprite_pipeline;
+        GPU::SamplerID nearest_sampler;
     } pipelines;
 
     Slice<FrameInFlightInfo> frames_in_flight;
@@ -118,7 +123,10 @@ struct SceneRenderer2D : System<SceneRenderer2D>
     void initialize(const SystemInitializeInfo& info);
     void shutdown();
 
+    void on_event(const InputEvent& e);
+
     void draw_rect(const Transform2D& transform, const Color& color, const Rect2D& rect);
+    void draw_sprite(Texture2D* texture, const Transform2D& transform, const Color& color, const Rect2D& src_rect);
 
     void dispatch();
 

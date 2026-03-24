@@ -4,6 +4,7 @@
 #include "render/render_device.h"
 #include "resource/resource_manager.h"
 #include "resource/resource_manager_internal.h"
+#include "engine/engine.h"
 
 #include <external/stb_truetype.h>
 
@@ -110,7 +111,8 @@ static void _load_theme(const mem::Allocator& allocator, const Slice<u8>& font_f
 void Font::init()
 {
     Resource::init(RESOURCE_FONT);
-    auto& allocator = ResourceManager::get_allocator();
+
+    mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
     data.themes = Array<FontTheme>::with_allocator(allocator);
 }
 
@@ -141,7 +143,7 @@ Error Font::load(StringView file_path)
         return MakeError(ErrorCode::FileNotFound);
     }
 
-    auto& allocator = ResourceManager::get_allocator();
+    mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
     path.set(file_path);
 
     Slice<u8> content = File::read_all(allocator, file_path);
@@ -174,7 +176,7 @@ const Font::FontTheme& Font::get_font_theme(i32 font_size)
 
 const Font::FontTheme& Font::_theme_with_size(i32 font_size)
 {
-    auto& allocator = ResourceManager::get_allocator();
+    mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
     Slice<u8> content = File::read_all(allocator, path.view());
 
     stbtt_fontinfo font;

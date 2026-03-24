@@ -68,9 +68,9 @@ GPU::TextureID GPU::swap_chain_get_texture(SwapChainID swap_chain, u32 image_ind
 	return current_adapter.swap_chain_get_texture(swap_chain, image_index);
 }
 
-void GPU::swap_chain_acquire_next_image(SwapChainID swap_chain, const AcquireInfo& acquire_info, u32* image_index)
+GPU::AcquireResult GPU::swap_chain_acquire_next_image(SwapChainID swap_chain, const AcquireInfo& acquire_info, u32* image_index)
 {
-	current_adapter.swap_chain_acquire_next_image(swap_chain, acquire_info, image_index);
+	return current_adapter.swap_chain_acquire_next_image(swap_chain, acquire_info, image_index);
 }
 
 GPU::FenceID GPU::fence_create(const FenceCreateInfo &ci)

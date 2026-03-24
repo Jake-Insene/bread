@@ -23,7 +23,7 @@ struct GPUAdapter
 	VTFunc(void, swap_chain_destroy, GPU::SwapChainID swap_chain);
 	VTFunc(u32, swap_chain_get_image_count, GPU::SwapChainID swap_chain);
 	VTFunc(GPU::TextureID, swap_chain_get_texture, GPU::SwapChainID swap_chain, u32 image_index);
-	VTFunc(void, swap_chain_acquire_next_image, GPU::SwapChainID swap_chain, const GPU::AcquireInfo& acquire_info, u32* image_index);
+	VTFunc(GPU::AcquireResult, swap_chain_acquire_next_image, GPU::SwapChainID swap_chain, const GPU::AcquireInfo& acquire_info, u32* image_index);
 
 	VTFunc(GPU::FenceID, fence_create, const GPU::FenceCreateInfo& ci);
 	VTFunc(void, fence_destroy, GPU::FenceID fence);

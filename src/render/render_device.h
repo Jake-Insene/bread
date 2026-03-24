@@ -34,6 +34,8 @@ struct RenderDevice : System<RenderDevice>
     void initialize(const SystemInitializeInfo& info);
     void shutdown();
 
+    void on_event(const InputEvent&) {}
+
     GPU::DeviceID get_graphics_device() { return gpu_device; }
     GPU::QueueID get_graphics_queue() { return graphics_queue; }
     GPU::QueueID get_compute_queue() { return compute_queue; }

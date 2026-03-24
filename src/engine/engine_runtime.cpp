@@ -55,7 +55,8 @@ void EngineRuntime::initialize()
     SceneManager::initialize(allocator_ref);
     Physics2D::initialize(allocator_ref, Physics2D::DEFAULT_DRIVER);
 
-    ResourceManager::initialize(allocator_ref);
+    // Initialize subsystems first
+    system_manager.allocate_systems(__get_requested_systems__());
 
     main_window.set_size(__configuration__.viewport_size);
     SceneManager::set_keep_viewport(__configuration__.keep_viewport);
@@ -64,9 +65,6 @@ void EngineRuntime::initialize()
     
     __preload__();
 
-    // Initialize subsystems first
-    system_manager.allocate_systems(__get_requested_systems__());
-
     // Entry point for app
     SceneManager::change_scene(__configuration__.create_main_scene(allocator_ref));
 }
@@ -74,7 +72,6 @@ void EngineRuntime::initialize()
 void EngineRuntime::shutdown()
 {
     SceneManager::shutdown();
-    ResourceManager::shutdown();
 
     system_manager.deallocate_systems();
 
@@ -111,6 +108,12 @@ void EngineRuntime::handle_event(const InputEvent& event)
             request_recreate_window();
         }
     }
+    
+    (void)system_manager.systems.iter().for_each([event](SystemManager::SystemInstance& instance)
+        {
+            instance.info.runtime.on_event.call(instance.instance, event);
+        }
+    );
     SceneManager::scene_handle_event(event);
 }
 

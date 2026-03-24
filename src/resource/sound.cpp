@@ -2,25 +2,28 @@
 
 #include "resource/resource_manager.h"
 #include "resource/resource_manager_internal.h"
+#include "engine/engine.h"
 
 
 static void* _dr_alloc(size_t size, void*)
 {
-    return ResourceManager::get_allocator().alloc(size, 16).items;
+    mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
+    return allocator.alloc(size, 16).items;
 }
 
 static void* _dr_realloc(void* mem, size_t new_size, void*)
 {
     Slice<u8> old_mem = Slice(reinterpret_cast<u8*>(mem), 1);
-    if (ResourceManager::get_allocator().realloc(old_mem, new_size, 16))
+    mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
+    if (allocator.realloc(old_mem, new_size, 16))
     {
         return mem;
     }
 
-    Slice<u8> new_mem = ResourceManager::get_allocator().alloc(new_size, 16);
+    Slice<u8> new_mem = allocator.alloc(new_size, 16);
     if (mem != nullptr)
     {
-        ResourceManager::get_allocator().free(old_mem);
+        allocator.free(old_mem);
     }
 
     return new_mem.items;
@@ -28,7 +31,8 @@ static void* _dr_realloc(void* mem, size_t new_size, void*)
 
 static inline void _dr_free(void* mem, void*)
 {
-    ResourceManager::get_allocator().free(
+    mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
+    allocator.free(
         Slice(reinterpret_cast<u8*>(mem), 1)
     );
 }
@@ -60,8 +64,8 @@ Error Sound::load(StringView file_path)
         RMDebugInfo("Couldn't load the font '{}'", file_path);
         return MakeError(ErrorCode::FileNotFound);
     }
-
-    auto& allocator = ResourceManager::get_allocator();
+    
+    mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
     path.set(file_path);
 
     Slice<u8> content = File::read_all(allocator, file_path);

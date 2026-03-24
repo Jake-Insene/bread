@@ -684,7 +684,7 @@ GPU::TextureID VulkanDriver::swap_chain_get_texture(GPU::SwapChainID swap_chain,
     return sc.images[image_index].texture;
 }
 
-void VulkanDriver::swap_chain_acquire_next_image(GPU::SwapChainID swap_chain, const GPU::AcquireInfo& acquire_info, u32* image_index)
+GPU::AcquireResult VulkanDriver::swap_chain_acquire_next_image(GPU::SwapChainID swap_chain, const GPU::AcquireInfo& acquire_info, u32* image_index)
 {
     VKFailOn(swap_chain.is_valid() == false, "invalid swap chain");
     VKFailOn(
@@ -710,7 +710,14 @@ void VulkanDriver::swap_chain_acquire_next_image(GPU::SwapChainID swap_chain, co
     }
 
     VkResult result = ld.vk.vkAcquireNextImageKHR(sc.vk_device, sc.vk_swapchain, acquire_info.timeout, vk_semaphore, vk_fence, image_index);
-    VKFailOn(result != VK_SUCCESS, "vkAcquireNextImageKHR({})", Vulkan::result_as_string(result));
+    VKFailOn(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR, "vkAcquireNextImageKHR({})", Vulkan::result_as_string(result));
+
+    if(result == VK_SUBOPTIMAL_KHR)
+    {
+        return GPU::AcquireResult::Suboptimal;
+    }
+
+    return GPU::AcquireResult::Acquired;
 }
 
 GPU::FenceID VulkanDriver::fence_create(const GPU::FenceCreateInfo& ci)

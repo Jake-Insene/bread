@@ -15,23 +15,23 @@
 #include <external/stb_image.h>
 
 
-void ResourceManager::initialize(mem::Allocator& allocator)
+void ResourceManager::initialize(const SystemInitializeInfo& info)
 {
-    data.allocator = allocator;
+    allocator = info.allocator;
 
     stbi_set_flip_vertically_on_load(true);
-    data.resources = StringMap<Resource*>::with_size(
-        data.allocator, 128
+    resources = StringMap<Resource*>::with_size(
+        allocator, 128
     );
     
-    data.cached_images = HashMap<Image*, Texture*>::with_size(
-        data.allocator, 128
+    cached_images = HashMap<Image*, Texture*>::with_size(
+        allocator, 128
     );
 }
 
 void ResourceManager::shutdown()
 {
-    for(auto& it : data.resources.iter())
+    for(auto& it : resources.iter())
     {
         switch (it.second->type)
         {
@@ -75,24 +75,24 @@ void ResourceManager::shutdown()
             break;
         }
         
-        data.allocator.free(
+        allocator.free(
             mem::to_bytes(Slice<Resource>(it.second, 1))
         );
     }
     
-    for(auto& [image, texture] : data.cached_images.iter())
+    for(auto& [image, texture] : cached_images.iter())
     {
         if(texture)
         {
             texture->destroy();
-            data.allocator.free(
+            allocator.free(
                 mem::to_bytes(Slice<Texture>(texture, 1))
             );
         }
     }
 
-    data.resources.destroy();
-    data.cached_images.destroy();
+    resources.destroy();
+    cached_images.destroy();
 }
 
 Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
@@ -121,9 +121,9 @@ Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
     case RESOURCE_SPRITE_ANIMATION:
     case RESOURCE_TILE_SET:
     {
-        if (data.resources.has(path))
+        if (resources.has(path))
         {
-            return data.resources.get(path);
+            return resources.get(path);
         }
         return MakeError(ErrorCode::ResourceNotFound);
     }
@@ -143,23 +143,23 @@ Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
 
 bool ResourceManager::place_resource(StringView resource_name, Resource* resource)
 {
-    if (data.resources.has(resource_name))
+    if (resources.has(resource_name))
         return false;
 
-    data.resources.insert(resource_name, resource);
+    resources.insert(resource_name, resource);
     return true;
 }
 
 SpriteAnimation* ResourceManager::create_sprite_animation(StringView name)
 {
-    if (data.resources.has(name))
+    if (resources.has(name))
     {
         FailOn(true, "SpriteAnimation already create");
         return nullptr;
     }
 
     SpriteAnimation* sprite_animation = _create_resource<SpriteAnimation>();
-    data.resources.insert(name, sprite_animation);
+    resources.insert(name, sprite_animation);
 
     sprite_animation->path.set("local");
     return sprite_animation;
@@ -167,14 +167,14 @@ SpriteAnimation* ResourceManager::create_sprite_animation(StringView name)
 
 TileSet* ResourceManager::create_tile_set(StringView name, Vector2I tile_size)
 {
-    if (data.resources.has(name))
+    if (resources.has(name))
     {
         FailOn(true, "TileSet already create");
         return nullptr;
     }
 
     TileSet* tile_set = _create_resource<TileSet>();
-    data.resources.insert(name, tile_set);
+    resources.insert(name, tile_set);
     tile_set->path.set("local");
     tile_set->set_tile_size(tile_size);
     return tile_set;
@@ -183,9 +183,9 @@ TileSet* ResourceManager::create_tile_set(StringView name, Vector2I tile_size)
 Result<Resource*, Error> ResourceManager::_load_image(StringView path)
 {
     Image* image = nullptr;
-    if (data.resources.has(path))
+    if (resources.has(path))
     {
-        image = reinterpret_cast<Image*>(data.resources.get(path));
+        image = reinterpret_cast<Image*>(resources.get(path));
     }
     else
     {
@@ -209,9 +209,9 @@ Result<Resource*, Error> ResourceManager::_load_image(StringView path)
 Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, const TextureLoadInfo& load_info)
 {
     Image* image = nullptr;
-    if(data.resources.has(path))
+    if(resources.has(path))
     {
-        image = reinterpret_cast<Image*>(data.resources.get(path));
+        image = reinterpret_cast<Image*>(resources.get(path));
     }
     else
     {
@@ -225,9 +225,9 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
     }
     
     Texture2D* tex = nullptr;
-    if(data.cached_images.has(image))
+    if(cached_images.has(image))
     {
-        tex = reinterpret_cast<Texture2D*>(data.cached_images.get(image));
+        tex = reinterpret_cast<Texture2D*>(cached_images.get(image));
     }
     else
     {
@@ -245,7 +245,7 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
         
         tex->texture_ref = Engine::get_system_manager().get_system<RenderDevice>()->get_resource_manager().create_texture(create_info);
         tex->size = image->size;
-        data.cached_images.insert(image, tex);
+        cached_images.insert(image, tex);
     }
     
     return tex;
@@ -253,9 +253,9 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
 
 Result<Resource*, Error> ResourceManager::_load_sound(StringView path)
 {
-    if (data.resources.has(path))
+    if (resources.has(path))
     {
-        return reinterpret_cast<Sound*>(data.resources.get(path));
+        return reinterpret_cast<Sound*>(resources.get(path));
     }
 
     Sound* new_sound = _create_resource<Sound>();
@@ -271,9 +271,9 @@ Result<Resource*, Error> ResourceManager::_load_sound(StringView path)
 
 Result<Resource*, Error> ResourceManager::_load_font(StringView path)
 {
-    if (data.resources.has(path))
+    if (resources.has(path))
     {
-        return reinterpret_cast<Font*>(data.resources.get(path));
+        return reinterpret_cast<Font*>(resources.get(path));
     }
 
     Font* new_font = _create_resource<Font>();
@@ -289,9 +289,9 @@ Result<Resource*, Error> ResourceManager::_load_font(StringView path)
 
 Result<Resource*, Error> ResourceManager::_load_material(StringView path)
 {
-    if (data.resources.has(path))
+    if (resources.has(path))
     {
-        return reinterpret_cast<Material*>(data.resources.get(path));
+        return reinterpret_cast<Material*>(resources.get(path));
     }
 
     Material* new_material = _create_resource<Material>();

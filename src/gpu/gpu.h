@@ -147,6 +147,13 @@ struct GPU
 		VSync,
 	};
 
+	enum class AcquireResult
+	{
+		Uknown = 0,
+		Acquired,
+		Suboptimal,
+	};
+
 	struct SwapChainCreateInfo
 	{
 		DeviceID device;
@@ -168,7 +175,7 @@ struct GPU
 	static void swap_chain_destroy(SwapChainID swap_chain);
 	static u32 swap_chain_get_image_count(SwapChainID swap_chain);
 	static TextureID swap_chain_get_texture(SwapChainID swap_chain, u32 image_index);
-	static void swap_chain_acquire_next_image(SwapChainID swap_chain, const AcquireInfo& acquire_info, u32* image_index);
+	static AcquireResult swap_chain_acquire_next_image(SwapChainID swap_chain, const AcquireInfo& acquire_info, u32* image_index);
 
 	/*
 	* Fence

@@ -2,6 +2,7 @@
 #include "core/header.h"
 #include "collections/string_view.h"
 #include "collections/event.h"
+#include "input/input.h"
 #include "mem/allocator.h"
 
 
@@ -15,6 +16,7 @@ struct SystemRuntime
 {
     Event<void(*)(Opaque*, const SystemInitializeInfo& init_info)> initialize;
     Event<void(*)(Opaque*)> shutdown;
+    Event<void(*)(Opaque*, const InputEvent&)> on_event;
 };
 
 struct SystemDependency
@@ -57,6 +59,12 @@ struct System
             DestructObject(system);
         });
 
+        runtime.on_event.bind([](Opaque* system_ref, const InputEvent& e)
+        {
+            T* system = system_ref->cast<T*>();
+            system->on_event(e);
+        });
+
         return runtime;
     }
 
@@ -77,6 +85,8 @@ struct IdentitySystem : System<IdentitySystem>
 {
     void initialize(const SystemInitializeInfo&) {}
     void shutdown() {}
+
+    void on_event(const InputEvent&) {}
 
     static constexpr StringView _name = "IdentitySystem";
     static constexpr SystemInfo get_system_info()

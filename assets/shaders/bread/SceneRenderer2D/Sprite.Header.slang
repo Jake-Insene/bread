@@ -11,6 +11,16 @@ static float2 QuadPositions[6] = float2[6](
     float2(0, 1)
 );
 
+static float2 UVPositions[6] = float2[6](
+    float2(0, 0),
+    float2(1, 0),
+    float2(1, 1),
+
+    float2(1, 1),
+    float2(0, 1),
+    float2(0, 0)
+);
+
 struct VertexInput
 {
     float4 Attrib0 : POSITION;
@@ -21,6 +31,7 @@ struct VertexInput
 struct FragmentInput
 {
     nointerpolation half4 Color;
+    float2 UV;
     float4 ClipPosition : SV_Position;
 };
 
@@ -33,6 +44,8 @@ FragmentInput VertexMain(VertexInput Input, uint VertexIndex : SV_VertexID)
 
     uint InputUintColor = reinterpret<uint>(Input.Attrib1.z);
     Object.Color = unpackUnorm4x8ToHalf(InputUintColor);
+
+    Object.UV = UVPositions[VertexIndex % 6];
 
     float2 VertexPosition = QuadPositions[VertexIndex % 6];
     Object.VertexPosition = float4(VertexPosition, 0, 1);

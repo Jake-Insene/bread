@@ -1,4 +1,4 @@
-
+#pragma once
 struct FrameUB
 {
     float4x4 View;
@@ -7,3 +7,4 @@ struct FrameUB
 };
 
 layout(set = 0, binding = 0) ConstantBuffer<FrameUB> FrameInfo;
+layout(set = 0, binding = 1) Sampler2D BindTexture;
