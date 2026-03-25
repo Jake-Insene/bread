@@ -8,7 +8,7 @@
 void Texture::init()
 {
     Resource::init(RESOURCE_TEXTURE);
-    texture_ref = GPUTextureRef::invalid();
+    texture_ref = GPUTextureID::invalid();
     size = Vector2I();
 }
 

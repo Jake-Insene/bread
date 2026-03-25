@@ -13,7 +13,7 @@ void GPUResourceManager::initialize(const mem::Allocator& _allocator)
     render_device = Engine::get_system_manager().get_system<RenderDevice>();
     memory_allocator = &render_device->get_memory_allocator();
 
-    textures = FreeList<GPUTextureResource, GPUTextureRef>::with_size(allocator, 4);
+    textures = FreeList<GPUTextureResource, GPUTextureID>::with_size(allocator, 4);
 }
 
 void GPUResourceManager::shutdown()
@@ -21,11 +21,11 @@ void GPUResourceManager::shutdown()
     textures.destroy();
 }
 
-GPUTextureRef GPUResourceManager::create_texture(const GPUTextureResourceCreateInfo& ci)
+GPUTextureID GPUResourceManager::create_texture(const GPUTextureResourceCreateInfo& ci)
 {
     GPU::DeviceID device = render_device->get_graphics_device();
 
-    GPUMemoryAllocator::AllocationID allocation = memory_allocator->allocate(
+    GPUMemoryAllocationID allocation = memory_allocator->allocate(
         GPUMemoryAllocator::AllocationTag::Texture, ci.pixels.len
     );
 
@@ -119,7 +119,7 @@ GPUTextureRef GPUResourceManager::create_texture(const GPUTextureResourceCreateI
         memory_allocator->end_staging(buffer);
     }
 
-    GPUTextureRef texture_ref = textures.add(GPUTextureResource());
+    GPUTextureID texture_ref = textures.add(GPUTextureResource());
     GPUTextureResource& texture = textures.get(texture_ref);
     texture.gpu_texture = gpu_texture;
     texture.allocation = allocation;
@@ -127,7 +127,7 @@ GPUTextureRef GPUResourceManager::create_texture(const GPUTextureResourceCreateI
     return texture_ref;
 }
 
-void GPUResourceManager::destroy_texture(GPUTextureRef texture_ref)
+void GPUResourceManager::destroy_texture(GPUTextureID texture_ref)
 {
     GPUTextureResource& texture = textures.get(texture_ref);
     memory_allocator->free(texture.allocation);

@@ -9,7 +9,7 @@ struct Texture : Resource
 {
     RESOURCE(RESOURCE_TEXTURE, LoadFromAssets, ResourceExtensions("png"))
 
-    GPUTextureRef texture_ref;
+    GPUTextureID texture_ref;
     Vector2I size;
     
     void init();

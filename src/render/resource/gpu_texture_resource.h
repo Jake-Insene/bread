@@ -1,6 +1,6 @@
 #pragma once
 #include "gpu/gpu.h"
-#include "render/core/gpu_memory_allocator.h"
+#include "render/core/gpu_memory_allocator_types.h"
 
 
 struct GPUTextureResourceCreateInfo
@@ -14,7 +14,7 @@ struct GPUTextureResourceCreateInfo
 struct GPUTextureResource
 {
     GPU::TextureID gpu_texture;
-    GPUMemoryAllocator::AllocationID allocation;
+    GPUMemoryAllocationID allocation;
 };
 
-using GPUTextureRef = ID<u32, struct _GPUTextureTag>;
+using GPUTextureID = ID<u32, struct _GPUTextureTag>;

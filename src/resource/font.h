@@ -28,7 +28,7 @@ struct Font : Resource
 	{
 		Array<Glyph> glyphs;
 		i32 font_size;
-		GPUTextureRef font_atlas;
+		GPUTextureID font_atlas;
 	};
 
 	struct InternalData

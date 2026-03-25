@@ -123,7 +123,7 @@ void Font::destroy()
     
     for (FontTheme& theme : data.themes.iter())
     {
-        if (theme.font_atlas == GPUTextureRef::invalid())
+        if (theme.font_atlas == GPUTextureID::invalid())
             continue;
 
         Engine::get_system_manager().get_system<RenderDevice>()->get_resource_manager().destroy_texture(theme.font_atlas);
