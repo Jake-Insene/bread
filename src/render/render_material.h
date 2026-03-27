@@ -2,7 +2,7 @@
 #include "core/header.h"
 
 
-struct GPUMaterialResource
+struct RenderMaterialResource
 {
 };
 

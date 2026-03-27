@@ -188,6 +188,7 @@ struct GPU
 
 	static FenceID fence_create(const FenceCreateInfo& ci);
 	static void fence_destroy(FenceID fence);
+	static bool fence_get_state(FenceID fence);
 	static void fence_reset(Slice<FenceID> fences);
 	static void fence_wait_for(Slice<FenceID> fences, bool wait_for_all, u64 timeout);
 
@@ -222,10 +223,10 @@ struct GPU
 
 	struct QueueExecuteInfo
 	{
-		Slice<SemaphoreID> wait_semaphores;
-		Slice<PipelineStages> wait_stages;
-		Slice<CommandBufferID> command_buffers;
-		Slice<SemaphoreID> signal_semaphores;
+		Slice<const SemaphoreID> wait_semaphores;
+		Slice<const PipelineStages> wait_stages;
+		Slice<const CommandBufferID> command_buffers;
+		Slice<const SemaphoreID> signal_semaphores;
 		FenceID fence;
 	};
 

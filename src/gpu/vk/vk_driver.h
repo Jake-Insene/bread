@@ -300,6 +300,7 @@ struct VulkanDriver
 
 	static GPU::FenceID fence_create(const GPU::FenceCreateInfo& ci);
 	static void fence_destroy(GPU::FenceID fence);
+	static bool fence_get_state(GPU::FenceID fence);
 	static void fence_reset(Slice<GPU::FenceID> fences);
 	static void fence_wait_for(Slice<GPU::FenceID> fences, bool wait_for_all, u64 timeout);
 

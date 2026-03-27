@@ -28,6 +28,7 @@ InternalGPU::GPUAdapter VulkanDriver::get_adapter()
         .swap_chain_acquire_next_image = &VulkanDriver::swap_chain_acquire_next_image,
         .fence_create = &VulkanDriver::fence_create,
         .fence_destroy = &VulkanDriver::fence_destroy,
+        .fence_get_state = &VulkanDriver::fence_get_state,
         .fence_reset = &VulkanDriver::fence_reset,
         .fence_wait_for = &VulkanDriver::fence_wait_for,
         .semaphore_create = &VulkanDriver::semaphore_create,
@@ -330,10 +331,17 @@ GPU::DeviceID VulkanDriver::device_create(const GPU::DeviceCreateInfo& ci)
         vk_compute_index = vk_graphics_index;
     }
 
-    if(vk_copy_index == MaxValue<uint32_t>
-        && vk_families[vk_graphics_index].queueFamilyProperties.queueFlags & VK_QUEUE_TRANSFER_BIT)
+    if(vk_copy_index == MaxValue<uint32_t>)
     {
-        vk_copy_index = vk_graphics_index;
+        // Prefer the compute queue.
+        if(vk_compute_index != vk_graphics_index)
+        {
+            vk_copy_index = vk_compute_index;
+        }
+        else
+        {
+            vk_copy_index = vk_compute_index;
+        }
     }
     
     static constexpr usize VkFamilyCount = 4; // Graphics, Compute, Copy, Present
@@ -756,6 +764,18 @@ void VulkanDriver::fence_destroy(GPU::FenceID fence)
     ld.vk.vkDestroyFence(f.vk_device, f.vk_fence, Vulkan::allocation_callbacks());
 
     data.fences.remove(fence);
+}
+
+bool VulkanDriver::fence_get_state(GPU::FenceID fence)
+{
+    VKFailOn(fence.is_valid() == false, "invalid fence");
+ 
+    Fence& f = _get_fence(fence);
+    LogicalDevice& ld = _get_logical_device(f.device);
+
+    VkResult result = ld.vk.vkGetFenceStatus(ld.vk_device, f.vk_fence);
+
+    return result == VK_SUCCESS ? true : false;
 }
 
 void VulkanDriver::fence_reset(Slice<GPU::FenceID> fences)

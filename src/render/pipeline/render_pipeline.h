@@ -2,7 +2,7 @@
 #include "systems/system.h"
 
 
-struct Pipeline2D : System<Pipeline2D>
+struct RenderPipeline : System<RenderPipeline>
 {
     static constexpr SystemDependency Dependencies[] =
     {
@@ -10,7 +10,7 @@ struct Pipeline2D : System<Pipeline2D>
         SystemDependency::of("ResourceManager"),
     };
 
-    static constexpr StringView _name = "SceneRenderer2D";
+    static constexpr StringView _name = "RenderPipeline";
     static constexpr SystemInfo get_system_info()
     {
         return System::get_system_info_with_name(_name);

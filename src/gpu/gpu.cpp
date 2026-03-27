@@ -83,6 +83,11 @@ void GPU::fence_destroy(FenceID fence)
 	current_adapter.fence_destroy(fence);
 }
 
+bool GPU::fence_get_state(FenceID fence)
+{
+	return current_adapter.fence_get_state(fence);
+}
+
 void GPU::fence_reset(Slice<FenceID> fences)
 {
 	current_adapter.fence_reset(fences);

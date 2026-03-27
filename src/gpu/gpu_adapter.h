@@ -27,6 +27,7 @@ struct GPUAdapter
 
 	VTFunc(GPU::FenceID, fence_create, const GPU::FenceCreateInfo& ci);
 	VTFunc(void, fence_destroy, GPU::FenceID fence);
+	VTFunc(bool, fence_get_state, GPU::FenceID fence);
 	VTFunc(void, fence_reset, Slice<GPU::FenceID> fences);
 	VTFunc(void, fence_wait_for, Slice<GPU::FenceID> fences, bool wait_for_all, u64 timeout);
 
