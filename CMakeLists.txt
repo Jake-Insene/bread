@@ -82,8 +82,9 @@ file(GLOB ENGINE_SRC
 
     src/render/render_device.cpp
     
-    src/render/2d/scene_renderer_2d.cpp
+    src/render/2d/pipeline_2d.cpp
     
+    src/render/core/gpu_material_manager.cpp
     src/render/core/gpu_memory_allocator.cpp
     src/render/core/gpu_resource_manager.cpp
 

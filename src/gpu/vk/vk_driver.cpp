@@ -1575,6 +1575,10 @@ GPU::PipelineID VulkanDriver::pipeline_create(const GPU::PipelineCreateInfo& ci)
 
     for(usize i = 0; i < ci.shader_stages.len; i++)
     {
+        Slice<char> null_terminated = allocator.array<char>(ci.shader_stages[i].name.len + 1);
+        mem::copy(null_terminated, ci.shader_stages[i].name);
+        null_terminated[null_terminated.len - 1] = '\0';
+
         vk_shader_stages[i] =
         {
             .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
@@ -1582,7 +1586,7 @@ GPU::PipelineID VulkanDriver::pipeline_create(const GPU::PipelineCreateInfo& ci)
             .flags = 0,
             .stage = VkShaderStageFlagBits(VkUtils::_vk_get_shader_stage(ci.shader_stages[i].stage)),
             .module = _vk_create_shader_module(ld, ci.shader_stages[i]),
-            .pName = ci.shader_stages[i].name.ptr(),
+            .pName = null_terminated.ptr(),
             .pSpecializationInfo = nullptr,
         };
     }

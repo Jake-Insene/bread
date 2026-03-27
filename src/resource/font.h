@@ -1,9 +1,8 @@
 #pragma once
 #include "collections/array.h"
 #include "collections/error.h"
-#include "render/resource/gpu_texture_resource.h"
+#include "render/resource/gpu_resource_types.h"
 #include "resource/resource.h"
-#include "resource/resource_id.h"
 #include "math/rect_2d.h"
 
 

@@ -4,7 +4,7 @@
 
 #include "systems/system.h"
 #include "render/render_device.h"
-#include "render/2d/scene_renderer_2d.h"
+#include "render/2d/pipeline_2d.h"
 #include "resource/resource_manager.h"
 
 SystemInfo _system_infos[] =
@@ -12,8 +12,8 @@ SystemInfo _system_infos[] =
 #if defined(BREAD_SYSTEM_RENDERDEVICE)
 	RenderDevice::get_system_info(),
 #endif
-#if defined(BREAD_SYSTEM_SCENERENDERER2D)
-	SceneRenderer2D::get_system_info(),
+#if defined(BREAD_SYSTEM_PIPELINE2D)
+	Pipeline2D::get_system_info(),
 #endif
 #if defined(BREAD_SYSTEM_RESOURCEMANAGER)
 	ResourceManager::get_system_info(),

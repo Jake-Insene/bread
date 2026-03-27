@@ -17,4 +17,3 @@ struct GPUTextureResource
     GPUMemoryAllocationID allocation;
 };
 
-using GPUTextureID = ID<u32, struct _GPUTextureTag>;
