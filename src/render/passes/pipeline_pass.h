@@ -5,7 +5,7 @@
 
 
 
-struct RenderCommandEncoder;
+struct CommandEncoder;
 
 struct PipelinePassInitializeInfo
 {
@@ -16,7 +16,7 @@ struct PipelinePassRuntime
 {
     Event<void(*)(Opaque*, const PipelinePassInitializeInfo& init_info)> initialize;
     Event<void(*)(Opaque*)> shutdown;
-    Event<void(*)(Opaque*, RenderCommandEncoder&)> encode;
+    Event<void(*)(Opaque*, CommandEncoder&)> encode;
 };
 
 struct PipelinePassDependency
@@ -59,7 +59,7 @@ struct PipelinePass
             DestructObject(system);
         });
 
-        runtime.encode.bind([](Opaque* system_ref, RenderCommandEncoder& encoder)
+        runtime.encode.bind([](Opaque* system_ref, CommandEncoder& encoder)
         {
             T* system = system_ref->cast<T*>();
             system->encode(encoder);
