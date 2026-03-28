@@ -245,11 +245,13 @@ struct GPU
 
 	// ====== Resources ======
 
+	static constexpr u32 ConstantBlockAlignment = 4;
+	static constexpr u32 MaxConstantBlockSize = 128;
+
 	/*
 	* Memory Heap API
 	*/
 
-	static constexpr usize MinHeapSize = 4096;
 	static constexpr usize HeapAlignment = 4096;
 	static constexpr usize MinHeapResourceAlignment = 4096;
 
