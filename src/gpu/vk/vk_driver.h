@@ -315,11 +315,11 @@ struct VulkanDriver
 
 	static GPU::MemoryHeapID memory_heap_create(const GPU::MemoryHeapCreateInfo& ci);
 	static void memory_heap_destroy(GPU::MemoryHeapID memory_heap);
+	static Slice<u8> memory_heap_map(GPU::MemoryHeapID memory_heap, usize offset, usize len);
+	static void memory_heap_unmap(GPU::MemoryHeapID memory_heap, const Slice<u8>& memory);
 
 	static GPU::BufferID buffer_create(const GPU::BufferCreateInfo& ci);
 	static void buffer_destroy(GPU::BufferID buffer);
-	static Slice<u8> buffer_map_memory(GPU::BufferID buffer, usize offset, usize len);
-	static void buffer_unmap_memory(GPU::BufferID buffer, const Slice<u8>& memory);
 
 	static GPU::SamplerID sampler_create(const GPU::SamplerCreateInfo& ci);
 	static void sampler_destroy(GPU::SamplerID sampler);

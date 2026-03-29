@@ -30,11 +30,15 @@ void GPUMemoryAllocator::initialize(const mem::Allocator& _allocator)
             .heap_offset = 0,
         }
     );
+
+    staging_heap_current_size = StagingHeapInitialSize;
+    mapped_staging_heap = GPU::memory_heap_map(staging_heap, 0, staging_heap_current_size);
 }
 
 void GPUMemoryAllocator::shutdown()
 {
     GPU::buffer_destroy(staging_buffer);
+    GPU::memory_heap_unmap(staging_heap, mapped_staging_heap);
     GPU::memory_heap_destroy(staging_heap);
     
     for(Heap& heap : heaps.iter())
@@ -110,6 +114,16 @@ GPU::BufferID GPUMemoryAllocator::begin_staging(usize size)
 void GPUMemoryAllocator::end_staging(GPU::BufferID)
 {
 
+}
+
+Slice<u8> GPUMemoryAllocator::map_staging()
+{
+    return mapped_staging_heap;
+}
+
+void GPUMemoryAllocator::unmap_staging(Slice<u8> memory)
+{
+    Unused(memory);
 }
 
 GPU::MemoryHeapID GPUMemoryAllocator::allocation_get_heap(GPUMemoryAllocationID allocation)

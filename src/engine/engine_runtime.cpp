@@ -94,6 +94,7 @@ void EngineRuntime::shutdown()
 
 void EngineRuntime::step()
 {
+    system_manager.tick();
     SceneManager::step();
     main_queue.run();
 }
@@ -109,11 +110,7 @@ void EngineRuntime::handle_event(const InputEvent& event)
         }
     }
     
-    (void)system_manager.systems.iter().for_each([event](SystemManager::SystemInstance& instance)
-        {
-            instance.info.runtime.on_event.call(instance.instance, event);
-        }
-    );
+    system_manager.tick_event(event);
     SceneManager::scene_handle_event(event);
 }
 

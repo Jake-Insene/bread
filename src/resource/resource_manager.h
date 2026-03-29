@@ -14,7 +14,7 @@ struct TileSet;
 struct Texture;
 
 
-struct ResourceManager : System<ResourceManager>
+struct ResourceManager final : System<ResourceManager>
 {
     static constexpr SystemDependency Dependencies[] =
     {

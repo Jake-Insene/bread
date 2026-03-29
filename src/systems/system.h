@@ -29,10 +29,19 @@ struct SystemDependency
     }
 };
 
+enum class SystemFlags
+{
+    Tick = Bit(0),
+    OnEvent = Bit(1),
+};
+
+EnableBitOp(SystemFlags);
+
 struct SystemInfo
 {
     SystemRuntime runtime;
     Slice<const SystemDependency> dependencies;
+    SystemFlags flags;
     usize size_in_bytes;
     StringView name;
 };
@@ -74,6 +83,19 @@ struct System
         {
             .runtime = _get_system_runtime(),
             .dependencies = T::Dependencies,
+            .flags = SystemFlags(),
+            .size_in_bytes = sizeof(T),
+            .name = name,
+        };
+    }
+
+    static constexpr SystemInfo get_system_info_with_name_and_flags(StringView name, SystemFlags flags)
+    {
+        return SystemInfo
+        {
+            .runtime = _get_system_runtime(),
+            .dependencies = T::Dependencies,
+            .flags = flags,
             .size_in_bytes = sizeof(T),
             .name = name,
         };

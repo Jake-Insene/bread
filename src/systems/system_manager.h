@@ -36,6 +36,9 @@ struct SystemManager
     void allocate_systems(const Slice<SystemInfo>& requested_systems);
     void deallocate_systems();
 
+    void tick();
+    void tick_event(const InputEvent& event);
+
     void _create_flow_order();
 
     void _initialize_systems_instance();

@@ -273,6 +273,9 @@ struct GPU
 	static MemoryHeapID memory_heap_create(const MemoryHeapCreateInfo& ci);
 	static void memory_heap_destroy(MemoryHeapID memory_heap);
 
+	static Slice<u8> memory_heap_map(MemoryHeapID memory_heap, usize offset, usize len);
+	static void memory_heap_unmap(MemoryHeapID memory_heap, const Slice<u8>& memory);
+
 	/*
 	* Buffer API
 	*/
@@ -296,9 +299,6 @@ struct GPU
 
 	static BufferID buffer_create(const BufferCreateInfo& ci);
 	static void buffer_destroy(BufferID buffer);
-
-	static Slice<u8> buffer_map_memory(BufferID buffer, usize offset, usize len);
-	static void buffer_unmap_memory(BufferID buffer, const Slice<u8>& memory);
 
 	/*
 	* Sampler API
@@ -676,15 +676,15 @@ struct GPU
 
 	struct PipelineLayout
 	{
-		Slice<ConstantBlock> constant_blocks;
-		Slice<DescriptorSetLayoutID> set_layouts;
+		Slice<const ConstantBlock> constant_blocks;
+		Slice<const DescriptorSetLayoutID> set_layouts;
 	};
 
 	struct PipelineCreateInfo
 	{
 		DeviceID device;
 		PipelineBindPoint bind_point;
-		Slice<ShaderStageInfo> shader_stages;
+		Slice<const ShaderStageInfo> shader_stages;
 		VertexInput vertex_input;
 		InputAssembly input_assembly;
 		RasterizerState rasterizer_state;

@@ -2,7 +2,7 @@
 #include "systems/system.h"
 
 
-struct RenderPipeline : System<RenderPipeline>
+struct Renderer final : System<Renderer>
 {
     static constexpr SystemDependency Dependencies[] =
     {
@@ -10,11 +10,13 @@ struct RenderPipeline : System<RenderPipeline>
         SystemDependency::of("ResourceManager"),
     };
 
-    static constexpr StringView _name = "RenderPipeline";
+    static constexpr StringView _name = "Renderer";
     static constexpr SystemInfo get_system_info()
     {
         return System::get_system_info_with_name(_name);
     }
+
+    mem::Allocator allocator;
 
     void initialize(const SystemInitializeInfo& info);
     void shutdown();

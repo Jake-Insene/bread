@@ -6,7 +6,7 @@
 
 
 
-struct RenderDevice : System<RenderDevice>
+struct RenderDevice final : System<RenderDevice>
 {
     static constexpr SystemDependency Dependencies[] =
     {

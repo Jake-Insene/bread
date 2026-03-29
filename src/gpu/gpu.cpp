@@ -209,6 +209,20 @@ void GPU::memory_heap_destroy(MemoryHeapID memory_heap)
 	current_adapter.memory_heap_destroy(memory_heap);
 }
 
+Slice<u8> GPU::memory_heap_map(GPU::MemoryHeapID memory_heap, usize offset, usize len)
+{
+	GPUFailOn(memory_heap.is_valid() == false, "invalid memory heap");
+    GPUFailOn(len == 0, "invalid len");
+	return current_adapter.memory_heap_map(memory_heap, offset, len);
+}
+
+void GPU::memory_heap_unmap(GPU::MemoryHeapID memory_heap, const Slice<u8>& memory)
+{
+	GPUFailOn(memory_heap.is_valid() == false, "invalid memory heap");
+    GPUFailOn(memory.ptr() == nullptr, "invalid memory address");
+	current_adapter.memory_heap_unmap(memory_heap, memory);
+}
+
 GPU::BufferID GPU::buffer_create(const BufferCreateInfo& ci)
 {
 	GPUFailOn(ci.device.is_valid() == false, "invalid device");
@@ -225,20 +239,6 @@ void GPU::buffer_destroy(BufferID buffer)
 {
     GPUFailOn(buffer.is_valid() == false, "invalid buffer");
 	current_adapter.buffer_destroy(buffer);
-}
-
-Slice<u8> GPU::buffer_map_memory(GPU::BufferID buffer, usize offset, usize len)
-{
-	GPUFailOn(buffer.is_valid() == false, "invalid buffer");
-    GPUFailOn(len == 0, "invalid buffer len");
-	return current_adapter.buffer_map_memory(buffer, offset, len);
-}
-
-void GPU::buffer_unmap_memory(GPU::BufferID buffer, const Slice<u8>& memory)
-{
-	GPUFailOn(buffer.is_valid() == false, "invalid buffer");
-    GPUFailOn(memory.ptr() == nullptr, "invalid memory address");
-	current_adapter.buffer_unmap_memory(buffer, memory);
 }
 
 GPU::SamplerID GPU::sampler_create(const SamplerCreateInfo& ci)

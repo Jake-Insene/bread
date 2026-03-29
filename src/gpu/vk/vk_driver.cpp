@@ -40,10 +40,10 @@ InternalGPU::GPUAdapter VulkanDriver::get_adapter()
         .queue_wait_idle = &VulkanDriver::queue_wait_idle,
         .memory_heap_create = &VulkanDriver::memory_heap_create,
         .memory_heap_destroy = &VulkanDriver::memory_heap_destroy,
+        .memory_heap_map = &VulkanDriver::memory_heap_map,
+        .memory_heap_unmap = &VulkanDriver::memory_heap_unmap,
         .buffer_create = &VulkanDriver::buffer_create,
         .buffer_destroy = &VulkanDriver::buffer_destroy,
-        .buffer_map_memory = &VulkanDriver::buffer_map_memory,
-        .buffer_unmap_memory = &VulkanDriver::buffer_unmap_memory,
         .sampler_create = &VulkanDriver::sampler_create,
         .sampler_destroy = &VulkanDriver::sampler_destroy,
         .texture_create = &VulkanDriver::texture_create,
@@ -1008,6 +1008,28 @@ void VulkanDriver::memory_heap_destroy(GPU::MemoryHeapID memory_heap)
     data.memory_heaps.remove(memory_heap);
 }
 
+Slice<u8> VulkanDriver::memory_heap_map(GPU::MemoryHeapID memory_heap, usize offset, usize len)
+{
+    MemoryHeap& heap = _get_memory_heap(memory_heap);
+    LogicalDevice& ld = _get_logical_device(heap.device);
+
+    void* ptr = nullptr;
+
+    VkResult result = ld.vk.vkMapMemory(ld.vk_device, heap.vk_memory, offset, len, 0, &ptr);
+    VKFailOn(result != VK_SUCCESS, "vkMapMemory({})", Vulkan::result_as_string(result));
+
+    return Slice<u8>(reinterpret_cast<u8*>(ptr), len);
+}
+
+void VulkanDriver::memory_heap_unmap(GPU::MemoryHeapID memory_heap, const Slice<u8>& memory)
+{
+    Unused(memory);
+    MemoryHeap& heap = _get_memory_heap(memory_heap);
+    LogicalDevice& ld = _get_logical_device(heap.device);
+
+    ld.vk.vkUnmapMemory(ld.vk_device, heap.vk_memory);
+}
+
 GPU::BufferID VulkanDriver::buffer_create(const GPU::BufferCreateInfo& ci)
 {
     LogicalDevice& ld = _get_logical_device(ci.device);
@@ -1058,30 +1080,6 @@ void VulkanDriver::buffer_destroy(GPU::BufferID buffer)
     ld.vk.vkDestroyBuffer(b.vk_device, b.vk_buffer, Vulkan::allocation_callbacks());
 
     data.buffers.remove(buffer);
-}
-
-Slice<u8> VulkanDriver::buffer_map_memory(GPU::BufferID buffer, usize offset, usize len)
-{
-    Buffer& b = _get_buffer(buffer);
-    MemoryHeap& heap = _get_memory_heap(b.memory_heap);
-    LogicalDevice& ld = _get_logical_device(b.device);
-
-    void* ptr = nullptr;
-
-    VkResult result = ld.vk.vkMapMemory(ld.vk_device, heap.vk_memory, offset, len, 0, &ptr);
-    VKFailOn(result != VK_SUCCESS, "vkMapMemory({})", Vulkan::result_as_string(result));
-
-    return Slice<u8>(reinterpret_cast<u8*>(ptr), len);
-}
-
-void VulkanDriver::buffer_unmap_memory(GPU::BufferID buffer, const Slice<u8>& memory)
-{
-    Unused(memory);
-    Buffer& b = _get_buffer(buffer);
-    MemoryHeap& heap = _get_memory_heap(b.memory_heap);
-    LogicalDevice& ld = _get_logical_device(b.device);
-
-    ld.vk.vkUnmapMemory(ld.vk_device, heap.vk_memory);
 }
 
 GPU::SamplerID VulkanDriver::sampler_create(const GPU::SamplerCreateInfo& ci)

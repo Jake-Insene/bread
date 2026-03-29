@@ -80,15 +80,20 @@ file(GLOB ENGINE_SRC
     
     src/platform/intrinsics.cpp
 
+    src/render/buffer.cpp
     src/render/command_queue.cpp
+    src/render/memory_heap.cpp
     src/render/render_device.cpp
-    src/render/render_material_manager.cpp
     
     src/render/core/gpu_material_manager.cpp
     src/render/core/gpu_memory_allocator.cpp
     src/render/core/gpu_resource_manager.cpp
     
-    src/render/pipeline/render_pipeline.cpp
+    src/render/renderer/render_material_manager.cpp
+    src/render/renderer/renderer.cpp
+
+    src/render/pipeline/pipeline.cpp
+    src/render/pipeline/pipeline_2d.cpp
 
     src/resource/font.cpp
     src/resource/image.cpp

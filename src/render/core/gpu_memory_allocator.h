@@ -51,6 +51,8 @@ struct GPUMemoryAllocator
     FreeList<Allocation, GPUMemoryAllocationID> allocations;
     GPU::MemoryHeapID staging_heap;
     GPU::BufferID staging_buffer;
+    usize staging_heap_current_size;
+    Slice<u8> mapped_staging_heap;
 
     void initialize(const mem::Allocator& _allocator);
     void shutdown();
@@ -59,9 +61,9 @@ struct GPUMemoryAllocator
     void free(GPUMemoryAllocationID allocation);
 
     GPU::BufferID begin_staging(usize size);
+    void end_staging(GPU::BufferID staging_buffer);
     Slice<u8> map_staging();
     void unmap_staging(Slice<u8> memory);
-    void end_staging(GPU::BufferID staging_buffer);
 
     GPU::MemoryHeapID allocation_get_heap(GPUMemoryAllocationID allocation);
     [[nodiscard]] usize allocation_get_offset(GPUMemoryAllocationID allocation);

@@ -42,11 +42,11 @@ struct GPUAdapter
 
 	VTFunc(GPU::MemoryHeapID, memory_heap_create, const GPU::MemoryHeapCreateInfo& ci);
 	VTFunc(void, memory_heap_destroy, GPU::MemoryHeapID memory_heap);
+	VTFunc(Slice<u8>, memory_heap_map, GPU::MemoryHeapID memory_heap, usize offset, usize len);
+	VTFunc(void, memory_heap_unmap, GPU::MemoryHeapID memory_heap, const Slice<u8>& memory);
 
 	VTFunc(GPU::BufferID, buffer_create, const GPU::BufferCreateInfo& ci);
 	VTFunc(void, buffer_destroy, GPU::BufferID buffer);
-	VTFunc(Slice<u8>, buffer_map_memory, GPU::BufferID buffer, usize offset, usize len);
-	VTFunc(void, buffer_unmap_memory, GPU::BufferID buffer, const Slice<u8>& memory);
 
 	VTFunc(GPU::SamplerID, sampler_create, const GPU::SamplerCreateInfo& ci);
 	VTFunc(void, sampler_destroy, GPU::SamplerID sampler);
