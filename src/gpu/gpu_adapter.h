@@ -37,7 +37,7 @@ struct GPUAdapter
 	VTFunc(GPU::QueueID, queue_create, const GPU::QueueCreateInfo& ci);
 	VTFunc(void, queue_destroy, GPU::QueueID queue);
 	VTFunc(void, queue_execute_command_buffer, GPU::QueueID queue, const GPU::QueueExecuteInfo& execute_info);
-	VTFunc(void, queue_present, GPU::QueueID queue, const GPU::QueuePresentInfo& present_info);
+	VTFunc(GPU::AcquireResult, queue_present, GPU::QueueID queue, const GPU::QueuePresentInfo& present_info);
 	VTFunc(void, queue_wait_idle, GPU::QueueID queue);
 
 	VTFunc(GPU::MemoryHeapID, memory_heap_create, const GPU::MemoryHeapCreateInfo& ci);
@@ -91,7 +91,7 @@ struct GPUAdapter
 	VTFunc(void, command_buffer_copy_buffer, GPU::CommandBufferID command_buffer, const GPU::BufferCopyInfo& copy_info);
 
 	VTFunc(void, command_buffer_bind_pipeline, GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineID pipeline);
-	VTFunc(void, command_buffer_bind_descriptor_sets, GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, u32 base_set, const Slice<GPU::DescriptorSetID>& descriptor_sets);
+	VTFunc(void, command_buffer_bind_descriptor_sets, GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineID pipeline, u32 base_set, const Slice<GPU::DescriptorSetID>& descriptor_sets);
 	VTFunc(void, command_buffer_bind_vertex_buffers, GPU::CommandBufferID command_buffer, u32 base_binding, const Slice<GPU::BufferID>& buffers, const Slice<usize>& offsets);
 	VTFunc(void, command_buffer_constant_block, GPU::CommandBufferID command_buffer, GPU::PipelineID pipeline, GPU::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address);
 	

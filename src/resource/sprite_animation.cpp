@@ -8,7 +8,7 @@ void SpriteAnimation::init()
 {
 	Resource::init(RESOURCE_SPRITE_ANIMATION);
 	
-    mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
+    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
 	
 	animations = StringMap<SpriteAnimation::Animation>::with_allocator(allocator);
 }
@@ -27,7 +27,7 @@ void SpriteAnimation::destroy()
 
 void SpriteAnimation::add_animation(StringView anim_name, Slice<SpriteFrame> frames, bool loop)
 {
-    mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
+    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
 	
 	Animation& anim = animations.insert(anim_name, Animation());
 	anim.loop = loop;

@@ -15,7 +15,7 @@ void Texture::init()
 void Texture::destroy()
 {
     Resource::destroy();
-    Engine::get_system_manager().get_system<RenderDevice>()->get_resource_manager().destroy_texture(texture_ref);
+    Engine::get_system_manager()->get_system<RenderDevice>()->get_resource_manager().destroy_texture(texture_ref);
 }
 
 Vector2I Texture::get_size() const

@@ -21,7 +21,7 @@ struct Engine
 
     static inline InternalData local_data = {};
 
-    static SystemManager& get_system_manager()
+    static SystemManager* get_system_manager()
     {
         return local_data.engine_runtime->get_system_manager();
     }

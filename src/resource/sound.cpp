@@ -7,14 +7,14 @@
 
 static void* _dr_alloc(size_t size, void*)
 {
-    mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
+    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
     return allocator.alloc(size, 16).items;
 }
 
 static void* _dr_realloc(void* mem, size_t new_size, void*)
 {
     Slice<u8> old_mem = Slice(reinterpret_cast<u8*>(mem), 1);
-    mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
+    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
     if (allocator.realloc(old_mem, new_size, 16))
     {
         return mem;
@@ -31,7 +31,7 @@ static void* _dr_realloc(void* mem, size_t new_size, void*)
 
 static inline void _dr_free(void* mem, void*)
 {
-    mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
+    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
     allocator.free(
         Slice(reinterpret_cast<u8*>(mem), 1)
     );
@@ -65,7 +65,7 @@ Error Sound::load(StringView file_path)
         return MakeError(ErrorCode::FileNotFound);
     }
     
-    mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
+    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
     path.set(file_path);
 
     Slice<u8> content = File::read_all(allocator, file_path);

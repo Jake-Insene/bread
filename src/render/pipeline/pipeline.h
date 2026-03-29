@@ -1,13 +1,14 @@
 #pragma once
 #include "gpu/gpu.h"
 #include "mem/allocator.h"
+#include "render/pipeline/shader.h"
 
 
 struct PipelineInfo
 {
     GPU::DeviceID device;
     GPU::PipelineBindPoint bind_point;
-	Slice<const GPU::ShaderStageInfo> shader_stages;
+    Shader shader;
     GPU::VertexInput vertex_input;
 	GPU::InputAssembly input_assembly;
     GPU::RasterizerState rasterizer_state;
@@ -29,4 +30,6 @@ struct Pipeline
 
     void init(const mem::Allocator _allocator, const PipelineInfo& info);
     void destroy();
+
+    GPU::DescriptorSetLayoutID get_set_layout(usize set_index);
 };

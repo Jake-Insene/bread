@@ -71,6 +71,18 @@ struct Ptr
         };
     }
 
+    static Ptr<T> from_raw(T* memory)
+    {
+        return Ptr<T>
+        {
+            .memory = memory,
+#if defined(DEBUG)
+            // This ptr should never be deallocate.
+            .allocator_self = nullptr,
+#endif
+        };
+    }
+
     void destroy(const mem::Allocator& allocator)
     {
         DebugAssert(allocator.self == allocator_self, "allocator mismatch");

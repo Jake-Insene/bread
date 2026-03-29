@@ -3,20 +3,19 @@
 #include "engine/engine.h"
 #include "render/render_device.h"
 
-Pipeline2D Pipeline2D::make_default(Slice<const GPU::ShaderStageInfo> stages,
-        const GPU::VertexInput& vertex_input, Slice<const GPU::ConstantBlock> constant_blocks,
-        Slice<const GPU::DescriptorSetLayoutCreateInfo> set_layout_infos, GPU::SurfaceFormat surface_format)
+
+Pipeline2D Pipeline2D::make_default(const Pipeline2DInfo& info)
 {
-    RenderDevice* render_device = Engine::get_system_manager().get_system<RenderDevice>();
+    RenderDevice* render_device = Engine::get_system_manager()->get_system<RenderDevice>();
 
     Pipeline2D pipe = {};
     pipe.init(
-        Engine::get_system_manager().get_system<RenderDevice>()->allocator,
+        Engine::get_system_manager()->get_system<RenderDevice>()->allocator,
         {
             .device = render_device->get_graphics_device(),
             .bind_point = GPU::PipelineBindPoint::Graphics,
-            .shader_stages = stages,
-            .vertex_input = vertex_input,
+            .shader = info.shader,
+            .vertex_input = info.vertex_input,
             .input_assembly = { .topology = GPU::PrimitiveTopology::TriangleList },
             .rasterizer_state =
             {
@@ -44,9 +43,9 @@ Pipeline2D Pipeline2D::make_default(Slice<const GPU::ShaderStageInfo> stages,
                 .min_depth_bounds = 0.f,
                 .max_depth_bounds = 1.f,
             },
-            .constant_blocks = constant_blocks,
-            .set_layout_infos = set_layout_infos,
-            .surface_format = surface_format,
+            .constant_blocks = info.constant_blocks,
+            .set_layout_infos = info.set_layout_infos,
+            .surface_format = info.surface_format,
         }
     );
  

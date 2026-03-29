@@ -430,6 +430,18 @@ constexpr bool HasValue(T&& value)
     return bool(value);
 }
 
+template<typename T>
+constexpr bool IsEqual(T& src1, T src2)
+{
+    return src1 == src2;
+}
+
+template<typename T, typename... Ts>
+constexpr bool IsAnyEqual(T first, Ts... args)
+{
+    return (IsEqual(first, args) || ...);
+}
+
 template<typename T, typename... TArgs>
 constexpr void ConstructObject(T& object, TArgs&&... args)
 {

@@ -16,7 +16,7 @@ void Image::init()
 void Image::destroy()
 {
     Resource::destroy();
-    mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
+    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
 
     if(!pixels.null())
     {
@@ -32,7 +32,7 @@ Error Image::load(StringView file_path)
         return MakeError(ErrorCode::FileNotFound);
     }
 
-    mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
+    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
     Slice<u8> buffer = File::read_all(allocator, file_path);
     
     i32 channels = 0;
@@ -68,7 +68,7 @@ void Image::unload()
 {
     if (!pixels.null())
     {
-        mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
+        mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
         allocator.free(pixels);
         pixels = Slice<u8>(nullptr, 0);
         size = Vector2I();

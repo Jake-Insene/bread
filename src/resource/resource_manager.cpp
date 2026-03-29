@@ -243,7 +243,7 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
             .pixels = image->pixels,
         };
         
-        tex->texture_ref = Engine::get_system_manager().get_system<RenderDevice>()->get_resource_manager().create_texture(create_info);
+        tex->texture_ref = Engine::get_system_manager()->get_system<RenderDevice>()->get_resource_manager().create_texture(create_info);
         tex->size = image->size;
         cached_images.insert(image, tex);
     }

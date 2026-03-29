@@ -10,7 +10,7 @@ void GPUResourceManager::initialize(const mem::Allocator& _allocator)
 {
     allocator = _allocator;
 
-    render_device = Engine::get_system_manager().get_system<RenderDevice>();
+    render_device = Engine::get_system_manager()->get_system<RenderDevice>();
     memory_allocator = &render_device->get_memory_allocator();
 
     textures = FreeList<GPUTextureResource, GPUTextureID>::with_size(allocator, 4);

@@ -229,7 +229,6 @@ struct VulkanDriver
 		VkCommandBuffer vk_command_buffer;
 
 		GPU::DeviceID device;
-		GPU::PipelineID last_binded_pipeline;
 	};
 
     struct InternalData
@@ -310,7 +309,7 @@ struct VulkanDriver
 	static GPU::QueueID queue_create(const GPU::QueueCreateInfo& ci);
 	static void queue_destroy(GPU::QueueID queue);
 	static void queue_execute_command_buffer(GPU::QueueID queue, const GPU::QueueExecuteInfo& execute_info);
-	static void queue_present(GPU::QueueID queue, const GPU::QueuePresentInfo& present_info);
+	static GPU::AcquireResult queue_present(GPU::QueueID queue, const GPU::QueuePresentInfo& present_info);
 	static void queue_wait_idle(GPU::QueueID queue);
 
 	static GPU::MemoryHeapID memory_heap_create(const GPU::MemoryHeapCreateInfo& ci);
@@ -365,7 +364,7 @@ struct VulkanDriver
 	static void command_buffer_copy_buffer(GPU::CommandBufferID command_buffer, const GPU::BufferCopyInfo& copy_info);
 
 	static void command_buffer_bind_pipeline(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineID pipeline);
-	static void command_buffer_bind_descriptor_sets(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, u32 base_set, const Slice<GPU::DescriptorSetID>& descriptor_sets);
+	static void command_buffer_bind_descriptor_sets(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineID pipeline, u32 base_set, const Slice<GPU::DescriptorSetID>& descriptor_sets);
 	static void command_buffer_bind_vertex_buffers(GPU::CommandBufferID command_buffer, u32 base_binding, const Slice<GPU::BufferID>& buffers, const Slice<usize>& offsets);
 	static void command_buffer_constant_block(GPU::CommandBufferID command_buffer, GPU::PipelineID pipeline, GPU::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address);
 

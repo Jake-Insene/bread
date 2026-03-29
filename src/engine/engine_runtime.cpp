@@ -67,6 +67,8 @@ void EngineRuntime::initialize()
 
     // Entry point for app
     SceneManager::change_scene(__configuration__.create_main_scene(allocator_ref));
+
+    can_tick = true;
 }
 
 void EngineRuntime::shutdown()
@@ -94,6 +96,8 @@ void EngineRuntime::shutdown()
 
 void EngineRuntime::step()
 {
+    if(can_tick == false)
+        return;
     system_manager.tick();
     SceneManager::step();
     main_queue.run();
@@ -108,6 +112,10 @@ void EngineRuntime::handle_event(const InputEvent& event)
         {
             request_recreate_window();
         }
+    }
+    else if(event.type == InputEventType::WindowClose)
+    {
+        can_tick = false;
     }
     
     system_manager.tick_event(event);

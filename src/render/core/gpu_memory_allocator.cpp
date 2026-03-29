@@ -8,7 +8,7 @@ void GPUMemoryAllocator::initialize(const mem::Allocator& _allocator)
 {
     allocator = _allocator;
 
-    render_device = Engine::get_system_manager().get_system<RenderDevice>();
+    render_device = Engine::get_system_manager()->get_system<RenderDevice>();
 
     heaps = Array<Heap>::with_size(allocator, 4);
     allocations = FreeList<Allocation, GPUMemoryAllocationID>::with_size(allocator, 4);

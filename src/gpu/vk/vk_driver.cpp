@@ -695,11 +695,15 @@ GPU::AcquireResult VulkanDriver::swap_chain_acquire_next_image(GPU::SwapChainID 
     }
 
     VkResult result = ld.vk.vkAcquireNextImageKHR(sc.vk_device, sc.vk_swapchain, acquire_info.timeout, vk_semaphore, vk_fence, image_index);
-    VKFailOn(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR, "vkAcquireNextImageKHR({})", Vulkan::result_as_string(result));
+    VKFailOn(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR && result != VK_ERROR_OUT_OF_DATE_KHR, "vkAcquireNextImageKHR({})", Vulkan::result_as_string(result));
 
     if(result == VK_SUBOPTIMAL_KHR)
     {
         return GPU::AcquireResult::Suboptimal;
+    }
+    else if(result == VK_ERROR_OUT_OF_DATE_KHR)
+    {
+        return GPU::AcquireResult::OutOfDate;
     }
 
     return GPU::AcquireResult::Acquired;
@@ -899,7 +903,7 @@ void VulkanDriver::queue_execute_command_buffer(GPU::QueueID queue, const GPU::Q
     VKFailOn(result != VK_SUCCESS, "vkQueueSubmit({})", Vulkan::result_as_string(result));
 }
 
-void VulkanDriver::queue_present(GPU::QueueID queue, const GPU::QueuePresentInfo& present_info)
+GPU::AcquireResult VulkanDriver::queue_present(GPU::QueueID queue, const GPU::QueuePresentInfo& present_info)
 {
     Queue& q = _get_queue(queue);
     LogicalDevice& ld = _get_logical_device(q.device);
@@ -933,7 +937,18 @@ void VulkanDriver::queue_present(GPU::QueueID queue, const GPU::QueuePresentInfo
     };
 
     VkResult call_result = ld.vk.vkQueuePresentKHR(q.vk_queue, &vk_present_info);
-    VKFailOn(call_result != VK_SUCCESS && call_result != VK_SUBOPTIMAL_KHR, "vkQueuePresentKHR({})", Vulkan::result_as_string(call_result));
+    VKFailOn(call_result != VK_SUCCESS && call_result != VK_SUBOPTIMAL_KHR && call_result != VK_ERROR_OUT_OF_DATE_KHR, "vkQueuePresentKHR({})", Vulkan::result_as_string(call_result));
+
+    if(call_result == VK_SUBOPTIMAL_KHR)
+    {
+        return GPU::AcquireResult::Suboptimal;
+    }
+    else if(call_result == VK_ERROR_OUT_OF_DATE_KHR)
+    {
+        return GPU::AcquireResult::OutOfDate;
+    }
+
+    return GPU::AcquireResult::Acquired;
 }
 
 void VulkanDriver::queue_wait_idle(GPU::QueueID queue)
@@ -1998,20 +2013,18 @@ void VulkanDriver::command_buffer_bind_pipeline(GPU::CommandBufferID command_buf
 {
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
-    cmd_buffer.last_binded_pipeline = pipeline;
 
     Pipeline& pipe = _get_pipeline(pipeline);
 
     ld.vk.vkCmdBindPipeline(cmd_buffer.vk_command_buffer, VkUtils::_vk_get_bind_point(bind_point), pipe.vk_pipeline);
 }
 
-void VulkanDriver::command_buffer_bind_descriptor_sets(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, u32 base_set, const Slice<GPU::DescriptorSetID>& descriptor_sets)
+void VulkanDriver::command_buffer_bind_descriptor_sets(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineID pipeline, u32 base_set, const Slice<GPU::DescriptorSetID>& descriptor_sets)
 {
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
+    Pipeline& pipe = _get_pipeline(pipeline);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
     mem::Allocator allocator = acquire_tmp_allocator();
-
-    Pipeline& current_pipe = _get_pipeline(cmd_buffer.last_binded_pipeline);
 
     Slice<VkDescriptorSet> vk_descriptor_sets = allocator.array<VkDescriptorSet>(descriptor_sets.len);
     for(usize i = 0; i < descriptor_sets.len; i++)
@@ -2020,7 +2033,7 @@ void VulkanDriver::command_buffer_bind_descriptor_sets(GPU::CommandBufferID comm
     }
 
     ld.vk.vkCmdBindDescriptorSets(
-        cmd_buffer.vk_command_buffer, VkUtils::_vk_get_bind_point(bind_point), current_pipe.vk_pipeline_layout,
+        cmd_buffer.vk_command_buffer, VkUtils::_vk_get_bind_point(bind_point), pipe.vk_pipeline_layout,
         base_set, static_cast<uint32_t>(vk_descriptor_sets.len), vk_descriptor_sets.ptr(), 0, nullptr 
     );
 }

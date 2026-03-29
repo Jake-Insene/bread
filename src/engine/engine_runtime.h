@@ -82,6 +82,7 @@ struct EngineRuntime
 
     i32 fps;
     bool vsync_cache;
+    bool can_tick;
 
     void initialize();
     void shutdown();
@@ -92,7 +93,7 @@ struct EngineRuntime
     void request_recreate_window();
 
     // Utility functions
-    SystemManager& get_system_manager() { return system_manager; }
+    SystemManager* get_system_manager() { return &system_manager; }
 
     GPU::PhysicalDeviceID get_selected_gpu_device() { return physical_device; }
 

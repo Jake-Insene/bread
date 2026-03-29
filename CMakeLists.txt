@@ -81,9 +81,14 @@ file(GLOB ENGINE_SRC
     src/platform/intrinsics.cpp
 
     src/render/buffer.cpp
+    src/render/command_encoder.cpp
     src/render/command_queue.cpp
+    src/render/descriptor_pool.cpp
+    src/render/descriptor_set.cpp
     src/render/memory_heap.cpp
     src/render/render_device.cpp
+    src/render/sampler.cpp
+    src/render/swap_chain.cpp
     
     src/render/core/gpu_material_manager.cpp
     src/render/core/gpu_memory_allocator.cpp
@@ -91,9 +96,10 @@ file(GLOB ENGINE_SRC
     
     src/render/renderer/render_material_manager.cpp
     src/render/renderer/renderer.cpp
-
+    
     src/render/pipeline/pipeline.cpp
     src/render/pipeline/pipeline_2d.cpp
+    src/render/pipeline/shader.cpp
 
     src/resource/font.cpp
     src/resource/image.cpp

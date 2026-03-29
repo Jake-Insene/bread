@@ -152,6 +152,7 @@ struct GPU
 		Uknown = 0,
 		Acquired,
 		Suboptimal,
+		OutOfDate,
 	};
 
 	struct SwapChainCreateInfo
@@ -240,7 +241,7 @@ struct GPU
 	static QueueID queue_create(const QueueCreateInfo& ci);
 	static void queue_destroy(QueueID queue);
 	static void queue_execute_command_buffer(QueueID queue, const QueueExecuteInfo& execute_info);
-	static void queue_present(QueueID queue, const QueuePresentInfo& present_info);
+	static AcquireResult queue_present(QueueID queue, const QueuePresentInfo& present_info);
 	static void queue_wait_idle(QueueID queue);
 
 	// ====== Resources ======
@@ -499,7 +500,7 @@ struct GPU
 	{
 		DeviceID device;
 		u32 max_sets;
-		Slice<DescriptorPoolSize> sizes;
+		Slice<const DescriptorPoolSize> sizes;
 	};
 
 	static DescriptorPoolID descriptor_pool_create(const DescriptorPoolCreateInfo& ci);
@@ -712,11 +713,6 @@ struct GPU
 	/*
 	* CommandBuffer API
 	*/
-	enum class CommandBufferUsage
-	{
-		Unknown = 0,
-		Graphics,
-	};
 
 	enum class IndexType
 	{
@@ -838,7 +834,7 @@ struct GPU
 	static void command_buffer_copy_buffer(CommandBufferID command_buffer, const BufferCopyInfo& copy_info);
 
 	static void command_buffer_bind_pipeline(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineID pipeline);
-	static void command_buffer_bind_descriptor_sets(CommandBufferID command_buffer, PipelineBindPoint bind_point, u32 base_set, const Slice<DescriptorSetID>& descriptor_sets);
+	static void command_buffer_bind_descriptor_sets(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineID pipeline, u32 base_set, const Slice<DescriptorSetID>& descriptor_sets);
 	static void command_buffer_bind_vertex_buffers(CommandBufferID command_buffer, u32 base_binding, const Slice<BufferID>& buffers, const Slice<usize>& offsets);
 	static void command_buffer_constant_block(CommandBufferID command_buffer, PipelineID pipeline, ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address);
 

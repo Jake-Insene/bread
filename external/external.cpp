@@ -5,13 +5,13 @@
 
 static void* _alloc(usize size)
 {
-    mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
+    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
     return allocator.alloc(size, alignof(usize)).items;
 }
 
 static void* _realloc(void* ptr, usize old_size, usize new_size)
 {
-    mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
+    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
 
     Slice<u8> old_mem = Slice<u8>(reinterpret_cast<u8*>(ptr), old_size);
     if(ptr && allocator.realloc(old_mem, new_size, alignof(usize)))
@@ -31,7 +31,7 @@ static void* _realloc(void* ptr, usize old_size, usize new_size)
 
 static void _free(void* ptr)
 {
-    mem::Allocator allocator = Engine::get_system_manager().get_system<ResourceManager>()->get_allocator();
+    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
     
     if(ptr)
     {

@@ -6,7 +6,7 @@
 
 MemoryHeap MemoryHeap::create(GPU::HeapUsage usage, usize size)
 {
-    RenderDevice* render_device = Engine::get_system_manager().get_system<RenderDevice>();
+    RenderDevice* render_device = Engine::get_system_manager()->get_system<RenderDevice>();
 
     MemoryHeap heap = {};
     heap.init(render_device->allocator,

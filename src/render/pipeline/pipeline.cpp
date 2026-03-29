@@ -8,7 +8,7 @@ Pipeline Pipeline::create(const PipelineInfo &info)
 {
     Pipeline pipe = {};
 
-    RenderDevice* render_device = Engine::get_system_manager().get_system<RenderDevice>();
+    RenderDevice* render_device = Engine::get_system_manager()->get_system<RenderDevice>();
 
     pipe.init(render_device->allocator, info);
     return pipe;
@@ -26,11 +26,17 @@ void Pipeline::init(const mem::Allocator _allocator, const PipelineInfo& info)
         set_layouts[i] = GPU::descriptor_set_layout_create(set_layout_info);
     }
 
+    GPU::ShaderStageInfo shader_stages[] =
+    {
+        { .stage = GPU::ShaderStage::Vertex, .code = info.shader.shader_code, .name = info.shader.shader_info.vertex_name, },
+        { .stage = GPU::ShaderStage::Fragment, .code = info.shader.shader_code, .name = info.shader.shader_info.fragment_name, },
+    };
+
     const GPU::PipelineCreateInfo pipeline_ci =
     {
         .device = info.device,
         .bind_point = info.bind_point,
-        .shader_stages = info.shader_stages,
+        .shader_stages = shader_stages,
         .vertex_input = info.vertex_input,
         .input_assembly = info.input_assembly,
         .rasterizer_state = info.rasterizer_state,
@@ -57,5 +63,12 @@ void Pipeline::destroy()
     allocator.free(mem::to_bytes(set_layouts));
     
     GPU::pipeline_destroy(pipeline);
+}
+
+GPU::DescriptorSetLayoutID Pipeline::get_set_layout(usize set_index)
+{
+    DebugAssert(set_index < set_layouts.len, "invalid set index");
+
+    return set_layouts[set_index];
 }
 

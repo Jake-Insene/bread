@@ -166,14 +166,10 @@ void GPU::queue_execute_command_buffer(QueueID queue, const QueueExecuteInfo& ex
         execute_info.wait_stages.len != 0 && execute_info.wait_semaphores.len != execute_info.wait_stages.len,
         "wait stages must be equal in len to wait semaphores or empty"
     );
-	GPUFailOn(
-        execute_info.signal_semaphores.len != 0 && execute_info.command_buffers.len != execute_info.signal_semaphores.len,
-        "signal semaphores must be equal in len to command buffers or empty"
-    );
 	current_adapter.queue_execute_command_buffer(queue, execute_info);
 }
 
-void GPU::queue_present(QueueID queue, const QueuePresentInfo& present_info)
+GPU::AcquireResult GPU::queue_present(QueueID queue, const QueuePresentInfo& present_info)
 {
     GPUFailOn(queue.is_valid() == false, "invalid queue");
 	GPUFailOn(
@@ -183,7 +179,7 @@ void GPU::queue_present(QueueID queue, const QueuePresentInfo& present_info)
 	GPUFailOn(present_info.swapchains.len != present_info.image_indices.len,
 		"image indices must be equal in len to swapchains"
 	);
-	current_adapter.queue_present(queue, present_info);
+	return current_adapter.queue_present(queue, present_info);
 }
 
 void GPU::queue_wait_idle(QueueID queue)
@@ -343,6 +339,21 @@ void GPU::descriptor_set_free(GPU::DescriptorSetID descriptor_set)
 void GPU::descriptor_set_update_descriptors(DescriptorSetID descriptor_set, const UpdateDescriptorInfo& update_info)
 {
     GPUFailOn(descriptor_set.is_valid() == false, "invalid descriptor set");
+	for(usize write_index = 0; write_index < update_info.write_infos.len; write_index++)
+	{
+		const WriteDescriptorInfo& write_info = update_info.write_infos[write_index];
+		GPUFailOn(write_info.type == GPU::DescriptorType::Unknown, "invalid descriptor type")
+		GPUFailOn(
+			IsAnyEqual(write_info.type, GPU::DescriptorType::UniformBuffer, GPU::DescriptorType::StorageBuffer)
+			&& write_info.count != write_info.buffers.len,
+			"invalid buffers len, WriteDescriptorInfo::count buffers were expected"
+		);
+		GPUFailOn(
+			IsAnyEqual(write_info.type, GPU::DescriptorType::CombinedTextureSampler)
+			&& write_info.count != write_info.textures.len,
+			"invalid textures len, WriteDescriptorInfo::count textures were expected"
+		);
+	}
 	current_adapter.descriptor_set_update_descriptors(descriptor_set, update_info);
 }
 
@@ -465,12 +476,13 @@ void GPU::command_buffer_bind_pipeline(CommandBufferID command_buffer, PipelineB
 	current_adapter.command_buffer_bind_pipeline(command_buffer, bind_point, pipeline);
 }
 
-void GPU::command_buffer_bind_descriptor_sets(CommandBufferID command_buffer, PipelineBindPoint bind_point, u32 base_set, const Slice<DescriptorSetID>& descriptor_sets)
+void GPU::command_buffer_bind_descriptor_sets(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineID pipeline, u32 base_set, const Slice<DescriptorSetID>& descriptor_sets)
 {
     GPUFailOn(command_buffer.is_valid() == false, "invalid command buffer");
 	GPUFailOn(bind_point == GPU::PipelineBindPoint::Unknown, "invalid bind point");
+    GPUFailOn(pipeline.is_valid() == false, "invalid pipeline");
     GPUFailOn(descriptor_sets.len == 0, "invalid descriptor set count");
-	current_adapter.command_buffer_bind_descriptor_sets(command_buffer, bind_point, base_set, descriptor_sets);
+	current_adapter.command_buffer_bind_descriptor_sets(command_buffer, bind_point, pipeline, base_set, descriptor_sets);
 }
 
 
