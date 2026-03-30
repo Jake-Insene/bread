@@ -51,7 +51,7 @@ static void* __bread_memcpy(void* dest, const void* src, size_t len)
 
 static void* __bread_memset(void* dest, int value, size_t len)
 {
-    auto dest_items = Slice(reinterpret_cast<u8*>(dest), len);
+    Slice<u8> dest_items = Slice(reinterpret_cast<u8*>(dest), len);
     mem::set(dest_items, u8(value));
     return dest;
 }

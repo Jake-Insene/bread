@@ -66,8 +66,6 @@ void CommandQueue::destroy()
 
 CommandEncoder CommandQueue::acquire_encoder()
 {
-    _remove_finished_work();
-
     if(!free_encoders.is_empty())
     {
         return free_encoders.pop();
@@ -87,13 +85,14 @@ CommandEncoder CommandQueue::acquire_encoder()
     return encoders.add(encoder);
 }
 
-void CommandQueue::execute(const CommandQueueExecuteInfo& info)
+GPU::FenceID CommandQueue::execute(const CommandQueueExecuteInfo& info)
 {
     // check for free encoders
     GPU::FenceID fence = GPU::FenceID::invalid();
     if(!free_fences.is_empty())
     {
         fence = free_fences.pop();
+        GPU::fence_reset(Slice(&fence, 1));
     }
     else
     {
@@ -126,15 +125,18 @@ void CommandQueue::execute(const CommandQueueExecuteInfo& info)
             .empty = false,
         }
     );
+    
+    return fence;
 }
 
-void CommandQueue::execute_empty(const CommandQueueExecuteEmptyInfo& info)
+GPU::FenceID CommandQueue::execute_empty(const CommandQueueExecuteEmptyInfo& info)
 {
     // check for free encoders
     GPU::FenceID fence = GPU::FenceID::invalid();
     if(!free_fences.is_empty())
     {
         fence = free_fences.pop();
+        GPU::fence_reset(Slice(&fence, 1));
     }
     else
     {
@@ -156,7 +158,7 @@ void CommandQueue::execute_empty(const CommandQueueExecuteEmptyInfo& info)
             .fence = fence,
         }
     );
-
+    
     (void)work_submited.add(
         WorkSubmit
         {
@@ -164,7 +166,9 @@ void CommandQueue::execute_empty(const CommandQueueExecuteEmptyInfo& info)
             .encoder = {},
             .empty = true,
         }
-    );   
+    );
+
+    return fence;
 }
 
 void CommandQueue::wait_for_all()
@@ -188,6 +192,27 @@ void CommandQueue::wait_for_all()
     tmp_allocator.reset();
 }
 
+void CommandQueue::release_fence(GPU::FenceID fence)
+{
+    for(usize i = 0; i < work_submited.count; i++)
+    {
+        WorkSubmit& work_data = work_submited.get(i);
+        if(work_data.fence != fence)
+        {
+            continue;
+        }
+
+        GPU::fence_reset(Slice(&work_data.fence, 1));
+        free_fences.push(work_data.fence);
+        if(work_data.empty == false)
+        {
+            free_encoders.push(work_data.encoder);
+        }
+        work_submited.remove_at(i);
+        break;
+    }
+}
+
 void CommandQueue::_remove_finished_work()
 {
     for(usize i = 0; i < work_submited.count; i++)
@@ -198,7 +223,6 @@ void CommandQueue::_remove_finished_work()
             continue;
         }
 
-        GPU::fence_reset(Slice(&work_data.fence, 1));
         free_fences.push(work_data.fence);
         if(work_data.empty == false)
         {

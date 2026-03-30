@@ -59,10 +59,12 @@ struct CommandQueue
     void destroy();
 
     CommandEncoder acquire_encoder();
-    void execute(const CommandQueueExecuteInfo& info);
-    void execute_empty(const CommandQueueExecuteEmptyInfo& info);
+    GPU::FenceID execute(const CommandQueueExecuteInfo& info);
+    GPU::FenceID execute_empty(const CommandQueueExecuteEmptyInfo& info);
 
     void wait_for_all();
+
+    void release_fence(GPU::FenceID fence);
 
     void _remove_finished_work();
 };

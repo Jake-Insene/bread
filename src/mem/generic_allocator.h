@@ -7,10 +7,10 @@ namespace mem
     
 struct GenericAllocator
 {
-    static constexpr u16 MaxPageCount = u16(-1);
+    static constexpr u16 MaxPageCount = MaxValue<u16>;
     static constexpr usize DefaultPageListSize = 128;
     static constexpr usize DirectPageAllocationSize = 32 * 1024; // 256 KB
-    static constexpr usize DefaultNextPageSize = 1024 * 8;
+    static constexpr usize DefaultNextPageSize = 1024 * 16; // 16 KB
 
     enum HeaderTags
     {
@@ -44,17 +44,18 @@ struct GenericAllocator
     u32 index = 0;
 
     void destroy();
-    
-    Page& allocate_new_page(usize size);
-    void check_integrity();
 
     Slice<u8> alloc(usize size, usize alignment);
     bool realloc(Slice<u8> ptr, usize new_size, usize alignment);
     void free(Slice<u8> ptr);
     usize get_size_of(Slice<u8> ptr) const;
 
-    
     Allocator allocator();
+
+    Header* _search_for_available_space(usize aligned_size, usize alignment);
+
+    Page& _allocate_new_page(usize size);
+    void _check_integrity();
 };
     
 }

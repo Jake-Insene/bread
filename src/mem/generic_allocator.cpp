@@ -16,7 +16,15 @@ static inline GenericAllocator::Header* get_header(Slice<u8> ptr)
     
 void GenericAllocator::destroy()
 {
-    Log::debug("[Memory]: Allocated pages {}", page_count);
+    usize accumulator = 0;
+    for(usize i = 0; i < page_count; i++)
+    {
+        Page& page = allocated_pages[i];
+        accumulator += page.bytes.len;
+    }
+    
+    Log::debug("[Memory]: Allocated pages {}, total memory usage of {} MB",
+        page_count, f32(accumulator) / (1024*1024));
   
     for(usize i = 0; i < page_count; i++)
     {
@@ -44,38 +52,6 @@ void GenericAllocator::destroy()
     {
         internal_allocator.free(mem::to_bytes(allocated_pages));
     }
-}
-
-GenericAllocator::Page& GenericAllocator::allocate_new_page(usize size)
-{
-    Page& page = allocated_pages[page_count++];
-    page.bytes = internal_allocator.alloc(size, OS::get_page_size());
-    page.first_header = nullptr;
-    Log::debug("[Memory]: Page requested at address {} with size {}", page.bytes.ptr(), page.bytes.len);
-    return page;
-}
-
-void GenericAllocator::check_integrity()
-{
-#if DEBUG
-    for (usize i = 0; i < page_count; i++)
-    {
-        usize page_size_accumulator = 0;
-        Page& page = allocated_pages[i];
-        Header* header = page.first_header;
-        while (header)
-        {
-            page_size_accumulator += header->len + sizeof(Header);
-            header = header->next;
-        }
-
-        if(page_size_accumulator != page.bytes.len)
-        {
-            Log::debug("Page({}) with size {} was corrupted, page_size_accumulator was {}", &page, page.bytes.len, page_size_accumulator);
-            DebugAssert(page_size_accumulator == page.bytes.len, "the page was corrupted");
-        }
-    }
-#endif
 }
     
 Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
@@ -106,101 +82,26 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
     }
 
     const usize aligned_size = mem::align_up(size, alignment);
-    for(usize i = 0; i < page_count; i++)
+
+    Header* allocated_mem = _search_for_available_space(size, alignment);
+    if(allocated_mem)
     {
-        Page& page = allocated_pages[i];
+        // allocated_mem = aligned_base - sizeof(Header)
+        u8* base = reinterpret_cast<u8*>(usize(allocated_mem) + sizeof(Header));
 
-        if(page.first_header != nullptr)
+        allocated_mem->tags |= Allocated;
+        _check_integrity();
+
+        index++;
+        allocated_mem->index = index;
+        return Slice<u8>
         {
-            Header* allocated_mem = page.first_header;
-            while(allocated_mem != nullptr)
-            {
-                if (allocated_mem->tags & Allocated)
-                {
-                    allocated_mem = allocated_mem->next;
-                    continue;
-                }
-
-                if(allocated_mem->len >= aligned_size)
-                {
-                    u8* aligned_base = reinterpret_cast<u8*>(
-                        mem::align_up(usize(allocated_mem) + sizeof(Header), alignment)
-                    );
-                    isize offset = aligned_base - (reinterpret_cast<u8*>(allocated_mem) + sizeof(Header));
-
-                    if (offset > 0)
-                    {
-                        if (allocated_mem->len >= aligned_size + offset)
-                        {
-                            const Header copied_block = *allocated_mem;
-                            Header* prev = allocated_mem->prev;
-
-                            allocated_mem = reinterpret_cast<Header*>(aligned_base - sizeof(Header));
-                            allocated_mem->len = copied_block.len - offset;
-                            allocated_mem->page_index = i;
-                            allocated_mem->tags = 0;
-
-                            // Is impossible that a header that start at 0xXXXX'X000 it is not aligned correctly.
-                            prev->len += offset;
-                            prev->next = allocated_mem;
-
-                            allocated_mem->prev = copied_block.prev;
-                            allocated_mem->next = copied_block.next;
-                            if (allocated_mem->next)
-                                allocated_mem->next->prev = allocated_mem;
-
-                            check_integrity();
-                        }
-                        else
-                        {
-                            // Try it with the next block
-                            allocated_mem = allocated_mem->next;
-                            continue;
-                        }
-                    }
-
-                    const usize remain = allocated_mem->len - aligned_size;
-                    
-                    if (remain >= MinimumValidRemain)
-                    {
-                        u8* remain_base = reinterpret_cast<u8*>(usize(aligned_base) + aligned_size);
-
-                        Header* remain_header = reinterpret_cast<Header*>(remain_base);
-
-                        remain_header->len = remain - sizeof(Header);
-                        remain_header->page_index = allocated_mem->page_index;
-                        remain_header->tags = 0;
-                        remain_header->prev = allocated_mem;
-                        remain_header->next = allocated_mem->next;
-
-                        allocated_mem->len = aligned_size;
-                        allocated_mem->next = remain_header;
-
-                        if (remain_header->next)
-                        {
-                            remain_header->next->prev = remain_header;
-                        }
-                    }
-                    
-                    allocated_mem->tags |= Allocated;
-                    check_integrity();
-
-                    index++;
-                    allocated_mem->index = index;
-                    return Slice<u8>
-                    {
-                        aligned_base,
-                        size
-                    };
-                }
-
-                
-                allocated_mem = allocated_mem->next;
-            }
-        }
+            base,
+            size
+        };
     }
 
-    Page& new_page = allocate_new_page(next_page_size + aligned_size + sizeof(Header));
+    Page& new_page = _allocate_new_page(next_page_size + aligned_size + sizeof(Header));
     next_page_size += DefaultNextPageSize;
 
     u8* base = new_page.bytes.ptr();
@@ -234,7 +135,7 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
         }
     }
     
-    check_integrity();
+    _check_integrity();
 
     index++;
     allocation_header->index = index;
@@ -254,7 +155,7 @@ bool GenericAllocator::realloc(Slice<u8> ptr, usize new_size, usize alignment)
     Header* header = get_header(ptr);
     DebugAssert(header->tags & Allocated, "the given block is already free.");
     
-    check_integrity();
+    _check_integrity();
     
     if(mem::align_up(new_size, alignment) <= header->len)
         return true;
@@ -272,24 +173,23 @@ void GenericAllocator::free(Slice<u8> ptr)
     header->tags = None;
 
     // TODO: Investigate page corruption.
-    //if(header && header->prev && header->prev->tags == 0)
-    //{
-    //    header->prev->len += header->len + sizeof(Header);
-    //    header->prev->next = header->next;
-    //    if (header->next)
-    //        header->next->prev = header->prev;
-    //    header = header->prev;
-    //}
+    if(header && header->prev)
+    {
+        header->prev->len += header->len + sizeof(Header);
+        header->prev->next = header->next;
+        if (header->next)
+            header->next->prev = header->prev;
+        header = header->prev;
+    }
+    else if(header && header->next && header->next->tags == 0)
+    {
+        header->len += header->next->len + sizeof(Header);
+        header->next = header->next->next;
+        if (header->next)
+            header->next->prev = header;
+    }
 
-    //if(header && header->next && header->next->tags == 0)
-    //{
-    //    header->len += header->next->len + sizeof(Header);
-    //    header->next = header->next->next;
-    //    if (header->next)
-    //        header->next->prev = header;
-    //}
-
-    check_integrity();
+    _check_integrity();
 }
 
 usize GenericAllocator::get_size_of(Slice<u8> ptr) const
@@ -317,6 +217,128 @@ Allocator GenericAllocator::allocator()
         .vtable = &ga_vtable,
         .self = reinterpret_cast<Allocator*>(this),
     };
+}
+
+GenericAllocator::Header* GenericAllocator::_search_for_available_space(usize aligned_size, usize alignment)
+{
+    for(usize i = 0; i < page_count; i++)
+    {
+        Page& page = allocated_pages[i];
+        if(page.first_header == nullptr)
+        {
+            continue;
+        }
+
+        Header* allocated_mem = page.first_header;
+        while(allocated_mem != nullptr)
+        {
+            if (allocated_mem->tags & Allocated)
+            {
+                allocated_mem = allocated_mem->next;
+                continue;
+            }
+
+            if(allocated_mem->len < aligned_size)
+            {
+                allocated_mem = allocated_mem->next;
+                continue;
+            }
+
+            u8* aligned_base = reinterpret_cast<u8*>(
+                mem::align_up(usize(allocated_mem) + sizeof(Header), alignment)
+            );
+            isize offset = aligned_base - (reinterpret_cast<u8*>(allocated_mem) + sizeof(Header));
+
+            if (offset > 0 && allocated_mem->len >= aligned_size + offset)
+            {
+                const Header copied_block = *allocated_mem;
+                Header* prev = allocated_mem->prev;
+
+                allocated_mem = reinterpret_cast<Header*>(aligned_base - sizeof(Header));
+                allocated_mem->len = copied_block.len - offset;
+                allocated_mem->page_index = i;
+                allocated_mem->tags = 0;
+                allocated_mem->index = copied_block.index;
+
+                prev->len += offset;
+                prev->next = allocated_mem;
+
+                allocated_mem->prev = copied_block.prev;
+                allocated_mem->next = copied_block.next;
+                if (allocated_mem->next)
+                    allocated_mem->next->prev = allocated_mem;
+
+                _check_integrity();
+            }
+            else if(offset > 0)
+            {
+                // Try it with the next block
+                allocated_mem = allocated_mem->next;
+                continue;
+            }
+
+            const usize remain = allocated_mem->len - aligned_size;
+            
+            if (remain >= MinimumValidRemain)
+            {
+                u8* remain_base = reinterpret_cast<u8*>(usize(aligned_base) + aligned_size);
+
+                Header* remain_header = reinterpret_cast<Header*>(remain_base);
+
+                remain_header->len = remain - sizeof(Header);
+                remain_header->page_index = allocated_mem->page_index;
+                remain_header->tags = 0;
+                index++;
+                remain_header->index = index;
+                remain_header->prev = allocated_mem;
+                remain_header->next = allocated_mem->next;
+
+                allocated_mem->len = aligned_size;
+                allocated_mem->next = remain_header;
+
+                if (remain_header->next)
+                {
+                    remain_header->next->prev = remain_header;
+                }
+            }
+            
+            return allocated_mem;
+        }
+    }
+
+    return nullptr;
+}
+
+GenericAllocator::Page& GenericAllocator::_allocate_new_page(usize size)
+{
+    Page& page = allocated_pages[page_count++];
+    page.bytes = internal_allocator.alloc(size, OS::get_page_size());
+    page.first_header = nullptr;
+    Log::debug("[Memory]: Page requested at address {} with size {}", page.bytes.ptr(), page.bytes.len);
+    return page;
+}
+
+void GenericAllocator::_check_integrity()
+{
+#if DEBUG
+    for (usize i = 0; i < page_count; i++)
+    {
+        usize page_size_accumulator = 0;
+        Page& page = allocated_pages[i];
+        Header* header = page.first_header;
+        while (header)
+        {
+            page_size_accumulator += header->len + sizeof(Header);
+            header = header->next;
+        }
+
+        if(page_size_accumulator != page.bytes.len)
+        {
+            Log::debug("Page({}) with size {} was corrupted, page_size_accumulator was {}", &page, page.bytes.len, page_size_accumulator);
+            DebugAssert(page_size_accumulator == page.bytes.len, "the page was corrupted");
+        }
+    }
+#endif
 }
     
 }
