@@ -16,6 +16,7 @@ struct DescriptorSet
     mem::Allocator allocator;
 
     GPU::DescriptorSetID descriptor_set;
+    GPU::DescriptorSetLayoutID set_layout;
 
     void init(const mem::Allocator& _allocator, const DescriptorSetInfo& info);
     void destroy();

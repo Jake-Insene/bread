@@ -13,6 +13,7 @@ void DescriptorSet::init(const mem::Allocator& _allocator, const DescriptorSetIn
             .set_layout = info.set_layout
         }
     );
+    set_layout = info.set_layout;
 }
 
 void DescriptorSet::destroy()

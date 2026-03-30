@@ -9,7 +9,7 @@
 
 
 template<>
-struct HashOfType<VkFormat>
+struct HashOfType<VkImage>
 {
     [[nodiscard]] static constexpr u64 hashfunc(const VkFormat& k)
     {
@@ -40,11 +40,13 @@ struct VulkanDriver
 	struct RenderPassCache
 	{
 		VkRenderPass vk_render_pass;
+		HashMap<VkImageView, VkFramebuffer> vk_framebuffers_cache;
 
 		GPU::DeviceID device;
 	};
 
 	using RenderPassEntry = HashMap<VkFormat, RenderPassCache>::KeyValue;
+	using FramebufferEntry = HashMap<VkImageView, VkFramebuffer>::KeyValue;
 
 	struct LogicalDevice
 	{
@@ -82,7 +84,6 @@ struct VulkanDriver
 	{
 		VkImage vk_image;
 		VkImageView vk_image_view;
-		VkFramebuffer vk_framebuffer;
 		GPU::TextureID texture;
 	};
 
@@ -91,7 +92,6 @@ struct VulkanDriver
 		VkDevice vk_device;
 		VkSurfaceKHR vk_surface;
 		VkSwapchainKHR vk_swapchain;
-		VkRenderPass vk_render_pass;
 
 		u32 image_count;
         Slice<SwapChainImage> images;
@@ -162,6 +162,8 @@ struct VulkanDriver
 		VkDevice vk_device;
 		VkImage vk_image;
 		VkImageView vk_image_view;
+		VkFormat vk_format;
+		Vector3U extent;
 
 		GPU::DeviceID device;
 		GPU::TextureID texture;
@@ -248,7 +250,6 @@ struct VulkanDriver
 		FreeList<Buffer, GPU::BufferID> buffers;
 		FreeList<Sampler, GPU::SamplerID> samplers;
 		FreeList<Texture, GPU::TextureID> textures;
-		FreeList<RenderTarget, GPU::RenderTargetID> render_targets;
 		FreeList<DescriptorSetLayout, GPU::DescriptorSetLayoutID> descriptor_set_layouts;
 		FreeList<DescriptorPool, GPU::DescriptorPoolID> descriptor_pools;
 		FreeList<DescriptorSet, GPU::DescriptorSetID> descriptor_sets;
@@ -325,11 +326,6 @@ struct VulkanDriver
 	
 	static GPU::TextureID texture_create(const GPU::TextureCreateInfo& ci);
 	static void texture_destroy(GPU::TextureID texture);
-	static Vector2I texture_get_size(GPU::TextureID texture);
-
-	static GPU::RenderTargetID render_target_create(const GPU::RenderTargetCreateInfo& ci);
-	static void render_target_destroy(GPU::RenderTargetID render_target);
-	static GPU::TextureID render_target_get_texture(GPU::RenderTargetID render_target);
 
 	static GPU::DescriptorSetLayoutID descriptor_set_layout_create(const GPU::DescriptorSetLayoutCreateInfo& ci);
 	static void descriptor_set_layout_destroy(GPU::DescriptorSetLayoutID descriptor_set_layout);
@@ -383,7 +379,6 @@ struct VulkanDriver
 	static Buffer& _get_buffer(GPU::BufferID buffer) { return data.buffers.get(buffer); }
 	static Sampler& _get_sampler(GPU::SamplerID sampler) { return data.samplers.get(sampler); }
 	static Texture& _get_texture(GPU::TextureID texture) { return data.textures.get(texture); }
-	static RenderTarget& _get_render_target(GPU::RenderTargetID render_target) { return data.render_targets.get(render_target); }
 	static DescriptorSetLayout& _get_descriptor_set_layout(GPU::DescriptorSetLayoutID descriptor_set_layout) { return data.descriptor_set_layouts.get(descriptor_set_layout); }
 	static DescriptorPool& _get_descriptor_pool(GPU::DescriptorPoolID descriptor_pool) { return data.descriptor_pools.get(descriptor_pool); }
 	static DescriptorSet& _get_descriptor_set(GPU::DescriptorSetID descriptor_set) { return data.descriptor_sets.get(descriptor_set); }
@@ -400,6 +395,8 @@ struct VulkanDriver
 	static VkShaderModule _vk_create_shader_module(LogicalDevice& ld, const GPU::ShaderStageInfo& shader_stage_info);
 
 	static RenderPassCache& _get_render_pass_for(LogicalDevice& ld, VkFormat format);
+	static void _get_render_pass_and_framebuffer_for(LogicalDevice& ld, const GPU::RenderPassBeginInfo& begin_info,
+		VkRenderPass* vk_render_pass, VkFramebuffer* vk_framebuffer);
 
 	static GPU::DeviceType _vk_device_type_to_device_type(VkPhysicalDeviceType vk_device_type);
 	static GPU::SurfaceFormat _vk_surface_format_to_surface_format(VkSurfaceFormatKHR vk_surface_format);

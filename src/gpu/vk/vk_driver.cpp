@@ -48,10 +48,6 @@ InternalGPU::GPUAdapter VulkanDriver::get_adapter()
         .sampler_destroy = &VulkanDriver::sampler_destroy,
         .texture_create = &VulkanDriver::texture_create,
         .texture_destroy = &VulkanDriver::texture_destroy,
-        .texture_get_size = &VulkanDriver::texture_get_size,
-        .render_target_create = &VulkanDriver::render_target_create,
-        .render_target_destroy = &VulkanDriver::render_target_destroy,
-        .render_target_get_texture = &VulkanDriver::render_target_get_texture,
         .descriptor_set_layout_create = &VulkanDriver::descriptor_set_layout_create,
         .descriptor_set_layout_destroy = &VulkanDriver::descriptor_set_layout_destroy,
         .descriptor_pool_create = &VulkanDriver::descriptor_pool_create,
@@ -100,7 +96,6 @@ void VulkanDriver::initialize(const mem::Allocator &allocator)
     data.buffers = FreeList<Buffer, GPU::BufferID>::with_allocator(allocator);
     data.samplers = FreeList<Sampler, GPU::SamplerID>::with_allocator(allocator);
     data.textures = FreeList<Texture, GPU::TextureID>::with_allocator(allocator);
-    data.render_targets = FreeList<RenderTarget, GPU::RenderTargetID>::with_allocator(allocator);
     data.descriptor_set_layouts = FreeList<DescriptorSetLayout, GPU::DescriptorSetLayoutID>::with_allocator(allocator);
     data.descriptor_pools = FreeList<DescriptorPool, GPU::DescriptorPoolID>::with_allocator(allocator);
     data.descriptor_sets = FreeList<DescriptorSet, GPU::DescriptorSetID>::with_allocator(allocator);
@@ -179,7 +174,6 @@ void VulkanDriver::shutdown()
     data.buffers.destroy();
     data.samplers.destroy();
     data.textures.destroy();
-    data.render_targets.destroy();
     data.descriptor_set_layouts.destroy();
     data.descriptor_pools.destroy();
     data.descriptor_sets.destroy();
@@ -510,6 +504,14 @@ void VulkanDriver::device_destroy(GPU::DeviceID device)
     
     for(RenderPassEntry& it : ld.render_pass_cache.iter())
     {
+        for(FramebufferEntry framebuffer : it.second.vk_framebuffers_cache.iter())
+        {
+            ld.vk.vkDestroyFramebuffer(
+                ld.vk_device, framebuffer.second,
+                Vulkan::allocation_callbacks()
+            );
+        }
+        it.second.vk_framebuffers_cache.destroy();
         ld.vk.vkDestroyRenderPass(ld.vk_device, it.second.vk_render_pass, Vulkan::allocation_callbacks());
     }
     ld.render_pass_cache.destroy();
@@ -567,8 +569,6 @@ GPU::SwapChainID VulkanDriver::swap_chain_create(const GPU::SwapChainCreateInfo&
     VkResult result = ld.vk.vkCreateSwapchainKHR(ld.vk_device, &swap_chain_info, Vulkan::allocation_callbacks(), &swap_chain.vk_swapchain);
     VKFailOn(result != VK_SUCCESS, "vkCreateSwapchainKHR({})", Vulkan::result_as_string(result));
 
-    swap_chain.vk_render_pass = _get_render_pass_for(ld, vk_swapchain_format).vk_render_pass;
-
     {
         // images
         ld.vk.vkGetSwapchainImagesKHR(ld.vk_device, swap_chain.vk_swapchain, &swap_chain.image_count, nullptr);
@@ -583,6 +583,7 @@ GPU::SwapChainID VulkanDriver::swap_chain_create(const GPU::SwapChainCreateInfo&
     }
 
     {
+        // image views
         VkImageViewCreateInfo vk_image_view_info =
         {
             .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
@@ -608,27 +609,10 @@ GPU::SwapChainID VulkanDriver::swap_chain_create(const GPU::SwapChainCreateInfo&
             },
         };
 
-        // image views
-        VkFramebufferCreateInfo vk_framebuffer_info =
-        {
-            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = 0,
-            .renderPass = swap_chain.vk_render_pass,
-            .attachmentCount = 1,
-            .pAttachments = nullptr,
-            .width = vk_swap_chain_extent.width,
-            .height = vk_swap_chain_extent.height,
-            .layers = 1,
-        };
-
         for(u32 i = 0; i < swap_chain.image_count; i++)
         {
             vk_image_view_info.image = swap_chain.images[i].vk_image;
             ld.vk.vkCreateImageView(ld.vk_device, &vk_image_view_info, Vulkan::allocation_callbacks(), &swap_chain.images[i].vk_image_view);
-
-            vk_framebuffer_info.pAttachments = &swap_chain.images[i].vk_image_view;
-            ld.vk.vkCreateFramebuffer(ld.vk_device, &vk_framebuffer_info, Vulkan::allocation_callbacks(), &swap_chain.images[i].vk_framebuffer);
         }
 
         // texture object
@@ -638,6 +622,9 @@ GPU::SwapChainID VulkanDriver::swap_chain_create(const GPU::SwapChainCreateInfo&
             Texture& tex = _get_texture(swap_chain.images[i].texture);
             tex.vk_device = swap_chain.vk_device;
             tex.vk_image = swap_chain.images[i].vk_image;
+            tex.vk_image_view = swap_chain.images[i].vk_image_view;
+		    tex.vk_format = vk_swapchain_format;
+            tex.extent = Vector3U(ci.size.x, ci.size.y, 1);
             tex.device = swap_chain.device;
         }
     }
@@ -653,7 +640,19 @@ void VulkanDriver::swap_chain_destroy(GPU::SwapChainID swap_chain)
     for(u32 i = 0; i < sc.image_count; i++)
     {
         ld.vk.vkDestroyImageView(sc.vk_device, sc.images[i].vk_image_view, Vulkan::allocation_callbacks());
-        ld.vk.vkDestroyFramebuffer(sc.vk_device, sc.images[i].vk_framebuffer, Vulkan::allocation_callbacks());
+
+        Texture& texture = _get_texture(sc.images[i].texture);
+        RenderPassCache& render_pass_cache = _get_render_pass_for(ld, texture.vk_format);
+        
+        if(render_pass_cache.vk_framebuffers_cache.has(texture.vk_image_view))
+        {
+            ld.vk.vkDestroyFramebuffer(
+                ld.vk_device, render_pass_cache.vk_framebuffers_cache.get(texture.vk_image_view),
+                Vulkan::allocation_callbacks()
+            );
+            render_pass_cache.vk_framebuffers_cache.remove(texture.vk_image_view);
+        }
+     
         data.textures.remove(sc.images[i].texture);
     }
     get_allocator().free(mem::to_bytes(sc.images));
@@ -1150,6 +1149,8 @@ GPU::TextureID VulkanDriver::texture_create(const GPU::TextureCreateInfo& ci)
     Texture& tex = _get_texture(texture_id);
     LogicalDevice& ld = _get_logical_device(ci.device);
     tex.vk_device = ld.vk_device;
+    tex.vk_format = VkUtils::_vk_get_texture_format(ci.format);
+    tex.extent = ci.extent;
     tex.device = ci.device;
     tex.texture = texture_id;
 
@@ -1229,29 +1230,6 @@ void VulkanDriver::texture_destroy(GPU::TextureID texture)
     ld.vk.vkDestroyImageView(tex.vk_device, tex.vk_image_view, Vulkan::allocation_callbacks());
 
     data.textures.remove(texture);
-}
-
-Vector2I VulkanDriver::texture_get_size(GPU::TextureID texture)
-{
-    Unused(texture);
-    return Vector2I();
-}
-
-GPU::RenderTargetID VulkanDriver::render_target_create(const GPU::RenderTargetCreateInfo& ci)
-{
-    Unused(ci);
-    return GPU::RenderTargetID();
-}
-
-void VulkanDriver::render_target_destroy(GPU::RenderTargetID render_target)
-{
-    Unused(render_target);
-}
-
-GPU::TextureID VulkanDriver::render_target_get_texture(GPU::RenderTargetID render_target)
-{
-    Unused(render_target);
-    return GPU::TextureID();
 }
 
 GPU::DescriptorSetLayoutID VulkanDriver::descriptor_set_layout_create(const GPU::DescriptorSetLayoutCreateInfo& ci)
@@ -1845,39 +1823,50 @@ void VulkanDriver::command_buffer_begin_renderpass(GPU::CommandBufferID command_
 {
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
-    SwapChain& sc = _get_swap_chain(begin_info.swap_chain);
 
     VkClearValue clear_value = {};
-    clear_value.color.float32[0] = begin_info.clear_color.r / 255.f;
-    clear_value.color.float32[1] = begin_info.clear_color.g / 255.f;
-    clear_value.color.float32[2] = begin_info.clear_color.b / 255.f;
-    clear_value.color.float32[3] = begin_info.clear_color.a / 255.f;
+    clear_value.color.float32[0] = begin_info.render_attachment.clear_color.r;
+    clear_value.color.float32[1] = begin_info.render_attachment.clear_color.g;
+    clear_value.color.float32[2] = begin_info.render_attachment.clear_color.b;
+    clear_value.color.float32[3] = begin_info.render_attachment.clear_color.a;
 
     VkRect2D render_area =
     {
-        .offset = {.x = 0, .y = 0},
+        .offset =
+        {
+            .x = begin_info.offset.x,
+            .y = begin_info.offset.y,
+        },
         .extent = 
         {
-            .width = static_cast<uint32_t>(begin_info.size.width),
-            .height = static_cast<uint32_t>(begin_info.size.height)
+            .width = begin_info.extent.width,
+            .height = begin_info.extent.height
         },
     };
 
-    SwapChainImage& sc_image = sc.images[begin_info.image_index];
-    VkFramebuffer vk_framebuffer = sc_image.vk_framebuffer;
+    VkRenderPass vk_render_pass;
+    VkFramebuffer vk_framebuffer;
+    _get_render_pass_and_framebuffer_for(ld, begin_info, &vk_render_pass, &vk_framebuffer);
 
     VkRenderPassBeginInfo vk_begin_info =
     {
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
         .pNext = nullptr,
-        .renderPass = sc.vk_render_pass,
+        .renderPass = vk_render_pass,
         .framebuffer = vk_framebuffer,
         .renderArea = render_area,
         .clearValueCount = 1,
         .pClearValues = &clear_value,
     };
 
-    ld.vk.vkCmdBeginRenderPass(cmd_buffer.vk_command_buffer, &vk_begin_info, VK_SUBPASS_CONTENTS_INLINE);    
+    VkSubpassBeginInfo vk_subpass_begin_info =
+    {
+        .sType = VK_STRUCTURE_TYPE_SUBPASS_BEGIN_INFO,
+        .pNext = nullptr,
+        .contents = VK_SUBPASS_CONTENTS_INLINE,
+    };
+
+    ld.vk.vkCmdBeginRenderPass2KHR(cmd_buffer.vk_command_buffer, &vk_begin_info, &vk_subpass_begin_info);    
 }
 
 void VulkanDriver::command_buffer_end_renderpass(GPU::CommandBufferID command_buffer, const GPU::RenderPassEndInfo& end_info)
@@ -1887,7 +1876,13 @@ void VulkanDriver::command_buffer_end_renderpass(GPU::CommandBufferID command_bu
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
 
-    ld.vk.vkCmdEndRenderPass(cmd_buffer.vk_command_buffer);
+    VkSubpassEndInfo vk_subpass_end_info =
+    {
+        .sType = VK_STRUCTURE_TYPE_SUBPASS_END_INFO,
+        .pNext = nullptr,
+    };
+
+    ld.vk.vkCmdEndRenderPass2KHR(cmd_buffer.vk_command_buffer, &vk_subpass_end_info);
 }
 
 void VulkanDriver::command_buffer_memory_barrier(GPU::CommandBufferID command_buffer, const GPU::PipelineMemoryBarrier& memory_barrier)
@@ -2285,10 +2280,44 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice&
     };
 
     RenderPassCache& render_pass_cache = ld.render_pass_cache.insert(format, RenderPassCache());
+    render_pass_cache.vk_framebuffers_cache = HashMap<VkImageView, VkFramebuffer>::with_size(get_allocator(), 3);
     render_pass_cache.device = ld.device;
     ld.vk.vkCreateRenderPass2KHR(ld.vk_device, &vk_render_pass_info, Vulkan::allocation_callbacks(), &render_pass_cache.vk_render_pass);
 
     return render_pass_cache;
+}
+
+void VulkanDriver::_get_render_pass_and_framebuffer_for(LogicalDevice& ld, const GPU::RenderPassBeginInfo& begin_info,
+    VkRenderPass* vk_render_pass, VkFramebuffer* vk_framebuffer)
+{
+    Texture& tex = _get_texture(begin_info.render_attachment.image);
+
+    RenderPassCache& render_pass_cache = _get_render_pass_for(ld, tex.vk_format);
+
+    if(render_pass_cache.vk_framebuffers_cache.has(tex.vk_image_view))
+    {
+        *vk_framebuffer = render_pass_cache.vk_framebuffers_cache.get(tex.vk_image_view);
+    }
+    else
+    {
+        VkFramebufferCreateInfo vk_framebuffer_info =
+        {
+            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .renderPass = render_pass_cache.vk_render_pass,
+            .attachmentCount = 1,
+            .pAttachments = &tex.vk_image_view,
+            .width = tex.extent.x,
+            .height = tex.extent.y,
+            .layers = tex.extent.z,
+        };
+
+        ld.vk.vkCreateFramebuffer(ld.vk_device, &vk_framebuffer_info, Vulkan::allocation_callbacks(), vk_framebuffer);
+        render_pass_cache.vk_framebuffers_cache.insert(tex.vk_image_view, *vk_framebuffer);
+    }
+
+    *vk_render_pass = render_pass_cache.vk_render_pass;
 }
 
 GPU::DeviceType VulkanDriver::_vk_device_type_to_device_type(VkPhysicalDeviceType vk_device_type)

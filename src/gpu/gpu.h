@@ -15,18 +15,41 @@ struct GPU
 	*	GPU API
 	*/
 
+	enum class ObjectType
+	{
+		Unknown = 0,
+		PhysicalDevice,
+		Surface,
+		Device,
+		SwapChain,
+		Fence,
+		Semaphore,
+		Queue,
+		MemoryHeap,
+		Buffer,
+		Sampler,
+		Texture,
+		DescriptorSetLayout,
+		DescriptorPool,
+		DescriptorSet,
+		Pipeline,
+		CommandPool,
+		CommandBuffer,
+
+		ObjectCount = CommandBuffer,
+	};
+
 	using PhysicalDeviceID = ID<u32, struct _PhysicalDeviceTag>;
 	using SurfaceID = ID<u32, struct _SurfaceTag>;
 	using DeviceID = ID<u32, struct _DeviceTag>;
+	using SwapChainID = ID<u32, struct _SwapChainTag>;
 	using FenceID = ID<u32, struct _FenceID>;
 	using SemaphoreID = ID<u32, struct _SemaphoreD>;
 	using QueueID = ID<u32, struct _QueueID>;
-	using SwapChainID = ID<u32, struct _SwapChainTag>;
 	using MemoryHeapID = ID<u32, struct _MemoryHeapTag>;
 	using BufferID = ID<u32, struct _BufferTag>;
 	using SamplerID = ID<u32, struct _SamplerTag>;
 	using TextureID = ID<u32, struct _TextureTag>;
-	using RenderTargetID = ID<u32, struct _RenderTargetTag>;
 	using DescriptorSetLayoutID = ID<u32, struct _DescriptorSetLayout>;
 	using DescriptorPoolID = ID<u32, struct _DescriptorPoolTag>;
 	using DescriptorSetID = ID<u32, struct _DescriptorSet>;
@@ -80,6 +103,21 @@ struct GPU
 		Transfer = Bit(8),
 		
 		End = Bit(31),
+	};
+
+	enum class LoadOp
+	{
+		Unknown = 0,
+		Load,
+    	Clear,
+    	DontCare,
+	};
+
+	enum class StoreOp
+	{
+		Unknown = 0,
+		Store,
+    	DontCare,
 	};
 
 	/*
@@ -450,22 +488,6 @@ struct GPU
 	static TextureID texture_create(const TextureCreateInfo& ci);
 	static void texture_destroy(TextureID texture);
 
-	static Vector2I texture_get_size(TextureID texture);
-
-	/*
-	* Render Target API
-	*/
-	struct RenderTargetCreateInfo
-	{
-		TextureFormat format;
-		TextureFormat depth_stencil_format;
-		Vector2I size;
-	};
-
-	static RenderTargetID render_target_create(const RenderTargetCreateInfo& ci);
-	static void render_target_destroy(RenderTargetID render_target);
-	static TextureID render_target_get_texture(RenderTargetID render_target);
-
 	/*
 	* Descriptor Set
 	*/
@@ -732,32 +754,59 @@ struct GPU
 		ShaderWrite = Bit(5),
 	};
 
+	struct RenderArea
+	{
+		Vector2 offset;
+		Vector2 extent;
+		i32 x;
+		i32 y;
+		u32 width;
+		u32 height;
+	};
+
+	struct ClearColor
+	{
+		f32 r;
+		f32 g;
+		f32 b;
+		f32 a;
+	};
+
 	struct CommandBufferAllocateInfo
 	{
 		CommandPoolID pool;
 	};
 
+	struct RenderAttachmentInfo
+	{
+		TextureID image;
+		TextureLayout layout;
+		TextureID resolve_image;
+		TextureLayout resolve_layout;
+		LoadOp load_op;
+		StoreOp store_op;
+		ClearColor clear_color;
+	};
+
 	struct RenderPassBeginInfo
 	{
-		Vector2I size;
-		SwapChainID swap_chain;
-		u32 image_index;
-		Color clear_color;
+		Vector2I offset;
+		Vector2U extent;
+		RenderAttachmentInfo render_attachment;
+		RenderAttachmentInfo depth_attachment;
+		RenderAttachmentInfo stencil_attachment;
 	};
 
 	struct RenderPassEndInfo
 	{
-
 	};
 
 	struct PipelineMemoryBarrier
 	{
-
 	};
 
 	struct PipelineBufferBarrier
 	{
-
 	};
 
 	struct PipelineTextureBarrier

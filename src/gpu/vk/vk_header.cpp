@@ -167,8 +167,10 @@ void Vulkan::load_device_procs(DeviceVulkanTable& table, VkDevice device)
     VK_DEVICE_REQUIRED_LOAD(table, device, vkBeginCommandBuffer);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkEndCommandBuffer);
 
-    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdBeginRenderPass);
-    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdEndRenderPass);
+    // vk_khr_create_renderpass2
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdBeginRenderPass2KHR);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdEndRenderPass2KHR);
+
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdPipelineBarrier);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdCopyBufferToImage);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdCopyBuffer);

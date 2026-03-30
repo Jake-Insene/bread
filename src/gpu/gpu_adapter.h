@@ -53,11 +53,6 @@ struct GPUAdapter
 
 	VTFunc(GPU::TextureID, texture_create, const GPU::TextureCreateInfo& ci);
 	VTFunc(void, texture_destroy, GPU::TextureID texture);
-	VTFunc(Vector2I, texture_get_size, GPU::TextureID texture);
-
-	VTFunc(GPU::RenderTargetID, render_target_create, const GPU::RenderTargetCreateInfo& ci);
-	VTFunc(void, render_target_destroy, GPU::RenderTargetID render_target);
-	VTFunc(GPU::TextureID, render_target_get_texture, GPU::RenderTargetID render_target);
 
 	VTFunc(GPU::DescriptorSetLayoutID, descriptor_set_layout_create, const GPU::DescriptorSetLayoutCreateInfo& ci);
 	VTFunc(void, descriptor_set_layout_destroy, GPU::DescriptorSetLayoutID descriptor_set_layout);

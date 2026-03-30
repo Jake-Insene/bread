@@ -1,6 +1,43 @@
 #include "gpu/vk/vk_utils.h"
 
 
+
+VkAttachmentLoadOp VkUtils::_vk_get_load_op(GPU::LoadOp load_op)
+{
+    switch(load_op)
+    {
+    case GPU::LoadOp::Load:
+        return VK_ATTACHMENT_LOAD_OP_LOAD;
+    case GPU::LoadOp::Clear:
+        return VK_ATTACHMENT_LOAD_OP_CLEAR;
+    case GPU::LoadOp::DontCare:
+        return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    default:
+        break;
+    }
+
+    
+    VKFailOn(true, "invalid load op");
+    return VkAttachmentLoadOp(0);
+}
+
+VkAttachmentStoreOp VkUtils::_vk_get_store_op(GPU::StoreOp store_op)
+{
+    switch(store_op)
+    {
+    case GPU::StoreOp::Store:
+        return VK_ATTACHMENT_STORE_OP_STORE;
+    case GPU::StoreOp::DontCare:
+        return VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    default:
+        break;
+    }
+
+    
+    VKFailOn(true, "invalid store op");
+    return VkAttachmentStoreOp(0);
+}
+
 VkCompareOp VkUtils::_vk_get_compare_op(GPU::CompareOp compare_op)
 {
     switch(compare_op)

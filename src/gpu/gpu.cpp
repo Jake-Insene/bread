@@ -1,6 +1,7 @@
 #include "gpu/gpu.h"
 
 #include "gpu/gpu_adapter.h"
+#include "gpu/gpu_debug_layer.h"
 #include "gpu/vk/vk_driver.h"
 
 
@@ -14,11 +15,19 @@ void GPU::initialize(const mem::Allocator& allocator)
 	current_adapter = VulkanDriver::get_adapter();
 
 	current_adapter.initialize(allocator);
+
+#if defined(BREAD_ENABLE_GPU_DEBUG_LAYER)
+	gpu_debug_layer.init(allocator);
+#endif
 }
 
 void GPU::shutdown()
 {
 	current_adapter.shutdown();
+
+#if defined(BREAD_ENABLE_GPU_DEBUG_LAYER)
+	gpu_debug_layer.destroy();
+#endif
 }
 
 Slice<GPU::PhysicalDeviceID> GPU::physical_devices_enumerate()
@@ -35,25 +44,25 @@ GPU::PhysicalDeviceInfo GPU::physical_device_get_info(PhysicalDeviceID physical_
 GPU::SurfaceID GPU::surface_create(const GPU::SurfaceCreateInfo& ci)
 {
     GPUFailOn(ci.window_native_handle == 0, "invalid window native handle");
-	return current_adapter.surface_create(ci);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.surface_create(ci));
 }
 
 void GPU::surface_destroy(GPU::SurfaceID surface)
 {
     GPUFailOn(surface.is_valid() == false, "invalid surface");
-	current_adapter.surface_destroy(surface);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(surface, current_adapter.surface_destroy(surface));
 }
 
 GPU::DeviceID GPU::device_create(const DeviceCreateInfo &ci)
 {
     GPUFailOn(ci.physical_device.is_valid() == false, "invalid physical device");
-	return current_adapter.device_create(ci);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.device_create(ci);)
 }
 
 void GPU::device_destroy(DeviceID device)
 {
     GPUFailOn(device.is_valid() == false, "invalid device");
-	current_adapter.device_destroy(device);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(device, current_adapter.device_destroy(device));
 }
 
 GPU::SwapChainID GPU::swap_chain_create(const SwapChainCreateInfo& ci)
@@ -63,13 +72,14 @@ GPU::SwapChainID GPU::swap_chain_create(const SwapChainCreateInfo& ci)
     GPUFailOn(ci.present_mode == GPU::PresentMode::Unknown, "invalid present mode");
     GPUFailOn(ci.format == GPU::SurfaceFormat::Unknown, "invalid surface format");
     GPUFailOn(ci.min_image_count == 0, "invalid min image count");
-	return current_adapter.swap_chain_create(ci);
+
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.swap_chain_create(ci));
 }
 
 void GPU::swap_chain_destroy(SwapChainID swap_chain)
 {
     GPUFailOn(swap_chain.is_valid() == false, "invalid swap chain");
-	current_adapter.swap_chain_destroy(swap_chain);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(swap_chain, current_adapter.swap_chain_destroy(swap_chain));
 }
 
 u32 GPU::swap_chain_get_image_count(SwapChainID swap_chain)
@@ -99,13 +109,13 @@ GPU::AcquireResult GPU::swap_chain_acquire_next_image(SwapChainID swap_chain, co
 GPU::FenceID GPU::fence_create(const FenceCreateInfo &ci)
 {
 	GPUFailOn(ci.device.is_valid() == false, "invalid device");
-	return current_adapter.fence_create(ci);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.fence_create(ci));
 }
 
 void GPU::fence_destroy(FenceID fence)
 {
 	GPUFailOn(fence.is_valid() == false, "invalid fence");
-	current_adapter.fence_destroy(fence);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(fence, current_adapter.fence_destroy(fence));
 }
 
 bool GPU::fence_get_state(FenceID fence)
@@ -137,26 +147,26 @@ void GPU::fence_wait_for(Slice<FenceID> fences, bool wait_for_all, u64 timeout)
 GPU::SemaphoreID GPU::semaphore_create(const SemaphoreCreateInfo &ci)
 {
     GPUFailOn(ci.device.is_valid() == false, "invalid device");
-	return current_adapter.semaphore_create(ci);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.semaphore_create(ci));
 }
 
 void GPU::semaphore_destroy(SemaphoreID semaphore)
 {
     GPUFailOn(semaphore.is_valid() == false, "invalid semaphore");
-	current_adapter.semaphore_destroy(semaphore);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(semaphore, current_adapter.semaphore_destroy(semaphore));
 }
 
 GPU::QueueID GPU::queue_create(const QueueCreateInfo& ci)
 {
     GPUFailOn(ci.device.is_valid() == false, "invalid device");
     GPUFailOn(ci.usage == GPU::QueueUsage::Unknown, "invalid queue usage");
-	return current_adapter.queue_create(ci);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.queue_create(ci));
 }
 
 void GPU::queue_destroy(QueueID queue)
 {
     GPUFailOn(queue.is_valid() == false, "invalid queue");
-	current_adapter.queue_destroy(queue);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(queue, current_adapter.queue_destroy(queue));
 }
 
 void GPU::queue_execute_command_buffer(QueueID queue, const QueueExecuteInfo& execute_info)
@@ -196,13 +206,13 @@ GPU::MemoryHeapID GPU::memory_heap_create(const MemoryHeapCreateInfo& ci)
 		mem::align_up(ci.heap_size, GPU::HeapAlignment) != ci.heap_size,
 		"invalid heap alignment"
 	);
-	return current_adapter.memory_heap_create(ci);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.memory_heap_create(ci));
 }
 
 void GPU::memory_heap_destroy(MemoryHeapID memory_heap)
 {
     GPUFailOn(memory_heap.is_valid() == false, "invalid memory heap");
-	current_adapter.memory_heap_destroy(memory_heap);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(memory_heap, current_adapter.memory_heap_destroy(memory_heap));
 }
 
 Slice<u8> GPU::memory_heap_map(GPU::MemoryHeapID memory_heap, usize offset, usize len)
@@ -228,13 +238,13 @@ GPU::BufferID GPU::buffer_create(const BufferCreateInfo& ci)
 		"invalid buffer alignment"
 	);
     GPUFailOn(ci.memory_heap.is_valid() == false, "invalid memory heap");
-	return current_adapter.buffer_create(ci);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.buffer_create(ci));
 }
 
 void GPU::buffer_destroy(BufferID buffer)
 {
     GPUFailOn(buffer.is_valid() == false, "invalid buffer");
-	current_adapter.buffer_destroy(buffer);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(buffer, current_adapter.buffer_destroy(buffer));
 }
 
 GPU::SamplerID GPU::sampler_create(const SamplerCreateInfo& ci)
@@ -247,13 +257,13 @@ GPU::SamplerID GPU::sampler_create(const SamplerCreateInfo& ci)
     GPUFailOn(ci.address_mode_v == GPU::SamplerAddressMode::Unknown, "invalid address mode v");
     GPUFailOn(ci.address_mode_w == GPU::SamplerAddressMode::Unknown, "invalid address mode w");
     GPUFailOn(ci.compare_op == GPU::CompareOp::Unknown, "invalid compare op");
-	return current_adapter.sampler_create(ci);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.sampler_create(ci));
 }
 
 void GPU::sampler_destroy(SamplerID sampler)
 {
     GPUFailOn(sampler.is_valid() == false, "invalid sampler");
-	current_adapter.sampler_destroy(sampler);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(sampler, current_adapter.sampler_destroy(sampler));
 }
 
 GPU::TextureID GPU::texture_create(const TextureCreateInfo& ci)
@@ -268,58 +278,38 @@ GPU::TextureID GPU::texture_create(const TextureCreateInfo& ci)
     GPUFailOn(ci.tiling == GPU::TextureTiling::Unknown, "invalid texture tiling");
     GPUFailOn(ci.usage == GPU::TextureUsage(0), "invalid texture usage");
     GPUFailOn(ci.memory_heap.is_valid() == false, "invalid texture memory heap");
-	return current_adapter.texture_create(ci);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.texture_create(ci));
 }
 
 void GPU::texture_destroy(TextureID texture)
 {
     GPUFailOn(texture.is_valid() == false, "invalid texture");
-	current_adapter.texture_destroy(texture);
-}
-
-Vector2I GPU::texture_get_size(TextureID texture)
-{
-	return current_adapter.texture_get_size(texture);
-}
-
-GPU::RenderTargetID GPU::render_target_create(const RenderTargetCreateInfo& ci)
-{
-	return current_adapter.render_target_create(ci);
-}
-
-void GPU::render_target_destroy(RenderTargetID render_target)
-{
-	current_adapter.render_target_destroy(render_target);
-}
-
-GPU::TextureID GPU::render_target_get_texture(RenderTargetID render_target)
-{
-	return current_adapter.render_target_get_texture(render_target);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(texture, current_adapter.texture_destroy(texture));
 }
 
 GPU::DescriptorSetLayoutID GPU::descriptor_set_layout_create(const DescriptorSetLayoutCreateInfo& ci)
 {
 	GPUFailOn(ci.device.is_valid() == false, "invalid device");
     GPUFailOn(ci.bindings.len == 0, "invalid descriptor binding count");
-	return current_adapter.descriptor_set_layout_create(ci);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.descriptor_set_layout_create(ci));
 }
 
 void GPU::descriptor_set_layout_destroy(DescriptorSetLayoutID descriptor_set_layout)
 {
     GPUFailOn(descriptor_set_layout.is_valid() == false, "invalid descriptor set layout");
-	current_adapter.descriptor_set_layout_destroy(descriptor_set_layout);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(descriptor_set_layout, current_adapter.descriptor_set_layout_destroy(descriptor_set_layout));
 }
 
 GPU::DescriptorPoolID GPU::descriptor_pool_create(const DescriptorPoolCreateInfo &ci)
 {
     GPUFailOn(ci.device.is_valid() == false, "invalid device");
-	return current_adapter.descriptor_pool_create(ci);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.descriptor_pool_create(ci));
 }
 
 void GPU::descriptor_pool_destroy(DescriptorPoolID descriptor_pool)
 {
     GPUFailOn(descriptor_pool.is_valid() == false, "invalid descriptor pool");
-	current_adapter.descriptor_pool_destroy(descriptor_pool);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(descriptor_pool, current_adapter.descriptor_pool_destroy(descriptor_pool));
 }
 
 GPU::DescriptorSetID GPU::descriptor_set_allocate(const GPU::DescriptorSetAllocateInfo& ci)
@@ -327,13 +317,13 @@ GPU::DescriptorSetID GPU::descriptor_set_allocate(const GPU::DescriptorSetAlloca
 	GPUFailOn(ci.device.is_valid() == false, "invalid device");
     GPUFailOn(ci.pool.is_valid() == false, "invalid descriptor pool");
     GPUFailOn(ci.set_layout.is_valid() == false, "invalid set layout");
-	return current_adapter.descriptor_set_allocate(ci);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.descriptor_set_allocate(ci));
 }
 
 void GPU::descriptor_set_free(GPU::DescriptorSetID descriptor_set)
 {
     GPUFailOn(descriptor_set.is_valid() == false, "invalid descriptor set");
-	current_adapter.descriptor_set_free(descriptor_set);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(descriptor_set, current_adapter.descriptor_set_free(descriptor_set));
 }
 
 void GPU::descriptor_set_update_descriptors(DescriptorSetID descriptor_set, const UpdateDescriptorInfo& update_info)
@@ -373,38 +363,38 @@ GPU::PipelineID GPU::pipeline_create(const GPU::PipelineCreateInfo& ci)
     	);
 	}
 	
-	return current_adapter.pipeline_create(ci);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.pipeline_create(ci));
 }
 
 void GPU::pipeline_destroy(PipelineID pipeline)
 {
     GPUFailOn(pipeline.is_valid() == false, "invalid pipeline");
-	current_adapter.pipeline_destroy(pipeline);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(pipeline, current_adapter.pipeline_destroy(pipeline));
 }
 
 GPU::CommandPoolID GPU::command_pool_create(const CommandPoolCreateInfo &ci)
 {
 	GPUFailOn(ci.device.is_valid() == false, "invalid device");
     GPUFailOn(ci.queue.is_valid() == false, "invalid queue");
-	return current_adapter.command_pool_create(ci);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.command_pool_create(ci));
 }
 
 void GPU::command_pool_destroy(CommandPoolID command_pool)
 {
     GPUFailOn(command_pool.is_valid() == false, "invalid command pool");
-	return current_adapter.command_pool_destroy(command_pool);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(command_pool, current_adapter.command_pool_destroy(command_pool));
 }
 
 GPU::CommandBufferID GPU::command_buffer_allocate(const CommandBufferAllocateInfo& ci)
 {
     GPUFailOn(ci.pool.is_valid() == false, "invalid command pool");
-	return current_adapter.command_buffer_allocate(ci);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.command_buffer_allocate(ci));
 }
 
 void GPU::command_buffer_free(CommandBufferID command_buffer)
 {
     GPUFailOn(command_buffer.is_valid() == false, "invalid command buffer");
-	current_adapter.command_buffer_free(command_buffer);
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(command_buffer, current_adapter.command_buffer_free(command_buffer));
 }
 
 void GPU::command_buffer_begin(CommandBufferID command_buffer)
@@ -422,9 +412,6 @@ void GPU::command_buffer_end(CommandBufferID command_buffer)
 void GPU::command_buffer_begin_renderpass(CommandBufferID command_buffer, const RenderPassBeginInfo& begin_info)
 {
 	GPUFailOn(command_buffer.is_valid() == false, "invalid command buffer");
-    GPUFailOn(begin_info.swap_chain.is_valid() == false, "invalid swap chain");
-
-    GPUFailOn(begin_info.image_index >= swap_chain_get_image_count(begin_info.swap_chain), "invalid image index");
 	current_adapter.command_buffer_begin_renderpass(command_buffer, begin_info);
 }
 

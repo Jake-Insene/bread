@@ -5,6 +5,8 @@
 
 struct VkUtils
 {
+    static VkAttachmentLoadOp _vk_get_load_op(GPU::LoadOp load_op);
+    static VkAttachmentStoreOp _vk_get_store_op(GPU::StoreOp store_op);
     static VkCompareOp _vk_get_compare_op(GPU::CompareOp compare_op);
     static VkPresentModeKHR _vk_get_present_mode(GPU::PresentMode present_mode);
     static VkMemoryPropertyFlags _vk_get_memory_properties(GPU::HeapUsage heap_usage);

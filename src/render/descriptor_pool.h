@@ -5,6 +5,8 @@
 #include "render/descriptor_set.h"
 
 
+using DescriptorSetRef = ID<u32, struct _DescriptorSetRefTag>;
+
 struct DescriptorPool
 {
     mem::Allocator allocator;
@@ -12,12 +14,19 @@ struct DescriptorPool
     GPU::DeviceID device;
     GPU::DescriptorPoolID descriptor_pool;
 
-    Array<DescriptorSet> allocated_sets;
+    FreeList<DescriptorSet, DescriptorSetRef> descriptor_sets;
+    // Free sets that it can be reused.
+    Array<DescriptorSetRef> available_sets;
+    // Allocated sets that require destruction.
+    Array<DescriptorSetRef> allocated_sets;
 
     static DescriptorPool create(u32 max_sets, Slice<const GPU::DescriptorPoolSize> sizes);
 
     void init(const mem::Allocator& _allocator, const GPU::DescriptorPoolCreateInfo& info);
     void destroy();
 
-    DescriptorSet allocate(GPU::DescriptorSetLayoutID set_layout);
+    DescriptorSetRef allocate(GPU::DescriptorSetLayoutID set_layout);
+    void free(DescriptorSetRef set_ref);
+
+    DescriptorSet& set(DescriptorSetRef set_ref) { return descriptor_sets.get(set_ref); }
 };
