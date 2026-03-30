@@ -1,4 +1,4 @@
-#include "render/pipeline/shader.h"
+#include "render/shader.h"
 
 #include "engine/engine.h"
 #include "io/file.h"

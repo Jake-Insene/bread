@@ -4,7 +4,6 @@
 
 #include "systems/system.h"
 #include "render/render_device.h"
-#include "render/renderer/renderer.h"
 #include "resource/resource_manager.h"
 
 SystemInfo _system_infos[] =
@@ -14,9 +13,6 @@ SystemInfo _system_infos[] =
 #endif
 #if defined(BREAD_SYSTEM_RESOURCEMANAGER)
 ResourceManager::get_system_info(),
-#endif
-#if defined(BREAD_SYSTEM_RENDERER)
-Renderer::get_system_info(),
 #endif
 IdentitySystem::get_system_info(),
 };

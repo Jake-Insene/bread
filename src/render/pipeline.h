@@ -1,7 +1,7 @@
 #pragma once
 #include "gpu/gpu.h"
 #include "mem/allocator.h"
-#include "render/pipeline/shader.h"
+#include "render/shader.h"
 
 
 struct PipelineInfo

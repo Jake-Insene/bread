@@ -86,8 +86,11 @@ file(GLOB ENGINE_SRC
     src/render/descriptor_pool.cpp
     src/render/descriptor_set.cpp
     src/render/memory_heap.cpp
+    src/render/pipeline_2d.cpp
+    src/render/pipeline.cpp
     src/render/render_device.cpp
     src/render/sampler.cpp
+    src/render/shader.cpp
     src/render/swap_chain.cpp
     
     src/render/core/gpu_material_manager.cpp
@@ -97,10 +100,6 @@ file(GLOB ENGINE_SRC
     src/render/renderer/render_material_manager.cpp
     src/render/renderer/renderer.cpp
     
-    src/render/pipeline/pipeline.cpp
-    src/render/pipeline/pipeline_2d.cpp
-    src/render/pipeline/shader.cpp
-
     src/resource/font.cpp
     src/resource/image.cpp
     src/resource/material.cpp

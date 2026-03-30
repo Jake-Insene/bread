@@ -1,4 +1,4 @@
-#include "render/pipeline/pipeline.h"
+#include "render/pipeline.h"
 
 #include "engine/engine.h"
 #include "render/render_device.h"

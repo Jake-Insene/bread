@@ -2,7 +2,7 @@
 #include "collections/array.h"
 #include "gpu/gpu.h"
 #include "mem/allocator.h"
-#include "render/pipeline/pipeline.h"
+#include "render/pipeline.h"
 #include "render/descriptor_set.h"
 
 

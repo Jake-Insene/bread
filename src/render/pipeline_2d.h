@@ -1,5 +1,5 @@
 #pragma once
-#include "render/pipeline/pipeline.h"
+#include "render/pipeline.h"
 
 
 struct Pipeline2DInfo
