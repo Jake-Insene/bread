@@ -1,9 +1,12 @@
 #pragma once
 #include "collections/array.h"
 #include "gpu/gpu.h"
-#include "render/buffer.h"
-#include "render/sampler.h"
+#include "graphics/buffer.h"
+#include "graphics/sampler.h"
 
+
+namespace Graphics
+{
 
 struct DescriptorSetInfo
 {
@@ -56,3 +59,5 @@ struct DescriptorSet
 
     void sync_writes();
 };
+
+}

@@ -23,7 +23,7 @@ void GPUResourceManager::shutdown()
 
 GPUTextureID GPUResourceManager::create_texture(const GPUTextureResourceCreateInfo& ci)
 {
-    GPU::DeviceID device = render_device->get_graphics_device();
+    GPU::DeviceID device = render_device->get_graphics_device().gpu_device;
 
     GPUMemoryAllocationID allocation = memory_allocator->allocate(
         GPUMemoryAllocator::AllocationTag::Texture, ci.pixels.len
@@ -41,20 +41,20 @@ GPUTextureID GPUResourceManager::create_texture(const GPUTextureResourceCreateIn
             .tiling = GPU::TextureTiling::Optimal,
             .usage = GPU::TextureUsage::TransferDestination | GPU::TextureUsage::Sampled,
             .initial_layout = GPU::TextureLayout::Unknown,
-            .memory_heap = memory_allocator->allocation_get_heap(allocation),
+            .memory_heap = memory_allocator->allocation_get_heap(allocation).get()->memory_heap,
             .heap_offset = memory_allocator->allocation_get_offset(allocation),
         }
     );
 
     // Setting up the texture data
     {
-        GPU::BufferID buffer = memory_allocator->begin_staging(ci.pixels.len);
+        Ptr<Graphics::Buffer> buffer = memory_allocator->begin_staging(ci.pixels.len);
         Slice<u8> mapped_buffer = memory_allocator->map_staging();
         mem::copy(mapped_buffer, ci.pixels);
         memory_allocator->unmap_staging(mapped_buffer);
 
         render_device->submit_and_wait(
-            render_device->copy_queue, [&](GPU::CommandBufferID cmd)
+            render_device->get_graphics_device().copy_queue.gpu_queue, [&](GPU::CommandBufferID cmd)
             {
                 GPU::command_buffer_texture_barrier(cmd,
                     {
@@ -77,7 +77,7 @@ GPUTextureID GPUResourceManager::create_texture(const GPUTextureResourceCreateIn
                 );
                 GPU::command_buffer_copy_buffer_to_texture(cmd,
                     {
-                        .source_buffer = buffer,
+                        .source_buffer = buffer.get()->gpu_buffer,
                         .source_offset = 0,
                         .row_length = 0,
                         .image_height = 0,

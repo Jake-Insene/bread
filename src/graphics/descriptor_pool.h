@@ -2,8 +2,11 @@
 #include "collections/free_list.h"
 #include "gpu/gpu.h"
 #include "mem/allocator.h"
-#include "render/descriptor_set.h"
+#include "graphics/descriptor_set.h"
 
+
+namespace Graphics
+{
 
 using DescriptorSetRef = ID<u32, struct _DescriptorSetRefTag>;
 
@@ -20,8 +23,6 @@ struct DescriptorPool
     // Allocated sets that require destruction.
     Array<DescriptorSetRef> allocated_sets;
 
-    static DescriptorPool create(u32 max_sets, Slice<const GPU::DescriptorPoolSize> sizes);
-
     void init(const mem::Allocator& _allocator, const GPU::DescriptorPoolCreateInfo& info);
     void destroy();
 
@@ -30,3 +31,5 @@ struct DescriptorPool
 
     DescriptorSet& set(DescriptorSetRef set_ref) { return descriptor_sets.get(set_ref); }
 };
+
+}

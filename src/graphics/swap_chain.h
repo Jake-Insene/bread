@@ -1,14 +1,19 @@
 #pragma once
 #include "collections/array.h"
+#include "collections/ptr.h"
 #include "display/window.h"
 #include "gpu/gpu.h"
+#include "graphics/queue.h"
 #include "mem/allocator.h"
 
+
+namespace Graphics
+{
 
 struct SwapChainInfo
 {
     GPU::DeviceID device;
-    GPU::QueueID present_queue;
+    Ptr<Queue> present_queue;
     Window window;
     GPU::SurfaceFormat surface_format;
 };
@@ -25,7 +30,8 @@ struct SwapChain
     mem::Allocator allocator;
     
     GPU::DeviceID device;
-    GPU::QueueID present_queue;
+    Ptr<Queue> present_queue;
+    GPU::QueueID last_submited_queue;
     Window window;
     GPU::SurfaceFormat surface_format;
     
@@ -35,15 +41,13 @@ struct SwapChain
     bool is_valid_swap_chain;
     bool pending_rebuild;
 
-    static SwapChain create(Window window, GPU::SurfaceFormat surface_format);
-
     void init(const mem::Allocator& _allocator, const SwapChainInfo& info);
     void destroy();
 
     void resize();
 
     bool acquire_image(u32* image_index, GPU::SemaphoreID present_complete);
-    bool present(u32 image_index, const Slice<GPU::SemaphoreID>& wait_semaphores);
+    bool present(Queue& present_queue, u32 image_index, const Slice<GPU::SemaphoreID>& wait_semaphores);
 
     usize get_image_count() { return images.count; }
     ImageInfo& get_image(u32 image_index) { return images.get(image_index); }
@@ -53,3 +57,5 @@ struct SwapChain
     void _rebuild();
     bool _try_rebuild();
 };
+
+}

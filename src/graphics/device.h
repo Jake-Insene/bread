@@ -1,0 +1,47 @@
+#pragma once
+#include "mem/allocator.h"
+#include "gpu/gpu.h"
+#include "graphics/buffer.h"
+#include "graphics/command_queue.h"
+#include "graphics/descriptor_pool.h"
+#include "graphics/memory_heap.h"
+#include "graphics/pipeline.h"
+#include "graphics/queue.h"
+#include "graphics/sampler.h"
+#include "graphics/swap_chain.h"
+
+
+namespace Graphics
+{
+
+struct Device
+{
+    mem::Allocator allocator;
+
+    GPU::PhysicalDeviceID gpu_physical_device;
+    GPU::DeviceID gpu_device;
+
+    Queue graphics_queue;
+    Queue compute_queue;
+    Queue copy_queue;
+    Queue present_queue;
+
+    Queue& get_graphics_queue() { return graphics_queue; }
+    Queue& get_compute_queue() { return compute_queue; }
+    Queue& get_copy_queue() { return copy_queue; }
+    Queue& get_present_queue() { return present_queue; }
+
+    void init(const mem::Allocator& _allocator, GPU::PhysicalDeviceID _gpu_physical_device);
+    void destroy();
+
+    SwapChain create_swap_chain(Window window, GPU::SurfaceFormat surface_format);
+    MemoryHeap create_memory_heap(GPU::HeapUsage usage, usize size);
+    Buffer create_buffer(GPU::BufferUsage usage, usize size, Ptr<MemoryHeap> heap, usize heap_offset);
+    Sampler create_sampler(const SamplerInfo& sampler_info);
+    DescriptorPool create_descriptor_pool(u32 max_sets, Slice<const GPU::DescriptorPoolSize> sizes);
+    Pipeline create_pipeline(const PipelineInfo& pipeline_info);
+    CommandQueue create_command_queue(Queue& queue);
+    
+};
+
+}

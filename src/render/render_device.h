@@ -1,5 +1,6 @@
 #pragma once
 #include "gpu/gpu.h"
+#include "graphics/device.h"
 #include "render/core/gpu_memory_allocator.h"
 #include "render/core/gpu_resource_manager.h"
 #include "systems/system.h"
@@ -21,29 +22,20 @@ struct RenderDevice final : System<RenderDevice>
 
     mem::Allocator allocator;
 
-    GPU::DeviceID gpu_device;
-
-    GPU::QueueID graphics_queue;
-    GPU::QueueID compute_queue;
-    GPU::QueueID copy_queue;
-    GPU::QueueID present_queue;
+    Graphics::Device device;
 
     GPUMemoryAllocator memory_allocator;
     GPUResourceManager resource_manager;
+
+    Graphics::Device& get_graphics_device() { return device; }
+
+    GPUMemoryAllocator& get_memory_allocator() { return memory_allocator; }
+    GPUResourceManager& get_resource_manager() { return resource_manager; }
 
     void initialize(const SystemInitializeInfo& info);
     void shutdown();
 
     void on_event(const InputEvent&) {}
-
-    GPU::DeviceID get_graphics_device() { return gpu_device; }
-    GPU::QueueID get_graphics_queue() { return graphics_queue; }
-    GPU::QueueID get_compute_queue() { return compute_queue; }
-    GPU::QueueID get_copy_queue() { return copy_queue; }
-    GPU::QueueID get_present_queue() { return present_queue; }
-
-    GPUMemoryAllocator& get_memory_allocator() { return memory_allocator; }
-    GPUResourceManager& get_resource_manager() { return resource_manager; }
 
     using SubmitFn = void(*)(void* arg, GPU::CommandBufferID);
 

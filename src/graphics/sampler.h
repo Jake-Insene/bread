@@ -2,6 +2,9 @@
 #include "gpu/gpu.h"
 
 
+namespace Graphics
+{
+
 struct SamplerInfo
 {
     GPU::Filter min_filter;
@@ -21,10 +24,10 @@ struct SamplerInfo
 
 struct Sampler
 {
-    GPU::SamplerID sampler;
+    GPU::SamplerID gpu_sampler;
 
-    static Sampler create(const SamplerInfo& sampler_info);
-
-    void init(const mem::Allocator& _allocator, const GPU::SamplerCreateInfo& info);
+    void init(const mem::Allocator& _allocator, GPU::DeviceID gpu_device, const SamplerInfo& info);
     void destroy();
 };
+
+}

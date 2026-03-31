@@ -1,5 +1,9 @@
-#include "render/command_encoder.h"
+#include "graphics/command_encoder.h"
 
+
+
+namespace Graphics
+{
 
 void CommandEncoder::begin()
 {
@@ -42,7 +46,7 @@ void CommandEncoder::bind_vertex_buffers(u32 base_binding, const Slice<Buffer>& 
     Slice<GPU::BufferID> buffers_id = allocator.array<GPU::BufferID>(buffers.len);
     for(usize i = 0; i < buffers.len; i++)
     {
-        buffers_id[i] = buffers[i].buffer;
+        buffers_id[i] = buffers[i].gpu_buffer;
     }
 
     GPU::command_buffer_bind_vertex_buffers(command_buffer, base_binding, buffers_id, offsets);
@@ -61,4 +65,6 @@ void CommandEncoder::set_scissors(u32 base_scissor, const Slice<GPU::Scissor>& s
 void CommandEncoder::draw(u32 vertex_count, u32 instance_count, u32 base_vertex, u32 base_instance)
 {
     GPU::command_buffer_draw(command_buffer, vertex_count, instance_count, base_vertex, base_instance);
+}
+
 }

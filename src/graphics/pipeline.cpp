@@ -1,20 +1,13 @@
-#include "render/pipeline.h"
+#include "graphics/pipeline.h"
 
 #include "engine/engine.h"
 #include "render/render_device.h"
 
 
-Pipeline Pipeline::create(const PipelineInfo &info)
+namespace Graphics
 {
-    Pipeline pipe = {};
 
-    RenderDevice* render_device = Engine::get_system_manager()->get_system<RenderDevice>();
-
-    pipe.init(render_device->allocator, info);
-    return pipe;
-}
-
-void Pipeline::init(const mem::Allocator _allocator, const PipelineInfo& info)
+void Pipeline::init(const mem::Allocator _allocator, GPU::DeviceID gpu_device, const PipelineInfo& info)
 {
     allocator = _allocator;
 
@@ -22,7 +15,7 @@ void Pipeline::init(const mem::Allocator _allocator, const PipelineInfo& info)
     for(usize i = 0; i < info.set_layout_infos.len; i++)
     {
         GPU::DescriptorSetLayoutCreateInfo set_layout_info = info.set_layout_infos[i];
-        set_layout_info.device = info.device;
+        set_layout_info.device = gpu_device;
         set_layouts[i] = GPU::descriptor_set_layout_create(set_layout_info);
     }
 
@@ -34,7 +27,7 @@ void Pipeline::init(const mem::Allocator _allocator, const PipelineInfo& info)
 
     const GPU::PipelineCreateInfo pipeline_ci =
     {
-        .device = info.device,
+        .device = gpu_device,
         .bind_point = info.bind_point,
         .shader_stages = shader_stages,
         .vertex_input = info.vertex_input,
@@ -72,3 +65,4 @@ GPU::DescriptorSetLayoutID Pipeline::get_set_layout(usize set_index)
     return set_layouts[set_index];
 }
 
+}

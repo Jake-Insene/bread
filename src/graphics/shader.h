@@ -3,6 +3,9 @@
 #include "gpu/gpu.h"
 
 
+namespace Graphics
+{
+
 struct ShaderInfo
 {
     StringView file_path;
@@ -18,8 +21,8 @@ struct Shader
     ShaderInfo shader_info;
     Slice<u8> shader_code;
 
-    static Shader create(const ShaderInfo& info);
-
     void init(const mem::Allocator _allocator, const ShaderInfo& info);
     void destroy();
 };
+
+}

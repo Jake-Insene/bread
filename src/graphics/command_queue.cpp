@@ -1,23 +1,10 @@
-#include "render/command_queue.h"
+#include "graphics/command_queue.h"
 
-#include "engine/engine.h"
-#include "render/render_device.h"
+#include "os/os.h"
 
 
-CommandQueue CommandQueue::create()
+namespace Graphics
 {
-    CommandQueue command_queue = {};
-
-    RenderDevice* render_device = Engine::get_system_manager()->get_system<RenderDevice>();
-
-    command_queue.init(render_device->allocator,
-        {
-            .device = render_device->get_graphics_device(),
-            .queue = render_device->get_copy_queue(),
-        }
-    );
-    return command_queue;
-}
 
 void CommandQueue::init(const mem::Allocator& _allocator, const CommandQueueInfo& info)
 {
@@ -32,7 +19,7 @@ void CommandQueue::init(const mem::Allocator& _allocator, const CommandQueueInfo
         }
     );
 
-    tmp_allocator.init(OS::map_memory(TmpAllocatorSize, OS::MapReadWrtie));
+    tmp_allocator.init(OS::map_memory(TmpAllocatorSize, OS::MapReadWrite));
     encoders = Array<CommandEncoder>::with_size(allocator, 4);
     work_fences = Array<GPU::FenceID>::with_size(allocator, 4);
     work_submited = Array<WorkSubmit>::with_size(allocator, 4);
@@ -231,4 +218,6 @@ void CommandQueue::_remove_finished_work()
         work_submited.remove_at(i);
         i--;
     }
+}
+
 }

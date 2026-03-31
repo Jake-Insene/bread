@@ -1,24 +1,11 @@
-#include "render/descriptor_pool.h"
+#include "graphics/descriptor_pool.h"
 
 #include "engine/engine.h"
 #include "render/render_device.h"
 
 
-DescriptorPool DescriptorPool::create(u32 max_sets, Slice<const GPU::DescriptorPoolSize> sizes)
+namespace Graphics
 {
-    DescriptorPool pool = {};
-
-    RenderDevice* render_device = Engine::get_system_manager()->get_system<RenderDevice>();
-
-    pool.init(render_device->allocator,
-        {
-            .device = render_device->get_graphics_device(),
-            .max_sets = max_sets,
-            .sizes = sizes,
-        }
-    );
-    return pool;
-}
 
 void DescriptorPool::init(const mem::Allocator& _allocator, const GPU::DescriptorPoolCreateInfo& info)
 {
@@ -92,3 +79,4 @@ void DescriptorPool::free(DescriptorSetRef set_ref)
     (void)available_sets.add(set_ref);
 }
 
+}

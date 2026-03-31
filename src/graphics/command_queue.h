@@ -4,8 +4,11 @@
 #include "gpu/gpu.h"
 #include "mem/allocator.h"
 #include "mem/stack_allocator.h"
-#include "render/command_encoder.h"
+#include "graphics/command_encoder.h"
 
+
+namespace Graphics
+{
 
 struct CommandQueueInfo
 {
@@ -53,8 +56,6 @@ struct CommandQueue
     Stack<GPU::FenceID> free_fences;
     Stack<CommandEncoder> free_encoders;
 
-    static CommandQueue create();
-
     void init(const mem::Allocator& _allocator, const CommandQueueInfo& info);
     void destroy();
 
@@ -68,3 +69,5 @@ struct CommandQueue
 
     void _remove_finished_work();
 };
+
+}

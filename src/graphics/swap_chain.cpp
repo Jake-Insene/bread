@@ -1,25 +1,8 @@
-#include "render/swap_chain.h"
-
-#include "engine/engine.h"
-#include "render/render_device.h"
+#include "graphics/swap_chain.h"
 
 
-SwapChain SwapChain::create(Window window, GPU::SurfaceFormat surface_format)
+namespace Graphics
 {
-    SwapChain sc = {};
-
-    RenderDevice* render_device = Engine::get_system_manager()->get_system<RenderDevice>();
-
-    sc.init(render_device->allocator,
-        {
-            .device = render_device->get_graphics_device(),
-            .present_queue = render_device->get_present_queue(),
-            .window = window,
-            .surface_format = surface_format,
-        }
-    );
-    return sc;
-}
 
 void SwapChain::init(const mem::Allocator& _allocator, const SwapChainInfo& info)
 {
@@ -90,9 +73,9 @@ bool SwapChain::acquire_image(u32* image_index, GPU::SemaphoreID present_complet
     return true;
 }
 
-bool SwapChain::present(u32 image_index, const Slice<GPU::SemaphoreID>& wait_semaphores)
+bool SwapChain::present(Queue& present_queue, u32 image_index, const Slice<GPU::SemaphoreID>& wait_semaphores)
 {
-    GPU::AcquireResult result = GPU::queue_present(present_queue,
+    GPU::AcquireResult result = present_queue.present(
         {
             .wait_semaphores = wait_semaphores,
             .swapchains = Slice(&swap_chain, 1),
@@ -127,7 +110,7 @@ void SwapChain::_free_images()
 
 void SwapChain::_rebuild()
 {
-    GPU::queue_wait_idle(present_queue);
+    present_queue.get()->wait_idle();
 
     _free_images();
     
@@ -166,4 +149,6 @@ bool SwapChain::_try_rebuild()
 {
     _rebuild();
     return is_valid_swap_chain;
+}
+
 }

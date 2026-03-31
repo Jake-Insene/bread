@@ -1,19 +1,12 @@
-#include "render/shader.h"
+#include "graphics/shader.h"
 
 #include "engine/engine.h"
 #include "io/file.h"
 #include "render/render_device.h"
 
 
-Shader Shader::create(const ShaderInfo &info)
+namespace Graphics
 {
-    Shader shader = {};
-    
-    RenderDevice* render_device = Engine::get_system_manager()->get_system<RenderDevice>();
-
-    shader.init(render_device->allocator, info);
-    return shader;
-}
 
 void Shader::init(const mem::Allocator _allocator, const ShaderInfo& info)
 {
@@ -26,4 +19,6 @@ void Shader::init(const mem::Allocator _allocator, const ShaderInfo& info)
 void Shader::destroy()
 {
     allocator.free(shader_code);
+}
+
 }

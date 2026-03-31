@@ -2,11 +2,14 @@
 #include "collections/array.h"
 #include "gpu/gpu.h"
 #include "mem/allocator.h"
-#include "render/pipeline.h"
-#include "render/descriptor_set.h"
+#include "graphics/pipeline.h"
+#include "graphics/descriptor_set.h"
 
 
 struct RenderDevice;
+
+namespace Graphics
+{
 
 struct CommandEncoder
 {
@@ -28,3 +31,5 @@ struct CommandEncoder
 
     void draw(u32 vertex_count, u32 instance_count, u32 base_vertex, u32 base_instance);
 };
+
+}

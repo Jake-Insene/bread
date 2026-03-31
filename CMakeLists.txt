@@ -37,6 +37,20 @@ file(GLOB ENGINE_SRC
 
     src/gpu/gpu.cpp
 
+    src/graphics/buffer.cpp
+    src/graphics/command_encoder.cpp
+    src/graphics/command_queue.cpp
+    src/graphics/descriptor_pool.cpp
+    src/graphics/descriptor_set.cpp
+    src/graphics/device.cpp
+    src/graphics/memory_heap.cpp
+    src/graphics/pipeline_2d.cpp
+    src/graphics/pipeline.cpp
+    src/graphics/queue.cpp
+    src/graphics/sampler.cpp
+    src/graphics/shader.cpp
+    src/graphics/swap_chain.cpp
+
     src/input/input.cpp
     
     src/io/file.cpp
@@ -80,18 +94,7 @@ file(GLOB ENGINE_SRC
     
     src/platform/intrinsics.cpp
 
-    src/render/buffer.cpp
-    src/render/command_encoder.cpp
-    src/render/command_queue.cpp
-    src/render/descriptor_pool.cpp
-    src/render/descriptor_set.cpp
-    src/render/memory_heap.cpp
-    src/render/pipeline_2d.cpp
-    src/render/pipeline.cpp
     src/render/render_device.cpp
-    src/render/sampler.cpp
-    src/render/shader.cpp
-    src/render/swap_chain.cpp
     
     src/render/core/gpu_material_manager.cpp
     src/render/core/gpu_memory_allocator.cpp

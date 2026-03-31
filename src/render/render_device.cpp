@@ -8,39 +8,7 @@ void RenderDevice::initialize(const SystemInitializeInfo& info)
 {
     allocator = info.allocator;
 
-    gpu_device = GPU::device_create(
-        {
-            .physical_device = Engine::get_selected_gpu_device(),
-        }
-    );
-
-    graphics_queue = GPU::queue_create(
-        {
-            .device = gpu_device,
-            .usage = GPU::QueueUsage::Graphics,
-        }
-    );
-
-    compute_queue = GPU::queue_create(
-        {
-            .device = gpu_device,
-            .usage = GPU::QueueUsage::Compute,
-        }
-    );
-
-    copy_queue = GPU::queue_create(
-        {
-            .device = gpu_device,
-            .usage = GPU::QueueUsage::Copy,
-        }
-    );
-
-    present_queue = GPU::queue_create(
-        {
-            .device = gpu_device,
-            .usage = GPU::QueueUsage::Present,
-        }
-    );
+    device.init(allocator, Engine::get_selected_gpu_device());
 
     memory_allocator.initialize(allocator);
     resource_manager.initialize(allocator);
@@ -48,27 +16,22 @@ void RenderDevice::initialize(const SystemInitializeInfo& info)
 
 void RenderDevice::shutdown()
 {
-    GPU::queue_wait_idle(graphics_queue);
-    GPU::queue_wait_idle(compute_queue);
-    GPU::queue_wait_idle(copy_queue);
-    GPU::queue_wait_idle(present_queue);
+    device.get_graphics_queue().wait_idle();
+    device.get_compute_queue().wait_idle();
+    device.get_copy_queue().wait_idle();
+    device.get_present_queue().wait_idle();
 
     resource_manager.shutdown();
     memory_allocator.shutdown();
 
-    GPU::device_destroy(gpu_device);
-
-    GPU::queue_destroy(graphics_queue);
-    GPU::queue_destroy(compute_queue);
-    GPU::queue_destroy(copy_queue);
-    GPU::queue_destroy(present_queue);
+    device.destroy();
 }
 
 void RenderDevice::_submit_and_wait(GPU::QueueID queue, void* arg, SubmitFn recorder)
 {
     GPU::CommandPoolID pool = GPU::command_pool_create(
         {
-            .device = get_graphics_device(), .queue = queue
+            .device = get_graphics_device().gpu_device, .queue = queue
         }
     );
 

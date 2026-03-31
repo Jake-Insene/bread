@@ -1,6 +1,9 @@
-#include "render/descriptor_set.h"
+#include "graphics/descriptor_set.h"
 
 
+
+namespace Graphics
+{
 
 void DescriptorSet::init(const mem::Allocator& _allocator, const DescriptorSetInfo& info)
 {
@@ -39,7 +42,7 @@ void DescriptorSet::set_uniform_buffer(u32 binding, const Buffer& buffer, usize 
                 {
                     .buffer =
                     {
-                        .buffer = buffer.buffer,
+                        .buffer = buffer.gpu_buffer,
                         .offset = offset,
                         .range = range,
                     }
@@ -51,7 +54,7 @@ void DescriptorSet::set_uniform_buffer(u32 binding, const Buffer& buffer, usize 
     {
         GPU::DescriptorBufferInfo buffers[] =
         {
-            { .buffer = buffer.buffer, .offset = offset, .range = range, },
+            { .buffer = buffer.gpu_buffer, .offset = offset, .range = range, },
         };
 
         GPU::WriteDescriptorInfo write_info[] =
@@ -82,7 +85,7 @@ void DescriptorSet::set_combined_texture_sampler(u32 binding, GPU::TextureID tex
                     {
                         .texture = texture,
                         .layout = layout,
-                        .sampler = sampler.sampler,
+                        .sampler = sampler.gpu_sampler,
                     }
                 },
             }
@@ -92,7 +95,7 @@ void DescriptorSet::set_combined_texture_sampler(u32 binding, GPU::TextureID tex
     {
         GPU::DescriptorTextureInfo textures[] =
         {
-            { .texture = texture, .layout = layout, .sampler = sampler.sampler, },
+            { .texture = texture, .layout = layout, .sampler = sampler.gpu_sampler, },
         };
 
         GPU::WriteDescriptorInfo write_info[] =
@@ -165,4 +168,6 @@ void DescriptorSet::sync_writes()
         deferred_buffers = 0;
         deferred_textures = 0;
     }
+}
+
 }

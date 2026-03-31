@@ -1,6 +1,9 @@
 #pragma once
-#include "render/pipeline.h"
+#include "graphics/pipeline.h"
 
+
+namespace Graphics
+{
 
 struct Pipeline2DInfo
 {
@@ -13,5 +16,7 @@ struct Pipeline2DInfo
 
 struct Pipeline2D : Pipeline
 {
-    static Pipeline2D make_default(const Pipeline2DInfo& info);
+    static PipelineInfo make_default(const Pipeline2DInfo& info);
 };
+
+}
