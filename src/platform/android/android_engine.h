@@ -1,9 +1,9 @@
 #pragma once
-#include "engine/engine.h"
+#include "engine/engine_runtime.h"
 #include "platform/platform_header.h"
 
 
-struct AndroidEngine : Engine
+struct AndroidEngine : EngineRuntime
 {
     struct InternalData
     {

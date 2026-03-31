@@ -1,5 +1,8 @@
+#include "platform/platform_header.h"
+
 #include "debug/debug.h"
 #include "debug/fail.h"
+#include "engine/engine.h"
 #include "log/log.h"
 #include "scene/scene_manager.h"
 #include "platform/android/android_display.h"
@@ -46,7 +49,7 @@ static int32_t engine_handle_input(android_app*, AInputEvent* event)
                              || action == AMOTION_EVENT_ACTION_POINTER_DOWN);
                 e.pointer = i32(p);
 
-                Engine::handle_event(e);
+                Engine::local_data.engine_runtime->handle_event(e);
 
                 Log::debug("action pointer: {}, action: {}, pointer: {}", action_pointer, action, p);
             }
@@ -83,14 +86,13 @@ static void engine_handle_cmd(android_app*, int32_t cmd)
         // The window is being shown, get it ready.
         if (AndroidEngine::data.app->window != nullptr)
         {
-            AndroidEngine::initialize();
-            AndroidEngine::request_recreate_window();
+            Engine::local_data.engine_runtime->initialize();
+            Engine::local_data.engine_runtime->request_recreate_window();
             initialized = true;
     	}
         break;
     case APP_CMD_TERM_WINDOW:
         // The window is being hidden or closed, clean it up.
-        Engine::destroy();
         running = false;
         break;
     case APP_CMD_GAINED_FOCUS:
@@ -104,8 +106,12 @@ static void engine_handle_cmd(android_app*, int32_t cmd)
     }
 }
 
+AndroidEngine engine = {};
+
 void android_main(android_app* app)
 {
+    Engine::local_data.engine_runtime = &engine;
+
     AndroidEngine::data.app = app;
     AndroidEngine::data.asset_manager = app->activity->assetManager;
     app->onAppCmd = engine_handle_cmd;
@@ -150,10 +156,11 @@ void android_main(android_app* app)
         
         if(running && initialized)
         {
-            AndroidEngine::step();
+            engine.step();
         }
     }
-    
-    AndroidEngine::shutdown();
+
+    Engine::local_data.engine_runtime->shutdown();
+    engine.shutdown();
 }
 

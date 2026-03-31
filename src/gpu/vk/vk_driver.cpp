@@ -624,7 +624,7 @@ GPU::SwapChainID VulkanDriver::swap_chain_create(const GPU::SwapChainCreateInfo&
             tex.vk_image = swap_chain.images[i].vk_image;
             tex.vk_image_view = swap_chain.images[i].vk_image_view;
 		    tex.vk_format = vk_swapchain_format;
-            tex.extent = Vector3U(ci.size.x, ci.size.y, 1);
+            tex.extent = Vector3U(vk_swap_chain_extent.width, vk_swap_chain_extent.height, 1);
             tex.device = swap_chain.device;
         }
     }

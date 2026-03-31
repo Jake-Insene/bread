@@ -173,7 +173,7 @@ void GenericAllocator::free(Slice<u8> ptr)
     header->tags = None;
 
     // TODO: Investigate page corruption.
-    if(header && header->prev)
+    if(header && header->prev && header->prev->tags == 0)
     {
         header->prev->len += header->len + sizeof(Header);
         header->prev->next = header->next;
@@ -260,8 +260,15 @@ GenericAllocator::Header* GenericAllocator::_search_for_available_space(usize al
                 allocated_mem->tags = 0;
                 allocated_mem->index = copied_block.index;
 
-                prev->len += offset;
-                prev->next = allocated_mem;
+                if(prev)
+                {
+                    prev->len += offset;
+                    prev->next = allocated_mem;
+                }
+                else
+                {
+                    page.first_header = allocated_mem;
+                }
 
                 allocated_mem->prev = copied_block.prev;
                 allocated_mem->next = copied_block.next;
