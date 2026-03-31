@@ -65,7 +65,7 @@ Slice<u8> AndroidOS::map_memory(usize memory_size, OS::MapAccess access)
     {
     case OS::MapUnknown:
         break;
-    case OS::MapReadWrtie:
+    case OS::MapReadWrite:
     {
         ptr.items = reinterpret_cast<u8*>(mmap(
             0, aligned_size,

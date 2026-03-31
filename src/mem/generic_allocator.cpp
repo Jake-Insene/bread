@@ -58,7 +58,7 @@ void GenericAllocator::destroy()
     
 Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
 {
-    DebugAssert(alignment == 1 || alignment == mem::align_up<usize>(alignment, 2), "alignment must be a power of 2");
+    DebugAssert(alignment == 1 || alignment == mem::align_up<usize>(alignment, 2), "alignment must be a power of 2 or 1");
 
     if(allocated_pages.null())
     {
@@ -85,16 +85,11 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
 
     const usize aligned_size = mem::align_up(size, alignment);
 
-    Header* allocated_mem = _search_for_available_space(size, alignment);
+    Header* allocated_mem = _search_for_available_space(aligned_size, alignment);
     if(allocated_mem)
     {
         // allocated_mem = aligned_base - sizeof(Header)
         u8* base = reinterpret_cast<u8*>(usize(allocated_mem) + sizeof(Header));
-
-        if(allocated_mem->index == 20091)
-        {
-            Log::debug("Testing");
-        }
 
         allocated_mem->tags |= Allocated;
         _check_integrity();

@@ -84,7 +84,7 @@ void VulkanDriver::initialize(const mem::Allocator &allocator)
 {
     data.allocator = allocator;
 
-    data.tmp_allocator.init(OS::map_memory(1024*1024, OS::MapReadWrtie));
+    data.tmp_allocator.init(OS::map_memory(1024*1024, OS::MapReadWrite));
     
     data.surfaces = FreeList<Surface, GPU::SurfaceID>::with_allocator(allocator);
     data.devices = FreeList<LogicalDevice, GPU::DeviceID>::with_allocator(allocator);

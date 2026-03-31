@@ -8,8 +8,8 @@ struct OS
     enum MapAccess
     {
         MapUnknown = 0,
-        MapReadWrtie,
-        MapReadWrtieExecute,
+        MapReadWrite,
+        MapReadWriteExecute,
     };
 
     using ThreadID = ID<u32, struct __ThreadTag>;

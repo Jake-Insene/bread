@@ -17,12 +17,12 @@ void StackAllocator::reset()
 
 Slice<u8> StackAllocator::alloc(usize size, usize alignment)
 {
-    if(offset == sp.len)
+    const usize aligned_size = mem::align_up(size, alignment);
+
+    if(offset + aligned_size == sp.len)
     {
         return Slice<u8>();
     }
-
-    const usize aligned_size = mem::align_up(size, alignment);
 
     Slice<u8> ptr = {};
     ptr = sp.add(offset);
