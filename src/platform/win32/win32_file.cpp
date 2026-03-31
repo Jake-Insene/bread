@@ -125,7 +125,9 @@ void File::put(u8 value)
 void File::read(Slice<u8> bytes)
 {
 	DebugAssert(handle != 0, "invalid file handler");
-	(void)ReadFile(reinterpret_cast<HANDLE>(handle), bytes.ptr(), static_cast<DWORD>(bytes.len), 0, 0);
+	DWORD bytes_readed = 0;
+	(void)ReadFile(reinterpret_cast<HANDLE>(handle), bytes.ptr(), static_cast<DWORD>(bytes.len), &bytes_readed, 0);
+	DebugAssert(bytes_readed <= bytes.len, "read overflows");
 }
 
 void File::flush()

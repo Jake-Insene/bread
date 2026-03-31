@@ -52,6 +52,8 @@ void GenericAllocator::destroy()
     {
         internal_allocator.free(mem::to_bytes(allocated_pages));
     }
+
+    page_count = 0;
 }
     
 Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
@@ -88,6 +90,11 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
     {
         // allocated_mem = aligned_base - sizeof(Header)
         u8* base = reinterpret_cast<u8*>(usize(allocated_mem) + sizeof(Header));
+
+        if(allocated_mem->index == 20091)
+        {
+            Log::debug("Testing");
+        }
 
         allocated_mem->tags |= Allocated;
         _check_integrity();
@@ -341,6 +348,7 @@ void GenericAllocator::_check_integrity()
 
         if(page_size_accumulator != page.bytes.len)
         {
+            Log::debug("Allocation index: {}", index);
             Log::debug("Page({}) with size {} was corrupted, page_size_accumulator was {}", &page, page.bytes.len, page_size_accumulator);
             DebugAssert(page_size_accumulator == page.bytes.len, "the page was corrupted");
         }

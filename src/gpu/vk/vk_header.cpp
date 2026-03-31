@@ -416,11 +416,13 @@ void VKAPI_PTR Vulkan::_vk_driver_free(void* pUserData, void* pMemory)
 
 void VKAPI_PTR Vulkan::_vk_driver_internal_allocate(void* pUserData, size_t size, VkInternalAllocationType allocationType, VkSystemAllocationScope allocationScope)
 {
+    VKDebugInfo("driver allocated {} bytes", size);
 	Unused(pUserData, size, allocationType, allocationScope);
 }
 
 void VKAPI_PTR Vulkan::_vk_driver_internal_free(void* pUserData, size_t size, VkInternalAllocationType allocationType, VkSystemAllocationScope allocationScope)
 {
+    VKDebugInfo("driver deletes {} bytes", size);
 	Unused(pUserData, size, allocationType, allocationScope);
 }
 

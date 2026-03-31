@@ -143,7 +143,10 @@ Win32Engine engine = {};
 
 void engine_loop()
 {
-	if (engine.get_configuration().enable_debug_console)
+	// TODO: Accessing engine before initialization!
+	bool enable_console = engine.get_configuration().enable_debug_console;
+
+	if (enable_console)
 	{
 		if (!AttachConsole(ATTACH_PARENT_PROCESS))
 		{
@@ -169,6 +172,13 @@ void engine_loop()
 	}
 
 	engine.shutdown();
+	
+	if(enable_console)
+	{
+		u8 bytes[2] = {};
+		fmt::format<false>(File::get_stdout().writer(), "Press enter to close the console...");
+		File::get_stdin().read(bytes);
+	}
 }
 
 // Default for Windows
