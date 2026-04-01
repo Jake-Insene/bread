@@ -23,6 +23,12 @@ using VkFuncGeneric = void(*)();
     table.name = reinterpret_cast<decltype(table.name)>(vk.vkGetDeviceProcAddr(device, #name)); \
     VKFailOn(table.name == nullptr, "couldn't load the function {}", #name);
 
+#define VK_DEVICE_LOAD(table, device, name) \
+    table.name = reinterpret_cast<decltype(table.name)>(vk.vkGetDeviceProcAddr(device, #name)); \
+
+#define VK_DEVICE_TRY_LOAD(table, device, field, name) \
+    if(table.field == nullptr) table.field = reinterpret_cast<decltype(table.field)>(vk.vkGetDeviceProcAddr(device, #name)); \
+
 #define VK_INSTANCE_REQUIRED_LOAD(instance, name) \
     vk.name = reinterpret_cast<decltype(vk.name)>(vk.vkGetInstanceProcAddr(instance, #name)); \
     VKFailOn(vk.name == nullptr, "couldn't load the function {}", #name);
@@ -30,8 +36,6 @@ using VkFuncGeneric = void(*)();
 #define VK_INSTANCE_LOAD(instance, name) \
     vk.name = reinterpret_cast<decltype(vk.name)>(vk.vkGetInstanceProcAddr(instance, #name)); \
 
-#define VK_NOT_REQUIRED_LOAD(name) \
-    vk.name = reinterpret_cast<decltype(vk.name)>(platform_get_proc(#name));
 
 struct SharedVulkanTable
 {
@@ -77,7 +81,6 @@ struct DeviceVulkanTable
     PFN_vkDestroySwapchainKHR vkDestroySwapchainKHR;
     PFN_vkGetSwapchainImagesKHR vkGetSwapchainImagesKHR;
     PFN_vkAcquireNextImageKHR vkAcquireNextImageKHR;
-    PFN_vkAcquireNextImage2KHR vkAcquireNextImage2KHR;
 
     PFN_vkGetDeviceQueue vkGetDeviceQueue;
     PFN_vkQueuePresentKHR vkQueuePresentKHR;
@@ -101,9 +104,11 @@ struct DeviceVulkanTable
     PFN_vkCreateBuffer vkCreateBuffer;
     PFN_vkDestroyBuffer vkDestroyBuffer;
     PFN_vkBindBufferMemory2 vkBindBufferMemory2;
-
+    
     PFN_vkCreateBufferView vkCreateBufferView;
     PFN_vkDestroyBufferView vkDestroyBufferView;
+    
+    PFN_vkGetBufferDeviceAddress vkGetBufferDeviceAddress;
 
     PFN_vkCreateSampler vkCreateSampler;
     PFN_vkDestroySampler vkDestroySampler;

@@ -49,6 +49,10 @@ struct Vulkan
     static void destroy_surface(VkInstance instance, VkSurfaceKHR surface);
     
     static void check_device_extensions(VkPhysicalDevice physical_device);
+    static void check_device_features(VkPhysicalDevice physical_device);
+
+    static const char** get_device_extensions(VkPhysicalDevice physical_device, const mem::Allocator& allocator);
+    static VkPhysicalDeviceFeatures2* get_device_features(const mem::Allocator& allocator);
 
     /*
     * VK_ext_debug_utils

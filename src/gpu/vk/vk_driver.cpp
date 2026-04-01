@@ -112,6 +112,7 @@ void VulkanDriver::initialize(const mem::Allocator &allocator)
     Vulkan::load_core_procs(data.vk_lib);
 
     data.info.api_version = Vulkan::get_api_version();
+    VKFailOn(data.info.api_version < VK_API_VERSION_1_1, "vulkan 1.1 was expected");
     VKDebugInfo(
         "Vulkan API Version: {}.{}.{}",
         VK_API_VERSION_MAJOR(data.info.api_version),
@@ -263,8 +264,9 @@ GPU::DeviceID VulkanDriver::device_create(const GPU::DeviceCreateInfo& ci)
         VKDebugInfo("{}", Vulkan::vulkan_string_to_sv(extension.extensionName));
     }
 
-    // Checking for required extensions for the driver.
+    // Checking for required extensions and features use by the driver.
     Vulkan::check_device_extensions(pd.vk_physical_device);
+    Vulkan::check_device_features(pd.vk_physical_device);
 
     u32 vk_family_count;
     vk.vkGetPhysicalDeviceQueueFamilyProperties2(pd.vk_physical_device, &vk_family_count, nullptr);
@@ -383,39 +385,21 @@ GPU::DeviceID VulkanDriver::device_create(const GPU::DeviceCreateInfo& ci)
         };
     }
 
-    VkPhysicalDeviceShaderFloat16Int8FeaturesKHR vk_float16_features = {};
-    vk_float16_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES_KHR;
-    vk_float16_features.shaderFloat16 = VK_TRUE;
-
-    VkPhysicalDeviceVulkan11Features vk_1_1_features = {};
-    vk_1_1_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
-    vk_1_1_features.pNext = &vk_float16_features;
-    vk_1_1_features.shaderDrawParameters = VK_TRUE;
-    vk_1_1_features.storageInputOutput16 = VK_TRUE;
-
-    VkPhysicalDeviceFeatures2 vk_features =
-    {
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
-        .pNext = &vk_1_1_features,
-        .features = {},
-    };
-    vk_features.features.samplerAnisotropy = VK_TRUE;
-
-    VkDeviceCreateInfo device_info =
+    VkDeviceCreateInfo vk_device_info =
     {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        .pNext = &vk_features,
+        .pNext = Vulkan::get_device_features(allocator),
         .flags = 0,
         .queueCreateInfoCount = unique_count,
         .pQueueCreateInfos = queue_infos,
         .enabledLayerCount = 0,
         .ppEnabledLayerNames = nullptr,
         .enabledExtensionCount = static_cast<uint32_t>(ArraySize(Vulkan::VkCoreDeviceExtensions)),
-        .ppEnabledExtensionNames = Vulkan::VkCoreDeviceExtensions,
+        .ppEnabledExtensionNames = Vulkan::get_device_extensions(pd.vk_physical_device, allocator),
         .pEnabledFeatures = nullptr,
     };
 
-    VkResult result = vk.vkCreateDevice(pd.vk_physical_device, &device_info, Vulkan::allocation_callbacks(), &ld.vk_device);
+    VkResult result = vk.vkCreateDevice(pd.vk_physical_device, &vk_device_info, Vulkan::allocation_callbacks(), &ld.vk_device);
     VKFailOn(result != VK_SUCCESS, "vkCreateDevice({})", Vulkan::result_as_string(result));
     Vulkan::load_device_procs(ld.vk, ld.vk_device);
 
@@ -1062,7 +1046,7 @@ GPU::BufferID VulkanDriver::buffer_create(const GPU::BufferCreateInfo& ci)
         .pNext = nullptr,
         .flags = 0,
         .size = ci.size,
-        .usage = VkUtils::_vk_get_buffer_usage(ci.usage),
+        .usage = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VkUtils::_vk_get_buffer_usage(ci.usage),
         .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         .queueFamilyIndexCount = 0,
         .pQueueFamilyIndices = nullptr,
@@ -1082,6 +1066,14 @@ GPU::BufferID VulkanDriver::buffer_create(const GPU::BufferCreateInfo& ci)
 
     result = ld.vk.vkBindBufferMemory2(ld.vk_device, 1, &vk_bind_info);
     VKFailOn(result != VK_SUCCESS, "vkBindBufferMemory2({})", Vulkan::result_as_string(result));
+
+    VkBufferDeviceAddressInfo vk_buffer_device_address_info =
+    {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+        .pNext = nullptr,
+        .buffer = buffer.vk_buffer,
+    };
+    buffer.vk_device_address = ld.vk.vkGetBufferDeviceAddress(ld.vk_device, &vk_buffer_device_address_info);
 
     return buffer_id;
 }
