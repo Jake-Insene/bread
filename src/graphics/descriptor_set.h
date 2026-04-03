@@ -10,9 +10,9 @@ namespace Graphics
 
 struct DescriptorSetInfo
 {
-    GPU::DeviceID device;
-    GPU::DescriptorPoolID pool;
-    GPU::DescriptorSetLayoutID set_layout;
+    GPU::DeviceID gpu_device;
+    GPU::DescriptorPoolID gpu_pool;
+    GPU::DescriptorSetLayoutID gpu_set_layout;
 };
 
 union WriteInfo

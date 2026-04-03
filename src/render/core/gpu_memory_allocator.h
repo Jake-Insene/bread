@@ -39,7 +39,7 @@ struct GPUMemoryAllocator
 
     struct Heap
     {
-        Graphics::MemoryHeap heap;
+        Graphics::MemoryHeap* heap;
         usize heap_size;
         AllocationTag tag;
         usize heap_index;
@@ -51,8 +51,8 @@ struct GPUMemoryAllocator
     RenderDevice* render_device;
     Array<Heap> heaps;
     FreeList<Allocation, GPUMemoryAllocationID> allocations;
-    Graphics::MemoryHeap staging_heap;
-    Graphics::Buffer staging_buffer;
+    Graphics::MemoryHeap* staging_heap;
+    Graphics::Buffer* staging_buffer;
     usize staging_heap_current_size;
     Slice<u8> mapped_staging_heap;
 

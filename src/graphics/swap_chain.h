@@ -4,6 +4,7 @@
 #include "display/window.h"
 #include "gpu/gpu.h"
 #include "graphics/queue.h"
+#include "graphics/semaphore.h"
 #include "mem/allocator.h"
 
 
@@ -12,7 +13,7 @@ namespace Graphics
 
 struct SwapChainInfo
 {
-    GPU::DeviceID device;
+    GPU::DeviceID gpu_device;
     Ptr<Queue> present_queue;
     Window window;
     GPU::SurfaceFormat surface_format;
@@ -29,9 +30,8 @@ struct SwapChain
     
     mem::Allocator allocator;
     
-    GPU::DeviceID device;
+    GPU::DeviceID gpu_device;
     Ptr<Queue> present_queue;
-    GPU::QueueID last_submited_queue;
     Window window;
     GPU::SurfaceFormat surface_format;
     
@@ -46,8 +46,8 @@ struct SwapChain
 
     void resize();
 
-    bool acquire_image(u32* image_index, GPU::SemaphoreID present_complete);
-    bool present(Queue& present_queue, u32 image_index, const Slice<GPU::SemaphoreID>& wait_semaphores);
+    bool acquire_image(u32* image_index, Ptr<Semaphore> present_complete);
+    bool present(Queue& present_queue, u32 image_index, const Slice<Ptr<Semaphore>>& wait_semaphores);
 
     usize get_image_count() { return images.count; }
     ImageInfo& get_image(u32 image_index) { return images.get(image_index); }

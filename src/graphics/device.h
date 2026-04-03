@@ -4,10 +4,12 @@
 #include "graphics/buffer.h"
 #include "graphics/command_queue.h"
 #include "graphics/descriptor_pool.h"
+#include "graphics/fence.h"
 #include "graphics/memory_heap.h"
 #include "graphics/pipeline.h"
 #include "graphics/queue.h"
 #include "graphics/sampler.h"
+#include "graphics/semaphore.h"
 #include "graphics/swap_chain.h"
 
 
@@ -26,6 +28,12 @@ struct Device
     Queue copy_queue;
     Queue present_queue;
 
+    struct AllocatedObject
+    {
+        MemoryAddress object;
+    };
+    Array<AllocatedObject> allocated_objects;
+
     Queue& get_graphics_queue() { return graphics_queue; }
     Queue& get_compute_queue() { return compute_queue; }
     Queue& get_copy_queue() { return copy_queue; }
@@ -34,14 +42,27 @@ struct Device
     void init(const mem::Allocator& _allocator, GPU::PhysicalDeviceID _gpu_physical_device);
     void destroy();
 
-    SwapChain create_swap_chain(Window window, GPU::SurfaceFormat surface_format);
-    MemoryHeap create_memory_heap(GPU::HeapUsage usage, usize size);
-    Buffer create_buffer(GPU::BufferUsage usage, usize size, Ptr<MemoryHeap> heap, usize heap_offset);
-    Sampler create_sampler(const SamplerInfo& sampler_info);
-    DescriptorPool create_descriptor_pool(u32 max_sets, Slice<const GPU::DescriptorPoolSize> sizes);
-    Pipeline create_pipeline(const PipelineInfo& pipeline_info);
-    CommandQueue create_command_queue(Queue& queue);
-    
+    template<typename T>
+    Ptr<T> _allocate_object()
+    {
+        T* object = allocator.object<T>();
+        (void)allocated_objects.add(
+            {
+                .object = reinterpret_cast<MemoryAddress>(object)
+            }
+        );
+        return Ptr<T>::from_memory(allocator, object);
+    }
+
+    Ptr<SwapChain> create_swap_chain(Window window, GPU::SurfaceFormat surface_format);
+    Ptr<Fence> create_fence(bool signaled);
+    Ptr<Semaphore> create_semaphore();
+    Ptr<MemoryHeap> create_memory_heap(GPU::HeapUsage usage, usize size);
+    Ptr<Buffer> create_buffer(GPU::BufferUsage usage, usize size, Ptr<MemoryHeap> heap, usize heap_offset);
+    Ptr<Sampler> create_sampler(const SamplerInfo& sampler_info);
+    Ptr<DescriptorPool> create_descriptor_pool(u32 max_sets, Slice<const GPU::DescriptorPoolSize> sizes);
+    Ptr<Pipeline> create_pipeline(const PipelineInfo& pipeline_info);
+    Ptr<CommandQueue> create_command_queue(Queue& queue);
 };
 
 }

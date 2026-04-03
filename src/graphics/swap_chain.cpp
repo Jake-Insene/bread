@@ -8,7 +8,7 @@ void SwapChain::init(const mem::Allocator& _allocator, const SwapChainInfo& info
 {
     allocator = _allocator;
 
-    device = info.device;
+    gpu_device = info.gpu_device;
     present_queue = info.present_queue;
     window = info.window;
     surface_format = info.surface_format;
@@ -36,7 +36,7 @@ void SwapChain::resize()
 {
 }
 
-bool SwapChain::acquire_image(u32* image_index, GPU::SemaphoreID present_complete)
+bool SwapChain::acquire_image(u32* image_index, Ptr<Graphics::Semaphore> present_complete)
 {
     if(pending_rebuild == true)
     {
@@ -53,7 +53,7 @@ bool SwapChain::acquire_image(u32* image_index, GPU::SemaphoreID present_complet
         swap_chain,
         {
             .timeout = MaxValue<u64>,
-            .semaphore = present_complete,
+            .semaphore = present_complete.get()->gpu_semaphore,
             .fence = GPU::FenceID::invalid(),
         }, 
         &int_index
@@ -73,16 +73,23 @@ bool SwapChain::acquire_image(u32* image_index, GPU::SemaphoreID present_complet
     return true;
 }
 
-bool SwapChain::present(Queue& present_queue, u32 image_index, const Slice<GPU::SemaphoreID>& wait_semaphores)
+bool SwapChain::present(Queue& present_queue, u32 image_index, const Slice<Ptr<Semaphore>>& wait_semaphores)
 {
+    Slice<GPU::SemaphoreID> gpu_wait_semaphores = allocator.array<GPU::SemaphoreID>(wait_semaphores.len);
+    for(usize i = 0; i < gpu_wait_semaphores.len; i++)
+    {
+        gpu_wait_semaphores[i] = wait_semaphores[i].get()->gpu_semaphore;
+    }
+
     GPU::AcquireResult result = present_queue.present(
         {
-            .wait_semaphores = wait_semaphores,
+            .wait_semaphores = gpu_wait_semaphores,
             .swapchains = Slice(&swap_chain, 1),
             .image_indices = Slice(&image_index, 1),
         }
     );
 
+    allocator.free(mem::to_bytes(gpu_wait_semaphores));
     if(result == GPU::AcquireResult::Suboptimal || result == GPU::AcquireResult::OutOfDate)
     {
         return _try_rebuild();
@@ -131,7 +138,7 @@ void SwapChain::_rebuild()
 
     swap_chain = GPU::swap_chain_create(
         {
-            .device = device,
+            .device = gpu_device,
             .surface = window.get_surface(),
             .present_mode = GPU::PresentMode::Immediate,
             .format = surface_format,

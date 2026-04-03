@@ -5,6 +5,7 @@
 #include "mem/allocator.h"
 #include "mem/stack_allocator.h"
 #include "graphics/command_encoder.h"
+#include "graphics/semaphore.h"
 
 
 namespace Graphics
@@ -12,24 +13,26 @@ namespace Graphics
 
 struct CommandQueueInfo
 {
-    GPU::DeviceID device;
-    GPU::QueueID queue;
+    GPU::DeviceID gpu_device;
+    GPU::QueueID gpu_queue;
 };
 
 struct CommandQueueExecuteInfo
 {
-    Slice<GPU::SemaphoreID> wait_semaphores;
+    Slice<Ptr<Graphics::Semaphore>> wait_semaphores;
     Slice<GPU::PipelineStages> wait_stages;
-    Slice<GPU::SemaphoreID> signal_semaphores;
+    Slice<Ptr<Graphics::Semaphore>> signal_semaphores;
     const CommandEncoder& encoder;
 };
 
 struct CommandQueueExecuteEmptyInfo
 {
-    Slice<GPU::SemaphoreID> wait_semaphores;
+    Slice<Ptr<Graphics::Semaphore>> wait_semaphores;
     Slice<GPU::PipelineStages> wait_stages;
-    Slice<GPU::SemaphoreID> signal_semaphores;
+    Slice<Ptr<Graphics::Semaphore>> signal_semaphores;
 };
+
+struct Fence;
 
 struct CommandQueue
 {
@@ -37,35 +40,35 @@ struct CommandQueue
 
     mem::Allocator allocator;
     
-    GPU::DeviceID device;
-    GPU::QueueID queue;
-    GPU::CommandPoolID command_pool;
+    GPU::DeviceID gpu_device;
+    GPU::QueueID gpu_queue;
+    GPU::CommandPoolID gpu_command_pool;
 
     struct WorkSubmit
     {
-        GPU::FenceID fence;
+        Fence* fence;
         CommandEncoder encoder;
         bool empty;
     };
 
     mem::StackAllocator tmp_allocator;
     Array<CommandEncoder> encoders;
-    Array<GPU::FenceID> work_fences;
+    Array<Fence*> gpu_work_fences;
     Array<WorkSubmit> work_submited;
     
-    Stack<GPU::FenceID> free_fences;
+    Stack<Fence*> gpu_free_fences;
     Stack<CommandEncoder> free_encoders;
 
     void init(const mem::Allocator& _allocator, const CommandQueueInfo& info);
     void destroy();
 
     CommandEncoder acquire_encoder();
-    GPU::FenceID execute(const CommandQueueExecuteInfo& info);
-    GPU::FenceID execute_empty(const CommandQueueExecuteEmptyInfo& info);
+    Fence* execute(const CommandQueueExecuteInfo& info);
+    Fence* execute_empty(const CommandQueueExecuteEmptyInfo& info);
 
     void wait_for_all();
 
-    void release_fence(GPU::FenceID fence);
+    void release_fence(Fence* fence);
 
     void _remove_finished_work();
 };

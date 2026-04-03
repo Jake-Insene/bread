@@ -40,15 +40,15 @@ struct RenderDevice final : System<RenderDevice>
     using SubmitFn = void(*)(void* arg, GPU::CommandBufferID);
 
     template<typename Fn>
-    void submit_and_wait(GPU::QueueID queue, Fn&& fn)
+    void submit_and_wait(GPU::QueueID gpu_queue, Fn&& fn)
     {
         SubmitFn recorder = [](void* arg, GPU::CommandBufferID cmd)
         {
             (*reinterpret_cast<Fn*>(arg))(cmd);
         };
-        _submit_and_wait(queue, reinterpret_cast<void**>(&fn), recorder);
+        _submit_and_wait(gpu_queue, reinterpret_cast<void**>(&fn), recorder);
     }
 
-    void _submit_and_wait(GPU::QueueID queue, void* arg, SubmitFn recorder);
+    void _submit_and_wait(GPU::QueueID gpu_queue, void* arg, SubmitFn recorder);
 };
 

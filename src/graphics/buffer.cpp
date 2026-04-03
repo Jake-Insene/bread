@@ -12,7 +12,7 @@ void Buffer::init(const mem::Allocator& _allocator, const BufferInfo& info)
     allocator = _allocator;
     gpu_buffer = GPU::buffer_create(
         {
-            .device = info.device,
+            .device = info.gpu_device,
             .usage = info.usage,
             .size = info.size,
             .memory_heap = info.heap.get()->memory_heap,

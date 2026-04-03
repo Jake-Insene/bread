@@ -14,8 +14,8 @@ struct DescriptorPool
 {
     mem::Allocator allocator;
 
-    GPU::DeviceID device;
-    GPU::DescriptorPoolID descriptor_pool;
+    GPU::DeviceID gpu_device;
+    GPU::DescriptorPoolID gpu_descriptor_pool;
 
     FreeList<DescriptorSet, DescriptorSetRef> descriptor_sets;
     // Free sets that it can be reused.

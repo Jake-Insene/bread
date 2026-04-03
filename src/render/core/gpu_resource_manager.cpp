@@ -23,7 +23,7 @@ void GPUResourceManager::shutdown()
 
 GPUTextureID GPUResourceManager::create_texture(const GPUTextureResourceCreateInfo& ci)
 {
-    GPU::DeviceID device = render_device->get_graphics_device().gpu_device;
+    GPU::DeviceID gpu_device = render_device->get_graphics_device().gpu_device;
 
     GPUMemoryAllocationID allocation = memory_allocator->allocate(
         GPUMemoryAllocator::AllocationTag::Texture, ci.pixels.len
@@ -31,7 +31,7 @@ GPUTextureID GPUResourceManager::create_texture(const GPUTextureResourceCreateIn
 
     GPU::TextureID gpu_texture = GPU::texture_create(
         {
-            .device = device,
+            .device = gpu_device,
             .type = ci.type,
             .format = ci.format,
             .extent = ci.extent,

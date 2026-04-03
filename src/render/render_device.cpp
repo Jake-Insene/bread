@@ -27,11 +27,12 @@ void RenderDevice::shutdown()
     device.destroy();
 }
 
-void RenderDevice::_submit_and_wait(GPU::QueueID queue, void* arg, SubmitFn recorder)
+void RenderDevice::_submit_and_wait(GPU::QueueID gpu_queue, void* arg, SubmitFn recorder)
 {
     GPU::CommandPoolID pool = GPU::command_pool_create(
         {
-            .device = get_graphics_device().gpu_device, .queue = queue
+            .device = get_graphics_device().gpu_device,
+            .queue = gpu_queue,
         }
     );
 
@@ -46,7 +47,7 @@ void RenderDevice::_submit_and_wait(GPU::QueueID queue, void* arg, SubmitFn reco
     GPU::command_buffer_end(cmd);
 
     GPU::queue_execute_command_buffer(
-        queue,
+        gpu_queue,
         {
             .wait_semaphores = {},
             .wait_stages = {},
@@ -56,7 +57,7 @@ void RenderDevice::_submit_and_wait(GPU::QueueID queue, void* arg, SubmitFn reco
         }
     );
 
-    GPU::queue_wait_idle(queue);
+    GPU::queue_wait_idle(gpu_queue);
 
     GPU::command_buffer_free(cmd);
     GPU::command_pool_destroy(pool);

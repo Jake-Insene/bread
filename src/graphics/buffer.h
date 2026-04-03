@@ -10,7 +10,7 @@ namespace Graphics
 
 struct BufferInfo
 {
-    GPU::DeviceID device;
+    GPU::DeviceID gpu_device;
     GPU::BufferUsage usage;
     usize size;
     Ptr<MemoryHeap> heap;

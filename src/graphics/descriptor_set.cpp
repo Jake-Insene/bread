@@ -15,12 +15,12 @@ void DescriptorSet::init(const mem::Allocator& _allocator, const DescriptorSetIn
     use_deferred = false;
     descriptor_set = GPU::descriptor_set_allocate(
         {
-            .device = info.device,
-            .pool = info.pool,
-            .set_layout = info.set_layout
+            .device = info.gpu_device,
+            .pool = info.gpu_pool,
+            .set_layout = info.gpu_set_layout
         }
     );
-    set_layout = info.set_layout;
+    set_layout = info.gpu_set_layout;
 }
 
 void DescriptorSet::destroy()
