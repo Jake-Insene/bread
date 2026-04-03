@@ -4,6 +4,7 @@
 #include "graphics/buffer.h"
 #include "graphics/command_queue.h"
 #include "graphics/descriptor_pool.h"
+#include "graphics/device_object.h"
 #include "graphics/fence.h"
 #include "graphics/memory_heap.h"
 #include "graphics/pipeline.h"
@@ -28,11 +29,7 @@ struct Device
     Queue copy_queue;
     Queue present_queue;
 
-    struct AllocatedObject
-    {
-        MemoryAddress object;
-    };
-    Array<AllocatedObject> allocated_objects;
+    Array<DeviceObject*> allocated_objects;
 
     Queue& get_graphics_queue() { return graphics_queue; }
     Queue& get_compute_queue() { return compute_queue; }
@@ -41,18 +38,6 @@ struct Device
 
     void init(const mem::Allocator& _allocator, GPU::PhysicalDeviceID _gpu_physical_device);
     void destroy();
-
-    template<typename T>
-    Ptr<T> _allocate_object()
-    {
-        T* object = allocator.object<T>();
-        (void)allocated_objects.add(
-            {
-                .object = reinterpret_cast<MemoryAddress>(object)
-            }
-        );
-        return Ptr<T>::from_memory(allocator, object);
-    }
 
     Ptr<SwapChain> create_swap_chain(Window window, GPU::SurfaceFormat surface_format);
     Ptr<Fence> create_fence(bool signaled);
@@ -63,6 +48,22 @@ struct Device
     Ptr<DescriptorPool> create_descriptor_pool(u32 max_sets, Slice<const GPU::DescriptorPoolSize> sizes);
     Ptr<Pipeline> create_pipeline(const PipelineInfo& pipeline_info);
     Ptr<CommandQueue> create_command_queue(Queue& queue);
+
+    void release_object(DeviceObject* child);
+
+    void _log_child_alloc(DeviceObject* child);
+
+    template<typename T>
+    requires(IsBaseOf<DeviceObject, T>)
+    Ptr<T> _allocate_object()
+    {
+        T* object = allocator.object<T>();
+        _log_child_alloc(static_cast<DeviceObject*>(object));
+        (void)allocated_objects.add(
+            static_cast<DeviceObject*>(object)
+        );
+        return Ptr<T>::from_memory(allocator, object);
+    }
 };
 
 }

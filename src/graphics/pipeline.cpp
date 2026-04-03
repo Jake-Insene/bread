@@ -1,16 +1,13 @@
 #include "graphics/pipeline.h"
 
-#include "engine/engine.h"
-#include "render/render_device.h"
 
 
 namespace Graphics
 {
 
-void Pipeline::init(const mem::Allocator _allocator, GPU::DeviceID gpu_device, const PipelineInfo& info)
+void Pipeline::init(const mem::Allocator& _allocator, Device* _parent, GPU::DeviceID gpu_device, const PipelineInfo& info)
 {
-    allocator = _allocator;
-
+    DeviceObject::init(_allocator, _parent);
     set_layouts = allocator.array<GPU::DescriptorSetLayoutID>(info.set_layout_infos.len);
     for(usize i = 0; i < info.set_layout_infos.len; i++)
     {
@@ -44,7 +41,6 @@ void Pipeline::init(const mem::Allocator _allocator, GPU::DeviceID gpu_device, c
     };
 
     pipeline = GPU::pipeline_create(pipeline_ci);
-
 }
 
 void Pipeline::destroy()
@@ -56,6 +52,7 @@ void Pipeline::destroy()
     allocator.free(mem::to_bytes(set_layouts));
     
     GPU::pipeline_destroy(pipeline);
+    DeviceObject::destroy();
 }
 
 GPU::DescriptorSetLayoutID Pipeline::get_set_layout(usize set_index)

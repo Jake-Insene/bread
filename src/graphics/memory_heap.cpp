@@ -4,15 +4,16 @@
 namespace Graphics
 {
 
-void MemoryHeap::init(const mem::Allocator& _allocator, const GPU::MemoryHeapCreateInfo& info)
+void MemoryHeap::init(const mem::Allocator& _allocator, Device* _parent, const GPU::MemoryHeapCreateInfo& info)
 {
-    allocator = _allocator;
+    DeviceObject::init(_allocator, _parent);
     memory_heap = GPU::memory_heap_create(info);
 }
 
 void MemoryHeap::destroy()
 {
     GPU::memory_heap_destroy(memory_heap);
+    DeviceObject::destroy();
 }
 
 Slice<u8> MemoryHeap::map(usize offset, usize len)

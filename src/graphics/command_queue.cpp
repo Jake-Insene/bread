@@ -1,5 +1,6 @@
 #include "graphics/command_queue.h"
 
+#include "graphics/device.h"
 #include "graphics/fence.h"
 #include "os/os.h"
 
@@ -7,10 +8,9 @@
 namespace Graphics
 {
 
-void CommandQueue::init(const mem::Allocator& _allocator, const CommandQueueInfo& info)
+void CommandQueue::init(const mem::Allocator& _allocator, Device* _parent, const CommandQueueInfo& info)
 {
-    allocator = _allocator;
-
+    DeviceObject::init(_allocator, _parent);
     gpu_device = info.gpu_device;
     gpu_queue = info.gpu_queue;
     gpu_command_pool = GPU::command_pool_create(
@@ -40,7 +40,6 @@ void CommandQueue::destroy()
     for(Fence* fence : gpu_work_fences.iter())
     {
         fence->destroy();
-        allocator.free(Slice(reinterpret_cast<u8*>(fence), 1));
     }
     encoders.destroy();
     gpu_work_fences.destroy();
@@ -51,6 +50,7 @@ void CommandQueue::destroy()
     free_encoders.destroy();
 
     GPU::command_pool_destroy(gpu_command_pool);
+    DeviceObject::destroy();
 }
 
 CommandEncoder CommandQueue::acquire_encoder()
@@ -85,9 +85,7 @@ Fence* CommandQueue::execute(const CommandQueueExecuteInfo& info)
     }
     else
     {
-        fence = allocator.object<Fence>();
-        fence->init(gpu_device, false);
-        (void)gpu_work_fences.add(fence);
+        fence = _alloc_new_fence();
     }
 
     // submit encoder
@@ -137,9 +135,7 @@ Fence* CommandQueue::execute_empty(const CommandQueueExecuteEmptyInfo& info)
     }
     else
     {
-        fence = allocator.object<Fence>();
-        fence->init(gpu_device, false);
-        (void)gpu_work_fences.add(fence);
+        fence = _alloc_new_fence();
     }
 
     // submit
@@ -218,6 +214,13 @@ void CommandQueue::release_fence(Fence* fence)
         work_submited.remove_at(i);
         break;
     }
+}
+
+Fence* CommandQueue::_alloc_new_fence()
+{
+    Fence* fence = parent->create_fence(false).get();
+    (void)gpu_work_fences.add(fence);
+    return fence;
 }
 
 void CommandQueue::_remove_finished_work()

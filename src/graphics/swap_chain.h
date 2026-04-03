@@ -3,6 +3,7 @@
 #include "collections/ptr.h"
 #include "display/window.h"
 #include "gpu/gpu.h"
+#include "graphics/device_object.h"
 #include "graphics/queue.h"
 #include "graphics/semaphore.h"
 #include "mem/allocator.h"
@@ -19,7 +20,7 @@ struct SwapChainInfo
     GPU::SurfaceFormat surface_format;
 };
 
-struct SwapChain
+struct SwapChain : DeviceObject
 {
     static constexpr usize DefaultMinImageCount = 3;
 
@@ -27,8 +28,6 @@ struct SwapChain
     {
         GPU::TextureID texture;
     };
-    
-    mem::Allocator allocator;
     
     GPU::DeviceID gpu_device;
     Ptr<Queue> present_queue;
@@ -41,7 +40,7 @@ struct SwapChain
     bool is_valid_swap_chain;
     bool pending_rebuild;
 
-    void init(const mem::Allocator& _allocator, const SwapChainInfo& info);
+    void init(const mem::Allocator& _allocator, Device* _parent, const SwapChainInfo& info);
     void destroy();
 
     void resize();

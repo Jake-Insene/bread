@@ -1,15 +1,16 @@
 #pragma once
 #include "gpu/gpu.h"
+#include "graphics/device_object.h"
 
 
 namespace Graphics
 {
 
-struct Semaphore
+struct Semaphore : DeviceObject
 {
     GPU::SemaphoreID gpu_semaphore;
 
-    void init(GPU::DeviceID gpu_device);
+    void init(const mem::Allocator& _allocator, Device* _parent, GPU::DeviceID gpu_device);
     void destroy();
 };
 

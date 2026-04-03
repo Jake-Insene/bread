@@ -1,8 +1,6 @@
 #include "graphics/shader.h"
 
-#include "engine/engine.h"
 #include "io/file.h"
-#include "render/render_device.h"
 
 
 namespace Graphics

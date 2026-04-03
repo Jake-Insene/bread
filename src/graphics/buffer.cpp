@@ -1,15 +1,12 @@
 #include "graphics/buffer.h"
 
-#include "engine/engine.h"
-#include "render/render_device.h"
-
 
 namespace Graphics
 {
 
-void Buffer::init(const mem::Allocator& _allocator, const BufferInfo& info)
+void Buffer::init(const mem::Allocator& _allocator, Device* _parent, const BufferInfo& info)
 {
-    allocator = _allocator;
+    DeviceObject::init(_allocator, _parent);
     gpu_buffer = GPU::buffer_create(
         {
             .device = info.gpu_device,
@@ -25,6 +22,7 @@ void Buffer::init(const mem::Allocator& _allocator, const BufferInfo& info)
 void Buffer::destroy()
 {
     GPU::buffer_destroy(gpu_buffer);
+    DeviceObject::destroy();
 }
 
 Slice<u8> Buffer::map(usize offset, usize len)

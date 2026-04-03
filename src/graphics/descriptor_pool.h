@@ -3,6 +3,7 @@
 #include "gpu/gpu.h"
 #include "mem/allocator.h"
 #include "graphics/descriptor_set.h"
+#include "graphics/device_object.h"
 
 
 namespace Graphics
@@ -10,10 +11,8 @@ namespace Graphics
 
 using DescriptorSetRef = ID<u32, struct _DescriptorSetRefTag>;
 
-struct DescriptorPool
+struct DescriptorPool : DeviceObject
 {
-    mem::Allocator allocator;
-
     GPU::DeviceID gpu_device;
     GPU::DescriptorPoolID gpu_descriptor_pool;
 
@@ -23,7 +22,7 @@ struct DescriptorPool
     // Allocated sets that require destruction.
     Array<DescriptorSetRef> allocated_sets;
 
-    void init(const mem::Allocator& _allocator, const GPU::DescriptorPoolCreateInfo& info);
+    void init(const mem::Allocator& _allocator, Device* _parent, const GPU::DescriptorPoolCreateInfo& info);
     void destroy();
 
     DescriptorSetRef allocate(GPU::DescriptorSetLayoutID set_layout);

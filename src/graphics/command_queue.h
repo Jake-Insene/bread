@@ -5,6 +5,7 @@
 #include "mem/allocator.h"
 #include "mem/stack_allocator.h"
 #include "graphics/command_encoder.h"
+#include "graphics/device_object.h"
 #include "graphics/semaphore.h"
 
 
@@ -34,11 +35,9 @@ struct CommandQueueExecuteEmptyInfo
 
 struct Fence;
 
-struct CommandQueue
+struct CommandQueue : DeviceObject
 {
     static constexpr usize TmpAllocatorSize = 1024 * 1024;
-
-    mem::Allocator allocator;
     
     GPU::DeviceID gpu_device;
     GPU::QueueID gpu_queue;
@@ -59,7 +58,7 @@ struct CommandQueue
     Stack<Fence*> gpu_free_fences;
     Stack<CommandEncoder> free_encoders;
 
-    void init(const mem::Allocator& _allocator, const CommandQueueInfo& info);
+    void init(const mem::Allocator& _allocator, Device* _parent, const CommandQueueInfo& info);
     void destroy();
 
     CommandEncoder acquire_encoder();
@@ -70,6 +69,7 @@ struct CommandQueue
 
     void release_fence(Fence* fence);
 
+    Fence* _alloc_new_fence();
     void _remove_finished_work();
 };
 

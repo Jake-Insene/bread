@@ -5,8 +5,9 @@
 namespace Graphics
 {
 
-void Sampler::init(const mem::Allocator&, GPU::DeviceID gpu_device, const SamplerInfo& info)
+void Sampler::init(const mem::Allocator& _allocator, Device* _parent, GPU::DeviceID gpu_device, const SamplerInfo& info)
 {
+    DeviceObject::init(_allocator, _parent);
     gpu_sampler = GPU::sampler_create(
         {
             .device = gpu_device,

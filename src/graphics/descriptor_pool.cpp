@@ -1,16 +1,13 @@
 #include "graphics/descriptor_pool.h"
 
-#include "engine/engine.h"
-#include "render/render_device.h"
 
 
 namespace Graphics
 {
 
-void DescriptorPool::init(const mem::Allocator& _allocator, const GPU::DescriptorPoolCreateInfo& info)
+void DescriptorPool::init(const mem::Allocator& _allocator, Device* _parent, const GPU::DescriptorPoolCreateInfo& info)
 {
-    allocator = _allocator;
-    
+    DeviceObject::init(_allocator, _parent);
     gpu_device = info.device;
     gpu_descriptor_pool = GPU::descriptor_pool_create(info);
 
@@ -31,6 +28,8 @@ void DescriptorPool::destroy()
     available_sets.destroy();
     allocated_sets.destroy();
     GPU::descriptor_pool_destroy(gpu_descriptor_pool);
+
+    DeviceObject::destroy();
 }
 
 DescriptorSetRef DescriptorPool::allocate(GPU::DescriptorSetLayoutID gpu_set_layout)

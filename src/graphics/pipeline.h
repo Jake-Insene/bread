@@ -1,6 +1,7 @@
 #pragma once
 #include "gpu/gpu.h"
 #include "mem/allocator.h"
+#include "graphics/device_object.h"
 #include "graphics/shader.h"
 
 
@@ -21,14 +22,12 @@ struct PipelineInfo
     GPU::SurfaceFormat surface_format;
 };
 
-struct Pipeline
+struct Pipeline : DeviceObject
 {
-    mem::Allocator allocator;
-
     GPU::PipelineID pipeline;
     Slice<GPU::DescriptorSetLayoutID> set_layouts;
 
-    void init(const mem::Allocator _allocator, GPU::DeviceID gpu_device, const PipelineInfo& info);
+    void init(const mem::Allocator& _allocator, Device* _parent, GPU::DeviceID gpu_device, const PipelineInfo& info);
     void destroy();
 
     GPU::DescriptorSetLayoutID get_set_layout(usize set_index);

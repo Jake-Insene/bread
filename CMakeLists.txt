@@ -42,6 +42,7 @@ file(GLOB ENGINE_SRC
     src/graphics/command_queue.cpp
     src/graphics/descriptor_pool.cpp
     src/graphics/descriptor_set.cpp
+    src/graphics/device_object.cpp
     src/graphics/device.cpp
     src/graphics/fence.cpp
     src/graphics/memory_heap.cpp

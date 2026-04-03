@@ -4,10 +4,9 @@
 namespace Graphics
 {
 
-void SwapChain::init(const mem::Allocator& _allocator, const SwapChainInfo& info)
+void SwapChain::init(const mem::Allocator& _allocator, Device* _parent, const SwapChainInfo& info)
 {
-    allocator = _allocator;
-
+    DeviceObject::init(_allocator, _parent);
     gpu_device = info.gpu_device;
     present_queue = info.present_queue;
     window = info.window;
@@ -30,6 +29,7 @@ void SwapChain::destroy()
     {
         GPU::swap_chain_destroy(swap_chain);
     }
+    DeviceObject::destroy();
 }
 
 void SwapChain::resize()
