@@ -144,17 +144,17 @@ if(ANDROID)
     set(PLATFORM_LIBRARIES GLESv3 EGL android log)
 elseif(WIN32)
     file(GLOB PLATFORM_SRC
-        src/audio/xaudio2/xaudio2_driver.cpp
+        # Audio drivers
+        src/audio/wasapi/wasapi_driver.cpp
 
         src/platform/win32/win32_display.cpp
-        src/platform/win32/win32_egl.cpp
         src/platform/win32/win32_engine.cpp
         src/platform/win32/win32_file.cpp
         src/platform/win32/win32_main.cpp
         src/platform/win32/win32_math.cpp
         src/platform/win32/win32_os.cpp
     )
-    set(PLATFORM_LIBRARIES opengl32 xaudio2 dbghelp)
+    set(PLATFORM_LIBRARIES opengl32 xaudio2 dbghelp ole32.lib)
 endif()
 
 set(SOURCE_FILES

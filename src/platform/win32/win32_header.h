@@ -10,6 +10,9 @@
 #include <windowsx.h>
 #include <xaudio2.h>
 #include <dbghelp.h>
+#include <WaaSApi.h>
+#include <audioclient.h>
+#include <mmdeviceapi.h>
 
 #undef far
 #undef near

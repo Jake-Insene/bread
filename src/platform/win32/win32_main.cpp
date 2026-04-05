@@ -154,6 +154,8 @@ void engine_loop()
 		}
 	}
 
+	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+
 	Engine::local_data.engine_runtime = &engine;
 	engine.initialize();
 
@@ -179,6 +181,8 @@ void engine_loop()
 		fmt::format<false>(File::get_stdout().writer(), "Press enter to close the console...");
 		File::get_stdin().read(bytes);
 	}
+
+	CoUninitialize();
 }
 
 // Default for Windows

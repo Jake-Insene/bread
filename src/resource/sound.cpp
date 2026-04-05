@@ -53,8 +53,8 @@ void Sound::init()
 
 void Sound::destroy()
 {
-	Resource::destroy();
-    Audio::destroy_source_voice(data.source_voice);
+    //Audio::destroy_source_voice(data.source_voice);
+    Resource::destroy();
 }
 
 Error Sound::load(StringView file_path)
@@ -79,17 +79,17 @@ Error Sound::load(StringView file_path)
 
     (void)drwav_read_pcm_frames(&wav, wav.totalPCMFrameCount, buffer.ptr());
 
-    AudioSourceVoiceCreateInfo sv_create_info;
+    //AudioSourceVoiceCreateInfo sv_create_info;
 
     // TODO: This is only for 16-bits
-    sv_create_info.awf.channel_number = wav.channels;
-    sv_create_info.awf.samples_per_sec = wav.sampleRate;
-    sv_create_info.awf.bits_per_sample = wav.bitsPerSample;
-    sv_create_info.awf.block_align = wav.channels * (wav.bitsPerSample / 8);
-    sv_create_info.awf.avg_bytes_per_sec = sv_create_info.awf.samples_per_sec * sv_create_info.awf.block_align;
-    sv_create_info.buffer = buffer;
+    //sv_create_info.awf.channel_number = wav.channels;
+    //sv_create_info.awf.samples_per_sec = wav.sampleRate;
+    //sv_create_info.awf.bits_per_sample = wav.bitsPerSample;
+    //sv_create_info.awf.block_align = wav.channels * (wav.bitsPerSample / 8);
+    //sv_create_info.awf.avg_bytes_per_sec = sv_create_info.awf.samples_per_sec * sv_create_info.awf.block_align;
+    //sv_create_info.buffer = buffer;
 
-    data.source_voice = Audio::create_source_voice(sv_create_info);
+    //data.source_voice = Audio::create_source_voice(sv_create_info);
 
     drwav_uninit(&wav);
     allocator.free(buffer);

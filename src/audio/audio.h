@@ -5,47 +5,29 @@
 
 struct Audio
 {
-    enum DriverType
+    enum class DriverType
     {
-        DRIVER_UNKNOWN = 0,
+        Unknown = 0,
 
-        XAUDIO2,
+        Wasapi,
+        AAudio,
 
-        DEFAULT_DRIVER = XAUDIO2,
+#if defined(BREAD_WIN32)
+        Default = Wasapi,
+#elif defined(BREAD_ANDROID)
+        Default = AAudio,
+#endif
     };
-
-    using SourceVoiceID = ID<u32, struct __SourceVoiceTag>;
 
     struct VTable
     {
         VTFunc(void, initialize, const mem::Allocator&);
         VTFunc(void, shutdown);
-
-        VTFunc(SourceVoiceID, create_source_voice, const AudioSourceVoiceCreateInfo&);
-        VTFunc(void, destroy_source_voice, SourceVoiceID);
-
-        VTFunc(void, source_voice_set_volume, SourceVoiceID, f32);
-        VTFunc(f32, source_voice_get_volume, SourceVoiceID);
-
-        VTFunc(void, source_voice_play, SourceVoiceID);
-        VTFunc(void, source_voice_stop, SourceVoiceID);
-        VTFunc(void, source_voice_keep_playing, SourceVoiceID);
     };
 
     static inline VTable vtable;
 
     static void initialize(const mem::Allocator& allocator, DriverType driver);
     VTFuncDefS(shutdown);
-
-    VTFuncDefArg1RetS(SourceVoiceID, create_source_voice, const AudioSourceVoiceCreateInfo&);
-    VTFuncDefArg1S(destroy_source_voice, SourceVoiceID);
-
-    VTFuncDefArg2S(source_voice_set_volume, SourceVoiceID, f32);
-    VTFuncDefArg1RetS(f32, source_voice_get_volume, SourceVoiceID);
-
-    VTFuncDefArg1S(source_voice_play, SourceVoiceID);
-    VTFuncDefArg1S(source_voice_stop, SourceVoiceID);
-    VTFuncDefArg1S(source_voice_keep_playing, SourceVoiceID);
-
 };
 

@@ -9,7 +9,7 @@ void AudioPlayer::play()
     if (get_sound() == nullptr)
         return;
 
-    Audio::source_voice_play(get_sound()->get_source_voice());
+    //Audio::source_voice_play(get_sound()->get_source_voice());
     data.playing = true;
 }
 
@@ -34,7 +34,7 @@ void AudioPlayer::set_volume(f32 new_volume)
     if (data.volume_cache == new_volume)
         return;
 
-    Audio::source_voice_set_volume(get_sound()->get_source_voice(), new_volume);
+    //Audio::source_voice_set_volume(get_sound()->get_source_voice(), new_volume);
     data.volume_cache = new_volume;
 }
 
@@ -49,7 +49,7 @@ void AudioPlayer::deinit()
     if(get_sound() == nullptr)
         return;
 
-    Audio::source_voice_stop(get_sound()->get_source_voice());
+    //Audio::source_voice_stop(get_sound()->get_source_voice());
 }
 
 void AudioPlayer::update(f32)
@@ -60,5 +60,5 @@ void AudioPlayer::update(f32)
     if (data.loop == false)
         return;
  
-    Audio::source_voice_keep_playing(get_sound()->get_source_voice());
+    //Audio::source_voice_keep_playing(get_sound()->get_source_voice());
 }

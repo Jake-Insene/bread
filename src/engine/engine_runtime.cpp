@@ -50,7 +50,7 @@ void EngineRuntime::initialize()
     // Allocating main window
     main_window = Window(Display::window_create());
 
-    Audio::initialize(allocator_ref, Audio::DEFAULT_DRIVER);
+    Audio::initialize(allocator_ref, Audio::DriverType::Default);
 
     SceneManager::initialize(allocator_ref);
     Physics2D::initialize(allocator_ref, Physics2D::DEFAULT_DRIVER);

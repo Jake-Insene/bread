@@ -12,7 +12,7 @@ struct Sound : Resource
 
     struct InternalData
     {
-        Audio::SourceVoiceID source_voice;
+        //Audio::SourceVoiceID source_voice;
     } data;
 
     void init();
@@ -20,5 +20,5 @@ struct Sound : Resource
 
     Error load(StringView file_path);
 
-    [[nodiscard]] Audio::SourceVoiceID get_source_voice() const { return data.source_voice; }
+    //[[nodiscard]] Audio::SourceVoiceID get_source_voice() const { return data.source_voice; }
 };
