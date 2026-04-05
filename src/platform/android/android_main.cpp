@@ -108,7 +108,7 @@ static void engine_handle_cmd(android_app*, int32_t cmd)
 
 AndroidEngine engine = {};
 
-void android_main(android_app* app)
+void android_loop(android_app* app)
 {
     Engine::local_data.engine_runtime = &engine;
 
@@ -160,7 +160,11 @@ void android_main(android_app* app)
         }
     }
 
-    Engine::local_data.engine_runtime->shutdown();
     engine.shutdown();
+}
+
+void android_main(android_app* app)
+{
+    android_loop(app);
 }
 

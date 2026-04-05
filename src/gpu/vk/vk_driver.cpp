@@ -1051,7 +1051,7 @@ GPU::BufferID VulkanDriver::buffer_create(const GPU::BufferCreateInfo& ci)
         .pNext = nullptr,
         .flags = 0,
         .size = ci.size,
-        .usage = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VkUtils::_vk_get_buffer_usage(ci.usage),
+        .usage = VkUtils::_vk_get_buffer_usage(ci.usage),
         .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         .queueFamilyIndexCount = 0,
         .pQueueFamilyIndices = nullptr,
@@ -1071,14 +1071,6 @@ GPU::BufferID VulkanDriver::buffer_create(const GPU::BufferCreateInfo& ci)
 
     result = ld.vk.vkBindBufferMemory2(ld.vk_device, 1, &vk_bind_info);
     VKFailOn(result != VK_SUCCESS, "vkBindBufferMemory2({})", Vulkan::result_as_string(result));
-
-    VkBufferDeviceAddressInfo vk_buffer_device_address_info =
-    {
-        .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
-        .pNext = nullptr,
-        .buffer = buffer.vk_buffer,
-    };
-    buffer.vk_device_address = ld.vk.vkGetBufferDeviceAddress(ld.vk_device, &vk_buffer_device_address_info);
 
     return buffer_id;
 }
@@ -1917,14 +1909,7 @@ void VulkanDriver::command_buffer_begin_renderpass(GPU::CommandBufferID command_
         .pClearValues = &vk_clear_value,
     };
 
-    VkSubpassBeginInfo vk_subpass_begin_info =
-    {
-        .sType = VK_STRUCTURE_TYPE_SUBPASS_BEGIN_INFO,
-        .pNext = nullptr,
-        .contents = VK_SUBPASS_CONTENTS_INLINE,
-    };
-
-    ld.vk.vkCmdBeginRenderPass2KHR(cmd_buffer.vk_command_buffer, &vk_begin_info, &vk_subpass_begin_info);    
+    ld.vk.vkCmdBeginRenderPass(cmd_buffer.vk_command_buffer, &vk_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 }
 
 void VulkanDriver::command_buffer_end_renderpass(GPU::CommandBufferID command_buffer, const GPU::RenderPassEndInfo& end_info)
@@ -1940,13 +1925,7 @@ void VulkanDriver::command_buffer_end_renderpass(GPU::CommandBufferID command_bu
         return;
     }
 
-    VkSubpassEndInfo vk_subpass_end_info =
-    {
-        .sType = VK_STRUCTURE_TYPE_SUBPASS_END_INFO,
-        .pNext = nullptr,
-    };
-
-    ld.vk.vkCmdEndRenderPass2KHR(cmd_buffer.vk_command_buffer, &vk_subpass_end_info);
+    ld.vk.vkCmdEndRenderPass(cmd_buffer.vk_command_buffer);
 }
 
 void VulkanDriver::command_buffer_memory_barrier(GPU::CommandBufferID command_buffer, const GPU::PipelineMemoryBarrier& memory_barrier)
@@ -2294,10 +2273,8 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice&
         return ld.render_pass_cache.get(render_pass_key);
     }
 
-    VkAttachmentDescription2 vk_attachment_info =
+    VkAttachmentDescription vk_attachment_info =
     {
-        .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
-        .pNext = nullptr,
         .flags = 0,
         .format = texture.vk_format,
         .samples = VK_SAMPLE_COUNT_1_BIT,
@@ -2309,22 +2286,16 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice&
         .finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     };
 
-    VkAttachmentReference2 vk_color_attachment =
+    VkAttachmentReference vk_color_attachment =
     {
-        .sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2,
-        .pNext = nullptr,
         .attachment = 0,
         .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        .aspectMask = 0,
     };
 
-    VkSubpassDescription2 vk_subpass =
+    VkSubpassDescription vk_subpass =
     {
-        .sType = VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_2,
-        .pNext = nullptr,
         .flags = 0,
         .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
-        .viewMask = 0,
         .inputAttachmentCount = 0,
         .pInputAttachments = nullptr,
         .colorAttachmentCount = 1,
@@ -2335,9 +2306,9 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice&
         .pPreserveAttachments = nullptr,
     };
 
-    VkRenderPassCreateInfo2 vk_render_pass_info =
+    VkRenderPassCreateInfo vk_render_pass_info =
     {
-        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO_2,
+        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
         .attachmentCount = 1,
@@ -2346,14 +2317,12 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice&
         .pSubpasses = &vk_subpass,
         .dependencyCount = 0,
         .pDependencies = nullptr,
-        .correlatedViewMaskCount = 0,
-        .pCorrelatedViewMasks = nullptr,
     };
 
     RenderPassCache& render_pass_cache = ld.render_pass_cache.insert(render_pass_key, RenderPassCache());
     render_pass_cache.vk_framebuffers_cache = HashMap<VkImageView, VkFramebuffer>::with_size(get_allocator(), 3);
     render_pass_cache.device = ld.device;
-    ld.vk.vkCreateRenderPass2KHR(ld.vk_device, &vk_render_pass_info, Vulkan::allocation_callbacks(), &render_pass_cache.vk_render_pass);
+    ld.vk.vkCreateRenderPass(ld.vk_device, &vk_render_pass_info, Vulkan::allocation_callbacks(), &render_pass_cache.vk_render_pass);
     
     return render_pass_cache;
 }
@@ -2372,10 +2341,8 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for_pipeline(Logic
         return ld.render_pass_cache.get(render_pass_key);
     }
 
-    VkAttachmentDescription2 vk_attachment_info =
+    VkAttachmentDescription vk_attachment_info =
     {
-        .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
-        .pNext = nullptr,
         .flags = 0,
         .format = VkUtils::_vk_get_texture_format(pipeline_rendering_info.render_attachments[0]),
         .samples = VK_SAMPLE_COUNT_1_BIT,
@@ -2387,22 +2354,16 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for_pipeline(Logic
         .finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     };
 
-    VkAttachmentReference2 vk_color_attachment =
+    VkAttachmentReference vk_color_attachment =
     {
-        .sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2,
-        .pNext = nullptr,
         .attachment = 0,
         .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
     };
 
-    VkSubpassDescription2 vk_subpass =
+    VkSubpassDescription vk_subpass =
     {
-        .sType = VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_2,
-        .pNext = nullptr,
         .flags = 0,
         .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
-        .viewMask = 0,
         .inputAttachmentCount = 0,
         .pInputAttachments = nullptr,
         .colorAttachmentCount = 1,
@@ -2413,9 +2374,9 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for_pipeline(Logic
         .pPreserveAttachments = nullptr,
     };
 
-    VkRenderPassCreateInfo2 vk_render_pass_info =
+    VkRenderPassCreateInfo vk_render_pass_info =
     {
-        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO_2,
+        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
         .attachmentCount = 1,
@@ -2424,14 +2385,12 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for_pipeline(Logic
         .pSubpasses = &vk_subpass,
         .dependencyCount = 0,
         .pDependencies = nullptr,
-        .correlatedViewMaskCount = 0,
-        .pCorrelatedViewMasks = nullptr,
     };
 
     RenderPassCache& render_pass_cache = ld.render_pass_cache.insert(render_pass_key, RenderPassCache());
     render_pass_cache.vk_framebuffers_cache = HashMap<VkImageView, VkFramebuffer>::with_size(get_allocator(), 3);
     render_pass_cache.device = ld.device;
-    ld.vk.vkCreateRenderPass2KHR(ld.vk_device, &vk_render_pass_info, Vulkan::allocation_callbacks(), &render_pass_cache.vk_render_pass);
+    ld.vk.vkCreateRenderPass(ld.vk_device, &vk_render_pass_info, Vulkan::allocation_callbacks(), &render_pass_cache.vk_render_pass);
     
     return render_pass_cache;
 }
@@ -2475,6 +2434,8 @@ GPU::DeviceType VulkanDriver::_vk_device_type_to_device_type(VkPhysicalDeviceTyp
         return GPU::DeviceType::IntegratedGPU;
     case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
         return GPU::DeviceType::DiscreteGPU;
+    case VK_PHYSICAL_DEVICE_TYPE_CPU:
+        return GPU::DeviceType::Cpu;
     default:
         break;
     }

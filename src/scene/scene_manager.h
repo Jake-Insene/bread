@@ -47,8 +47,6 @@ struct SceneManager
             bool requested;
             Scene* new_scene;
         } change_scene;
-
-        HashMap<Scene*, QueueFreeInfo> queue_frees;
     };
     
     static inline InternalData data;

@@ -171,7 +171,6 @@ struct VulkanDriver
 		VkDevice vk_device;
 		VkBuffer vk_buffer;
 		VkBufferView vk_buffer_view;
-		VkDeviceAddress vk_device_address;
 
 		GPU::DeviceID device;
 		GPU::BufferID buffer;

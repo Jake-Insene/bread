@@ -131,6 +131,9 @@ file(GLOB VULKAN_ADAPTER_SRC
 set(PLATFORM_LIBRARIES "")
 if(ANDROID)
     file(GLOB PLATFORM_SRC
+        # Audio drivers
+        src/audio/aaudio/aaudio_driver.cpp
+
         src/platform/android/android_display.cpp
         src/platform/android/android_engine.cpp
         src/platform/android/android_file.cpp

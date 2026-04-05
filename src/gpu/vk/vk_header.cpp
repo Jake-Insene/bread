@@ -116,9 +116,6 @@ void Vulkan::load_device_procs(DeviceVulkanTable& table, VkDevice device)
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateBufferView);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyBufferView);
 
-    VK_DEVICE_TRY_LOAD(table, device, vkGetBufferDeviceAddress, vkGetBufferDeviceAddress);
-    VK_DEVICE_TRY_LOAD(table, device, vkGetBufferDeviceAddress, vkGetBufferDeviceAddressKHR);
-
     // sampler
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateSampler);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroySampler);
@@ -146,7 +143,7 @@ void Vulkan::load_device_procs(DeviceVulkanTable& table, VkDevice device)
     VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyDescriptorSetLayout);
 
     // render pass
-    VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateRenderPass2KHR);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateRenderPass);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyRenderPass);
 
     // pipeline
@@ -170,8 +167,8 @@ void Vulkan::load_device_procs(DeviceVulkanTable& table, VkDevice device)
     VK_DEVICE_REQUIRED_LOAD(table, device, vkEndCommandBuffer);
 
     // vk_khr_create_renderpass2
-    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdBeginRenderPass2KHR);
-    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdEndRenderPass2KHR);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdBeginRenderPass);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdEndRenderPass);
 
     // vk_khr_dynamic_rendering
     VK_DEVICE_TRY_LOAD(table, device, vkCmdBeginRenderingKHR, vkCmdBeginRenderingKHR);
@@ -337,14 +334,23 @@ Vulkan::AdditionalExtensionSupport Vulkan::check_device_extensions(VkPhysicalDev
     for (const char* ext : VkCoreDeviceExtensions)
     {
         StringView ext_view = Vulkan::vulkan_string_to_sv(ext);
+        bool finded = false;
         for (VkExtensionProperties& act_ext : vk_device_extensions)
         {
-            if (ext_view.equals(Vulkan::vulkan_string_to_sv(act_ext.extensionName)))
+            StringView reported_ext = Vulkan::vulkan_string_to_sv(act_ext.extensionName);
+            VKDebugInfo("comparing {} with {}", ext_view, reported_ext);
+            if (ext_view.equals(reported_ext))
             {
-                finded_count++;
+                finded = true;
                 break;
             }
         }
+        VKDebugInfo("couldn't find the extensions {}", ext_view);
+        if(finded)
+        {
+            finded_count++;
+        }
+
     }
 
     VKFailOn(
@@ -363,12 +369,9 @@ Vulkan::AdditionalExtensionSupport Vulkan::check_device_extensions(VkPhysicalDev
 
 void Vulkan::check_device_features(VkPhysicalDevice physical_device)
 {
-    VkPhysicalDeviceBufferDeviceAddressFeaturesEXT vk_buffer_device_address_features_ext = {};
-    vk_buffer_device_address_features_ext.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_EXT;
-
     VkPhysicalDeviceShaderFloat16Int8FeaturesKHR vk_float16_features = {};
     vk_float16_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES_KHR;
-    vk_float16_features.pNext = &vk_buffer_device_address_features_ext;
+    vk_float16_features.pNext = nullptr;
 
     VkPhysicalDeviceVulkan11Features vk_1_1_features = {};
     vk_1_1_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
@@ -382,10 +385,6 @@ void Vulkan::check_device_features(VkPhysicalDevice physical_device)
     };
 
     vk.vkGetPhysicalDeviceFeatures2(physical_device, &vk_features);
-
-    VKFailOn(vk_buffer_device_address_features_ext.bufferDeviceAddress == VK_FALSE,
-        "VkPhysicalDeviceBufferDeviceAddressFeaturesEXT::bufferDeviceAddress was required"
-    );
 
     VKFailOn(vk_float16_features.shaderFloat16 == VK_FALSE,
         "VkPhysicalDeviceShaderFloat16Int8FeaturesKHR::shaderFloat16 was required"
@@ -437,25 +436,19 @@ const char** Vulkan::get_device_extensions(VkPhysicalDevice physical_device, con
 
 VkPhysicalDeviceFeatures2* Vulkan::get_device_features(const AdditionalExtensionSupport& add_ext, const mem::Allocator& allocator)
 {
-    VkPhysicalDeviceDynamicRenderingFeaturesKHR* dynamic_rendering = nullptr;
+    VkPhysicalDeviceDynamicRenderingFeaturesKHR* vk_dynamic_rendering_features = nullptr;
     if(add_ext.has_dynamic_rendering)
     {
-        dynamic_rendering =
+        vk_dynamic_rendering_features =
             allocator.object<VkPhysicalDeviceDynamicRenderingFeaturesKHR>();
-        dynamic_rendering->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
-        dynamic_rendering->dynamicRendering = VK_TRUE;
+        vk_dynamic_rendering_features->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
+        vk_dynamic_rendering_features->dynamicRendering = VK_TRUE;
     }
-
-    VkPhysicalDeviceBufferDeviceAddressFeaturesEXT* vk_buffer_device_address_features_ext =
-        allocator.object<VkPhysicalDeviceBufferDeviceAddressFeaturesEXT>();
-    vk_buffer_device_address_features_ext->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_EXT;
-    vk_buffer_device_address_features_ext->pNext = dynamic_rendering;
-    vk_buffer_device_address_features_ext->bufferDeviceAddress = VK_TRUE;
 
     VkPhysicalDeviceShaderFloat16Int8FeaturesKHR* vk_float16_features =
         allocator.object<VkPhysicalDeviceShaderFloat16Int8FeaturesKHR>();
     vk_float16_features->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES_KHR;
-    vk_float16_features->pNext = vk_buffer_device_address_features_ext;
+    vk_float16_features->pNext = vk_dynamic_rendering_features;
     vk_float16_features->shaderFloat16 = VK_TRUE;
 
     VkPhysicalDeviceVulkan11Features* vk_1_1_features =

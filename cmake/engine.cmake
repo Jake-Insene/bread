@@ -8,6 +8,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # MSVC
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set(CMAKE_MSVC_RUNTIME_CHECKS OFF)
+# Expected to be the top directory of the current project
+set(CMAKE_PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Configurating output directories
 if(DEFINED BREAD_ANDROID)
@@ -170,6 +172,30 @@ function(bread_project)
         "${CMAKE_SOURCE_DIR}"
     )
 
-    target_link_libraries(${PROJECT_NAME} "bread")
+    target_link_libraries(${PROJECT_NAME} "bread" ${PROJECT_SUBMODULES})
+endfunction()
 
+function(bread_submodule)
+    set(options)
+    set(oneValueArgs NAME)
+    set(multiValueArgs SOURCES)
+
+    cmake_parse_arguments(SUBMODULE
+        "${options}"
+        "${oneValueArgs}"
+        "${multiValueArgs}"
+        ${ARGN}
+    )
+
+    add_library(${SUBMODULE_NAME} SHARED ${SUBMODULE_SOURCES})
+    
+    target_compile_definitions(${SUBMODULE_NAME} PUBLIC ${BREAD_BUILD_DEFINITIONS} BREAD_MODULE_COMPILATION)
+    target_compile_options(${SUBMODULE_NAME} PUBLIC ${BREAD_COMPILE_OPTIONS} ${BREAD_EXE_BUILD_OPTIONS})
+    target_link_options(${SUBMODULE_NAME} PUBLIC ${BREAD_EXE_LINK_OPTIONS})
+    target_include_directories(
+        ${SUBMODULE_NAME}
+        PUBLIC
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${CMAKE_PROJECT_SOURCE_DIR}/bread/src"
+    )
 endfunction()

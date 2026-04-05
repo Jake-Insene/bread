@@ -146,6 +146,7 @@ void EngineRuntime::_select_physical_device()
 
     bool finded = false;
     GPU::PhysicalDeviceID integrated = GPU::PhysicalDeviceID();
+    GPU::PhysicalDeviceID cpu = GPU::PhysicalDeviceID();
     for(GPU::PhysicalDeviceID pd : physical_devices)
     {
         if(finded == true)
@@ -162,11 +163,19 @@ void EngineRuntime::_select_physical_device()
         {
             integrated = pd;
         }
+        else if(pd_info.device_type == GPU::DeviceType::Cpu)
+        {
+            cpu = pd;
+        }
     }
 
-    if(finded == false)
+    if(finded == false && integrated.is_valid())
     {
         physical_device = integrated;
+    }
+    else if(finded == false && !integrated.is_valid())
+    {
+        physical_device = cpu;
     }
 }
 

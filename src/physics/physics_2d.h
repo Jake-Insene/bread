@@ -70,10 +70,10 @@ struct Physics2D
 
         VTFunc(void, step, f32);
 
-        VTFunc(BodyID, create_body, Opaque*);
-        VTFunc(void, destroy_body, BodyID);
-        VTFunc(AreaID, create_area, Opaque*);
-        VTFunc(void, destroy_area, AreaID);
+        VTFunc(BodyID, body_create, Opaque*);
+        VTFunc(void, body_destroy, BodyID);
+        VTFunc(AreaID, area_create, Opaque*);
+        VTFunc(void, area_destroy, AreaID);
 
         VTFunc(void, body_set_shape, BodyID, const Shape2D&);
         VTFunc(Shape2D, body_get_shape, BodyID);
@@ -137,10 +137,10 @@ struct Physics2D
 
     static void step(f32 dt);
 
-    static BodyID create_body(Opaque* user_data);
-    static void destroy_body(BodyID body_id);
-    static AreaID create_area(Opaque* user_data);
-    static void destroy_area(AreaID area_id);
+    static BodyID body_create(Opaque* user_data);
+    static void body_destroy(BodyID body_id);
+    static AreaID area_create(Opaque* user_data);
+    static void area_destroy(AreaID area_id);
 
     static void body_set_shape(BodyID body_id, const Shape2D& shape);
     static Shape2D body_get_shape(BodyID body_id);

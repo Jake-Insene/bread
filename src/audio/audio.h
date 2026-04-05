@@ -28,6 +28,6 @@ struct Audio
     static inline VTable vtable;
 
     static void initialize(const mem::Allocator& allocator, DriverType driver);
-    VTFuncDefS(shutdown);
+    static void shutdown();
 };
 

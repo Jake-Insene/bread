@@ -108,8 +108,6 @@ struct DeviceVulkanTable
     PFN_vkCreateBufferView vkCreateBufferView;
     PFN_vkDestroyBufferView vkDestroyBufferView;
     
-    PFN_vkGetBufferDeviceAddress vkGetBufferDeviceAddress;
-
     PFN_vkCreateSampler vkCreateSampler;
     PFN_vkDestroySampler vkDestroySampler;
 
@@ -131,7 +129,7 @@ struct DeviceVulkanTable
     PFN_vkCreateDescriptorSetLayout vkCreateDescriptorSetLayout;
     PFN_vkDestroyDescriptorSetLayout vkDestroyDescriptorSetLayout;
 
-    PFN_vkCreateRenderPass2KHR vkCreateRenderPass2KHR;
+    PFN_vkCreateRenderPass vkCreateRenderPass;
     PFN_vkDestroyRenderPass vkDestroyRenderPass;
 
     PFN_vkCreateGraphicsPipelines vkCreateGraphicsPipelines;
@@ -150,8 +148,8 @@ struct DeviceVulkanTable
     PFN_vkBeginCommandBuffer vkBeginCommandBuffer;
     PFN_vkEndCommandBuffer vkEndCommandBuffer;
 
-    PFN_vkCmdBeginRenderPass2KHR vkCmdBeginRenderPass2KHR;
-    PFN_vkCmdEndRenderPass2KHR vkCmdEndRenderPass2KHR;
+    PFN_vkCmdBeginRenderPass vkCmdBeginRenderPass;
+    PFN_vkCmdEndRenderPass vkCmdEndRenderPass;
 
     PFN_vkCmdBeginRenderingKHR vkCmdBeginRenderingKHR;
     PFN_vkCmdEndRenderingKHR vkCmdEndRenderingKHR;

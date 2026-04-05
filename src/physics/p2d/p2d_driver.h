@@ -76,10 +76,10 @@ struct P2DDriver
 
     static void step(f32 dt);
 
-    static Physics2D::BodyID create_body(Opaque* user_data);
-    static void destroy_body(Physics2D::BodyID body_id);
-    static Physics2D::AreaID create_area(Opaque* user_data);
-    static void destroy_area(Physics2D::AreaID area_id);
+    static Physics2D::BodyID body_create(Opaque* user_data);
+    static void body_destroy(Physics2D::BodyID body_id);
+    static Physics2D::AreaID area_create(Opaque* user_data);
+    static void area_destroy(Physics2D::AreaID area_id);
 
     // Body
     static void body_set_shape(Physics2D::BodyID body_id, const Shape2D& new_shape);

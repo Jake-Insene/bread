@@ -18,10 +18,10 @@ Physics2D::VTable P2DDriver::get_vtable()
 
         .step = &P2DDriver::step,
 
-        .create_body = &P2DDriver::create_body,
-        .destroy_body = &P2DDriver::destroy_body,
-        .create_area = &P2DDriver::create_area,
-        .destroy_area = &P2DDriver::destroy_area,
+        .body_create = &P2DDriver::body_create,
+        .body_destroy = &P2DDriver::body_destroy,
+        .area_create = &P2DDriver::area_create,
+        .area_destroy = &P2DDriver::area_destroy,
 
         .body_set_shape = &P2DDriver::body_set_shape,
         .body_get_shape = &P2DDriver::body_get_shape,
@@ -164,7 +164,7 @@ void P2DDriver::step(f32 dt)
     //}
 }
 
-Physics2D::BodyID P2DDriver::create_body(Opaque* user_data)
+Physics2D::BodyID P2DDriver::body_create(Opaque* user_data)
 {
     Physics2D::BodyID id = data.current_bodies.add(P2DBody());
     P2DBody& new_body = data.current_bodies.get(id);
@@ -175,7 +175,7 @@ Physics2D::BodyID P2DDriver::create_body(Opaque* user_data)
     return id;
 }
 
-void P2DDriver::destroy_body(Physics2D::BodyID body_id)
+void P2DDriver::body_destroy(Physics2D::BodyID body_id)
 {
     P2DBody& body = _get_body(body_id);
     body_set_residence_mask(body_id, Physics2D::CollisionMask(0));
@@ -205,7 +205,7 @@ void P2DDriver::destroy_body(Physics2D::BodyID body_id)
     data.current_bodies.remove(body_id);
 }
 
-Physics2D::AreaID P2DDriver::create_area(Opaque* user_data)
+Physics2D::AreaID P2DDriver::area_create(Opaque* user_data)
 {
     Physics2D::AreaID id = data.current_areas.add(P2DArea());
     P2DArea& new_area = data.current_areas.get(id);
@@ -217,7 +217,7 @@ Physics2D::AreaID P2DDriver::create_area(Opaque* user_data)
     return id;
 }
 
-void P2DDriver::destroy_area(Physics2D::AreaID area_id)
+void P2DDriver::area_destroy(Physics2D::AreaID area_id)
 {
     P2DArea& area = _get_area(area_id);
     _disable_area(area_id);

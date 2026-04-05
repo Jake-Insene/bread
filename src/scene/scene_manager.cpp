@@ -34,8 +34,6 @@ void SceneManager::shutdown()
 		SceneCallRef(data.current_scene, on_destroy);
         data.allocator.free(mem::to_bytes(Slice<Scene>(data.current_scene, 1)));
     }
-
-    data.queue_frees.destroy();
 }
 
 void SceneManager::change_scene(Scene* new_scene)
@@ -128,8 +126,6 @@ void SceneManager::step()
     data.fps_acum++;
 
     _handle_object_mark_changed();
-
-    data.queue_frees.clear();
 }
 
 void SceneManager::recreate_window()
@@ -219,8 +215,6 @@ void SceneManager::_handle_change_scene()
     data.current_scene = data.change_scene.new_scene;
     data.change_scene.new_scene = nullptr;
     SceneCallRef(data.current_scene, on_enter);
-
-    data.queue_frees.clear();
 }
 
 Vector2 SceneManager::_screen_make_local_to_canvas(const Vector2& pos)

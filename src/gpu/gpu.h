@@ -145,6 +145,7 @@ struct GPU
 		Unknown = 0,
 		IntegratedGPU,
 		DiscreteGPU,
+		Cpu,
 	};
 
 	struct PhysicalDeviceSurfaceInfo
