@@ -62,6 +62,23 @@ struct GPU
 
 	// ====== Enums ======
 
+	enum class TextureFormat
+	{
+		Unknown = 0,
+		RGBA8Srgb,
+		RGB8Srgb,
+		RG8Srgb,
+		R8Srgb,
+
+		RGBA8Unorm,
+		RGB8Unorm,
+		RG8Unorm,
+		R8Unorm,
+
+		BGRA8Srgb,
+		BGRA8Unorm,
+	};
+
 	enum class DescriptorType
 	{
 		Unknown = 0,
@@ -169,14 +186,6 @@ struct GPU
 	/*
 	* SwapChain API
 	*/
-	enum class SurfaceFormat
-	{
-		Unknown = 0,
-		RGBA8Unorm,
-		RGBA8Srgb,
-		BGRA8Unorm,
-		BGRA8Srgb,
-	};
 
 	enum class PresentMode
 	{
@@ -198,7 +207,7 @@ struct GPU
 		DeviceID device;
 		SurfaceID surface;
 		PresentMode present_mode;
-		SurfaceFormat format;
+		TextureFormat format;
 		u32 min_image_count;
 		Vector2U size;
 	};
@@ -395,15 +404,6 @@ struct GPU
 	{
 		Unknown = 0,
 		Texture2D,
-	};
-
-	enum class TextureFormat
-	{
-		Unknown = 0,
-		RGBA8Srgb,
-		RGB8Srgb,
-		RG8Srgb,
-		R8Srgb,
 	};
 
 	enum class SampleCount
@@ -703,6 +703,11 @@ struct GPU
 		Slice<const DescriptorSetLayoutID> set_layouts;
 	};
 
+	struct RenderingInfo
+	{
+		Slice<TextureFormat> render_attachments;
+	};
+
 	struct PipelineCreateInfo
 	{
 		DeviceID device;
@@ -714,7 +719,7 @@ struct GPU
 		MultisampleState multisample_state;
 		DepthStencilState depth_stencil_state;
 		PipelineLayout pipeline_layout;
-		SurfaceFormat surface_format;
+		RenderingInfo rendering_info;
 	};
 
 	static PipelineID pipeline_create(const PipelineCreateInfo& ci);

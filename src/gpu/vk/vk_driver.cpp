@@ -265,7 +265,7 @@ GPU::DeviceID VulkanDriver::device_create(const GPU::DeviceCreateInfo& ci)
     }
 
     // Checking for required extensions and features use by the driver.
-    Vulkan::check_device_extensions(pd.vk_physical_device);
+    Vulkan::AdditionalExtensionSupport add_ext = Vulkan::check_device_extensions(pd.vk_physical_device);
     Vulkan::check_device_features(pd.vk_physical_device);
 
     u32 vk_family_count;
@@ -388,14 +388,14 @@ GPU::DeviceID VulkanDriver::device_create(const GPU::DeviceCreateInfo& ci)
     VkDeviceCreateInfo vk_device_info =
     {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        .pNext = Vulkan::get_device_features(allocator),
+        .pNext = Vulkan::get_device_features(add_ext, allocator),
         .flags = 0,
         .queueCreateInfoCount = unique_count,
         .pQueueCreateInfos = queue_infos,
         .enabledLayerCount = 0,
         .ppEnabledLayerNames = nullptr,
         .enabledExtensionCount = static_cast<uint32_t>(ArraySize(Vulkan::VkCoreDeviceExtensions)),
-        .ppEnabledExtensionNames = Vulkan::get_device_extensions(pd.vk_physical_device, allocator),
+        .ppEnabledExtensionNames = Vulkan::get_device_extensions(pd.vk_physical_device, add_ext, allocator),
         .pEnabledFeatures = nullptr,
     };
 
@@ -432,6 +432,8 @@ GPU::DeviceID VulkanDriver::device_create(const GPU::DeviceCreateInfo& ci)
     vk.vkGetPhysicalDeviceMemoryProperties2(ld.vk_physical_device, &vk_physical_memory_properties);
     ld.vk_physical_device_memory_properties = vk_physical_memory_properties.memoryProperties;
 
+    ld.additional_extension_support = add_ext;
+
     // Queues
     GPU::QueueUsage queue_usages[VkFamilyCount] =
     {
@@ -466,7 +468,7 @@ GPU::DeviceID VulkanDriver::device_create(const GPU::DeviceCreateInfo& ci)
         }
     }
 
-    ld.render_pass_cache = HashMap<VkFormat, RenderPassCache>::with_allocator(get_allocator());
+    ld.render_pass_cache = HashMap<VkDriverRenderPassKey, RenderPassCache>::with_allocator(get_allocator());
 
     ld.device = device_id;
 
@@ -607,7 +609,8 @@ GPU::SwapChainID VulkanDriver::swap_chain_create(const GPU::SwapChainCreateInfo&
             tex.vk_device = swap_chain.vk_device;
             tex.vk_image = swap_chain.images[i].vk_image;
             tex.vk_image_view = swap_chain.images[i].vk_image_view;
-		    tex.vk_format = vk_swapchain_format;
+            tex.vk_format = VkUtils::_vk_get_texture_format(ci.format);
+		    tex.format = ci.format;
             tex.extent = Vector3U(vk_swap_chain_extent.width, vk_swap_chain_extent.height, 1);
             tex.device = swap_chain.device;
         }
@@ -626,15 +629,17 @@ void VulkanDriver::swap_chain_destroy(GPU::SwapChainID swap_chain)
         ld.vk.vkDestroyImageView(sc.vk_device, sc.images[i].vk_image_view, Vulkan::allocation_callbacks());
 
         Texture& texture = _get_texture(sc.images[i].texture);
-        RenderPassCache& render_pass_cache = _get_render_pass_for(ld, texture.vk_format);
-        
-        if(render_pass_cache.vk_framebuffers_cache.has(texture.vk_image_view))
+
+        for(RenderPassEntry& render_pass_entry : ld.render_pass_cache.iter())
         {
-            ld.vk.vkDestroyFramebuffer(
-                ld.vk_device, render_pass_cache.vk_framebuffers_cache.get(texture.vk_image_view),
-                Vulkan::allocation_callbacks()
-            );
-            render_pass_cache.vk_framebuffers_cache.remove(texture.vk_image_view);
+            if(render_pass_entry.second.vk_framebuffers_cache.has(texture.vk_image_view))
+            {
+                ld.vk.vkDestroyFramebuffer(
+                    ld.vk_device, render_pass_entry.second.vk_framebuffers_cache.get(texture.vk_image_view),
+                    Vulkan::allocation_callbacks()
+                );
+                render_pass_entry.second.vk_framebuffers_cache.remove(texture.vk_image_view);
+            }
         }
      
         data.textures.remove(sc.images[i].texture);
@@ -1142,6 +1147,7 @@ GPU::TextureID VulkanDriver::texture_create(const GPU::TextureCreateInfo& ci)
     LogicalDevice& ld = _get_logical_device(ci.device);
     tex.vk_device = ld.vk_device;
     tex.vk_format = VkUtils::_vk_get_texture_format(ci.format);
+    tex.format = ci.format;
     tex.extent = ci.extent;
     tex.device = ci.device;
     tex.texture = texture_id;
@@ -1657,16 +1663,33 @@ GPU::PipelineID VulkanDriver::pipeline_create(const GPU::PipelineCreateInfo& ci)
     VkResult result = ld.vk.vkCreatePipelineLayout(ld.vk_device, &vk_pipeline_layout_info, Vulkan::allocation_callbacks(), &pipe.vk_pipeline_layout);
     VKFailOn(result != VK_SUCCESS, "vkCreatePipelineLayout({})", Vulkan::result_as_string(result));
 
-    VkFormat vk_swap_chain_format;
-    VkColorSpaceKHR vk_color_space;
-    _vk_get_surface_format(ci.surface_format, &vk_swap_chain_format, &vk_color_space);
+    Slice<VkFormat> vk_color_attachment_formats = allocator.array<VkFormat>(ci.rendering_info.render_attachments.len);
+    for(usize i = 0; i < vk_color_attachment_formats.len; i++)
+    {
+        vk_color_attachment_formats[i] = VkUtils::_vk_get_texture_format(ci.rendering_info.render_attachments[i]);
+    }
 
-    RenderPassCache& render_pass = _get_render_pass_for(ld, vk_swap_chain_format);
+    VkPipelineRenderingCreateInfoKHR vk_pipeline_rendering_info =
+    {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR,
+        .pNext = nullptr,
+        .viewMask = 0,
+        .colorAttachmentCount = static_cast<uint32_t>(vk_color_attachment_formats.len),
+        .pColorAttachmentFormats = vk_color_attachment_formats.ptr(),
+        .depthAttachmentFormat = VK_FORMAT_UNDEFINED,
+        .stencilAttachmentFormat = VK_FORMAT_UNDEFINED,
+    };
+
+    RenderPassCache* render_pass = nullptr;
+    if(!ld.additional_extension_support.has_dynamic_rendering)
+    {
+        render_pass = &_get_render_pass_for_pipeline(ld, ci.rendering_info);
+    }
     
     VkGraphicsPipelineCreateInfo vk_graphics_pipeline_info =
     {
         .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-        .pNext = nullptr,
+        .pNext = ld.additional_extension_support.has_dynamic_rendering ? &vk_pipeline_rendering_info : nullptr,
         .flags = 0,
         .stageCount = static_cast<uint32_t>(vk_shader_stages.len),
         .pStages = vk_shader_stages.ptr(),
@@ -1680,7 +1703,7 @@ GPU::PipelineID VulkanDriver::pipeline_create(const GPU::PipelineCreateInfo& ci)
         .pColorBlendState = &vk_color_blend_state,
         .pDynamicState = &vk_dynamic_state,
         .layout = pipe.vk_pipeline_layout,
-        .renderPass = render_pass.vk_render_pass,
+        .renderPass = ld.additional_extension_support.has_dynamic_rendering ? nullptr : render_pass->vk_render_pass,
         .subpass = 0,
         .basePipelineHandle = VK_NULL_HANDLE,
         .basePipelineIndex = 0,
@@ -1815,14 +1838,15 @@ void VulkanDriver::command_buffer_begin_renderpass(GPU::CommandBufferID command_
 {
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
+    Texture& tex = _get_texture(begin_info.render_attachment.image);
 
-    VkClearValue clear_value = {};
-    clear_value.color.float32[0] = begin_info.render_attachment.clear_color.r;
-    clear_value.color.float32[1] = begin_info.render_attachment.clear_color.g;
-    clear_value.color.float32[2] = begin_info.render_attachment.clear_color.b;
-    clear_value.color.float32[3] = begin_info.render_attachment.clear_color.a;
+    VkClearValue vk_clear_value = {};
+    vk_clear_value.color.float32[0] = begin_info.render_attachment.clear_color.r;
+    vk_clear_value.color.float32[1] = begin_info.render_attachment.clear_color.g;
+    vk_clear_value.color.float32[2] = begin_info.render_attachment.clear_color.b;
+    vk_clear_value.color.float32[3] = begin_info.render_attachment.clear_color.a;
 
-    VkRect2D render_area =
+    VkRect2D vk_render_area =
     {
         .offset =
         {
@@ -1836,9 +1860,51 @@ void VulkanDriver::command_buffer_begin_renderpass(GPU::CommandBufferID command_
         },
     };
 
+    if(ld.additional_extension_support.has_dynamic_rendering)
+    {
+        VkImageView vk_resolve_view = VK_NULL_HANDLE;
+        VkImageLayout vk_resolve_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+        if(begin_info.render_attachment.resolve_image.is_valid())
+        {
+            vk_resolve_view = _get_texture(begin_info.render_attachment.resolve_image).vk_image_view;
+            vk_resolve_layout = VkUtils::_vk_get_image_layout(begin_info.render_attachment.resolve_layout);
+        }
+
+        VkRenderingAttachmentInfoKHR vk_color_attachment =
+        {
+            .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR,
+            .pNext = nullptr,
+            .imageView = tex.vk_image_view,
+            .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            .resolveMode = VK_RESOLVE_MODE_NONE,
+            .resolveImageView = vk_resolve_view,
+            .resolveImageLayout = vk_resolve_layout,
+            .loadOp = VkUtils::_vk_get_load_op(begin_info.render_attachment.load_op),
+            .storeOp = VkUtils::_vk_get_store_op(begin_info.render_attachment.store_op),
+            .clearValue = vk_clear_value,
+        };
+
+        VkRenderingInfoKHR vk_rendering_info =
+        {
+            .sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR,
+            .pNext = nullptr,
+            .flags = 0,
+            .renderArea = vk_render_area,
+            .layerCount = 1,
+            .viewMask = 0,
+            .colorAttachmentCount = 1,
+            .pColorAttachments = &vk_color_attachment,
+            .pDepthAttachment = nullptr,
+            .pStencilAttachment = nullptr,
+        };
+
+        ld.vk.vkCmdBeginRenderingKHR(cmd_buffer.vk_command_buffer, &vk_rendering_info);
+        return;
+    }
+
     VkRenderPass vk_render_pass;
     VkFramebuffer vk_framebuffer;
-    _get_render_pass_and_framebuffer_for(ld, begin_info, &vk_render_pass, &vk_framebuffer);
+    _get_render_pass_and_framebuffer_for(ld, tex, begin_info, &vk_render_pass, &vk_framebuffer);
 
     VkRenderPassBeginInfo vk_begin_info =
     {
@@ -1846,9 +1912,9 @@ void VulkanDriver::command_buffer_begin_renderpass(GPU::CommandBufferID command_
         .pNext = nullptr,
         .renderPass = vk_render_pass,
         .framebuffer = vk_framebuffer,
-        .renderArea = render_area,
+        .renderArea = vk_render_area,
         .clearValueCount = 1,
-        .pClearValues = &clear_value,
+        .pClearValues = &vk_clear_value,
     };
 
     VkSubpassBeginInfo vk_subpass_begin_info =
@@ -1867,6 +1933,12 @@ void VulkanDriver::command_buffer_end_renderpass(GPU::CommandBufferID command_bu
 
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
+
+    if(ld.additional_extension_support.has_dynamic_rendering)
+    {
+        ld.vk.vkCmdEndRenderingKHR(cmd_buffer.vk_command_buffer);
+        return;
+    }
 
     VkSubpassEndInfo vk_subpass_end_info =
     {
@@ -2142,23 +2214,23 @@ void VulkanDriver::_get_physical_devices()
     }
 }
 
-void VulkanDriver::_vk_get_surface_format(GPU::SurfaceFormat surface_format, VkFormat* vk_image_format, VkColorSpaceKHR* vk_color_space)
+void VulkanDriver::_vk_get_surface_format(GPU::TextureFormat surface_format, VkFormat* vk_image_format, VkColorSpaceKHR* vk_color_space)
 {
     switch(surface_format)
     {
-    case GPU::SurfaceFormat::RGBA8Unorm:
+    case GPU::TextureFormat::RGBA8Unorm:
         *vk_image_format = VK_FORMAT_R8G8B8A8_UNORM;
         *vk_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
         return;
-    case GPU::SurfaceFormat::RGBA8Srgb:
+    case GPU::TextureFormat::RGBA8Srgb:
         *vk_image_format = VK_FORMAT_R8G8B8A8_SRGB;
         *vk_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
         return;
-    case GPU::SurfaceFormat::BGRA8Unorm:
+    case GPU::TextureFormat::BGRA8Unorm:
         *vk_image_format = VK_FORMAT_B8G8R8A8_UNORM;
         *vk_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
         return;
-    case GPU::SurfaceFormat::BGRA8Srgb:
+    case GPU::TextureFormat::BGRA8Srgb:
         *vk_image_format = VK_FORMAT_B8G8R8A8_SRGB;
         *vk_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
         return;
@@ -2208,11 +2280,18 @@ VkShaderModule VulkanDriver::_vk_create_shader_module(LogicalDevice& ld, const G
     return vk_module;
 }
 
-VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice& ld, VkFormat format)
+VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice& ld, Texture& texture, const GPU::RenderPassBeginInfo& begin_info)
 {
-    if(ld.render_pass_cache.has(format))
+    VkDriverRenderPassKey render_pass_key =
     {
-        return ld.render_pass_cache.get(format);
+        .format = texture.format,
+        .load_op = begin_info.render_attachment.load_op,
+        .store_op = begin_info.render_attachment.store_op,
+    };
+
+    if(ld.render_pass_cache.has(render_pass_key))
+    {
+        return ld.render_pass_cache.get(render_pass_key);
     }
 
     VkAttachmentDescription2 vk_attachment_info =
@@ -2220,14 +2299,14 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice&
         .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
         .pNext = nullptr,
         .flags = 0,
-        .format = format,
+        .format = texture.vk_format,
         .samples = VK_SAMPLE_COUNT_1_BIT,
-        .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-        .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+        .loadOp = VkUtils::_vk_get_load_op(begin_info.render_attachment.load_op),
+        .storeOp = VkUtils::_vk_get_store_op(begin_info.render_attachment.store_op),
         .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
         .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-        .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-        .finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+        .initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        .finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     };
 
     VkAttachmentReference2 vk_color_attachment =
@@ -2271,24 +2350,100 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice&
         .pCorrelatedViewMasks = nullptr,
     };
 
-    RenderPassCache& render_pass_cache = ld.render_pass_cache.insert(format, RenderPassCache());
+    RenderPassCache& render_pass_cache = ld.render_pass_cache.insert(render_pass_key, RenderPassCache());
     render_pass_cache.vk_framebuffers_cache = HashMap<VkImageView, VkFramebuffer>::with_size(get_allocator(), 3);
     render_pass_cache.device = ld.device;
     ld.vk.vkCreateRenderPass2KHR(ld.vk_device, &vk_render_pass_info, Vulkan::allocation_callbacks(), &render_pass_cache.vk_render_pass);
-
+    
     return render_pass_cache;
 }
 
-void VulkanDriver::_get_render_pass_and_framebuffer_for(LogicalDevice& ld, const GPU::RenderPassBeginInfo& begin_info,
+VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for_pipeline(LogicalDevice& ld,
+    const GPU::RenderingInfo& pipeline_rendering_info)
+{
+    VkDriverRenderPassKey render_pass_key =
+    {
+        .format = pipeline_rendering_info.render_attachments[0],
+        .load_op = GPU::LoadOp::Load,
+        .store_op = GPU::StoreOp::Store,
+    };
+    if(ld.render_pass_cache.has(render_pass_key))
+    {
+        return ld.render_pass_cache.get(render_pass_key);
+    }
+
+    VkAttachmentDescription2 vk_attachment_info =
+    {
+        .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
+        .pNext = nullptr,
+        .flags = 0,
+        .format = VkUtils::_vk_get_texture_format(pipeline_rendering_info.render_attachments[0]),
+        .samples = VK_SAMPLE_COUNT_1_BIT,
+        .loadOp = VkUtils::_vk_get_load_op(render_pass_key.load_op),
+        .storeOp = VkUtils::_vk_get_store_op(render_pass_key.store_op),
+        .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+        .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        .initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        .finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    };
+
+    VkAttachmentReference2 vk_color_attachment =
+    {
+        .sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2,
+        .pNext = nullptr,
+        .attachment = 0,
+        .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+    };
+
+    VkSubpassDescription2 vk_subpass =
+    {
+        .sType = VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_2,
+        .pNext = nullptr,
+        .flags = 0,
+        .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+        .viewMask = 0,
+        .inputAttachmentCount = 0,
+        .pInputAttachments = nullptr,
+        .colorAttachmentCount = 1,
+        .pColorAttachments = &vk_color_attachment,
+        .pResolveAttachments = nullptr,
+        .pDepthStencilAttachment = nullptr,
+        .preserveAttachmentCount = 0,
+        .pPreserveAttachments = nullptr,
+    };
+
+    VkRenderPassCreateInfo2 vk_render_pass_info =
+    {
+        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO_2,
+        .pNext = nullptr,
+        .flags = 0,
+        .attachmentCount = 1,
+        .pAttachments = &vk_attachment_info,
+        .subpassCount = 1,
+        .pSubpasses = &vk_subpass,
+        .dependencyCount = 0,
+        .pDependencies = nullptr,
+        .correlatedViewMaskCount = 0,
+        .pCorrelatedViewMasks = nullptr,
+    };
+
+    RenderPassCache& render_pass_cache = ld.render_pass_cache.insert(render_pass_key, RenderPassCache());
+    render_pass_cache.vk_framebuffers_cache = HashMap<VkImageView, VkFramebuffer>::with_size(get_allocator(), 3);
+    render_pass_cache.device = ld.device;
+    ld.vk.vkCreateRenderPass2KHR(ld.vk_device, &vk_render_pass_info, Vulkan::allocation_callbacks(), &render_pass_cache.vk_render_pass);
+    
+    return render_pass_cache;
+}
+
+void VulkanDriver::_get_render_pass_and_framebuffer_for(LogicalDevice& ld, Texture& texture, const GPU::RenderPassBeginInfo& begin_info,
     VkRenderPass* vk_render_pass, VkFramebuffer* vk_framebuffer)
 {
-    Texture& tex = _get_texture(begin_info.render_attachment.image);
+    RenderPassCache& render_pass_cache = _get_render_pass_for(ld, texture, begin_info);
 
-    RenderPassCache& render_pass_cache = _get_render_pass_for(ld, tex.vk_format);
-
-    if(render_pass_cache.vk_framebuffers_cache.has(tex.vk_image_view))
+    if(render_pass_cache.vk_framebuffers_cache.has(texture.vk_image_view))
     {
-        *vk_framebuffer = render_pass_cache.vk_framebuffers_cache.get(tex.vk_image_view);
+        *vk_framebuffer = render_pass_cache.vk_framebuffers_cache.get(texture.vk_image_view);
     }
     else
     {
@@ -2299,14 +2454,14 @@ void VulkanDriver::_get_render_pass_and_framebuffer_for(LogicalDevice& ld, const
             .flags = 0,
             .renderPass = render_pass_cache.vk_render_pass,
             .attachmentCount = 1,
-            .pAttachments = &tex.vk_image_view,
-            .width = tex.extent.x,
-            .height = tex.extent.y,
-            .layers = tex.extent.z,
+            .pAttachments = &texture.vk_image_view,
+            .width = texture.extent.x,
+            .height = texture.extent.y,
+            .layers = texture.extent.z,
         };
 
         ld.vk.vkCreateFramebuffer(ld.vk_device, &vk_framebuffer_info, Vulkan::allocation_callbacks(), vk_framebuffer);
-        render_pass_cache.vk_framebuffers_cache.insert(tex.vk_image_view, *vk_framebuffer);
+        render_pass_cache.vk_framebuffers_cache.insert(texture.vk_image_view, *vk_framebuffer);
     }
 
     *vk_render_pass = render_pass_cache.vk_render_pass;
@@ -2326,26 +2481,6 @@ GPU::DeviceType VulkanDriver::_vk_device_type_to_device_type(VkPhysicalDeviceTyp
 
     VKFailOn(true, "invalid vulkan physical device type");
     return GPU::DeviceType::Unknown;
-}
-
-GPU::SurfaceFormat VulkanDriver::_vk_surface_format_to_surface_format(VkSurfaceFormatKHR vk_surface_format)
-{
-    switch(vk_surface_format.format)
-    {
-    case VK_FORMAT_R8G8B8A8_UNORM:
-        return GPU::SurfaceFormat::RGBA8Unorm;
-    case VK_FORMAT_R8G8B8A8_SRGB:
-        return GPU::SurfaceFormat::RGBA8Srgb;
-    case VK_FORMAT_B8G8R8A8_UNORM:
-        return GPU::SurfaceFormat::BGRA8Unorm;
-    case VK_FORMAT_B8G8R8A8_SRGB:
-        return GPU::SurfaceFormat::BGRA8Srgb;
-    default:
-        break;
-    }
-
-    VKFailOn(true, "invalid vulkan surface format");
-    return GPU::SurfaceFormat::Unknown;
 }
 
 GPU::PresentMode VulkanDriver::_vk_present_mode_to_present_mode(VkPresentModeKHR vk_present_mode)

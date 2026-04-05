@@ -217,8 +217,22 @@ VkFormat VkUtils::_vk_get_texture_format(GPU::TextureFormat texture_format)
         return VK_FORMAT_R8G8B8A8_SRGB;
     case GPU::TextureFormat::RGB8Srgb:
         return VK_FORMAT_R8G8B8_SRGB;
+    case GPU::TextureFormat::RG8Srgb:
+        return VK_FORMAT_R8G8_SRGB;
     case GPU::TextureFormat::R8Srgb:
         return VK_FORMAT_R8_SRGB;
+    case GPU::TextureFormat::RGBA8Unorm:
+        return VK_FORMAT_R8G8B8A8_UNORM;
+    case GPU::TextureFormat::RGB8Unorm:
+        return VK_FORMAT_R8G8B8_UNORM;
+    case GPU::TextureFormat::RG8Unorm:
+        return VK_FORMAT_R8G8_UNORM;
+    case GPU::TextureFormat::R8Unorm:
+        return VK_FORMAT_R8_UNORM;
+    case GPU::TextureFormat::BGRA8Srgb:
+        return VK_FORMAT_B8G8R8A8_SRGB;
+    case GPU::TextureFormat::BGRA8Unorm:
+        return VK_FORMAT_B8G8R8A8_UNORM;
     default:
         break;
     }

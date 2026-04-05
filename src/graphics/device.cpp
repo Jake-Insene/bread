@@ -73,7 +73,7 @@ void Device::destroy()
     GPU::device_destroy(gpu_device);
 }
 
-Ptr<SwapChain> Device::create_swap_chain(Window window, GPU::SurfaceFormat surface_format)
+Ptr<SwapChain> Device::create_swap_chain(Window window, GPU::TextureFormat surface_format)
 {
     Ptr<SwapChain> sc = _allocate_object<SwapChain>();
     sc.get()->init(allocator, this,

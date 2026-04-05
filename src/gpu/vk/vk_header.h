@@ -25,6 +25,12 @@ struct Vulkan
         VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
     };
 
+    struct AdditionalExtensionSupport
+    {
+        bool has_dynamic_rendering;
+        bool has_imageless_framebuffer;
+    };
+
     static StringView result_as_string(VkResult result)
     {
         return StringView(string_VkResult(result), __string_len(string_VkResult(result)));
@@ -48,11 +54,13 @@ struct Vulkan
     static VkSurfaceKHR create_surface(VkInstance instance, MemoryAddress native_handle);
     static void destroy_surface(VkInstance instance, VkSurfaceKHR surface);
     
-    static void check_device_extensions(VkPhysicalDevice physical_device);
+    static AdditionalExtensionSupport check_device_extensions(VkPhysicalDevice physical_device);
     static void check_device_features(VkPhysicalDevice physical_device);
 
-    static const char** get_device_extensions(VkPhysicalDevice physical_device, const mem::Allocator& allocator);
-    static VkPhysicalDeviceFeatures2* get_device_features(const mem::Allocator& allocator);
+    static const char** get_device_extensions(VkPhysicalDevice physical_device, const AdditionalExtensionSupport& add_ext, const mem::Allocator& allocator);
+    static VkPhysicalDeviceFeatures2* get_device_features(const AdditionalExtensionSupport& add_ext, const mem::Allocator& allocator);
+
+    static bool _has_extension(const Slice<VkExtensionProperties>& vk_device_extensions, const char* ext_name);
 
     /*
     * VK_ext_debug_utils

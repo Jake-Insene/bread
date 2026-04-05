@@ -22,6 +22,8 @@ struct CommandEncoder
     void begin_renderpass(const GPU::RenderPassBeginInfo& begin_info);
     void end_renderpass(const GPU::RenderPassEndInfo& end_info);
 
+    void texture_barrier(const GPU::PipelineTextureBarrier& barrier);
+
     void bind_pipeline(GPU::PipelineBindPoint bind_point, Pipeline& pipeline);
     void bind_set(GPU::PipelineBindPoint bind_point, Pipeline& pipeline, u32 base_set, const Slice<DescriptorSet>& sets);
     void bind_vertex_buffers(u32 base_binding, const Slice<Buffer>& buffers, const Slice<usize>& offsets);

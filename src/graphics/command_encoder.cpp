@@ -25,6 +25,11 @@ void CommandEncoder::end_renderpass(const GPU::RenderPassEndInfo& end_info)
     GPU::command_buffer_end_renderpass(command_buffer, end_info);
 }
 
+void CommandEncoder::texture_barrier(const GPU::PipelineTextureBarrier& barrier)
+{
+    GPU::command_buffer_texture_barrier(command_buffer, barrier);
+}
+
 void CommandEncoder::bind_pipeline(GPU::PipelineBindPoint bind_point, Pipeline& pipeline)
 {
     GPU::command_buffer_bind_pipeline(command_buffer, bind_point, pipeline.pipeline);

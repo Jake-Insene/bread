@@ -40,7 +40,7 @@ PipelineInfo Pipeline2D::make_default(const Pipeline2DInfo& info)
         },
         .constant_blocks = info.constant_blocks,
         .set_layout_infos = info.set_layout_infos,
-        .surface_format = info.surface_format,
+        .rendering_info = info.rendering_info,
     };
 }
 

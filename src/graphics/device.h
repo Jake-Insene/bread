@@ -39,7 +39,7 @@ struct Device
     void init(const mem::Allocator& _allocator, GPU::PhysicalDeviceID _gpu_physical_device);
     void destroy();
 
-    Ptr<SwapChain> create_swap_chain(Window window, GPU::SurfaceFormat surface_format);
+    Ptr<SwapChain> create_swap_chain(Window window, GPU::TextureFormat surface_format);
     Ptr<Fence> create_fence(bool signaled);
     Ptr<Semaphore> create_semaphore();
     Ptr<MemoryHeap> create_memory_heap(GPU::HeapUsage usage, usize size);

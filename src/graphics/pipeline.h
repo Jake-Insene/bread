@@ -19,7 +19,7 @@ struct PipelineInfo
     GPU::DepthStencilState depth_stencil_state;
 	Slice<const GPU::ConstantBlock> constant_blocks;
 	Slice<const GPU::DescriptorSetLayoutCreateInfo> set_layout_infos;
-    GPU::SurfaceFormat surface_format;
+    GPU::RenderingInfo rendering_info;
 };
 
 struct Pipeline : DeviceObject

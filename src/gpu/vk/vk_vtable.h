@@ -152,6 +152,10 @@ struct DeviceVulkanTable
 
     PFN_vkCmdBeginRenderPass2KHR vkCmdBeginRenderPass2KHR;
     PFN_vkCmdEndRenderPass2KHR vkCmdEndRenderPass2KHR;
+
+    PFN_vkCmdBeginRenderingKHR vkCmdBeginRenderingKHR;
+    PFN_vkCmdEndRenderingKHR vkCmdEndRenderingKHR;
+
     PFN_vkCmdPipelineBarrier vkCmdPipelineBarrier;
     PFN_vkCmdCopyBufferToImage vkCmdCopyBufferToImage;
     PFN_vkCmdCopyBuffer vkCmdCopyBuffer;

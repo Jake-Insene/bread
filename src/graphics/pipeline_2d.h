@@ -11,7 +11,7 @@ struct Pipeline2DInfo
     GPU::VertexInput vertex_input;
     Slice<const GPU::ConstantBlock> constant_blocks;
     Slice<const GPU::DescriptorSetLayoutCreateInfo> set_layout_infos;
-    GPU::SurfaceFormat surface_format;
+    GPU::RenderingInfo rendering_info;
 };
 
 struct Pipeline2D : Pipeline

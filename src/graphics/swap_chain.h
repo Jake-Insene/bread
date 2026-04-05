@@ -17,7 +17,7 @@ struct SwapChainInfo
     GPU::DeviceID gpu_device;
     Ptr<Queue> present_queue;
     Window window;
-    GPU::SurfaceFormat surface_format;
+    GPU::TextureFormat surface_format;
 };
 
 struct SwapChain : DeviceObject
@@ -32,7 +32,7 @@ struct SwapChain : DeviceObject
     GPU::DeviceID gpu_device;
     Ptr<Queue> present_queue;
     Window window;
-    GPU::SurfaceFormat surface_format;
+    GPU::TextureFormat surface_format;
     
     GPU::SwapChainID swap_chain;
     Array<ImageInfo> images;

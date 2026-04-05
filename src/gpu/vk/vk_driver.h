@@ -22,6 +22,33 @@ struct HashOfType<VkImage>
     }
 };
 
+struct VkDriverRenderPassKey
+{
+	GPU::TextureFormat format : 16;
+	GPU::LoadOp load_op : 4;
+	GPU::StoreOp store_op : 4;
+};
+
+template<>
+struct HashOfType<VkDriverRenderPassKey>
+{
+	// 0-15: texture format
+	// 16-19: load op
+	// 20-23: store op
+	[[nodiscard]] static constexpr u64 hashfunc(const VkDriverRenderPassKey& k)
+    {
+        return u64(k.format)
+			| (u64(k.load_op) << (16))
+			| u64(k.store_op) << (16 + 4);
+    }
+
+    [[nodiscard]] static constexpr bool compare(const VkDriverRenderPassKey& k1, const VkDriverRenderPassKey& k2)
+    {
+        return k1.format == k2.format
+			&& k1.load_op == k2.load_op
+			&& k1.store_op == k2.store_op;
+    }
+};
 
 struct VulkanDriver
 {
@@ -45,7 +72,8 @@ struct VulkanDriver
 		GPU::DeviceID device;
 	};
 
-	using RenderPassEntry = HashMap<VkFormat, RenderPassCache>::KeyValue;
+	// RenderPass Hash
+	using RenderPassEntry = HashMap<VkDriverRenderPassKey, RenderPassCache>::KeyValue;
 	using FramebufferEntry = HashMap<VkImageView, VkFramebuffer>::KeyValue;
 
 	struct LogicalDevice
@@ -56,6 +84,7 @@ struct VulkanDriver
 		VkPhysicalDeviceFeatures vk_physical_device_features;
 		VkPhysicalDeviceProperties vk_physical_device_properties;
 		VkPhysicalDeviceMemoryProperties vk_physical_device_memory_properties;
+		Vulkan::AdditionalExtensionSupport additional_extension_support;
 
 		struct QueueFamily
 		{
@@ -75,7 +104,7 @@ struct VulkanDriver
 		DeviceVulkanTable vk;
 
 		// device resources
-		HashMap<VkFormat, RenderPassCache> render_pass_cache;
+		HashMap<VkDriverRenderPassKey, RenderPassCache> render_pass_cache;
 
 		GPU::DeviceID device;
 	};
@@ -163,7 +192,10 @@ struct VulkanDriver
 		VkDevice vk_device;
 		VkImage vk_image;
 		VkImageView vk_image_view;
+		
 		VkFormat vk_format;
+
+		GPU::TextureFormat format;
 		Vector3U extent;
 
 		GPU::DeviceID device;
@@ -389,17 +421,17 @@ struct VulkanDriver
 
 	static void _get_physical_devices();
 	
-	static void _vk_get_surface_format(GPU::SurfaceFormat surface_format, VkFormat* vk_image_format, VkColorSpaceKHR* vk_color_space);
+	static void _vk_get_surface_format(GPU::TextureFormat surface_format, VkFormat* vk_image_format, VkColorSpaceKHR* vk_color_space);
 	static VkSurfaceCapabilitiesKHR _vk_get_surface_capabilities(VkPhysicalDevice vk_physical_device, VkSurfaceKHR vk_surface);
 	static VkExtent2D _vk_get_swap_chain_extent(const Vector2U& size, const VkSurfaceCapabilitiesKHR& vk_capabilities);
 
 	static VkShaderModule _vk_create_shader_module(LogicalDevice& ld, const GPU::ShaderStageInfo& shader_stage_info);
 
-	static RenderPassCache& _get_render_pass_for(LogicalDevice& ld, VkFormat format);
-	static void _get_render_pass_and_framebuffer_for(LogicalDevice& ld, const GPU::RenderPassBeginInfo& begin_info,
-		VkRenderPass* vk_render_pass, VkFramebuffer* vk_framebuffer);
+	static RenderPassCache& _get_render_pass_for(LogicalDevice& ld, Texture& texture, const GPU::RenderPassBeginInfo& begin_info);
+	static RenderPassCache& _get_render_pass_for_pipeline(LogicalDevice& ld, const GPU::RenderingInfo& pipeline_rendering_info);
+	static void _get_render_pass_and_framebuffer_for(LogicalDevice& ld, Texture& texture, 
+		const GPU::RenderPassBeginInfo& begin_info, VkRenderPass* vk_render_pass, VkFramebuffer* vk_framebuffer);
 
 	static GPU::DeviceType _vk_device_type_to_device_type(VkPhysicalDeviceType vk_device_type);
-	static GPU::SurfaceFormat _vk_surface_format_to_surface_format(VkSurfaceFormatKHR vk_surface_format);
 	static GPU::PresentMode _vk_present_mode_to_present_mode(VkPresentModeKHR vk_present_mode);
 };

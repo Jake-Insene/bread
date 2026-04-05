@@ -70,7 +70,7 @@ GPU::SwapChainID GPU::swap_chain_create(const SwapChainCreateInfo& ci)
     GPUFailOn(ci.device.is_valid() == false, "invalid device");
 	GPUFailOn(ci.surface.is_valid() == false, "invalid surface");
     GPUFailOn(ci.present_mode == GPU::PresentMode::Unknown, "invalid present mode");
-    GPUFailOn(ci.format == GPU::SurfaceFormat::Unknown, "invalid surface format");
+    GPUFailOn(ci.format == GPU::TextureFormat::Unknown, "invalid surface format");
     GPUFailOn(ci.min_image_count == 0, "invalid min image count");
 
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.swap_chain_create(ci));

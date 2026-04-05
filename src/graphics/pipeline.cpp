@@ -37,7 +37,7 @@ void Pipeline::init(const mem::Allocator& _allocator, Device* _parent, GPU::Devi
             .constant_blocks = info.constant_blocks,
             .set_layouts = set_layouts,
         },
-        .surface_format = info.surface_format,
+        .rendering_info = info.rendering_info,
     };
 
     pipeline = GPU::pipeline_create(pipeline_ci);
