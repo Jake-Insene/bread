@@ -196,7 +196,7 @@ struct Scene
     static Scene* _allocate_scene(const SceneClass* klass, const CreateInfo& info);
     
     template<typename T>
-        requires(IsBaseOf<Scene, T>)
+    requires(IsBaseOf<Scene, T>)
     [[nodiscard]] static T* create(const mem::Allocator& allocator)
     {
         CreateInfo info = 

@@ -3,6 +3,8 @@
 #include "math/transform_2d.h"
 
 
+struct SceneManager;
+
 struct Camera : Object
 {
     enum PositionMode
@@ -13,13 +15,11 @@ struct Camera : Object
 
     struct InternalData
     {
-        bool enable;
         Vector2 old_pos;
         f32 old_rot;
 
         PositionMode position_mode;
         Transform2D transform;
-
     } data;
 
     /*
@@ -56,7 +56,7 @@ struct Camera : Object
         return data.position_mode;
     }
     
-    [[nodiscard]] Transform2D get_camera_transform(f32 dt, bool update) Function(FunctionInternal);
+    [[nodiscard]] Transform2D get_camera_transform(const Vector2& viewport_size, f32 dt, bool update) Function(FunctionInternal);
 
     [[nodiscard]] Transform2D& get_transform() Function(FunctionNormal) { return data.transform;}
     void set_transform(const Transform2D& new_transform) Function(FunctionNormal);

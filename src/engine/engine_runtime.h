@@ -8,6 +8,7 @@
 #include "resource/sprite_animation.h"
 #include "resource/tile_set.h"
 #include "resource/material.h"
+#include "scene/scene_manager.h"
 #include "systems/system_manager.h"
 
 
@@ -69,6 +70,8 @@ struct EngineRuntime
     static constexpr usize DefaultMainQueueSize = 16;
     
     mem::GenericAllocator allocator;
+
+    SceneManager scene_manager;
     
     SystemManager system_manager;
 

@@ -8,6 +8,11 @@
 #include "math/color.h"
 
 
+namespace InternalGPU
+{
+	struct GPUAdapter;
+}
+
 
 struct GPU
 {
@@ -58,7 +63,10 @@ struct GPU
 	using CommandBufferID = ID<u32, struct _CommandBufferTag>;
 
     static void initialize(const mem::Allocator& allocator);
+    static void initialize_from_adapter(InternalGPU::GPUAdapter* adapter);
     static void shutdown();
+
+	static InternalGPU::GPUAdapter* get_adapter();
 
 	// ====== Enums ======
 

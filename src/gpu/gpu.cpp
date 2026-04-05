@@ -21,6 +21,11 @@ void GPU::initialize(const mem::Allocator& allocator)
 #endif
 }
 
+void GPU::initialize_from_adapter(InternalGPU::GPUAdapter *adapter)
+{
+	current_adapter = *adapter;
+}
+
 void GPU::shutdown()
 {
 	current_adapter.shutdown();
@@ -28,6 +33,11 @@ void GPU::shutdown()
 #if defined(BREAD_ENABLE_GPU_DEBUG_LAYER)
 	gpu_debug_layer.destroy();
 #endif
+}
+
+InternalGPU::GPUAdapter* GPU::get_adapter()
+{
+	return &current_adapter;
 }
 
 Slice<GPU::PhysicalDeviceID> GPU::physical_devices_enumerate()

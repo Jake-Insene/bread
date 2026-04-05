@@ -25,9 +25,10 @@ struct Audio
         VTFunc(void, shutdown);
     };
 
-    static inline VTable vtable;
-
     static void initialize(const mem::Allocator& allocator, DriverType driver);
+    static void initialize_from_adapter(const VTable* adapter);
     static void shutdown();
+
+    static VTable* get_adapter();
 };
 

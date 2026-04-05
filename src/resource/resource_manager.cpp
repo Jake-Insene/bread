@@ -10,7 +10,7 @@
 #include "resource/sound.h"
 #include "resource/sprite_animation.h"
 #include "resource/tile_set.h"
-#include "render/render_device.h"
+#include "render_device/render_device.h"
 
 #include <external/stb_image.h>
 

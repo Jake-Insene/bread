@@ -8,18 +8,18 @@
 #include "physics/physics_2d.h"
 
 
-void SceneManager::initialize(const mem::Allocator& allocator)
+void SceneManager::initialize(const mem::Allocator& _allocator)
 {
-    data.allocator = allocator;
+    allocator = _allocator;
 
-    data.current_scene = nullptr;
+    current_scene = nullptr;
     
-    data.last_time = f32(OS::get_time());
-    data.time_acum = 0;
-    data.delta_time = 0;
+    last_time = f32(OS::get_time());
+    time_acum = 0;
+    delta_time = 0;
     
-    data.fps_counter = 0;
-    data.fps_acum = 0;
+    fps_counter = 0;
+    fps_acum = 0;
     
     // TODO: touch focus.
 	// To avoid any out of range error in handle_input
@@ -28,46 +28,46 @@ void SceneManager::initialize(const mem::Allocator& allocator)
 
 void SceneManager::shutdown()
 {
-    if(data.current_scene)
+    if(current_scene)
     {
-		SceneCallRef(data.current_scene, on_exit);
-		SceneCallRef(data.current_scene, on_destroy);
-        data.allocator.free(mem::to_bytes(Slice<Scene>(data.current_scene, 1)));
+		SceneCallRef(current_scene, on_exit);
+		SceneCallRef(current_scene, on_destroy);
+        allocator.free(mem::to_bytes(Slice<Scene>(current_scene, 1)));
     }
 }
 
 void SceneManager::change_scene(Scene* new_scene)
 {
     DebugAssert(new_scene != nullptr, "new scene can't be null");
-    DebugAssert(data.change_scene.requested == false, "a change scene was already requested");
+    DebugAssert(change_scene_info.requested == false, "a change scene was already requested");
 
-    if (data.current_scene == nullptr)
+    if (current_scene == nullptr)
     {
-        data.current_scene = new_scene;
-        SceneCallRef(data.current_scene, on_enter);
+        current_scene = new_scene;
+        SceneCallRef(current_scene, on_enter);
         return;
     }
 
-    data.change_scene.requested = true;
-    data.change_scene.new_scene = new_scene;
+    change_scene_info.requested = true;
+    change_scene_info.new_scene = new_scene;
 }
 
 void SceneManager::step()
 {
-    if (data.current_scene == nullptr)
+    if (current_scene == nullptr)
         return;
 
     _handle_change_scene();
 
     f32 current = f32(OS::get_time());
-    data.delta_time = current - data.last_time;
-    data.last_time = current;
+    delta_time = current - last_time;
+    last_time = current;
 
-    data.time_acum += data.delta_time;
-    if (data.time_acum >= 1.0)
+    time_acum += delta_time;
+    if (time_acum >= 1.0)
     {
-        data.fps_counter = data.fps_acum;
-        Engine::local_data.engine_runtime->fps = data.fps_counter;
+        fps_counter = fps_acum;
+        Engine::local_data.engine_runtime->fps = fps_counter;
         Log::info(
             "Frame Info: FPS: {}\n"
             "\tAvg Frame Time: {}\n"
@@ -77,45 +77,45 @@ void SceneManager::step()
             "\tRender Time: {}\n"
             "\tRender Scene: {}\n"
             "\tPresent Scene Time: {}",
-            data.fps_counter, data.delta_time, data.debug_time.internal_update_time,
-            data.debug_time.update_time, data.debug_time.physics_2d_time, 
-            data.debug_time.render_time, data.debug_time.render_scene_time,
-            data.debug_time.present_scene_time
+            fps_counter, delta_time, debug_time.internal_update_time,
+            debug_time.update_time, debug_time.physics_2d_time, 
+            debug_time.render_time, debug_time.render_scene_time,
+            debug_time.present_scene_time
         );
 
-        data.fps_acum = 0;
-        data.time_acum = 0;
+        fps_acum = 0;
+        time_acum = 0;
     }
 
     {
         PROFILE_SCOPE(
-            data.debug_time.internal_update_time = duration;
+            debug_time.internal_update_time = duration;
         );
      
-        SceneCallRef(data.current_scene, on_internal_update, data.delta_time);
+        SceneCallRef(current_scene, on_internal_update, delta_time);
     }
 
     {
         PROFILE_SCOPE(
-            data.debug_time.update_time = duration;
+            debug_time.update_time = duration;
         );
 
-        SceneCallRef(data.current_scene, on_update, data.delta_time);
+        SceneCallRef(current_scene, on_update, delta_time);
     }
 
     {
         PROFILE_SCOPE(
-            data.debug_time.physics_2d_time = duration;
+            debug_time.physics_2d_time = duration;
         );
-        Physics2D::step(data.delta_time);
+        Physics2D::step(delta_time);
     }
 
     {
         PROFILE_SCOPE(
-            data.debug_time.render_time = duration;
+            debug_time.render_time = duration;
         );
 
-        SceneCallRef(data.current_scene, on_render, data.delta_time);
+        SceneCallRef(current_scene, on_render, delta_time);
     }
 
     if(!Engine::get_configuration().enable_custom_rendering)
@@ -123,7 +123,7 @@ void SceneManager::step()
         _render_manager_tick();
     }
 
-    data.fps_acum++;
+    fps_acum++;
 
     _handle_object_mark_changed();
 }
@@ -136,25 +136,25 @@ void SceneManager::recreate_window()
     }
 }
 
-void SceneManager::set_keep_viewport(bool keep_viewport)
+void SceneManager::set_keep_viewport(bool _keep_viewport)
 {
-    if (data.keep_viewport == keep_viewport)
+    if (keep_viewport == _keep_viewport)
         return;
 
-    data.keep_viewport = keep_viewport;
+    keep_viewport = _keep_viewport;
 }
 
 void SceneManager::set_viewport_size(const Vector2I& new_vp_size)
 {
-    if (data.viewport_size == new_vp_size)
+    if (viewport_size == new_vp_size)
         return;
 
-    data.viewport_size = new_vp_size;
+    viewport_size = new_vp_size;
 }
 
 void SceneManager::scene_handle_event(const InputEvent& event)
 {
-    if (data.current_scene == nullptr)
+    if (current_scene == nullptr)
         return;
 
     switch (event.type)
@@ -166,7 +166,7 @@ void SceneManager::scene_handle_event(const InputEvent& event)
         new_event = et;
 
         new_event.position = _screen_make_local_to_canvas(et.position);
-        SceneCallRef(data.current_scene, on_event, new_event);
+        SceneCallRef(current_scene, on_event, new_event);
     }
     break;
     case InputEventType::MouseButton:
@@ -176,12 +176,12 @@ void SceneManager::scene_handle_event(const InputEvent& event)
         new_event = et;
 
         new_event.position = _screen_make_local_to_canvas(et.position);
-        SceneCallRef(data.current_scene, on_event, new_event);
+        SceneCallRef(current_scene, on_event, new_event);
     }
     break;
     default:
     {
-        SceneCallRef(data.current_scene, on_event, event);
+        SceneCallRef(current_scene, on_event, event);
     }
         break;
     }
@@ -191,30 +191,30 @@ void SceneManager::_render_manager_tick()
 {
     {
         PROFILE_SCOPE(
-            data.debug_time.render_scene_time = duration;
+            debug_time.render_scene_time = duration;
         );
     }
 
     {
         PROFILE_SCOPE(
-            data.debug_time.present_scene_time = duration;
+            debug_time.present_scene_time = duration;
         );
     }
 }
 
 void SceneManager::_handle_change_scene()
 {
-    if (data.change_scene.requested == false)
+    if (change_scene_info.requested == false)
         return;
 
-    data.change_scene.requested = false;
-    SceneCallRef(data.current_scene, on_exit);
-    SceneCallRef(data.current_scene, on_destroy);
-    data.allocator.free(mem::to_bytes(Slice<Scene>(data.current_scene, 1)));
+    change_scene_info.requested = false;
+    SceneCallRef(current_scene, on_exit);
+    SceneCallRef(current_scene, on_destroy);
+    allocator.free(mem::to_bytes(Slice<Scene>(current_scene, 1)));
 
-    data.current_scene = data.change_scene.new_scene;
-    data.change_scene.new_scene = nullptr;
-    SceneCallRef(data.current_scene, on_enter);
+    current_scene = change_scene_info.new_scene;
+    change_scene_info.new_scene = nullptr;
+    SceneCallRef(current_scene, on_enter);
 }
 
 Vector2 SceneManager::_screen_make_local_to_canvas(const Vector2& pos)

@@ -1,8 +1,8 @@
-#include "render/core/gpu_resource_manager.h"
+#include "render_device/core/gpu_resource_manager.h"
 
 #include "engine/engine.h"
-#include "render/core/gpu_memory_allocator.h"
-#include "render/render_device.h"
+#include "render_device/core/gpu_memory_allocator.h"
+#include "render_device/render_device.h"
 
 
 

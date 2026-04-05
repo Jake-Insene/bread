@@ -133,7 +133,10 @@ struct Physics2D
     static inline InternalData data = {};
 
     static void initialize(const mem::Allocator& allocator, DriverType driver);
+    static void initialize_from_adapter(VTable* adapter);
     static void shutdown();
+    
+    static VTable* get_adapter();
 
     static void step(f32 dt);
 

@@ -14,70 +14,65 @@ struct SceneManager
         Scene* child;
     };
 
-    struct InternalData
+    mem::Allocator allocator;
+
+    bool keep_viewport;
+    
+    Vector2I viewport_size;
+    //Viewport main_viewport;
+
+    Scene* current_scene;
+
+    struct
     {
-        mem::Allocator allocator;
+        f64 internal_update_time;
+        f64 update_time;
+        f64 physics_2d_time;
+        f64 render_time;
+        f64 render_scene_time;
+        f64 present_scene_time;
+    } debug_time;
+
+    f32 last_time;
+    f32 time_acum;
+    f32 delta_time;
+
+    i32 fps_counter;
+    i32 fps_acum;
+
+    struct
+    {
+        bool requested;
+        Scene* new_scene;
+    } change_scene_info;
     
-        bool keep_viewport;
-        
-        Vector2I viewport_size;
-        //Viewport main_viewport;
+    f32 get_delta_time() { return delta_time; }
 
-        Scene* current_scene;
+    void initialize(const mem::Allocator& _allocator);
+    void shutdown();
     
-        struct
-        {
-            f64 internal_update_time;
-            f64 update_time;
-            f64 physics_2d_time;
-            f64 render_time;
-            f64 render_scene_time;
-            f64 present_scene_time;
-        } debug_time;
-
-        f32 last_time;
-        f32 time_acum;
-        f32 delta_time;
+    void change_scene(Scene* new_scene);
     
-        i32 fps_counter;
-        i32 fps_acum;
+    void step();
 
-        struct
-        {
-            bool requested;
-            Scene* new_scene;
-        } change_scene;
-    };
+    void recreate_window();
+
+    void set_keep_viewport(bool _keep_viewport);
+    bool get_keep_viewport() { return keep_viewport; }
+
+    void set_viewport_size(const Vector2I& new_vp_size);
+    Vector2I get_viewport_size() { return viewport_size; }
+
+    void scene_handle_event(const InputEvent& event);
     
-    static inline InternalData data;
-    
-    static f32 get_delta_time() { return data.delta_time; }
+    void _render_manager_tick();
 
-    static void initialize(const mem::Allocator& allocator);
-    static void shutdown();
-    
-    static void change_scene(Scene* new_scene);
-    
-    static void step();
+    void _handle_change_scene();
 
-    static void recreate_window();
+    Vector2 _screen_make_local_to_canvas(const Vector2& pos);
 
-    static void set_keep_viewport(bool keep_viewport);
-    static bool get_keep_viewport() { return data.keep_viewport; }
-
-    static void set_viewport_size(const Vector2I& new_vp_size);
-    static Vector2I get_viewport_size() { return data.viewport_size; }
-
-    static void scene_handle_event(const InputEvent& event);
-    
-    static void _render_manager_tick();
-
-    static void _handle_change_scene();
-
-    static Vector2 _screen_make_local_to_canvas(const Vector2& pos);
-
-    static void _remove_object_from_list(Scene* scene);
-    static void _handle_object_mark_changed();
-    static void _queue_free(Scene* parent, Scene* scene);
-    static void _update_object_mark(Scene::MarkName mark_name, Scene* scene, bool marked);
+    void _remove_object_from_list(Scene* scene);
+    void _handle_object_mark_changed();
+    void _queue_free(Scene* parent, Scene* scene);
+    void _update_object_mark(Scene::MarkName mark_name, Scene* scene, bool marked);
 };

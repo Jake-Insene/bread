@@ -1,6 +1,6 @@
 #pragma once
 #include "gpu/gpu.h"
-#include "render/core/gpu_memory_allocator_types.h"
+#include "render_device/core/gpu_memory_allocator_types.h"
 
 
 struct GPUTextureResourceCreateInfo

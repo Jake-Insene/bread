@@ -4,10 +4,17 @@
 
 
 #define PROFILE_SCOPE(...) \
-	struct __ProfileScopeObject##__LINE__\
+	auto Concat(func, __LINE__) = [&](f64 duration) -> void\
+	{\
+		__VA_ARGS__\
+	};\
+	using Concat(FuncType, __LINE__) = decltype(Concat(func, __LINE__));\
+	struct Concat(__ProfileScopeObject, __LINE__)\
 	{\
 		f64 start;\
-		__ProfileScopeObject##__LINE__() { start = OS::get_time(); }\
-		~__ProfileScopeObject##__LINE__() { f64 duration = OS::get_time() - start; __VA_ARGS__ }\
+		Concat(FuncType, __LINE__) func;\
+		Concat(__ProfileScopeObject, __LINE__)(Concat(FuncType, __LINE__) _func) : func(_func) { start = OS::get_time(); }\
+		~Concat(__ProfileScopeObject, __LINE__)() { f64 duration = OS::get_time() - start; func(duration); }\
 	};\
-	__ProfileScopeObject##__LINE__ __ps##__LINE__ = __ProfileScopeObject##__LINE__();
+	Concat(__ProfileScopeObject, __LINE__) Concat(__ps, __LINE__)\
+		= Concat(__ProfileScopeObject, __LINE__)(Concat(func, __LINE__));

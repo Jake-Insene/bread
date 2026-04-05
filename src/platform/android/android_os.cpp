@@ -7,6 +7,8 @@
 
 void AndroidOS::initialize(const mem::Allocator& allocator)
 {
+    data.allocator = allocator;
+
     data.threads = FreeList<ThreadData,OS::ThreadID>::with_size(allocator, InitialThreadCount);
     data.mutexes = FreeList<MutexData, OS::MutexID>::with_size(allocator, InitialMutexCount);
 
@@ -52,7 +54,16 @@ void AndroidOS::unload_library(MemoryAddress library)
 
 OS::VoidFunction AndroidOS::get_proc_address(MemoryAddress library, StringView symbol_name)
 {
-    return reinterpret_cast<OS::VoidFunction>(dlsym(reinterpret_cast<void*>(library), symbol_name.ptr()));
+    Slice<char> chars = get_allocator().array<char>(symbol_name.len + 1);
+    mem::copy(chars, symbol_name);
+    chars[chars.len-1] = 0;
+
+    OS::VoidFunction func = reinterpret_cast<OS::VoidFunction>(
+        dlsym(reinterpret_cast<void*>(library), chars.ptr())
+    );
+
+    get_allocator().free(mem::to_bytes(chars));
+    return func;
 }
 
 

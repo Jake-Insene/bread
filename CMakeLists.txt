@@ -97,14 +97,11 @@ file(GLOB ENGINE_SRC
     
     src/platform/intrinsics.cpp
 
-    src/render/render_device.cpp
+    src/render_device/render_device.cpp
     
-    src/render/core/gpu_material_manager.cpp
-    src/render/core/gpu_memory_allocator.cpp
-    src/render/core/gpu_resource_manager.cpp
-    
-    src/render/renderer/render_material_manager.cpp
-    src/render/renderer/renderer.cpp
+    src/render_device/core/gpu_material_manager.cpp
+    src/render_device/core/gpu_memory_allocator.cpp
+    src/render_device/core/gpu_resource_manager.cpp
     
     src/resource/font.cpp
     src/resource/image.cpp

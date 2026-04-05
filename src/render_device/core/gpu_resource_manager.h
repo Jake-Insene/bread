@@ -1,7 +1,7 @@
 #pragma once
 #include "collections/free_list.h"
-#include "render/resource/gpu_resource_types.h"
-#include "render/resource/gpu_texture_resource.h"
+#include "render_device/resource/gpu_resource_types.h"
+#include "render_device/resource/gpu_texture_resource.h"
 
 
 struct RenderDevice;

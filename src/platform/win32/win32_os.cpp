@@ -39,6 +39,8 @@ static inline DWORD WINAPI _thread_handler(void* _arg)
 
 void Win32OS::initialize(const mem::Allocator& allocator)
 {
+    data.allocator = allocator;
+    
     // For get_time()
     LARGE_INTEGER platform_time;
     QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&data.frequency));
@@ -99,9 +101,16 @@ void Win32OS::unload_library(MemoryAddress library)
 
 OS::VoidFunction Win32OS::get_proc_address(MemoryAddress library, StringView symbol_name)
 {
-    return reinterpret_cast<OS::VoidFunction>(
-        GetProcAddress(reinterpret_cast<HMODULE>(library), symbol_name.ptr())
+    Slice<char> chars = get_allocator().array<char>(symbol_name.len + 1);
+    mem::copy(chars, symbol_name);
+    chars[chars.len-1] = 0;
+
+    OS::VoidFunction func = reinterpret_cast<OS::VoidFunction>(
+        GetProcAddress(reinterpret_cast<HMODULE>(library), chars.ptr())
     );
+
+    get_allocator().free(mem::to_bytes(chars));
+    return func;
 }
 
 Slice<u8> Win32OS::map_memory(usize memory_size, OS::MapAccess access)

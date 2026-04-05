@@ -3,7 +3,7 @@
 #endif
 
 #include "systems/system.h"
-#include "render/render_device.h"
+#include "render_device/render_device.h"
 #include "resource/resource_manager.h"
 
 SystemInfo _system_infos[] =

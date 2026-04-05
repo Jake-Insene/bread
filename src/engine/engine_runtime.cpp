@@ -52,28 +52,28 @@ void EngineRuntime::initialize()
 
     Audio::initialize(allocator_ref, Audio::DriverType::Default);
 
-    SceneManager::initialize(allocator_ref);
+    scene_manager.initialize(allocator_ref);
     Physics2D::initialize(allocator_ref, Physics2D::DEFAULT_DRIVER);
 
     // Initialize subsystems first
     system_manager.allocate_systems(__get_requested_systems__());
 
     main_window.set_size(__configuration__.viewport_size);
-    SceneManager::set_keep_viewport(__configuration__.keep_viewport);
-    SceneManager::set_viewport_size(__configuration__.viewport_size);
+    scene_manager.set_keep_viewport(__configuration__.keep_viewport);
+    scene_manager.set_viewport_size(__configuration__.viewport_size);
     set_vsync(__configuration__.vsync);
     
     __preload__();
 
     // Entry point for app
-    SceneManager::change_scene(__configuration__.create_main_scene(allocator_ref));
+    scene_manager.change_scene(__configuration__.create_main_scene(allocator_ref));
 
     can_tick = true;
 }
 
 void EngineRuntime::shutdown()
 {
-    SceneManager::shutdown();
+    scene_manager.shutdown();
 
     system_manager.deallocate_systems();
 
@@ -98,8 +98,9 @@ void EngineRuntime::step()
 {
     if(can_tick == false)
         return;
+    
     system_manager.tick();
-    SceneManager::step();
+    scene_manager.step();
     main_queue.run();
 }
 
@@ -119,14 +120,14 @@ void EngineRuntime::handle_event(const InputEvent& event)
     }
     
     system_manager.tick_event(event);
-    SceneManager::scene_handle_event(event);
+    scene_manager.scene_handle_event(event);
 }
 
 void EngineRuntime::request_recreate_window()
 {
-    main_queue.add_job([]() 
+    main_queue.add_job([&]() 
         {
-            SceneManager::recreate_window();
+            scene_manager.recreate_window();
         }
     );
 }

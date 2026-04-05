@@ -5,7 +5,7 @@
 #include "graphics/buffer.h"
 #include "graphics/memory_heap.h"
 #include "mem/allocator.h"
-#include "render/core/gpu_memory_allocator_types.h"
+#include "render_device/core/gpu_memory_allocator_types.h"
 
 
 struct RenderDevice;

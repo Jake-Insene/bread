@@ -7,7 +7,6 @@ void Camera::init(const CreateInfo& info)
 {
     Object::init(info);
 
-    data.enable = false;
     data.old_pos = Vector2();
     data.old_rot = 0.f;
     data.position_mode = POSITION_TOP_LEFT;
@@ -19,7 +18,7 @@ void Camera::init(const CreateInfo& info)
 void Camera::deinit()
 {}
 
-Transform2D Camera::get_camera_transform(f32 dt, bool update)
+Transform2D Camera::get_camera_transform(const Vector2& viewport_size, f32 dt, bool update)
 {
     const Transform2D camera_transform = data.transform;
     const Vector2 camera_scale = camera_transform.get_scale();
@@ -49,7 +48,7 @@ Transform2D Camera::get_camera_transform(f32 dt, bool update)
         if (!update)
             break;
 
-        const Vector2 display_size = Vector2(SceneManager::get_viewport_size());
+        const Vector2 display_size = viewport_size;
         Vector2 centered_pos = camera_position;
         centered_pos -= (Vector2(display_size.x, -display_size.y) * 0.5);
 
