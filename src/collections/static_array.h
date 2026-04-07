@@ -1,5 +1,4 @@
 #pragma once
-#include "core/types.h"
 #include "collections/base_iterator.h"
 #include "mem/utils.h"
 
@@ -47,6 +46,11 @@ struct [[nodiscard]] StaticArrayIterator : BaseIterator<T>
     }
 };
 
+
+/*
+* A collection of limited linear memory that contains items of type T.
+* You can add/remove/modify items.
+*/
 template<typename T, usize N>
 struct [[nodiscard]] StaticArray
 {
@@ -58,14 +62,14 @@ struct [[nodiscard]] StaticArray
 
     static constexpr StaticArray with_count(usize item_count)
     {
-        return StaticArray
+        return
         {
             .items = {},
             .count = item_count
         };
     }
 
-    static constexpr StaticArray from_items(Slice<T> items)
+    static constexpr StaticArray from_items(Slice<Type> items)
     {
 		DebugAssert(N >= items.len, "Static Array size is too small for the provided items");
         StaticArray array =
@@ -73,7 +77,7 @@ struct [[nodiscard]] StaticArray
             .count = items.len,
         };
 
-        Slice<T> dest = Slice(array.items, N);
+        Slice<Type> dest = Slice(array.items, N);
         mem::copy(dest, items);
         return array;
     }
@@ -89,8 +93,8 @@ struct [[nodiscard]] StaticArray
             .count = ListLen,
         };
 
-        const T list_array[] = { list... };
-        Slice<T> dest = Slice(array.items, N);
+        const Type list_array[] = { list... };
+        Slice<Type> dest = Slice(array.items, N);
         mem::copy(dest, Slice(list_array, ListLen));
 
         return array;
@@ -99,7 +103,11 @@ struct [[nodiscard]] StaticArray
     template<typename Self>
     constexpr Iterator iter(this Self& self)
     {
-        return Iterator{ .base = self.items, .extent = self.count };
+        return
+        {
+            .base = self.items,
+            .extent = self.count,
+        };
     }
 
     [[nodiscard]] constexpr bool is_empty() const { return count == 0; }
@@ -118,48 +126,48 @@ struct [[nodiscard]] StaticArray
         return items[count++];
     }
 
-    constexpr void add_slice(Slice<T> new_items)
+    constexpr void add_slice(Slice<Type> new_items)
     {
 		DebugAssert(count + new_items.len <= N, "StaticArray is full, cannot add more items");
         usize _count = count;
-        Slice<T> dest = items.add(_count);
+        Slice<Type> dest = items.add(_count);
         mem::copy(dest, new_items);
         count += new_items.len;
     }
 
-    constexpr void replace(Slice<T> new_items)
+    constexpr void replace(Slice<Type> new_items)
     {
 		DebugAssert(new_items.len <= N, "StaticArray is too small for the provided items");
-        Slice<T> dest = Slice(items, N);
+        Slice<Type> dest = Slice(items, N);
         mem::copy(dest, new_items);
     }
 
-    constexpr void remove(usize index)
+    constexpr void remove_at(usize index)
     {
         DebugAssert(index < count && count != 0, "index out of range");
-        if (count == 1)
+        DestructObject(items[index]);
+
+        if (count == 1 || index == count - 1)
         {
             count--;
+            return;
         }
-        else
-        {
-            count--;
-            Slice<T> dest = Slice(items, N);
-            Slice<T> src = Slice(items, N);
-            mem::copy(dest.add(index), src.add(index + 1));
-        }
+
+        count--;
+        Slice<Type> dest = Slice(items, N);
+        Slice<Type> src = Slice(items, N);
+        mem::copy(dest.add(index), src.add(index + 1));
     }
 
-    constexpr void remove_equal(const T& item)
+    constexpr void remove(const T& item)
     {
-        for (usize i = 0; i < count; i++)
+        auto it = iter().find(item);
+        if (it == iter().end())
         {
-            if (items[i] == item)
-            {
-                remove(i);
-                return;
-            }
+            return;
         }
+
+        remove_at(iter().distance(it));
     }
 
     constexpr void clear()
@@ -167,5 +175,10 @@ struct [[nodiscard]] StaticArray
         count = 0;
     }
 
-    constexpr Slice<T> slice() { return Slice(items.items, count); }
+    constexpr Slice<Type> slice() { return Slice(items.items, count); }
+
+    StaticArray copy() const
+    {
+        return StaticArray::from_items(slice());
+    }
 };

@@ -26,12 +26,12 @@ struct [[nodiscard]] JobQueue
 	void destroy();
 
 	template<typename Fn>
-	void add_job(Fn fn)
+	void add_job(Fn _job)
 	{
 		Fn* fn_mem = reinterpret_cast<Fn*>(
 			allocator.alloc(sizeof(Fn), alignof(usize)).ptr()
 		);
-		ConstructObject(*fn_mem, fn);
+		ConstructObject(*fn_mem, _job);
 
 		JobInfo job =
 		{

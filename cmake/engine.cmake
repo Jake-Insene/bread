@@ -71,6 +71,11 @@ else()
         "-Wno-language-extension-token" "-Wno-gnu-anonymous-struct" "-Wno-error=gnu-anonymous-struct"
         "-Wuninitialized" "-Wconditional-uninitialized" "-Wno-strict-prototypes"
     )
+    if(BREAD_BUILD_TYPE STREQUAL "debugbuild")
+        set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS}
+            "-fsanitize=undefined" "-fsanitize-trap=all"
+        )
+    endif()
     if(NOT ANDROID)
         set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS}
             "-fuse-ld=lld-link" "-flto"

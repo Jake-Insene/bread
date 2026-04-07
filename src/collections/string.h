@@ -68,11 +68,7 @@ struct [[nodiscard]] String
     void add(T&& arg)
     {
         using TypeNoCR = RemoveConst<RemoveReference<T>>;
-        if constexpr (IsSame<TypeNoCR, StringView>)
-        {
-            _add_str_view(arg);
-        }
-        else if constexpr (IsArrayOf<T, char>)
+        if constexpr (IsSame<TypeNoCR, StringView> || IsArrayOf<T, char>)
         {
             _add_str_view(arg);
         }

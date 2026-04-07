@@ -8,7 +8,7 @@
 
 String String::with_allocator(const mem::Allocator& allocator)
 {
-    return String
+    return
     {
         .allocator = allocator,
         .chars = {},
@@ -18,7 +18,7 @@ String String::with_allocator(const mem::Allocator& allocator)
 
 String String::with_size(const mem::Allocator& allocator, usize size)
 {
-    return String
+    return
     {
         .allocator = allocator,
         .chars = mem::from_bytes<char>(allocator.alloc(size, alignof(usize))),
@@ -28,15 +28,15 @@ String String::with_size(const mem::Allocator& allocator, usize size)
 
 String String::from_chars(const mem::Allocator& allocator, StringView chars)
 {
-    String s = String::with_size(allocator, chars.len);
+    String str = String::with_size(allocator, chars.len);
     
     if(chars.len != 0)
     {
-        mem::copy(s.chars, chars);
-        s.count = chars.len;
+        mem::copy(str.chars, chars);
+        str.count = chars.len;
     }
     
-    return s;
+    return str;
 }
 
 void String::destroy()
@@ -134,7 +134,9 @@ void String::_set_from_float(f64 fp)
 void String::_add_str_view(StringView str)
 {
     if (str.len == 0)
+    {
         return;
+    }
 
     usize old_count = count;
     resize(count + str.len);

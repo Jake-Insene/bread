@@ -31,7 +31,7 @@ void JobQueue::run()
 {
 	mutex.lock();
 
-	while (job_stack.is_empty() == false)
+	while (job_stack.is_empty())
 	{
 		JobInfo job = job_stack.pop();
 		job.func(job.arg);

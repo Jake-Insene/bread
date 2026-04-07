@@ -24,7 +24,7 @@ void GenericAllocator::destroy()
     }
     
     Log::debug("[Memory]: Allocated pages {}, total memory usage of {} MB",
-        page_count, f32(accumulator) / (1024*1024));
+        page_count, f32(accumulator) / MiB(1));
   
     for(usize i = 0; i < page_count; i++)
     {
@@ -69,7 +69,7 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
     {
         FailOn(allocated_pages.len >= MaxPageCount, "allocator reaches its limit!");
         
-        usize new_size = allocated_pages.len + allocated_pages.len / 2;
+        usize new_size = allocated_pages.len + (allocated_pages.len / 2);
         if(internal_allocator.realloc(mem::to_bytes(allocated_pages), sizeof(Page) * new_size, alignof(Page)))
         {
             allocated_pages.len = new_size;
@@ -149,7 +149,7 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
     };
 }
         
-bool GenericAllocator::realloc(Slice<u8> ptr, usize new_size, usize alignment)
+bool GenericAllocator::realloc(const Slice<u8>& ptr, usize new_size, usize alignment)
 {
     DebugAssert(alignment == mem::align_up<usize>(alignment, 2), "alignment must be a power of 2");
     DebugAssert(ptr.ptr(), "invalid pointer");
@@ -159,20 +159,17 @@ bool GenericAllocator::realloc(Slice<u8> ptr, usize new_size, usize alignment)
     
     _check_integrity();
     
-    if(mem::align_up(new_size, alignment) <= header->len)
-        return true;
-
-    return false;
+    return mem::align_up(new_size, alignment) <= header->len;
 }
         
-void GenericAllocator::free(Slice<u8> ptr)
+void GenericAllocator::free(const Slice<u8>& ptr)
 {
     DebugAssert(ptr.ptr() != nullptr, "can't delete a null pointer");
     
     Header* header = get_header(ptr);
     DebugAssert(header->tags & Allocated, "the given block is already free.");
     
-    header->tags = None;
+    header->tags = HeaderTags(0);
 
     // TODO: Investigate page corruption.
     if(header && header->prev && header->prev->tags == 0)
@@ -180,7 +177,9 @@ void GenericAllocator::free(Slice<u8> ptr)
         header->prev->len += header->len + sizeof(Header);
         header->prev->next = header->next;
         if (header->next)
+        {
             header->next->prev = header->prev;
+        }
         header = header->prev;
     }
     else if(header && header->next && header->next->tags == 0)
@@ -188,13 +187,15 @@ void GenericAllocator::free(Slice<u8> ptr)
         header->len += header->next->len + sizeof(Header);
         header->next = header->next->next;
         if (header->next)
+        {
             header->next->prev = header;
+        }
     }
 
     _check_integrity();
 }
 
-usize GenericAllocator::get_size_of(Slice<u8> ptr) const
+usize GenericAllocator::get_size_of(const Slice<u8>& ptr) const
 {
     DebugAssert(ptr.ptr() != nullptr, "can't delete a null pointer");
     
@@ -290,11 +291,15 @@ GenericAllocator::Header* GenericAllocator::_search_for_available_space(usize al
             
             if (remain >= MinimumValidRemain)
             {
-                u8* remain_base = reinterpret_cast<u8*>(usize(aligned_base) + aligned_size);
+                u8* remain_base = reinterpret_cast<u8*>(aligned_base + aligned_size);
+                u8* aligned_remain_base = reinterpret_cast<u8*>(
+                    mem::align_up(usize(remain_base), usize(DefaultAlignmentForRemain))
+                );
 
-                Header* remain_header = reinterpret_cast<Header*>(remain_base);
+                const usize offset = aligned_remain_base - remain_base;
+                Header* remain_header = reinterpret_cast<Header*>(aligned_remain_base);
 
-                remain_header->len = remain - sizeof(Header);
+                remain_header->len = remain - offset - sizeof(Header);
                 remain_header->page_index = allocated_mem->page_index;
                 remain_header->tags = 0;
                 index++;
@@ -302,7 +307,7 @@ GenericAllocator::Header* GenericAllocator::_search_for_available_space(usize al
                 remain_header->prev = allocated_mem;
                 remain_header->next = allocated_mem->next;
 
-                allocated_mem->len = aligned_size;
+                allocated_mem->len = aligned_size + offset;
                 allocated_mem->next = remain_header;
 
                 if (remain_header->next)

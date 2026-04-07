@@ -49,9 +49,9 @@ struct [[nodiscard]] HashMap
     MapEntry* first;
     MapEntry* last;
     
-    static HashMap<K, V> with_allocator(const mem::Allocator& allocator)
+    static HashMap with_allocator(const mem::Allocator& allocator)
     {
-        return HashMap
+        return
         {
             .allocator = allocator,
             .entries = {},
@@ -61,9 +61,9 @@ struct [[nodiscard]] HashMap
         };
     }
     
-    static HashMap<K, V> with_size(const mem::Allocator& allocator, const usize size)
+    static HashMap with_size(const mem::Allocator& allocator, const usize size)
     {
-        return HashMap
+        return
         {
             .allocator = allocator,
             .entries = allocator.array<MapEntry*>(size),
@@ -75,20 +75,22 @@ struct [[nodiscard]] HashMap
     
     void destroy()
     {
-        if (entries.ptr())
+        if(entries.ptr() == nullptr)
         {
-            for (MapEntry* entry : entries)
-            {
-                if (entry != nullptr)
-                {
-                    allocator.free(mem::to_bytes(Slice<MapEntry>(entry, 1)));
-                }
-            }
-            allocator.free(mem::to_bytes(entries));
-            entries = {};
+            return;
         }
+
+        for(MapEntry* entry : entries)
+        {
+            if(entry != nullptr)
+            {
+                allocator.free(mem::to_bytes(Slice<MapEntry>(entry, 1)));
+            }
+        }
+        allocator.free(mem::to_bytes(entries));
+        entries = {};
     }
-    
+
     Iterator iter() const { return Iterator{ .entry = first }; }
 
     void resize(usize new_size)
@@ -193,7 +195,7 @@ struct [[nodiscard]] HashMap
         entry->hash = InvalidHash;
         count--;
     }
-  
+
     void clear()
     {
         for (MapEntry* entry : entries)
@@ -213,9 +215,9 @@ struct [[nodiscard]] HashMap
         u64 i = hash & (entries.len - 1);
         usize dist = 0;
 
-        while (true)
+        while(true)
         {
-            if (dist >= entries.len)
+            if(dist >= entries.len)
             {
                 return false;
             }
@@ -256,66 +258,65 @@ struct [[nodiscard]] HashMap
             entries[pos]->kv.second = value;
             return entries[pos];
         }
-        else
+
+        usize i = hash & (entries.len - 1);
+        while(true)
         {
-            usize i = hash & (entries.len - 1);
-            while (true)
+            if(entries[i] == nullptr)
             {
-                if (entries[i] == nullptr)
+                MapEntry* entry = mem::from_bytes<MapEntry>(
+                    allocator.alloc(sizeof(MapEntry), alignof(MapEntry))
+                ).ptr();
+                entry->hash = hash;
+                entry->kv = KeyValue(k, value);
+                entry->prev = nullptr;
+                entry->next = nullptr;
+
+                entries[i] = entry;
+                if(first == nullptr)
                 {
-                    MapEntry* entry = mem::from_bytes<MapEntry>(
-                        allocator.alloc(sizeof(MapEntry), alignof(MapEntry))
-                    ).ptr();
-                    entry->hash = hash;
-                    entry->kv = KeyValue(k, value);
-                    entry->prev = nullptr;
-                    entry->next = nullptr;
-
-                    entries[i] = entry;
-                    if (first == nullptr)
-                    {
-                        first = entry;
-                        last = entry;
-                    }
-                    else
-                    {
-                        last->next = entry;
-                        entry->prev = last;
-                        last = entry;
-                    }
-
-                    count++;
-                    return entry;
+                    first = entry;
+                    last = entry;
                 }
-                else if (entries[i]->hash == InvalidHash)
+                else
                 {
-                    MapEntry* entry = entries[i];
-                    entry->hash = hash;
-                    entry->kv = KeyValue(k, value);
-                    entry->prev = nullptr;
-                    entry->next = nullptr;
-
-                    if (first == nullptr)
-                    {
-                        first = entry;
-                        last = entry;
-                    }
-                    else
-                    {
-                        last->next = entry;
-                        entry->prev = last;
-                        last = entry;
-                    }
-
-                    count++;
-                    return entry;
+                    last->next = entry;
+                    entry->prev = last;
+                    last = entry;
                 }
 
-                i++;
-                if (i == entries.len)
+                count++;
+                return entry;
+            }
+            
+            if(entries[i]->hash == InvalidHash)
+            {
+                MapEntry* entry = entries[i];
+                entry->hash = hash;
+                entry->kv = KeyValue(k, value);
+                entry->prev = nullptr;
+                entry->next = nullptr;
+
+                if (first == nullptr)
                 {
-                    i = 0;
+                    first = entry;
+                    last = entry;
                 }
+                else
+                {
+                    last->next = entry;
+                    entry->prev = last;
+                    last = entry;
+                }
+
+                count++;
+                return entry;
+            }
+            
+            i++;
+            if (i == entries.len)
+            {
+                i = 0;
             }
         }
     }

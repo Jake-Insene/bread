@@ -42,9 +42,9 @@ struct [[nodiscard]] StringMap
     MapEntry* first;
     MapEntry* last;
     
-    static StringMap<T> with_allocator(const mem::Allocator& allocator)
+    static StringMap with_allocator(const mem::Allocator& allocator)
     {
-        return StringMap
+        return
         {
             .allocator = allocator,
             .entries = {},
@@ -54,9 +54,9 @@ struct [[nodiscard]] StringMap
         };
     }
     
-    static StringMap<T> with_size(const mem::Allocator& allocator, usize size)
+    static StringMap with_size(const mem::Allocator& allocator, usize size)
     {
-        return StringMap<T>
+        return
         {
             .allocator = allocator,
             .entries = allocator.array<MapEntry*>(size),
@@ -68,23 +68,24 @@ struct [[nodiscard]] StringMap
     
     void destroy()
     {
-        if(entries.ptr())
+        if(entries.ptr() == nullptr)
         {
-            for(MapEntry* entry : entries)
-            {
-                if(entry != nullptr)
-                {
-                    allocator.free(mem::to_bytes(Slice<MapEntry>(entry, 1)));
-                }
-            }
-            allocator.free(mem::to_bytes(entries));
-            entries = {};
+            return;
         }
+
+        for(MapEntry* entry : entries)
+        {
+            if(entry != nullptr)
+            {
+                allocator.free(mem::to_bytes(Slice<MapEntry>(entry, 1)));
+            }
+        }
+        allocator.free(mem::to_bytes(entries));
+        entries = {};
     }
-    
 
     Iterator iter() const { return Iterator{ .entry = first }; }
-    
+
     void resize(usize new_size)
     {
         if(entries.len == 0)
@@ -149,12 +150,11 @@ struct [[nodiscard]] StringMap
     {
         return _insert_or_replace(str, value)->kv.second;
     }
-   
+
     void remove(StringView str)
     {
         HashType hash = hashfunc(str);
         usize pos = InvalidPos;
-        (void)_find_entry(hash, pos);
         if (_find_entry(hash, pos) == false)
         {
             DebugAssert(false, "the item don't exists!");
@@ -222,21 +222,21 @@ struct [[nodiscard]] StringMap
     {
         u64 i = hash & (entries.len - 1);
         usize dist = 0;
-        
+
         while(true)
         {
             if(dist >= entries.len)
             {
                 return false;
             }
-            
-            if(entries[i] != nullptr 
+
+            if(entries[i] != nullptr
                 && entries[i]->kv.first == hash)
             {
                 pos = i;
                 return true;
             }
-            
+
             dist++;
             i++;
             if (i == entries.len)
@@ -245,7 +245,7 @@ struct [[nodiscard]] StringMap
             }
         }
     }
-    
+
     [[nodiscard]] MapEntry* _insert_or_replace(StringView str, const T& value)
     {
         if (count >= entries.len)
@@ -264,64 +264,63 @@ struct [[nodiscard]] StringMap
             entries[pos]->kv.second = value;
             return entries[pos];
         }
-        else
+        
+        usize i = hash & (entries.len - 1);
+        while(true)
         {
-            usize i = hash & (entries.len - 1);
-            while(true)
+            if(entries[i] == nullptr)
             {
-                if(entries[i] == nullptr)
+                MapEntry* entry = mem::from_bytes<MapEntry>(
+                    allocator.alloc(sizeof(MapEntry), alignof(MapEntry))
+                ).ptr();
+                entry->kv = KeyValue(hash, value);
+                entry->prev = nullptr;
+                entry->next = nullptr;
+
+                entries[i] = entry;
+                if(first == nullptr)
                 {
-                    MapEntry* entry = mem::from_bytes<MapEntry>(
-                        allocator.alloc(sizeof(MapEntry), alignof(MapEntry))
-                    ).ptr();
-                    entry->kv = KeyValue(hash, value);
-                    entry->prev = nullptr;
-                    entry->next = nullptr;
-
-                    entries[i] = entry;
-                    if(first == nullptr)
-                    {
-                        first = entry;
-                        last = entry;
-                    }
-                    else
-                    {
-                        last->next = entry;
-                        entry->prev = last;
-                        last = entry;
-                    }
-
-                    count++;
-                    return entry;
+                    first = entry;
+                    last = entry;
                 }
-                else if(entries[i]->kv.first == InvalidHash)
+                else
                 {
-                    MapEntry* entry = entries[i];
-                    entry->kv = KeyValue(hash, value);
-                    entry->prev = nullptr;
-                    entry->next = nullptr;
-
-                    if (first == nullptr)
-                    {
-                        first = entry;
-                        last = entry;
-                    }
-                    else
-                    {
-                        last->next = entry;
-                        entry->prev = last;
-                        last = entry;
-                    }
-
-                    count++;
-                    return entry;
+                    last->next = entry;
+                    entry->prev = last;
+                    last = entry;
                 }
-                
-                i++;
-                if (i == entries.len)
+
+                count++;
+                return entry;
+            }
+            
+            if(entries[i]->kv.first == InvalidHash)
+            {
+                MapEntry* entry = entries[i];
+                entry->kv = KeyValue(hash, value);
+                entry->prev = nullptr;
+                entry->next = nullptr;
+
+                if (first == nullptr)
                 {
-                    i = 0;
+                    first = entry;
+                    last = entry;
                 }
+                else
+                {
+                    last->next = entry;
+                    entry->prev = last;
+                    last = entry;
+                }
+
+                count++;
+                return entry;
+            }
+            
+            i++;
+            if (i == entries.len)
+            {
+                i = 0;
             }
         }
     }

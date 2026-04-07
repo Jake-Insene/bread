@@ -11,7 +11,7 @@ struct [[nodiscard]] StringView : Slice<const char>
     template<usize N>
     constexpr StringView(const char(&str)[N]) : Slice(str, N-1) {}
 
-    constexpr StringView(Slice<char> str) : Slice(str.items, str.len) {}
+    constexpr StringView(const Slice<char>& str) : Slice(str.items, str.len) {}
     
     [[nodiscard]] constexpr const char* ptr() const { return items; }
 
@@ -37,7 +37,9 @@ struct [[nodiscard]] StringView : Slice<const char>
 [[nodiscard]] constexpr bool StringView::equals(StringView str) const
 {
     if (items == nullptr || len == 0)
+    {
         return false;
+    }
     return mem::compare(Slice(items, str.len), str);
 }
     

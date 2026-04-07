@@ -8,14 +8,14 @@ namespace mem
 struct GenericAllocator
 {
     static constexpr u16 MaxPageCount = MaxValue<u16>;
-    static constexpr usize DefaultPageListSize = 128;
-    static constexpr usize DirectPageAllocationSize = 32 * 1024; // 256 KB
-    static constexpr usize DefaultNextPageSize = 1024 * 16; // 16 KB
+    static constexpr usize DefaultPageListSize = 128ULL;
+    static constexpr usize DirectPageAllocationSize = 32ULL * 1024ULL; // 256 KB
+    static constexpr usize DefaultNextPageSize = 1024ULL * 16ULL; // 16 KB
+    static constexpr usize DefaultAlignmentForRemain = 16ULL;
 
     enum HeaderTags
     {
-        None = 0,
-        Allocated,
+        Allocated = Bit(0),
     };
     
     struct Header
@@ -46,9 +46,9 @@ struct GenericAllocator
     void destroy();
 
     Slice<u8> alloc(usize size, usize alignment);
-    bool realloc(Slice<u8> ptr, usize new_size, usize alignment);
-    void free(Slice<u8> ptr);
-    usize get_size_of(Slice<u8> ptr) const;
+    bool realloc(const Slice<u8>& ptr, usize new_size, usize alignment);
+    void free(const Slice<u8>& ptr);
+    usize get_size_of(const Slice<u8>& ptr) const;
 
     Allocator allocator();
 
@@ -59,3 +59,5 @@ struct GenericAllocator
 };
     
 }
+
+EnableBitOp(mem::GenericAllocator::HeaderTags)

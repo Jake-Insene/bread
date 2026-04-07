@@ -10,6 +10,8 @@ template<typename T, usize N, typename SlotID = u32>
     requires(sizeof(T) >= sizeof(SlotID))
 struct [[nodiscard]] StaticFreeList
 {
+    using Type = T;
+
     static constexpr SlotID _GetInvalidSlotValue()
     {
         if constexpr (IsSame<SlotID, u64>)
@@ -25,15 +27,15 @@ struct [[nodiscard]] StaticFreeList
     static constexpr SlotID InvalidSlot = _GetInvalidSlotValue();
     static constexpr SlotID SlotBitmask = SlotID(~0U);
 
-    StaticArray<T, N> array;
+    StaticArray<Type, N> array;
     SlotID last_free_element;
     u32 count;
 
     static constexpr StaticFreeList with_count(usize count)
     {
-        return StaticFreeList
+        return
         {
-            .array = StaticArray<T, N>::with_count(count),
+            .array = StaticArray<Type, N>::with_count(count),
             .last_free_element = InvalidSlot,
             .count = count,
         };
@@ -41,7 +43,7 @@ struct [[nodiscard]] StaticFreeList
 
     static constexpr StaticFreeList create()
     {
-        return StaticFreeList
+        return
         {
             .last_free_element = InvalidSlot,
             .count = 0,
@@ -50,13 +52,13 @@ struct [[nodiscard]] StaticFreeList
 
     [[nodiscard]] SlotID add(const T& item)
     {
-        if (last_free_element != InvalidSlot)
+        if(last_free_element != InvalidSlot)
         {
             SlotID id = last_free_element;
             SlotID* last_element = reinterpret_cast<SlotID*>(
                 &_get_element_at(last_free_element.integer())
             );
-            if (last_element[0] != InvalidSlot)
+            if(last_element[0] != InvalidSlot)
             {
                 last_free_element = last_element[0];
             }
@@ -77,7 +79,7 @@ struct [[nodiscard]] StaticFreeList
 
     void remove(const SlotID& slot)
     {
-        DebugAssert(slot.integet() < array.count, "invalid slot");
+        DebugAssert(slot.integer() < array.count, "invalid slot");
         DebugAssert(
             *reinterpret_cast<const SlotID*>(&_get_element_at(slot.integer())) != InvalidSlot,
             "slot is already free"
@@ -86,7 +88,7 @@ struct [[nodiscard]] StaticFreeList
         count--;
 
         T& item = get(slot);
-        array.allocator.destruct(&item);
+        DestructObject(item);
 
         if(last_free_element == InvalidSlot)
         {
@@ -113,12 +115,13 @@ struct [[nodiscard]] StaticFreeList
 
     [[nodiscard]] T& get(const SlotID& slot)
     {
-        DebugAssert(slot < array.count, "invalid slot");
+        DebugAssert(slot.integer() < array.count, "invalid slot");
         DebugAssert(
             *reinterpret_cast<SlotID*>(&_get_element_at(slot.integer())) != InvalidSlot,
             "slot isn't free"
         );
-        return array[slot];
+        return array.get(slot.integer());
     }
 
+    T& _get_element_at(usize index) { return array.get(index); }
 };

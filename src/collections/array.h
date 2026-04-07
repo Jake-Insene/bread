@@ -2,6 +2,8 @@
 #include "collections/base_iterator.h"
 #include "mem/allocator.h"
 #include "mem/utils.h"
+#include "math/funcs.h"
+
 
 
 /*
@@ -65,7 +67,7 @@ struct [[nodiscard]] Array
 
     static Array with_allocator(const mem::Allocator& allocator)
     {
-        return Array
+        return
         {
             .allocator = allocator,
             .items = allocator.array<Type>(DefaultCapacity),
@@ -75,7 +77,7 @@ struct [[nodiscard]] Array
 
     static Array with_size(const mem::Allocator& allocator, const usize size)
     {
-        return Array
+        return
         {
             .allocator = allocator,
             .items = allocator.array<Type>(size),
@@ -107,7 +109,7 @@ struct [[nodiscard]] Array
             .count = ListLen,
         };
 
-        const T list_array[] = { list... };
+        const Type list_array[] = { list... };
         mem::copy(array.items, Slice(list_array, ListLen));
 
         return array;
@@ -124,7 +126,11 @@ struct [[nodiscard]] Array
     template<typename Self>
     Iterator iter(this Self& self)
     {
-        return Iterator{ .base = self.items.items, .extent = self.count };
+        return
+        {
+            .base = self.items.items,
+            .extent = self.count,
+        };
     }
     
     [[nodiscard]] bool is_empty() const { return count == 0; }
@@ -136,11 +142,8 @@ struct [[nodiscard]] Array
             return;
         }
         
-        usize new_cap = items.len + items.len / 2;
-        if(new_cap < required_capacity)
-        {
-            new_cap = required_capacity;
-        }
+        usize new_cap = items.len + (items.len / 2);
+        new_cap = math::max(new_cap, required_capacity);
         
         if(!allocator.realloc(mem::to_bytes(items), sizeof(Type) * new_cap, alignof(Type)))
         {
@@ -189,11 +192,6 @@ struct [[nodiscard]] Array
         mem::copy(items, new_items);
     }
 
-    Iterator find(const Type& item)
-    {
-        return iter().find(item);
-    }
-
     void remove_at(usize index)
     {
         DebugAssert(index < count && count != 0, "index out of range");
@@ -204,7 +202,7 @@ struct [[nodiscard]] Array
             count--;
             return;
         }
-     
+
         count--;
         mem::copy(items.add(index), items.add(index + 1));
     }
@@ -234,9 +232,9 @@ struct [[nodiscard]] Array
     template<typename Self>
     Slice<Type> slice(this Self& self) { return self.items.slice(self.count); }
 
-    Array<Type> copy(const mem::Allocator& copy_allocator) const
+    Array copy(const mem::Allocator& copy_allocator) const
     {
-        return Array<Type>::from_items(copy_allocator, slice());
+        return Array::from_items(copy_allocator, slice());
     }
 };
 

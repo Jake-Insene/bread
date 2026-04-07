@@ -172,7 +172,7 @@ void Device::release_object(DeviceObject* child)
 {
     Log::debug("[Graphics::Device({})]: Releasing child object({})", this, child);
     DebugAssert(
-        allocated_objects.find(child) != allocated_objects.iter().end(),
+        allocated_objects.iter().find(child) != allocated_objects.iter().end(),
         "the allocated object it's not owned by this device"
     );
     allocated_objects.remove(child);

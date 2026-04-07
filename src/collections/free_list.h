@@ -10,6 +10,8 @@ template<typename T, typename SlotID = u32>
     requires(sizeof(T) >= sizeof(SlotID))
 struct [[nodiscard]] FreeList
 {
+    using Type = T;
+
     static constexpr SlotID _GetInvalidSlotValue()
     {
         if constexpr (IsSame<SlotID, u64>)
@@ -25,15 +27,15 @@ struct [[nodiscard]] FreeList
     static constexpr SlotID InvalidSlot = _GetInvalidSlotValue();
     static constexpr SlotID SlotBitmask = SlotID(~0U);
 
-    Array<T> array;
+    Array<Type> array;
     SlotID last_free_element;
     u32 count;
 
     static FreeList with_allocator(const mem::Allocator& allocator)
     {
-        return FreeList
+        return
         {
-            .array = Array<T>::with_allocator(allocator),
+            .array = Array<Type>::with_allocator(allocator),
             .last_free_element = InvalidSlot,
             .count = 0,
         };
@@ -41,7 +43,7 @@ struct [[nodiscard]] FreeList
 
     static FreeList with_size(const mem::Allocator& allocator, usize size)
     {
-        return FreeList
+        return
         {
             .array = Array<T>::with_size(allocator, size),
             .last_free_element = InvalidSlot,
@@ -128,5 +130,4 @@ struct [[nodiscard]] FreeList
     }
 
     T& _get_element_at(usize index) { return array.get(index); }
-
 };

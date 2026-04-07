@@ -39,7 +39,7 @@ template<typename T>
 inline void set(Slice<T> dest, const T value);
 
 template<typename T>
-inline constexpr void swap(T& a, T& b)
+constexpr void swap(T& a, T& b)
 {
     T tmp = a;
     a = b;
