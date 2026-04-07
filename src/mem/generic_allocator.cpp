@@ -276,7 +276,9 @@ GenericAllocator::Header* GenericAllocator::_search_for_available_space(usize al
                 allocated_mem->prev = copied_block.prev;
                 allocated_mem->next = copied_block.next;
                 if (allocated_mem->next)
+                {
                     allocated_mem->next->prev = allocated_mem;
+                }
 
                 _check_integrity();
             }
@@ -302,6 +304,7 @@ GenericAllocator::Header* GenericAllocator::_search_for_available_space(usize al
                 remain_header->len = remain - offset - sizeof(Header);
                 remain_header->page_index = allocated_mem->page_index;
                 remain_header->tags = 0;
+
                 index++;
                 remain_header->index = index;
                 remain_header->prev = allocated_mem;

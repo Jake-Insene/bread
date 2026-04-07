@@ -78,7 +78,7 @@ struct EngineRuntime
     GPU::PhysicalDeviceID physical_device;
 
     JobQueue main_queue;
-        
+    
     Window main_window;
 
     Texture* white_texture;

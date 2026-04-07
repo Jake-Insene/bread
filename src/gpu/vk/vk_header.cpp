@@ -212,46 +212,49 @@ VkInstance Vulkan::create_instance()
 
     // Validation layer
 #if defined(BREAD_SHOW_DEBUG_INFO)
-#else
-    const VkBool32 verbose_value = false;
-    const VkLayerSettingEXT layer_setting =
+    const VkBool32 verbose_value = VK_TRUE;
+    const VkBool32 gpu_validation = VK_TRUE;
+
+    const VkLayerSettingEXT layer_settings[] =
     {
-        .pLayerName = "VK_LAYER_KHRONOS_validation",
-        .pSettingName = "printf_verbose",
-        .type = VK_LAYER_SETTING_TYPE_BOOL32_EXT,
-        .valueCount = 1,
-        .pValues = &verbose_value,
+        {
+            .pLayerName = "VK_LAYER_KHRONOS_validation",
+            .pSettingName = "printf_verbose",
+            .type = VK_LAYER_SETTING_TYPE_BOOL32_EXT,
+            .valueCount = 1,
+            .pValues = &verbose_value,
+        },
+        {
+            .pLayerName = "VK_LAYER_KHRONOS_validation",
+            .pSettingName = "validate_gpu_based",
+            .type = VK_LAYER_SETTING_TYPE_BOOL32_EXT,
+            .valueCount = 1,
+            .pValues = &gpu_validation
+        }
     };
 
     VkLayerSettingsCreateInfoEXT layer_settings_create_info =
     {
         .sType = VK_STRUCTURE_TYPE_LAYER_SETTINGS_CREATE_INFO_EXT,
         .pNext = nullptr,
-        .settingCount = 1,
-        .pSettings = &layer_setting,
+        .settingCount = static_cast<uint32_t>(ArraySize(layer_settings)),
+        .pSettings = layer_settings,
     };
     (void)layer_settings_create_info;
-#endif
-
-#if defined(BREAD_SHOW_DEBUG_INFO) && defined(BREAD_WIN32)
-    const char* vk_layers[] = {
-        "VK_LAYER_KHRONOS_validation"
-    };
 #endif
 
     VkInstanceCreateInfo instance_info =
     {
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+#if defined(BREAD_SHOW_DEBUG_INFO)
+        .pNext = &layer_settings_create_info,
+#else
         .pNext = nullptr,
+#endif
         .flags = 0,
         .pApplicationInfo = &application_info,
-#if defined(BREAD_SHOW_DEBUG_INFO) && defined(BREAD_WIN32)
-        .enabledLayerCount = static_cast<uint32_t>(ArraySize(vk_layers)),
-        .ppEnabledLayerNames = vk_layers,
-#else
         .enabledLayerCount = 0,
         .ppEnabledLayerNames = nullptr,
-#endif
         .enabledExtensionCount = static_cast<uint32_t>(ArraySize(_vk_extensions)),
         .ppEnabledExtensionNames = _vk_extensions,
     };
@@ -338,19 +341,17 @@ Vulkan::AdditionalExtensionSupport Vulkan::check_device_extensions(VkPhysicalDev
         for (VkExtensionProperties& act_ext : vk_device_extensions)
         {
             StringView reported_ext = Vulkan::vulkan_string_to_sv(act_ext.extensionName);
-            VKDebugInfo("comparing {} with {}", ext_view, reported_ext);
             if (ext_view.equals(reported_ext))
             {
                 finded = true;
                 break;
             }
         }
-        VKDebugInfo("couldn't find the extensions {}", ext_view);
+
         if(finded)
         {
             finded_count++;
         }
-
     }
 
     VKFailOn(

@@ -96,8 +96,10 @@ void EngineRuntime::shutdown()
 
 void EngineRuntime::step()
 {
-    if(can_tick == false)
+    if(!can_tick)
+    {
         return;
+    }
     
     system_manager.tick();
     scene_manager.step();
@@ -135,7 +137,9 @@ void EngineRuntime::request_recreate_window()
 void EngineRuntime::set_vsync(bool vsync)
 {
     if (vsync_cache == vsync)
+    {
         return;
+    }
 
     vsync_cache = vsync;
     // TODO: Set VSync
