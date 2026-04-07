@@ -12,7 +12,7 @@ struct Texture : Resource
     GPUTextureID texture_ref;
     Vector2I size;
     
-    void init();
+    void init(const ResourceCreateInfo& info);
     void destroy();
     
     [[nodiscard]] Vector2I get_size() const;
@@ -22,8 +22,5 @@ struct Texture : Resource
 struct Texture2D : Texture
 {
     RESOURCE(RESOURCE_TEXTURE_2D, LoadFromAssets, ResourceExtensions("png"))
-
-    void init();
-    void destroy();
 };
 

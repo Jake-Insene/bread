@@ -22,7 +22,7 @@ struct SpriteAnimation : Resource
 
 	StringMap<Animation> animations;
 
-	void init();
+	void init(const ResourceCreateInfo& info);
 	void destroy();
 
 	void add_animation(StringView anim_name, Slice<SpriteFrame> frames, bool loop);

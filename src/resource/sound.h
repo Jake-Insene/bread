@@ -15,9 +15,6 @@ struct Sound : Resource
         //Audio::SourceVoiceID source_voice;
     } data;
 
-    void init();
-    void destroy();
-
     Error load(StringView file_path);
 
     //[[nodiscard]] Audio::SourceVoiceID get_source_voice() const { return data.source_voice; }

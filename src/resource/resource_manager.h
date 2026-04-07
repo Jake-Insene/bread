@@ -3,7 +3,6 @@
 #include "collections/hash_map.h"
 #include "collections/string_map.h"
 #include "gpu/gpu.h"
-#include "mem/allocator.h"
 #include "resource/resource.h"
 #include "systems/system.h"
 
@@ -28,14 +27,21 @@ struct ResourceManager final : System<ResourceManager>
     }
 
     static constexpr usize DefaultFontSize = 32;
-
+    
     struct TextureLoadInfo
     {
         GPU::TextureType type;
     };
+      
+    using DestroyResourceFn = void(*)(Resource*);
+    struct ResourceAllocation
+    {
+        DestroyResourceFn destroy;
+        Resource* resource;
+    };
 
     mem::Allocator allocator;
-    StringMap<Resource*> resources;
+    StringMap<ResourceAllocation> resources;
     HashMap<Image*, Texture*> cached_images;
 
     [[nodiscard]] mem::Allocator& get_allocator() { return allocator; }
@@ -48,18 +54,23 @@ struct ResourceManager final : System<ResourceManager>
     [[nodiscard]] Result<Resource*, Error> load_resource(ResourceType type,
         ResourceTypeSpecification specification, StringView path);
 
-    [[nodiscard]] bool place_resource(StringView resource_name, Resource* resource);
+    [[nodiscard]] bool place_resource(StringView resource_name, DestroyResourceFn destroy, Resource* resource);
 
     [[nodiscard]] SpriteAnimation* create_sprite_animation(StringView name);
     [[nodiscard]] TileSet* create_tile_set(StringView name, Vector2I tile_size);
     
     // Implementation
     template<typename T>
-        requires(!IsSame<Resource, T>)
+    requires(!IsSame<Resource, T>)
     [[nodiscard]] T* _create_resource()
     {
         T* resource = get_allocator().object<T>();
-        resource->init();
+        resource->init(
+            {
+                .allocator = get_allocator(),
+                .resource_type = T::Type,
+            }
+        );
         return resource;
     }
 

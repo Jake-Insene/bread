@@ -57,6 +57,12 @@ struct Resource
         NoResourceFlags, 
         ResourceExtensions(""))
 
+    struct ResourceCreateInfo
+    {
+        mem::Allocator allocator;
+        ResourceType resource_type;
+    };
+
     
     static Result<Resource*, Error> _load_resource(ResourceType type, ResourceTypeSpecification spec, StringView path);
 
@@ -64,7 +70,7 @@ struct Resource
     * Try to load the resource of the given type, can return nullptr
     */
     template<typename T>
-        requires(!IsSame<Resource, T> && IsBaseOf<Resource, T>)
+    requires(!IsSame<Resource, T> && IsBaseOf<Resource, T>)
     [[nodiscard]] static Result<T*, Error> try_load(StringView path)
     {
         Result<Resource*, Error> resource = _load_resource(T::Type, T::Specification, path);
@@ -81,16 +87,17 @@ struct Resource
     * Load the resource of the given type, can return nullptr.
     */
     template<typename T>
-        requires(!IsSame<Resource, T> && IsBaseOf<Resource, T>)
+    requires(!IsSame<Resource, T> && IsBaseOf<Resource, T>)
     [[nodiscard]] static T* load(StringView path)
     {
         return reinterpret_cast<T*>(_load_resource(T::Type, T::Specification, path).value());
     };
     
+    mem::Allocator allocator;
     ResourceType type;
     String path;
     
-    void init(ResourceType resource_type);
+    void init(const ResourceCreateInfo& info);
     void destroy();
 };
 

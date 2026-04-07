@@ -20,7 +20,7 @@ void ResourceManager::initialize(const SystemInitializeInfo& info)
     allocator = info.allocator;
 
     stbi_set_flip_vertically_on_load(true);
-    resources = StringMap<Resource*>::with_size(
+    resources = StringMap<ResourceAllocation>::with_size(
         allocator, 128
     );
     
@@ -33,50 +33,9 @@ void ResourceManager::shutdown()
 {
     for(auto& it : resources.iter())
     {
-        switch (it.second->type)
-        {
-        case RESOURCE_IMAGE:
-        {
-            Image* image = reinterpret_cast<Image*>(it.second);
-            image->destroy();
-        }
-            break;
-        case RESOURCE_SOUND:
-        {
-            Sound* sound = reinterpret_cast<Sound*>(it.second);
-            sound->destroy();
-        }
-            break;
-        case RESOURCE_FONT:
-            {
-                Font* font = reinterpret_cast<Font*>(it.second);
-                font->destroy();
-            }
-            break;
-        case RESOURCE_SPRITE_ANIMATION:
-        {
-            SpriteAnimation* sa = reinterpret_cast<SpriteAnimation*>(it.second);
-            sa->destroy();
-        }
-            break;
-        case RESOURCE_TILE_SET:
-        {
-            TileSet* ts = reinterpret_cast<TileSet*>(it.second);
-            ts->destroy();
-        }
-        break;
-        case RESOURCE_MATERIAL:
-        {
-            Material* ma = reinterpret_cast<Material*>(it.second);
-            ma->destroy();
-        }
-            break;
-        default:
-            break;
-        }
-        
+        it.second.destroy(it.second.resource);
         allocator.free(
-            mem::to_bytes(Slice<Resource>(it.second, 1))
+            mem::to_bytes(Slice<Resource>(it.second.resource, 1))
         );
     }
     
@@ -123,7 +82,7 @@ Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
     {
         if (resources.has(path))
         {
-            return resources.get(path);
+            return resources.get(path).resource;
         }
         return MakeError(ErrorCode::ResourceNotFound);
     }
@@ -141,12 +100,18 @@ Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
 }
 
 
-bool ResourceManager::place_resource(StringView resource_name, Resource* resource)
+bool ResourceManager::place_resource(StringView resource_name, DestroyResourceFn destroy, Resource* resource)
 {
     if (resources.has(resource_name))
         return false;
 
-    resources.insert(resource_name, resource);
+    resources.insert(
+        resource_name,
+        {
+            .destroy = destroy,
+            .resource = resource,
+        }
+    );
     return true;
 }
 
@@ -159,7 +124,11 @@ SpriteAnimation* ResourceManager::create_sprite_animation(StringView name)
     }
 
     SpriteAnimation* sprite_animation = _create_resource<SpriteAnimation>();
-    resources.insert(name, sprite_animation);
+    (void)place_resource(
+        name,
+        [](Resource* resource){ reinterpret_cast<SpriteAnimation*>(resource)->destroy(); },
+        sprite_animation
+    );
 
     sprite_animation->path.set("local");
     return sprite_animation;
@@ -174,7 +143,12 @@ TileSet* ResourceManager::create_tile_set(StringView name, Vector2I tile_size)
     }
 
     TileSet* tile_set = _create_resource<TileSet>();
-    resources.insert(name, tile_set);
+    (void)place_resource(
+        name,
+        [](Resource* resource){ reinterpret_cast<TileSet*>(resource)->destroy(); },
+        tile_set
+    );
+    
     tile_set->path.set("local");
     tile_set->set_tile_size(tile_size);
     return tile_set;
@@ -185,7 +159,7 @@ Result<Resource*, Error> ResourceManager::_load_image(StringView path)
     Image* image = nullptr;
     if (resources.has(path))
     {
-        image = reinterpret_cast<Image*>(resources.get(path));
+        image = reinterpret_cast<Image*>(resources.get(path).resource);
     }
     else
     {
@@ -199,7 +173,11 @@ Result<Resource*, Error> ResourceManager::_load_image(StringView path)
         }
 
         image->path.set(path);
-        (void)place_resource(path, image);
+        (void)place_resource(
+            path,
+            [](Resource* resource){ reinterpret_cast<Image*>(resource)->destroy(); },
+            image
+        );
     }
 
     return image;
@@ -211,13 +189,17 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
     Image* image = nullptr;
     if(resources.has(path))
     {
-        image = reinterpret_cast<Image*>(resources.get(path));
+        image = reinterpret_cast<Image*>(resources.get(path).resource);
     }
     else
     {
         image = _create_resource<Image>();
         image->path.set(path);
-        (void)place_resource(path, image);
+        (void)place_resource(
+            path,
+            [](Resource* resource){ reinterpret_cast<Image*>(resource)->destroy(); },
+            image
+        );
         
         Error load_result = image->load(path);
         if (!load_result)
@@ -255,7 +237,7 @@ Result<Resource*, Error> ResourceManager::_load_sound(StringView path)
 {
     if (resources.has(path))
     {
-        return reinterpret_cast<Sound*>(resources.get(path));
+        return reinterpret_cast<Sound*>(resources.get(path).resource);
     }
 
     Sound* new_sound = _create_resource<Sound>();
@@ -265,7 +247,11 @@ Result<Resource*, Error> ResourceManager::_load_sound(StringView path)
         return load_result;
     }
 
-    (void)place_resource(path, new_sound);
+    (void)place_resource(
+        path,
+        [](Resource* resource){ reinterpret_cast<Sound*>(resource)->destroy(); },
+        new_sound
+    );
     return new_sound;
 }
 
@@ -273,7 +259,7 @@ Result<Resource*, Error> ResourceManager::_load_font(StringView path)
 {
     if (resources.has(path))
     {
-        return reinterpret_cast<Font*>(resources.get(path));
+        return reinterpret_cast<Font*>(resources.get(path).resource);
     }
 
     Font* new_font = _create_resource<Font>();
@@ -283,7 +269,11 @@ Result<Resource*, Error> ResourceManager::_load_font(StringView path)
         return load_result;
     }
 
-    (void)place_resource(path, new_font);
+    (void)place_resource(
+        path,
+        [](Resource* resource){ reinterpret_cast<Font*>(resource)->destroy(); },
+        new_font
+    );
     return new_font;
 }
 
@@ -291,7 +281,7 @@ Result<Resource*, Error> ResourceManager::_load_material(StringView path)
 {
     if (resources.has(path))
     {
-        return reinterpret_cast<Material*>(resources.get(path));
+        return reinterpret_cast<Material*>(resources.get(path).resource);
     }
 
     Material* new_material = _create_resource<Material>();
@@ -301,7 +291,11 @@ Result<Resource*, Error> ResourceManager::_load_material(StringView path)
         return load_result;
     }
 
-    (void)place_resource(path, new_material);
+    (void)place_resource(
+        path,
+        [](Resource* resource){ reinterpret_cast<Material*>(resource)->destroy(); },
+        new_material
+    );
     return new_material;
 }
 

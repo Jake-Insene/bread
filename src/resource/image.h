@@ -22,7 +22,6 @@ struct Image : Resource
     Vector2I size;
     ImageFormat format;
     
-    void init();
     void destroy();
     
     Error load(StringView file_path);

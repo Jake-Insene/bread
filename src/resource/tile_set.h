@@ -29,7 +29,7 @@ struct TileSet : Resource
 		Array<TileData> tiles_data;
 	} data;
 
-	void init();
+	void init(const ResourceCreateInfo& info);
 	void destroy();
 
 	void set_tile_size(Vector2I new_tile_size) { data.tile_size = new_tile_size; }

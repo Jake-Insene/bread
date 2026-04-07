@@ -1,34 +1,26 @@
 #include "resource/sprite_animation.h"
 
-#include "resource/resource_manager.h"
-#include "engine/engine.h"
 
-
-void SpriteAnimation::init()
+void SpriteAnimation::init(const ResourceCreateInfo& info)
 {
-	Resource::init(RESOURCE_SPRITE_ANIMATION);
-	
-    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
-	
+	Resource::init(info);
 	animations = StringMap<SpriteAnimation::Animation>::with_allocator(allocator);
 }
 
 void SpriteAnimation::destroy()
 {
-	Resource::destroy();
 	for (auto& it : animations.iter())
 	{
 		it.second.frames.destroy();
 	}
-
+	
 	animations.destroy();
+	Resource::destroy();
 }
 
 
 void SpriteAnimation::add_animation(StringView anim_name, Slice<SpriteFrame> frames, bool loop)
 {
-    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
-	
 	Animation& anim = animations.insert(anim_name, Animation());
 	anim.loop = loop;
 	anim.frames = Array<SpriteFrame>::from_items(allocator, frames);

@@ -1,27 +1,19 @@
 #include "resource/image.h"
 
 #include "io/file.h"
-#include "resource/resource_manager.h"
 #include "resource/resource_manager_internal.h"
-#include "engine/engine.h"
 
 #include <external/stb_image.h>
 
 
-void Image::init()
-{
-    Resource::init(RESOURCE_IMAGE);
-}
-
 void Image::destroy()
 {
-    Resource::destroy();
-    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
-
     if(!pixels.null())
     {
         allocator.free(pixels);
     }
+
+    Resource::destroy();
 }
 
 Error Image::load(StringView file_path)
@@ -32,7 +24,6 @@ Error Image::load(StringView file_path)
         return MakeError(ErrorCode::FileNotFound);
     }
 
-    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
     Slice<u8> buffer = File::read_all(allocator, file_path);
     
     i32 channels = 0;
@@ -68,7 +59,6 @@ void Image::unload()
 {
     if (!pixels.null())
     {
-        mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
         allocator.free(pixels);
         pixels = Slice<u8>(nullptr, 0);
         size = Vector2I();

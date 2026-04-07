@@ -45,18 +45,6 @@ static inline drwav_allocation_callbacks alloc_callbacks =
     .onFree = &_dr_free,
 };
 
-
-void Sound::init()
-{
-	Resource::init(RESOURCE_SOUND);
-}
-
-void Sound::destroy()
-{
-    //Audio::destroy_source_voice(data.source_voice);
-    Resource::destroy();
-}
-
 Error Sound::load(StringView file_path)
 {
     if (File::exists(file_path) == false)
@@ -65,7 +53,6 @@ Error Sound::load(StringView file_path)
         return MakeError(ErrorCode::FileNotFound);
     }
     
-    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
     path.set(file_path);
 
     Slice<u8> content = File::read_all(allocator, file_path);

@@ -108,30 +108,28 @@ static void _load_theme(const mem::Allocator& allocator, const Slice<u8>& font_f
 }
 
 
-void Font::init()
+void Font::init(const ResourceCreateInfo& info)
 {
-    Resource::init(RESOURCE_FONT);
+    Resource::init(info);
 
-    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
     data.themes = Array<FontTheme>::with_allocator(allocator);
 }
 
 
 void Font::destroy()
 {
-	Resource::destroy();
-    
     for (FontTheme& theme : data.themes.iter())
     {
         if (theme.font_atlas == GPUTextureID::invalid())
-            continue;
-
+        continue;
+    
         Engine::get_system_manager()->get_system<RenderDevice>()->get_resource_manager().destroy_texture(theme.font_atlas);
-
+        
         theme.glyphs.destroy();
     }
 
     data.themes.destroy();
+    Resource::destroy();
 }
 
 

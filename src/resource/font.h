@@ -35,7 +35,7 @@ struct Font : Resource
 		Array<FontTheme> themes;
 	} data;
 
-	void init();
+	void init(const ResourceCreateInfo& info);
 	void destroy();
 
 	Error load(StringView file_path);

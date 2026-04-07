@@ -1,23 +1,18 @@
 #include "resource/tile_set.h"
 
-#include "resource/resource_manager.h"
-#include "engine/engine.h"
 
-
-void TileSet::init()
+void TileSet::init(const ResourceCreateInfo& info)
 {
-	Resource::init(RESOURCE_TILE_SET);
-    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
-
+	Resource::init(info);
 	data.tiles = Array<TileSet::Tile>::with_allocator(allocator);
 	data.tiles_data = Array<TileSet::TileData>::with_allocator(allocator);
 }
 
 void TileSet::destroy()
 {
-	Resource::destroy();
 	data.tiles.destroy();
 	data.tiles_data.destroy();
+	Resource::destroy();
 }
 
 void TileSet::set_texture(Texture2D* new_texture)
