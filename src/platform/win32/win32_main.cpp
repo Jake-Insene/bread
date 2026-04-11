@@ -15,6 +15,13 @@ extern "C"
 	__declspec(dllexport)
 	void __chkstk() {}
 
+	__declspec(dllexport)
+	int __cdecl _purecall()
+	{
+		Log::error("Pure virtual function called!");
+		return 0;
+	}
+
 	#pragma function(memset)
 	void* __cdecl memset(void* dest, int c, size_t count)
 	{

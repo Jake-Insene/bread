@@ -92,8 +92,7 @@ static void _load_theme(const mem::Allocator& allocator, const Slice<u8>& font_f
         }
 
         flip_atlas_vertical(allocator, pixels, width, width);
-        theme.font_atlas = Engine::get_system_manager()->get_system<RenderDevice>()->get_resource_manager().create_texture(
-            GPUTextureResourceCreateInfo
+        theme.font_atlas = Engine::get_system_manager()->get_system<RenderDevice>()->get_resource_manager()->create_texture(
             {
                 .type = GPU::TextureType::Texture2D,
                 .format = GPU::TextureFormat::R8Srgb,
@@ -121,9 +120,11 @@ void Font::destroy()
     for (FontTheme& theme : data.themes.iter())
     {
         if (theme.font_atlas == GPUTextureID::invalid())
-        continue;
+        {
+            continue;
+        }
     
-        Engine::get_system_manager()->get_system<RenderDevice>()->get_resource_manager().destroy_texture(theme.font_atlas);
+        Engine::get_system_manager()->get_system<RenderDevice>()->get_resource_manager()->destroy_texture(theme.font_atlas);
         
         theme.glyphs.destroy();
     }
@@ -135,7 +136,7 @@ void Font::destroy()
 
 Error Font::load(StringView file_path)
 {
-    if (File::exists(file_path) == false)
+    if (!File::exists(file_path))
     {
         RMDebugInfo("Couldn't load the font '{}'", file_path);
         return MakeError(ErrorCode::FileNotFound);

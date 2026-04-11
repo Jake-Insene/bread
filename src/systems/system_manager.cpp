@@ -63,19 +63,6 @@ void SystemManager::tick()
     }
 }
 
-void SystemManager::tick_event(const InputEvent& event)
-{
-    for(SystemInstance& instance : systems.iter())
-    {
-        SystemFlags flags = instance.info.flags;
-
-        if(HasValue(flags & SystemFlags::OnEvent))
-        {
-            instance.info.runtime.on_event.call(instance.instance, event);
-        }
-    }
-}
-
 void SystemManager::_create_flow_order()
 {
     flow_order.clear();

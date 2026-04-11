@@ -121,7 +121,6 @@ void EngineRuntime::handle_event(const InputEvent& event)
         can_tick = false;
     }
     
-    system_manager.tick_event(event);
     scene_manager.scene_handle_event(event);
 }
 

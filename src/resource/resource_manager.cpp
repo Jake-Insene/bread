@@ -217,7 +217,7 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
         tex = _create_resource<Texture2D>();
         tex->path.set(path);
         
-        GPUTextureResourceCreateInfo create_info =
+        GPUResourceManager::TextureAllocateInfo create_info =
         {
             .type = load_info.type,
             .format = image->format == Image::FORMAT_RGB8 ? GPU::TextureFormat::RGB8Srgb : GPU::TextureFormat::RGBA8Srgb,
@@ -225,7 +225,7 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
             .pixels = image->pixels,
         };
         
-        tex->texture_ref = Engine::get_system_manager()->get_system<RenderDevice>()->get_resource_manager().create_texture(create_info);
+        tex->texture_ref = Engine::get_system_manager()->get_system<RenderDevice>()->get_resource_manager()->create_texture(create_info);
         tex->size = image->size;
         cached_images.insert(image, tex);
     }

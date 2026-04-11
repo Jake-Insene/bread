@@ -1,60 +1,56 @@
 #include "render_device/core/gpu_resource_manager.h"
 
-#include "engine/engine.h"
 #include "render_device/core/gpu_memory_allocator.h"
 #include "render_device/render_device.h"
 
 
 
-void GPUResourceManager::initialize(const mem::Allocator& _allocator)
+void GPUResourceManager::init(const GPUResourceManagerCreateInfo& info)
 {
-    allocator = _allocator;
+    allocator = info.allocator;
+    graphics_device = info.graphics_device;
+    gpu_memory_allocator = info.gpu_memory_allocator;
 
-    render_device = Engine::get_system_manager()->get_system<RenderDevice>();
-    memory_allocator = &render_device->get_memory_allocator();
-
-    textures = FreeList<GPUTextureResource, GPUTextureID>::with_size(allocator, 4);
+    textures = FreeList<TextureData, GPUTextureID>::with_size(allocator, 4);
 }
 
-void GPUResourceManager::shutdown()
+void GPUResourceManager::destroy()
 {
     textures.destroy();
 }
 
-GPUTextureID GPUResourceManager::create_texture(const GPUTextureResourceCreateInfo& ci)
+GPUTextureID GPUResourceManager::create_texture(const TextureAllocateInfo& alloc_info)
 {
-    GPU::DeviceID gpu_device = render_device->get_graphics_device().gpu_device;
-
-    GPUMemoryAllocationID allocation = memory_allocator->allocate(
-        GPUMemoryAllocator::AllocationTag::Texture, ci.pixels.len
+    GPUMemoryAllocationID allocation = gpu_memory_allocator->allocate(
+        GPUMemoryAllocator::AllocationTag::Texture, alloc_info.pixels.len
     );
 
     GPU::TextureID gpu_texture = GPU::texture_create(
         {
-            .device = gpu_device,
-            .type = ci.type,
-            .format = ci.format,
-            .extent = ci.extent,
+            .device = graphics_device->gpu_device,
+            .type = alloc_info.type,
+            .format = alloc_info.format,
+            .extent = alloc_info.extent,
             .mip_levels = 1,
             .array_levels = 1,
             .sample_count = GPU::SampleCount::Sample1,
             .tiling = GPU::TextureTiling::Optimal,
             .usage = GPU::TextureUsage::TransferDestination | GPU::TextureUsage::Sampled,
             .initial_layout = GPU::TextureLayout::Unknown,
-            .memory_heap = memory_allocator->allocation_get_heap(allocation).get()->memory_heap,
-            .heap_offset = memory_allocator->allocation_get_offset(allocation),
+            .memory_heap = gpu_memory_allocator->allocation_get_heap(allocation).get()->memory_heap,
+            .heap_offset = gpu_memory_allocator->allocation_get_offset(allocation),
         }
     );
 
     // Setting up the texture data
     {
-        Ptr<Graphics::Buffer> buffer = memory_allocator->begin_staging(ci.pixels.len);
-        Slice<u8> mapped_buffer = memory_allocator->map_staging();
-        mem::copy(mapped_buffer, ci.pixels);
-        memory_allocator->unmap_staging(mapped_buffer);
+        Ptr<Graphics::Buffer> buffer = gpu_memory_allocator->begin_staging(alloc_info.pixels.len);
+        Slice<u8> mapped_buffer = gpu_memory_allocator->map_staging();
+        mem::copy(mapped_buffer, alloc_info.pixels);
+        gpu_memory_allocator->unmap_staging(mapped_buffer);
 
-        render_device->submit_and_wait(
-            render_device->get_graphics_device().copy_queue.gpu_queue, [&](GPU::CommandBufferID cmd)
+        submit_and_wait(
+            graphics_device->copy_queue.gpu_queue, [&](GPU::CommandBufferID cmd)
             {
                 GPU::command_buffer_texture_barrier(cmd,
                     {
@@ -91,7 +87,7 @@ GPUTextureID GPUResourceManager::create_texture(const GPUTextureResourceCreateIn
                             .layer_count = 1,
                         },
                         .offset = Vector3I(),
-                        .extent = ci.extent,
+                        .extent = alloc_info.extent,
                     }
                 );
                 GPU::command_buffer_texture_barrier(cmd,
@@ -116,11 +112,11 @@ GPUTextureID GPUResourceManager::create_texture(const GPUTextureResourceCreateIn
             }
         );
 
-        memory_allocator->end_staging(buffer);
+        gpu_memory_allocator->end_staging(buffer);
     }
 
-    GPUTextureID texture_ref = textures.add(GPUTextureResource());
-    GPUTextureResource& texture = textures.get(texture_ref);
+    GPUTextureID texture_ref = textures.add(TextureData());
+    TextureData& texture = textures.get(texture_ref);
     texture.gpu_texture = gpu_texture;
     texture.allocation = allocation;
 
@@ -129,8 +125,48 @@ GPUTextureID GPUResourceManager::create_texture(const GPUTextureResourceCreateIn
 
 void GPUResourceManager::destroy_texture(GPUTextureID texture_ref)
 {
-    GPUTextureResource& texture = textures.get(texture_ref);
-    memory_allocator->free(texture.allocation);
+    TextureData& texture = textures.get(texture_ref);
+    gpu_memory_allocator->free(texture.allocation);
     GPU::texture_destroy(texture.gpu_texture);
 }
 
+GPU::TextureID GPUResourceManager::texture_get_gpu_texture(GPUTextureID texture_ref)
+{
+    return textures.get(texture_ref).gpu_texture;
+}
+
+void GPUResourceManager::_submit_and_wait(GPU::QueueID gpu_queue, void* arg, SubmitFn recorder)
+{
+    GPU::CommandPoolID pool = GPU::command_pool_create(
+        {
+            .device = graphics_device->gpu_device,
+            .queue = gpu_queue,
+        }
+    );
+
+    GPU::CommandBufferID cmd = GPU::command_buffer_allocate(
+        {
+            .pool = pool,
+        }
+    );
+
+    GPU::command_buffer_begin(cmd);
+    recorder(arg, cmd);
+    GPU::command_buffer_end(cmd);
+
+    GPU::queue_execute_command_buffer(
+        gpu_queue,
+        {
+            .wait_semaphores = {},
+            .wait_stages = {},
+            .command_buffers = Slice(&cmd, 1),
+            .signal_semaphores = {},
+            .fence = GPU::FenceID::invalid(),
+        }
+    );
+
+    GPU::queue_wait_idle(gpu_queue);
+
+    GPU::command_buffer_free(cmd);
+    GPU::command_pool_destroy(pool);
+}

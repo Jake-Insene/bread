@@ -37,7 +37,6 @@ struct SystemManager
     void deallocate_systems();
 
     void tick();
-    void tick_event(const InputEvent& event);
 
     void _create_flow_order();
 

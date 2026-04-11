@@ -24,31 +24,15 @@ struct RenderDevice final : System<RenderDevice>
 
     Graphics::Device device;
 
-    GPUMemoryAllocator memory_allocator;
+    GPUMemoryAllocator gpu_memory_allocator;
     GPUResourceManager resource_manager;
 
-    Graphics::Device& get_graphics_device() { return device; }
+    Graphics::Device* get_graphics_device() { return &device; }
 
-    GPUMemoryAllocator& get_memory_allocator() { return memory_allocator; }
-    GPUResourceManager& get_resource_manager() { return resource_manager; }
+    GPUMemoryAllocator* get_gpu_memory_allocator() { return &gpu_memory_allocator; }
+    GPUResourceManager* get_resource_manager() { return &resource_manager; }
 
     void initialize(const SystemInitializeInfo& info);
     void shutdown();
-
-    void on_event(const InputEvent&) {}
-
-    using SubmitFn = void(*)(void* arg, GPU::CommandBufferID);
-
-    template<typename Fn>
-    void submit_and_wait(GPU::QueueID gpu_queue, Fn&& fn)
-    {
-        SubmitFn recorder = [](void* arg, GPU::CommandBufferID cmd)
-        {
-            (*reinterpret_cast<Fn*>(arg))(cmd);
-        };
-        _submit_and_wait(gpu_queue, reinterpret_cast<void**>(&fn), recorder);
-    }
-
-    void _submit_and_wait(GPU::QueueID gpu_queue, void* arg, SubmitFn recorder);
 };
 

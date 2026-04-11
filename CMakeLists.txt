@@ -102,6 +102,9 @@ file(GLOB ENGINE_SRC
     src/render_device/core/gpu_material_manager.cpp
     src/render_device/core/gpu_memory_allocator.cpp
     src/render_device/core/gpu_resource_manager.cpp
+
+    src/renderer/framed_buffer.cpp
+    src/renderer/renderer_2d.cpp
     
     src/resource/font.cpp
     src/resource/image.cpp

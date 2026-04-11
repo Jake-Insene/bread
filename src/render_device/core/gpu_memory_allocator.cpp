@@ -1,23 +1,21 @@
 #include "render_device/core/gpu_memory_allocator.h"
 
-#include "engine/engine.h"
-#include "render_device/render_device.h"
+#include "debug/fail.h"
 
 
-void GPUMemoryAllocator::initialize(const mem::Allocator& _allocator)
+void GPUMemoryAllocator::init(const GPUMemoryAllocatorCreateInfo& info)
 {
-    allocator = _allocator;
-
-    render_device = Engine::get_system_manager()->get_system<RenderDevice>();
+    allocator = info.allocator;
+    graphics_device = info.graphics_device;
 
     heaps = Array<Heap>::with_size(allocator, 4);
     allocations = FreeList<Allocation, GPUMemoryAllocationID>::with_size(allocator, 4);
 
-    staging_heap = render_device->get_graphics_device().create_memory_heap(
+    staging_heap = graphics_device->create_memory_heap(
         GPU::HeapUsage::CPUGPUCoherent, StagingHeapInitialSize
     ).get();
 
-    staging_buffer = render_device->get_graphics_device().create_buffer(
+    staging_buffer = graphics_device->create_buffer(
         GPU::BufferUsage::TransferSource, StagingHeapInitialSize, Ptr<Graphics::MemoryHeap>::from_raw(staging_heap), 0
     ).get();
 
@@ -25,7 +23,7 @@ void GPUMemoryAllocator::initialize(const mem::Allocator& _allocator)
     mapped_staging_heap = staging_heap->map(0, staging_heap_current_size);
 }
 
-void GPUMemoryAllocator::shutdown()
+void GPUMemoryAllocator::destroy()
 {
     staging_buffer->destroy();
     staging_heap->unmap(mapped_staging_heap);
@@ -50,13 +48,16 @@ GPUMemoryAllocationID GPUMemoryAllocator::allocate(AllocationTag tag, usize size
     
     for(Heap& heap : heaps.iter())
     {
-        if(allocation_id != GPUMemoryAllocationID::invalid()) break;
+        if(allocation_id != GPUMemoryAllocationID::invalid())
+        {
+            break;
+        }
         
         GPUMemoryAllocationID alloc_current_id = heap.first_allocation;
         for(;alloc_current_id != GPUMemoryAllocationID::invalid();)
         {
             Allocation& allocation = allocations.get(alloc_current_id);
-            if(allocation.free == false)
+            if(!allocation.free)
             {
                 alloc_current_id = allocation.next;
                 continue;
@@ -111,7 +112,7 @@ Slice<u8> GPUMemoryAllocator::map_staging()
     return mapped_staging_heap;
 }
 
-void GPUMemoryAllocator::unmap_staging(Slice<u8> memory)
+void GPUMemoryAllocator::unmap_staging(const Slice<u8>& memory)
 {
     Unused(memory);
 }
@@ -148,7 +149,7 @@ GPUMemoryAllocator::Heap& GPUMemoryAllocator::_create_heap(AllocationTag tag, us
     usize heap_size =  mem::align_up(size, GPU::HeapAlignment);
     Heap new_heap =
     {
-        .heap = render_device->get_graphics_device().create_memory_heap(
+        .heap = graphics_device->create_memory_heap(
             _tag_get_gpu_usage(tag), heap_size
         ).get(),
         .heap_size = heap_size,

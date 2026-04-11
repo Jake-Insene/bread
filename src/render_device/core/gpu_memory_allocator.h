@@ -3,12 +3,18 @@
 #include "collections/free_list.h"
 #include "gpu/gpu.h"
 #include "graphics/buffer.h"
+#include "graphics/device.h"
 #include "graphics/memory_heap.h"
 #include "mem/allocator.h"
 #include "render_device/core/gpu_memory_allocator_types.h"
 
 
-struct RenderDevice;
+
+struct GPUMemoryAllocatorCreateInfo
+{
+    mem::Allocator allocator;
+    Graphics::Device* graphics_device;
+};
 
 
 struct GPUMemoryAllocator
@@ -48,7 +54,7 @@ struct GPUMemoryAllocator
     };
 
     mem::Allocator allocator;
-    RenderDevice* render_device;
+    Graphics::Device* graphics_device;
     Array<Heap> heaps;
     FreeList<Allocation, GPUMemoryAllocationID> allocations;
     Graphics::MemoryHeap* staging_heap;
@@ -56,8 +62,8 @@ struct GPUMemoryAllocator
     usize staging_heap_current_size;
     Slice<u8> mapped_staging_heap;
 
-    void initialize(const mem::Allocator& _allocator);
-    void shutdown();
+    void init(const GPUMemoryAllocatorCreateInfo& info);
+    void destroy();
 
     GPUMemoryAllocationID allocate(AllocationTag tag, usize size);
     void free(GPUMemoryAllocationID allocation);
@@ -65,7 +71,7 @@ struct GPUMemoryAllocator
     Ptr<Graphics::Buffer> begin_staging(usize size);
     void end_staging(Ptr<Graphics::Buffer> staging_buffer);
     Slice<u8> map_staging();
-    void unmap_staging(Slice<u8> memory);
+    void unmap_staging(const Slice<u8>& memory);
 
     Ptr<Graphics::MemoryHeap> allocation_get_heap(GPUMemoryAllocationID allocation);
     [[nodiscard]] usize allocation_get_offset(GPUMemoryAllocationID allocation);

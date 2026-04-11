@@ -10,8 +10,19 @@ void RenderDevice::initialize(const SystemInitializeInfo& info)
 
     device.init(allocator, Engine::get_selected_gpu_device());
 
-    memory_allocator.initialize(allocator);
-    resource_manager.initialize(allocator);
+    gpu_memory_allocator.init(
+        {
+            .allocator = allocator,
+            .graphics_device = get_graphics_device(),
+        }
+    );
+    resource_manager.init(
+        {
+            .allocator = allocator,
+            .graphics_device = get_graphics_device(),
+            .gpu_memory_allocator = get_gpu_memory_allocator(),
+        }
+    );
 }
 
 void RenderDevice::shutdown()
@@ -21,44 +32,9 @@ void RenderDevice::shutdown()
     device.get_copy_queue().wait_idle();
     device.get_present_queue().wait_idle();
 
-    resource_manager.shutdown();
-    memory_allocator.shutdown();
+    resource_manager.destroy();
+    gpu_memory_allocator.destroy();
 
     device.destroy();
 }
 
-void RenderDevice::_submit_and_wait(GPU::QueueID gpu_queue, void* arg, SubmitFn recorder)
-{
-    GPU::CommandPoolID pool = GPU::command_pool_create(
-        {
-            .device = get_graphics_device().gpu_device,
-            .queue = gpu_queue,
-        }
-    );
-
-    GPU::CommandBufferID cmd = GPU::command_buffer_allocate(
-        {
-            .pool = pool,
-        }
-    );
-
-    GPU::command_buffer_begin(cmd);
-    recorder(arg, cmd);
-    GPU::command_buffer_end(cmd);
-
-    GPU::queue_execute_command_buffer(
-        gpu_queue,
-        {
-            .wait_semaphores = {},
-            .wait_stages = {},
-            .command_buffers = Slice(&cmd, 1),
-            .signal_semaphores = {},
-            .fence = GPU::FenceID::invalid(),
-        }
-    );
-
-    GPU::queue_wait_idle(gpu_queue);
-
-    GPU::command_buffer_free(cmd);
-    GPU::command_pool_destroy(pool);
-}
