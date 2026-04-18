@@ -27,6 +27,7 @@ struct GPUMemoryAllocator
         Staging,
         Texture,
         Buffer,
+        MappedBuffer,
     };
 
     struct Allocation
@@ -68,12 +69,12 @@ struct GPUMemoryAllocator
     GPUMemoryAllocationID allocate(AllocationTag tag, usize size);
     void free(GPUMemoryAllocationID allocation);
 
-    Ptr<Graphics::Buffer> begin_staging(usize size);
-    void end_staging(Ptr<Graphics::Buffer> staging_buffer);
+    Graphics::Buffer* begin_staging(usize size);
+    void end_staging(Graphics::Buffer* staging_buffer);
     Slice<u8> map_staging();
     void unmap_staging(const Slice<u8>& memory);
 
-    Ptr<Graphics::MemoryHeap> allocation_get_heap(GPUMemoryAllocationID allocation);
+    Graphics::MemoryHeap* allocation_get_heap(GPUMemoryAllocationID allocation);
     [[nodiscard]] usize allocation_get_offset(GPUMemoryAllocationID allocation);
 
     Heap& _request_heap_for(AllocationTag tag, usize size);

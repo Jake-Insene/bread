@@ -13,11 +13,11 @@ void GPUMemoryAllocator::init(const GPUMemoryAllocatorCreateInfo& info)
 
     staging_heap = graphics_device->create_memory_heap(
         GPU::HeapUsage::CPUGPUCoherent, StagingHeapInitialSize
-    ).get();
+    );
 
     staging_buffer = graphics_device->create_buffer(
-        GPU::BufferUsage::TransferSource, StagingHeapInitialSize, Ptr<Graphics::MemoryHeap>::from_raw(staging_heap), 0
-    ).get();
+        GPU::BufferUsage::TransferSource, StagingHeapInitialSize, staging_heap, 0
+    );
 
     staging_heap_current_size = StagingHeapInitialSize;
     mapped_staging_heap = staging_heap->map(0, staging_heap_current_size);
@@ -96,13 +96,13 @@ void GPUMemoryAllocator::free(GPUMemoryAllocationID allocation)
     allocations.remove(allocation);
 }
 
-Ptr<Graphics::Buffer> GPUMemoryAllocator::begin_staging(usize size)
+Graphics::Buffer* GPUMemoryAllocator::begin_staging(usize size)
 {
     Unused(size);
-    return Ptr<Graphics::Buffer>::from_raw(staging_buffer);
+    return staging_buffer;
 }
 
-void GPUMemoryAllocator::end_staging(Ptr<Graphics::Buffer>)
+void GPUMemoryAllocator::end_staging(Graphics::Buffer*)
 {
 
 }
@@ -117,11 +117,11 @@ void GPUMemoryAllocator::unmap_staging(const Slice<u8>& memory)
     Unused(memory);
 }
 
-Ptr<Graphics::MemoryHeap> GPUMemoryAllocator::allocation_get_heap(GPUMemoryAllocationID allocation)
+Graphics::MemoryHeap* GPUMemoryAllocator::allocation_get_heap(GPUMemoryAllocationID allocation)
 {
     FailOn(allocation.is_valid() == false, "invalid allocation");
 
-    return Ptr<Graphics::MemoryHeap>::from_raw(heaps.get(allocations.get(allocation).heap_index).heap);
+    return heaps.get(allocations.get(allocation).heap_index).heap;
 }
 
 [[nodiscard]] usize GPUMemoryAllocator::allocation_get_offset(GPUMemoryAllocationID allocation)
@@ -151,7 +151,7 @@ GPUMemoryAllocator::Heap& GPUMemoryAllocator::_create_heap(AllocationTag tag, us
     {
         .heap = graphics_device->create_memory_heap(
             _tag_get_gpu_usage(tag), heap_size
-        ).get(),
+        ),
         .heap_size = heap_size,
         .tag = tag,
         .heap_index = heaps.count,
@@ -171,6 +171,8 @@ GPU::HeapUsage GPUMemoryAllocator::_tag_get_gpu_usage(AllocationTag tag)
     case AllocationTag::Texture:
     case AllocationTag::Buffer:
         return GPU::HeapUsage::GPUExclusive;
+    case AllocationTag::MappedBuffer:
+        return GPU::HeapUsage::CPUGPUCoherent;
     }
 
     FailOn(true, "invalid allocation tag");

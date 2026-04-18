@@ -93,11 +93,11 @@ Fence* CommandQueue::execute(const CommandQueueExecuteInfo& info)
     Slice<GPU::SemaphoreID> gpu_signal_semaphores = allocator.array<GPU::SemaphoreID>(info.signal_semaphores.len);
     for(usize i = 0; i < gpu_wait_semaphores.len; i++)
     {
-        gpu_wait_semaphores[i] = info.wait_semaphores[i].get()->gpu_semaphore;
+        gpu_wait_semaphores[i] = info.wait_semaphores[i]->gpu_semaphore;
     }
     for(usize i = 0; i < gpu_signal_semaphores.len; i++)
     {
-        gpu_signal_semaphores[i] = info.signal_semaphores[i].get()->gpu_semaphore;
+        gpu_signal_semaphores[i] = info.signal_semaphores[i]->gpu_semaphore;
     }
 
     GPU::queue_execute_command_buffer(gpu_queue,
@@ -143,11 +143,11 @@ Fence* CommandQueue::execute_empty(const CommandQueueExecuteEmptyInfo& info)
     Slice<GPU::SemaphoreID> gpu_signal_semaphores = allocator.array<GPU::SemaphoreID>(info.signal_semaphores.len);
     for(usize i = 0; i < gpu_wait_semaphores.len; i++)
     {
-        gpu_wait_semaphores[i] = info.wait_semaphores[i].get()->gpu_semaphore;
+        gpu_wait_semaphores[i] = info.wait_semaphores[i]->gpu_semaphore;
     }
     for(usize i = 0; i < gpu_signal_semaphores.len; i++)
     {
-        gpu_signal_semaphores[i] = info.signal_semaphores[i].get()->gpu_semaphore;
+        gpu_signal_semaphores[i] = info.signal_semaphores[i]->gpu_semaphore;
     }
 
     GPU::queue_execute_command_buffer(gpu_queue,
@@ -218,7 +218,7 @@ void CommandQueue::release_fence(Fence* fence)
 
 Fence* CommandQueue::_alloc_new_fence()
 {
-    Fence* fence = parent->create_fence(false).get();
+    Fence* fence = parent->create_fence(false);
     (void)gpu_work_fences.add(fence);
     return fence;
 }

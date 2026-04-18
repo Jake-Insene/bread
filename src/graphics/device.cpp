@@ -73,13 +73,13 @@ void Device::destroy()
     GPU::device_destroy(gpu_device);
 }
 
-Ptr<SwapChain> Device::create_swap_chain(Window window, GPU::TextureFormat surface_format)
+SwapChain* Device::create_swap_chain(Window window, GPU::TextureFormat surface_format)
 {
-    Ptr<SwapChain> sc = _allocate_object<SwapChain>();
-    sc.get()->init(allocator, this,
+    SwapChain* sc = _allocate_object<SwapChain>();
+    sc->init(allocator, this,
         {
             .gpu_device = gpu_device,
-            .present_queue = Ptr<Queue>::from_raw(&present_queue),
+            .present_queue = &present_queue,
             .window = window,
             .surface_format = surface_format,
         }
@@ -87,24 +87,24 @@ Ptr<SwapChain> Device::create_swap_chain(Window window, GPU::TextureFormat surfa
     return sc;
 }
 
-Ptr<Fence> Device::create_fence(bool signaled)
+Fence* Device::create_fence(bool signaled)
 {
-    Ptr<Fence> fence = _allocate_object<Fence>();
-    fence.get()->init(allocator, this, gpu_device, signaled);
+    Fence* fence = _allocate_object<Fence>();
+    fence->init(allocator, this, gpu_device, signaled);
     return fence;   
 }
 
-Ptr<Semaphore> Device::create_semaphore()
+Semaphore* Device::create_semaphore()
 {
-    Ptr<Semaphore> semaphore = _allocate_object<Semaphore>();
-    semaphore.get()->init(allocator, this, gpu_device);
+    Semaphore* semaphore = _allocate_object<Semaphore>();
+    semaphore->init(allocator, this, gpu_device);
     return semaphore;
 }
 
-Ptr<MemoryHeap> Device::create_memory_heap(GPU::HeapUsage usage, usize size)
+MemoryHeap* Device::create_memory_heap(GPU::HeapUsage usage, usize size)
 {
-    Ptr<MemoryHeap> heap = _allocate_object<MemoryHeap>();
-    heap.get()->init(allocator, this,
+    MemoryHeap* heap = _allocate_object<MemoryHeap>();
+    heap->init(allocator, this,
         {
             .device = gpu_device,
             .heap_usage = usage,
@@ -114,10 +114,10 @@ Ptr<MemoryHeap> Device::create_memory_heap(GPU::HeapUsage usage, usize size)
     return heap;
 }
 
-Ptr<Buffer> Device::create_buffer(GPU::BufferUsage usage, usize size, Ptr<MemoryHeap> heap, usize heap_offset)
+Buffer* Device::create_buffer(GPU::BufferUsage usage, usize size, MemoryHeap* heap, usize heap_offset)
 {
-    Ptr<Buffer> buffer = _allocate_object<Buffer>();
-    buffer.get()->init(allocator, this,
+    Buffer* buffer = _allocate_object<Buffer>();
+    buffer->init(allocator, this,
         {
             .gpu_device = gpu_device,
             .usage = usage,
@@ -129,17 +129,17 @@ Ptr<Buffer> Device::create_buffer(GPU::BufferUsage usage, usize size, Ptr<Memory
     return buffer;
 }
 
-Ptr<Sampler> Device::create_sampler(const SamplerInfo& sampler_info)
+Sampler* Device::create_sampler(const SamplerInfo& sampler_info)
 {
-    Ptr<Sampler> sampler = _allocate_object<Sampler>();
-    sampler.get()->init(allocator, this, gpu_device, sampler_info);
+    Sampler* sampler = _allocate_object<Sampler>();
+    sampler->init(allocator, this, gpu_device, sampler_info);
     return sampler;
 }
 
-Ptr<DescriptorPool> Device::create_descriptor_pool(u32 max_sets, Slice<const GPU::DescriptorPoolSize> sizes)
+DescriptorPool* Device::create_descriptor_pool(u32 max_sets, Slice<const GPU::DescriptorPoolSize> sizes)
 {
-    Ptr<DescriptorPool> descriptor_pool = _allocate_object<DescriptorPool>();
-    descriptor_pool.get()->init(allocator, this,
+    DescriptorPool* descriptor_pool = _allocate_object<DescriptorPool>();
+    descriptor_pool->init(allocator, this,
         {
             .device = gpu_device,
             .max_sets = max_sets,
@@ -149,17 +149,17 @@ Ptr<DescriptorPool> Device::create_descriptor_pool(u32 max_sets, Slice<const GPU
     return descriptor_pool;
 }
 
-Ptr<Pipeline> Device::create_pipeline(const PipelineInfo& pipeline_info)
+Pipeline* Device::create_pipeline(const PipelineInfo& pipeline_info)
 {
-    Ptr<Pipeline> pipe = _allocate_object<Pipeline>();
-    pipe.get()->init(allocator, this, gpu_device, pipeline_info);
+    Pipeline* pipe = _allocate_object<Pipeline>();
+    pipe->init(allocator, this, gpu_device, pipeline_info);
     return pipe;
 }
 
-Ptr<CommandQueue> Device::create_command_queue(Queue& queue)
+CommandQueue* Device::create_command_queue(Queue& queue)
 {
-    Ptr<CommandQueue> command_queue = _allocate_object<CommandQueue>();
-    command_queue.get()->init(allocator, this,
+    CommandQueue* command_queue = _allocate_object<CommandQueue>();
+    command_queue->init(allocator, this,
         {
             .gpu_device = gpu_device,
             .gpu_queue = queue.gpu_queue,

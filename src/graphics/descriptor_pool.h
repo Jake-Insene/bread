@@ -28,7 +28,7 @@ struct DescriptorPool : DeviceObject
     DescriptorSetRef allocate(GPU::DescriptorSetLayoutID set_layout);
     void free(DescriptorSetRef set_ref);
 
-    DescriptorSet& set(DescriptorSetRef set_ref) { return descriptor_sets.get(set_ref); }
+    DescriptorSet* set(DescriptorSetRef set_ref) { return &descriptor_sets.get(set_ref); }
 };
 
 }

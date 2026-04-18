@@ -29,7 +29,7 @@ void DescriptorSet::destroy()
     GPU::descriptor_set_free(descriptor_set);
 }
 
-void DescriptorSet::set_uniform_buffer(u32 binding, const Buffer& buffer, usize offset, usize range)
+void DescriptorSet::set_uniform_buffer(u32 binding, const Buffer* buffer, usize offset, usize range)
 {
     if(use_deferred)
     {
@@ -42,7 +42,7 @@ void DescriptorSet::set_uniform_buffer(u32 binding, const Buffer& buffer, usize 
                 {
                     .buffer =
                     {
-                        .buffer = buffer.gpu_buffer,
+                        .buffer = buffer->gpu_buffer,
                         .offset = offset,
                         .range = range,
                     }
@@ -54,7 +54,7 @@ void DescriptorSet::set_uniform_buffer(u32 binding, const Buffer& buffer, usize 
     {
         GPU::DescriptorBufferInfo buffers[] =
         {
-            { .buffer = buffer.gpu_buffer, .offset = offset, .range = range, },
+            { .buffer = buffer->gpu_buffer, .offset = offset, .range = range, },
         };
 
         GPU::WriteDescriptorInfo write_info[] =

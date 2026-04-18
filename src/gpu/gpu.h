@@ -511,7 +511,7 @@ struct GPU
 	struct DescriptorSetLayoutCreateInfo
 	{
 		DeviceID device;
-		Slice<DescriptorBinding> bindings;
+		Slice<const DescriptorBinding> bindings;
 	};
 
 	static DescriptorSetLayoutID descriptor_set_layout_create(const DescriptorSetLayoutCreateInfo& ci);
@@ -585,6 +585,9 @@ struct GPU
 	/*
 	* Pipeline API
 	*/
+	static constexpr usize MaxVertexInputBindings = 16;
+	static constexpr usize MaxVertexInputAttributes = 16;
+
 	enum class PipelineBindPoint
 	{
 		Unknown = 0,

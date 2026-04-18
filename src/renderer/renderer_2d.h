@@ -4,24 +4,29 @@
 #include "math/color.h"
 #include "math/rect_2d.h"
 #include "graphics/device.h"
+#include "graphics/pipeline_2d.h"
 #include "render_device/core/gpu_memory_allocator.h"
 #include "renderer/framed_buffer.h"
+#include "renderer/framed_pool.h"
+#include "renderer/renderer.h"
 
 
 struct GPUMemoryAllocator;
 
-struct Renderer2DCreateInfo
+struct Renderer2DCreateInfo : RendererCreateInfo
 {
-    mem::Allocator allocator;
-    Graphics::Device* graphics_device;
-    GPUMemoryAllocator* gpu_memory_allocator;
 };
 
-struct Renderer2D
-{
-    static constexpr usize MaxInstancePerFramedBuffer = 128;
+struct Renderer2D : Renderer
+{    
+    struct SceneUniform
+    {
+        Mat4 view;
+        Mat4 projection;
+        Mat4 view_projection;
+    };
 
-    struct BaseInstance
+    struct alignas(Vector4) BaseInstance
     {
         // attrib 0
         Vector2 xx;
@@ -35,10 +40,22 @@ struct Renderer2D
         // attrib 3
         Rect2D uv_rect;
     };
+    static_assert(sizeof(BaseInstance) / sizeof(Vector4) <= 5, "BaseInstance should use more than 5 attributes");
+    
+    static constexpr usize InstanceSize = sizeof(Vector4) * GPU::MaxVertexInputAttributes;
+    static constexpr usize AttributesPerInstance = InstanceSize / sizeof(Vector4);
 
-    mem::Allocator allocator;
-    FramedBuffer buffers;
+    static constexpr usize MaxInstancePerFramedBuffer = 128;
+    static constexpr usize InstanceBufferSize = MaxInstancePerFramedBuffer * sizeof(InstanceSize);
+
+    Graphics::Pipeline* pipeline;
+
+    FramedDeviceBuffer buffers;
+    FramedMappedBuffer uniform_buffers;
+    FramedPool uniform_pool;
 
     void init(const Renderer2DCreateInfo& info);
     void destroy();
+
+    void build_frame(const FrameInfo& frame_info);
 };

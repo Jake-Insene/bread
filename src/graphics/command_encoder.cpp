@@ -1,5 +1,7 @@
 #include "graphics/command_encoder.h"
 
+#include "graphics/descriptor_set.h"
+#include "graphics/pipeline.h"
 
 
 namespace Graphics
@@ -30,28 +32,28 @@ void CommandEncoder::texture_barrier(const GPU::PipelineTextureBarrier& barrier)
     GPU::command_buffer_texture_barrier(command_buffer, barrier);
 }
 
-void CommandEncoder::bind_pipeline(GPU::PipelineBindPoint bind_point, Pipeline& pipeline)
+void CommandEncoder::bind_pipeline(GPU::PipelineBindPoint bind_point, Pipeline* pipeline)
 {
-    GPU::command_buffer_bind_pipeline(command_buffer, bind_point, pipeline.pipeline);
+    GPU::command_buffer_bind_pipeline(command_buffer, bind_point, pipeline->gpu_pipeline);
 }
 
-void CommandEncoder::bind_set(GPU::PipelineBindPoint bind_point, Pipeline& pipeline, u32 base_set, const Slice<DescriptorSet>& sets)
+void CommandEncoder::bind_set(GPU::PipelineBindPoint bind_point, Pipeline* pipeline, u32 base_set, const Slice<DescriptorSet*>& sets)
 {
     Slice<GPU::DescriptorSetID> descriptor_sets = allocator.array<GPU::DescriptorSetID>(sets.len);
     for(usize i = 0; i < descriptor_sets.len; i++)
     {
-        descriptor_sets[i] = sets[i].descriptor_set;
+        descriptor_sets[i] = sets[i]->descriptor_set;
     }
 
-    GPU::command_buffer_bind_descriptor_sets(command_buffer, bind_point, pipeline.pipeline, base_set, descriptor_sets);
+    GPU::command_buffer_bind_descriptor_sets(command_buffer, bind_point, pipeline->gpu_pipeline, base_set, descriptor_sets);
 }
 
-void CommandEncoder::bind_vertex_buffers(u32 base_binding, const Slice<Buffer>& buffers, const Slice<usize>& offsets)
+void CommandEncoder::bind_vertex_buffers(u32 base_binding, const Slice<Buffer*>& buffers, const Slice<usize>& offsets)
 {
     Slice<GPU::BufferID> buffers_id = allocator.array<GPU::BufferID>(buffers.len);
     for(usize i = 0; i < buffers.len; i++)
     {
-        buffers_id[i] = buffers[i].gpu_buffer;
+        buffers_id[i] = buffers[i]->gpu_buffer;
     }
 
     GPU::command_buffer_bind_vertex_buffers(command_buffer, base_binding, buffers_id, offsets);

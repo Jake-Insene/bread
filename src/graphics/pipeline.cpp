@@ -8,12 +8,15 @@ namespace Graphics
 void Pipeline::init(const mem::Allocator& _allocator, Device* _parent, GPU::DeviceID gpu_device, const PipelineInfo& info)
 {
     DeviceObject::init(_allocator, _parent);
-    set_layouts = allocator.array<GPU::DescriptorSetLayoutID>(info.set_layout_infos.len);
+    gpu_set_layouts = allocator.array<GPU::DescriptorSetLayoutID>(info.set_layout_infos.len);
     for(usize i = 0; i < info.set_layout_infos.len; i++)
     {
-        GPU::DescriptorSetLayoutCreateInfo set_layout_info = info.set_layout_infos[i];
-        set_layout_info.device = gpu_device;
-        set_layouts[i] = GPU::descriptor_set_layout_create(set_layout_info);
+        gpu_set_layouts[i] = GPU::descriptor_set_layout_create(
+            {
+                .device = gpu_device,
+                .bindings = info.set_layout_infos[i].bindings,
+            }
+        );
     }
 
     GPU::ShaderStageInfo shader_stages[] =
@@ -35,31 +38,31 @@ void Pipeline::init(const mem::Allocator& _allocator, Device* _parent, GPU::Devi
         .pipeline_layout =
         {
             .constant_blocks = info.constant_blocks,
-            .set_layouts = set_layouts,
+            .set_layouts = gpu_set_layouts,
         },
         .rendering_info = info.rendering_info,
     };
 
-    pipeline = GPU::pipeline_create(pipeline_ci);
+    gpu_pipeline = GPU::pipeline_create(pipeline_ci);
 }
 
 void Pipeline::destroy()
 {
-    for(GPU::DescriptorSetLayoutID set_layout : set_layouts)
+    for(GPU::DescriptorSetLayoutID gpu_set_layout : gpu_set_layouts)
     {
-        GPU::descriptor_set_layout_destroy(set_layout);
+        GPU::descriptor_set_layout_destroy(gpu_set_layout);
     }
-    allocator.free(mem::to_bytes(set_layouts));
+    allocator.free(mem::to_bytes(gpu_set_layouts));
     
-    GPU::pipeline_destroy(pipeline);
+    GPU::pipeline_destroy(gpu_pipeline);
     DeviceObject::destroy();
 }
 
 GPU::DescriptorSetLayoutID Pipeline::get_set_layout(usize set_index)
 {
-    DebugAssert(set_index < set_layouts.len, "invalid set index");
+    DebugAssert(set_index < gpu_set_layouts.len, "invalid set index");
 
-    return set_layouts[set_index];
+    return gpu_set_layouts[set_index];
 }
 
 }

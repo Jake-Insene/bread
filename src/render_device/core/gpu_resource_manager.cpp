@@ -37,14 +37,14 @@ GPUTextureID GPUResourceManager::create_texture(const TextureAllocateInfo& alloc
             .tiling = GPU::TextureTiling::Optimal,
             .usage = GPU::TextureUsage::TransferDestination | GPU::TextureUsage::Sampled,
             .initial_layout = GPU::TextureLayout::Unknown,
-            .memory_heap = gpu_memory_allocator->allocation_get_heap(allocation).get()->memory_heap,
+            .memory_heap = gpu_memory_allocator->allocation_get_heap(allocation)->memory_heap,
             .heap_offset = gpu_memory_allocator->allocation_get_offset(allocation),
         }
     );
 
     // Setting up the texture data
     {
-        Ptr<Graphics::Buffer> buffer = gpu_memory_allocator->begin_staging(alloc_info.pixels.len);
+        Graphics::Buffer* buffer = gpu_memory_allocator->begin_staging(alloc_info.pixels.len);
         Slice<u8> mapped_buffer = gpu_memory_allocator->map_staging();
         mem::copy(mapped_buffer, alloc_info.pixels);
         gpu_memory_allocator->unmap_staging(mapped_buffer);
@@ -73,7 +73,7 @@ GPUTextureID GPUResourceManager::create_texture(const TextureAllocateInfo& alloc
                 );
                 GPU::command_buffer_copy_buffer_to_texture(cmd,
                     {
-                        .source_buffer = buffer.get()->gpu_buffer,
+                        .source_buffer = buffer->gpu_buffer,
                         .source_offset = 0,
                         .row_length = 0,
                         .image_height = 0,

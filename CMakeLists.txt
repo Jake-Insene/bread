@@ -104,7 +104,9 @@ file(GLOB ENGINE_SRC
     src/render_device/core/gpu_resource_manager.cpp
 
     src/renderer/framed_buffer.cpp
+    src/renderer/framed_pool.cpp
     src/renderer/renderer_2d.cpp
+    src/renderer/renderer.cpp
     
     src/resource/font.cpp
     src/resource/image.cpp

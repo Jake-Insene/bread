@@ -10,36 +10,81 @@ void FramedBuffer::init(const FramedBufferCreateInfo& info)
     gpu_memory_allocator = info.gpu_memory_allocator;
 
     buffer_size = mem::align_up(info.buffer_size, GPU::MinHeapResourceAlignment);
-
-    buffer_allocation = gpu_memory_allocator->allocate(GPUMemoryAllocator::AllocationTag::Buffer, info.frame_count * buffer_size);
-    staging_buffer_allocation = gpu_memory_allocator->allocate(GPUMemoryAllocator::AllocationTag::Staging, info.frame_count * buffer_size);
-   
-    buffers = Array<Graphics::Buffer*>::with_size(allocator, info.frame_count);
-    buffers.resize(info.frame_count);
-    staging_buffers = Array<Graphics::Buffer*>::with_size(allocator, info.frame_count);
-    staging_buffers.resize(info.frame_count);
-    for(usize i = 0; i < info.frame_count; i++)
-    {
-        buffers.get(i) = graphics_device->create_buffer(
-            info.usage | GPU::BufferUsage::TransferDestination, buffer_size,
-            gpu_memory_allocator->allocation_get_heap(buffer_allocation),
-            gpu_memory_allocator->allocation_get_offset(buffer_allocation) + (i * buffer_size)
-        ).get();
-        staging_buffers.get(i) = graphics_device->create_buffer(
-            info.usage | GPU::BufferUsage::TransferSource, buffer_size,
-            gpu_memory_allocator->allocation_get_heap(buffer_allocation),
-            gpu_memory_allocator->allocation_get_offset(buffer_allocation) + (i * buffer_size)
-        ).get();
-    }
+    buffers_info = Array<BufferInfo>::with_size(allocator, info.frame_count);
 }
 
 void FramedBuffer::destroy()
 {
-    (void)buffers.iter().for_each([](Graphics::Buffer* buffer){ buffer->destroy(); });
-    (void)staging_buffers.iter().for_each([](Graphics::Buffer* buffer){ buffer->destroy(); });
-    buffers.destroy();
-    staging_buffers.destroy();
+    buffers_info.destroy();
+}
 
+void FramedDeviceBuffer::init(const FramedBufferCreateInfo& info)
+{
+    FramedBuffer::init(info);
+    buffer_allocation = gpu_memory_allocator->allocate(GPUMemoryAllocator::AllocationTag::Buffer, info.frame_count * buffer_size);
+    staging_allocation = gpu_memory_allocator->allocate(GPUMemoryAllocator::AllocationTag::Staging, info.frame_count * buffer_size);
+   
+    buffer = graphics_device->create_buffer(
+        info.usage | GPU::BufferUsage::TransferDestination, info.frame_count * buffer_size,
+        gpu_memory_allocator->allocation_get_heap(buffer_allocation),
+        gpu_memory_allocator->allocation_get_offset(buffer_allocation)
+    );
+    staging_buffer = graphics_device->create_buffer(
+        info.usage | GPU::BufferUsage::TransferSource, info.frame_count * buffer_size,
+        gpu_memory_allocator->allocation_get_heap(staging_allocation),
+        gpu_memory_allocator->allocation_get_offset(staging_allocation)
+    );
+
+    for(usize i = 0; i < info.frame_count; i++)
+    {
+        (void)buffers_info.add(
+            {
+                .offset = i * buffer_size,
+            }
+        );
+    }
+
+    mapped_staging = staging_buffer->map(0, info.frame_count * buffer_size);
+}
+
+void FramedDeviceBuffer::destroy()
+{
+    staging_buffer->unmap(mapped_staging);
+    buffer->destroy();
+    staging_buffer->destroy();
     gpu_memory_allocator->free(buffer_allocation);
-    gpu_memory_allocator->free(staging_buffer_allocation);
+    gpu_memory_allocator->free(staging_allocation);
+
+    FramedBuffer::destroy();
+}
+
+void FramedMappedBuffer::init(const FramedBufferCreateInfo& info)
+{
+    FramedBuffer::init(info);
+
+    mapped_buffer_allocation = gpu_memory_allocator->allocate(GPUMemoryAllocator::AllocationTag::Staging, info.frame_count * buffer_size);
+    mapped_buffer = graphics_device->create_buffer(
+        info.usage, info.frame_count * buffer_size,
+        gpu_memory_allocator->allocation_get_heap(mapped_buffer_allocation),
+        gpu_memory_allocator->allocation_get_offset(mapped_buffer_allocation)
+    );;
+
+    for(usize i = 0; i < info.frame_count; i++)
+    {
+        (void)buffers_info.add(
+            {
+                .offset = i * buffer_size,
+            }
+        );
+    }
+
+    mapped = mapped_buffer->map(0, info.frame_count * buffer_size);
+}
+
+void FramedMappedBuffer::destroy()
+{
+    mapped_buffer->unmap(mapped);
+    mapped_buffer->destroy();
+    gpu_memory_allocator->free(mapped_buffer_allocation);
+    FramedBuffer::destroy();
 }

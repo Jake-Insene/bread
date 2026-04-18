@@ -233,6 +233,12 @@ VkInstance Vulkan::create_instance()
         }
     };
 
+#if defined(BREAD_SHOW_DEBUG_INFO) && defined(BREAD_WIN32)
+    const char* vk_layers[] = {
+        "VK_LAYER_KHRONOS_validation"
+    };
+#endif
+
     VkLayerSettingsCreateInfoEXT layer_settings_create_info =
     {
         .sType = VK_STRUCTURE_TYPE_LAYER_SETTINGS_CREATE_INFO_EXT,
@@ -253,8 +259,13 @@ VkInstance Vulkan::create_instance()
 #endif
         .flags = 0,
         .pApplicationInfo = &application_info,
+#if defined(BREAD_SHOW_DEBUG_INFO) && defined(BREAD_WIN32)
+        .enabledLayerCount = static_cast<uint32_t>(ArraySize(vk_layers)),
+        .ppEnabledLayerNames = vk_layers,
+#else
         .enabledLayerCount = 0,
         .ppEnabledLayerNames = nullptr,
+#endif
         .enabledExtensionCount = static_cast<uint32_t>(ArraySize(_vk_extensions)),
         .ppEnabledExtensionNames = _vk_extensions,
     };

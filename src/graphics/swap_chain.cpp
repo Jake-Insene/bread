@@ -36,14 +36,14 @@ void SwapChain::resize()
 {
 }
 
-bool SwapChain::acquire_image(u32* image_index, Ptr<Graphics::Semaphore> present_complete)
+bool SwapChain::acquire_image(u32* image_index, Graphics::Semaphore* present_complete)
 {
-    if(pending_rebuild == true)
+    if(pending_rebuild)
     {
         _rebuild();
     }
 
-    if(is_valid_swap_chain == false && _try_rebuild() == false)
+    if(!is_valid_swap_chain && !_try_rebuild())
     {
         return false;
     }
@@ -53,7 +53,7 @@ bool SwapChain::acquire_image(u32* image_index, Ptr<Graphics::Semaphore> present
         swap_chain,
         {
             .timeout = MaxValue<u64>,
-            .semaphore = present_complete.get()->gpu_semaphore,
+            .semaphore = present_complete->gpu_semaphore,
             .fence = GPU::FenceID::invalid(),
         }, 
         &int_index
@@ -64,7 +64,8 @@ bool SwapChain::acquire_image(u32* image_index, Ptr<Graphics::Semaphore> present
         pending_rebuild = true;
         return true;
     }
-    else if(result == GPU::AcquireResult::OutOfDate)
+    
+    if(result == GPU::AcquireResult::OutOfDate)
     {
         return false;
     }
@@ -73,12 +74,12 @@ bool SwapChain::acquire_image(u32* image_index, Ptr<Graphics::Semaphore> present
     return true;
 }
 
-bool SwapChain::present(Queue& present_queue, u32 image_index, const Slice<Ptr<Semaphore>>& wait_semaphores)
+bool SwapChain::present(Queue& present_queue, u32 image_index, const Slice<Semaphore*>& wait_semaphores)
 {
     Slice<GPU::SemaphoreID> gpu_wait_semaphores = allocator.array<GPU::SemaphoreID>(wait_semaphores.len);
     for(usize i = 0; i < gpu_wait_semaphores.len; i++)
     {
-        gpu_wait_semaphores[i] = wait_semaphores[i].get()->gpu_semaphore;
+        gpu_wait_semaphores[i] = wait_semaphores[i]->gpu_semaphore;
     }
 
     GPU::AcquireResult result = present_queue.present(
@@ -117,7 +118,7 @@ void SwapChain::_free_images()
 
 void SwapChain::_rebuild()
 {
-    present_queue.get()->wait_idle();
+    present_queue->wait_idle();
 
     _free_images();
     

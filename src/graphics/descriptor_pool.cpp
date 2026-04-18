@@ -20,8 +20,8 @@ void DescriptorPool::destroy()
 {
     for(DescriptorSetRef set_ref : allocated_sets.iter())
     {
-        DescriptorSet& descriptor_set = set(set_ref);
-        descriptor_set.destroy();
+        DescriptorSet* descriptor_set = set(set_ref);
+        descriptor_set->destroy();
     }
 
     descriptor_sets.destroy();
@@ -37,8 +37,8 @@ DescriptorSetRef DescriptorPool::allocate(GPU::DescriptorSetLayoutID gpu_set_lay
     for (usize i = 0; i < available_sets.count; ++i)
     {
         DescriptorSetRef avail_set = available_sets.get(i);
-        DescriptorSet& descriptor_set = set(avail_set);
-        if (descriptor_set.set_layout == gpu_set_layout)
+        DescriptorSet* descriptor_set = set(avail_set);
+        if (descriptor_set->set_layout == gpu_set_layout)
         {
             available_sets.remove_at(i);
             return avail_set;

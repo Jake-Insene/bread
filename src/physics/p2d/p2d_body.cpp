@@ -73,7 +73,9 @@ void P2DBody::add_velocity(const Vector2& vel)
 void P2DBody::set_angular_velocity(f32 new_angular_velocity)
 {
 	if(fixed_rotation)
+	{
 		return;
+	}
 	data.angular_velocity = new_angular_velocity;
 }
 
@@ -85,7 +87,9 @@ f32 P2DBody::get_angular_velocity() const
 void P2DBody::add_angular_velocity(f32 ang_vel)
 {
 	if(fixed_rotation)
+	{
 		return;
+	}
 	data.angular_velocity += ang_vel;
 }
 
@@ -185,7 +189,7 @@ void P2DBody::_semi_implicit_euler(f32 dt)
 	data.angular_velocity += angular_acceleration;
 
 	// Angular Velocity
-	if (fixed_rotation == false)
+	if (!fixed_rotation)
 	{
 		data.transform.rotate(data.angular_velocity * dt);
 	}

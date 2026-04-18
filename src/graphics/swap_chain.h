@@ -15,13 +15,14 @@ namespace Graphics
 struct SwapChainInfo
 {
     GPU::DeviceID gpu_device;
-    Ptr<Queue> present_queue;
+    Queue* present_queue;
     Window window;
     GPU::TextureFormat surface_format;
 };
 
 struct SwapChain : DeviceObject
 {
+    static constexpr GPU::TextureFormat DefaultSurfaceFormat = GPU::TextureFormat::RGBA8Unorm;
     static constexpr usize DefaultMinImageCount = 3;
 
     struct ImageInfo
@@ -30,7 +31,7 @@ struct SwapChain : DeviceObject
     };
     
     GPU::DeviceID gpu_device;
-    Ptr<Queue> present_queue;
+    Queue* present_queue;
     Window window;
     GPU::TextureFormat surface_format;
     
@@ -45,10 +46,10 @@ struct SwapChain : DeviceObject
 
     void resize();
 
-    bool acquire_image(u32* image_index, Ptr<Semaphore> present_complete);
-    bool present(Queue& present_queue, u32 image_index, const Slice<Ptr<Semaphore>>& wait_semaphores);
+    bool acquire_image(u32* image_index, Semaphore* present_complete);
+    bool present(Queue& present_queue, u32 image_index, const Slice<Semaphore*>& wait_semaphores);
 
-    usize get_image_count() { return images.count; }
+    usize get_image_count() const { return images.count; }
     ImageInfo& get_image(u32 image_index) { return images.get(image_index); }
 
     void _init_images();

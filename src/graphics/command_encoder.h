@@ -2,14 +2,16 @@
 #include "collections/array.h"
 #include "gpu/gpu.h"
 #include "mem/allocator.h"
-#include "graphics/pipeline.h"
-#include "graphics/descriptor_set.h"
 
 
 struct RenderDevice;
 
 namespace Graphics
 {
+
+struct Pipeline;
+struct Buffer;
+struct DescriptorSet;
 
 struct CommandEncoder
 {
@@ -24,9 +26,9 @@ struct CommandEncoder
 
     void texture_barrier(const GPU::PipelineTextureBarrier& barrier);
 
-    void bind_pipeline(GPU::PipelineBindPoint bind_point, Pipeline& pipeline);
-    void bind_set(GPU::PipelineBindPoint bind_point, Pipeline& pipeline, u32 base_set, const Slice<DescriptorSet>& sets);
-    void bind_vertex_buffers(u32 base_binding, const Slice<Buffer>& buffers, const Slice<usize>& offsets);
+    void bind_pipeline(GPU::PipelineBindPoint bind_point, Pipeline* pipeline);
+    void bind_set(GPU::PipelineBindPoint bind_point, Pipeline* pipeline, u32 base_set, const Slice<DescriptorSet*>& sets);
+    void bind_vertex_buffers(u32 base_binding, const Slice<Buffer*>& buffers, const Slice<usize>& offsets);
 
     void set_viewports(u32 base_viewport, const Slice<GPU::Viewport>& viewports);
     void set_scissors(u32 base_scissor, const Slice<GPU::Scissor>& scissors);

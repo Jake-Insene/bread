@@ -12,7 +12,7 @@ void Buffer::init(const mem::Allocator& _allocator, Device* _parent, const Buffe
             .device = info.gpu_device,
             .usage = info.usage,
             .size = info.size,
-            .memory_heap = info.heap.get()->memory_heap,
+            .memory_heap = info.heap->memory_heap,
             .heap_offset = info.heap_offset,
         }
     );
@@ -27,12 +27,12 @@ void Buffer::destroy()
 
 Slice<u8> Buffer::map(usize offset, usize len)
 {
-    return heap.get()->map(heap_offset + offset, len);
+    return heap->map(heap_offset + offset, len);
 }
 
 void Buffer::unmap(Slice<u8> memory)
 {
-    heap.get()->unmap(memory);
+    heap->unmap(memory);
 }
 
 }

@@ -10,7 +10,7 @@ struct Pipeline2DInfo
     Shader shader;
     GPU::VertexInput vertex_input;
     Slice<const GPU::ConstantBlock> constant_blocks;
-    Slice<const GPU::DescriptorSetLayoutCreateInfo> set_layout_infos;
+    Slice<const DescriptorSetLayoutCreateInfo> set_layout_infos;
     GPU::RenderingInfo rendering_info;
 };
 

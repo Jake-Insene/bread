@@ -14,14 +14,14 @@ struct BufferInfo
     GPU::DeviceID gpu_device;
     GPU::BufferUsage usage;
     usize size;
-    Ptr<MemoryHeap> heap;
+    MemoryHeap* heap;
     usize heap_offset;
 };
 
 struct Buffer : DeviceObject
 {
     GPU::BufferID gpu_buffer;
-    Ptr<MemoryHeap> heap;
+    MemoryHeap* heap;
     usize heap_offset;
     
     void init(const mem::Allocator& _allocator, Device* _parent, const BufferInfo& info);
