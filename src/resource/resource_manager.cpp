@@ -220,13 +220,13 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
         GPUResourceManager::TextureAllocateInfo create_info =
         {
             .type = load_info.type,
-            .format = image->format == Image::FORMAT_RGB8 ? GPU::TextureFormat::RGB8Srgb : GPU::TextureFormat::RGBA8Srgb,
-            .extent = Vector3U(image->size.width, image->size.height, 1),
-            .pixels = image->pixels,
+            .format = image->get_format() == Image::ImageFormat::RGB8 ? GPU::TextureFormat::RGB8Srgb : GPU::TextureFormat::RGBA8Srgb,
+            .extent = Vector3U(image->get_size().width, image->get_size().height, 1),
+            .pixels = image->get_raw_pixels(),
         };
         
         tex->texture_ref = Engine::get_system_manager()->get_system<RenderDevice>()->get_resource_manager()->create_texture(create_info);
-        tex->size = image->size;
+        tex->size = image->get_size();
         cached_images.insert(image, tex);
     }
     

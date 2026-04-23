@@ -48,3 +48,24 @@ Audio::VTable* Audio::get_adapter()
 {
 	return &current_adapter;
 }
+
+Audio::Format Audio::output_get_format()
+{
+	return current_adapter.output_get_format();
+}
+
+u32 Audio::output_get_channels()
+{
+	return current_adapter.output_get_channels();
+}
+
+u32 Audio::output_get_samples_per_sec()
+{
+	return current_adapter.output_get_samples_per_sec();
+}
+
+u32 Audio::output_get_bits_per_sample()
+{
+	return current_adapter.output_get_bits_per_sample();
+}
+

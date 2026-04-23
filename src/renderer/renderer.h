@@ -59,4 +59,6 @@ struct Renderer
 
     void begin_frame();
     void end_frame();
+
+    virtual void render() = 0;
 };

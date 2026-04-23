@@ -6,11 +6,20 @@
 #include <external/stb_image.h>
 
 
+void Image::init(const ResourceCreateInfo& info)
+{
+    Resource::init(info);
+
+    data.pixels = {};
+    data.size = {};
+    data.format = {};
+}
+
 void Image::destroy()
 {
-    if(!pixels.null())
+    if(!data.pixels.null())
     {
-        allocator.free(pixels);
+        allocator.free(data.pixels);
     }
 
     Resource::destroy();
@@ -18,7 +27,7 @@ void Image::destroy()
 
 Error Image::load(StringView file_path)
 {
-    if (File::exists(file_path) == false)
+    if (!File::exists(file_path))
     {
         RMDebugInfo("Couldn't load the font '{}'", file_path);
         return MakeError(ErrorCode::FileNotFound);
@@ -27,29 +36,29 @@ Error Image::load(StringView file_path)
     Slice<u8> buffer = File::read_all(allocator, file_path);
     
     i32 channels = 0;
-    pixels.items = reinterpret_cast<u8*>(stbi_load_from_memory(
-        buffer.ptr(), static_cast<int>(buffer.len), &size.width, &size.height, &channels, 0
+    data.pixels.items = reinterpret_cast<u8*>(stbi_load_from_memory(
+        buffer.ptr(), static_cast<int>(buffer.len), &data.size.width, &data.size.height, &channels, 0
     ));
 
-    if(pixels.null())
+    if(data.pixels.null())
     {
         return MakeError(ErrorCode::ImageCorrupted);
     }
     
     if(channels == 3)
     {
-        format = FORMAT_RGB8;
+        data.format = ImageFormat::RGB8;
     }
     else if(channels == 4)
     {
-        format = FORMAT_RGBA8;
+        data.format = ImageFormat::RGBA8;
     }
     else
     {
         RMFatal("invalid channel count {}", channels);
     }
     
-    pixels.len = size.width * size.height * channels;
+    data.pixels.len = data.size.width * data.size.height * channels;
     allocator.free(buffer);
     
     return ErrorCode::Ok;
@@ -57,11 +66,11 @@ Error Image::load(StringView file_path)
 
 void Image::unload()
 {
-    if (!pixels.null())
+    if (!data.pixels.null())
     {
-        allocator.free(pixels);
-        pixels = Slice<u8>(nullptr, 0);
-        size = Vector2I();
-        format = Image::FORMAT_UNKNOWN;
+        allocator.free(data.pixels);
+        data.pixels = {};
+        data.size = {};
+        data.format = {};
     }
 }

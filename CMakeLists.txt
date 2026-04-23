@@ -21,6 +21,7 @@ file(GLOB EXTERNAL_SRC
 )
 
 file(GLOB ENGINE_SRC
+    src/audio/audio_service.cpp
     src/audio/audio.cpp
 
     src/collections/error.cpp

@@ -82,6 +82,7 @@ InternalGPU::GPUAdapter VulkanDriver::get_adapter()
 
 void VulkanDriver::initialize(const mem::Allocator &allocator)
 {
+    VKDebugInfo("Initializing Vulkan Driver...");
     data.allocator = allocator;
 
     data.tmp_allocator.init(OS::map_memory(1024*1024, OS::MapReadWrite));

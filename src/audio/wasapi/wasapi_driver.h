@@ -18,6 +18,13 @@ struct WASAPIDriver
         IMMDevice* device;
         IAudioClient* audio_client;
         IAudioRenderClient* render_client;
+
+        Audio::Format format;
+        u32 channels;
+        u32 samples_per_sec;
+        u32 bits_per_sample;
+
+        u32 frame_count;
     };
 
     struct InternalData
@@ -35,5 +42,10 @@ struct WASAPIDriver
 
     static void initialize(const mem::Allocator& allocator);
     static void shutdown();
+
+    static Audio::Format output_get_format();
+    static u32 output_get_channels();
+    static u32 output_get_samples_per_sec();
+    static u32 output_get_bits_per_sample();
 };
 

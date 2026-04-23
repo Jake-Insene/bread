@@ -5,13 +5,13 @@
 #include "engine/engine.h"
 
 
-static void* _dr_alloc(size_t size, void*)
+static inline void* _dr_alloc(size_t size, void*)
 {
     mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
     return allocator.alloc(size, 16).items;
 }
 
-static void* _dr_realloc(void* mem, size_t new_size, void*)
+static inline void* _dr_realloc(void* mem, size_t new_size, void*)
 {
     Slice<u8> old_mem = Slice(reinterpret_cast<u8*>(mem), 1);
     mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
@@ -45,9 +45,26 @@ static inline drwav_allocation_callbacks alloc_callbacks =
     .onFree = &_dr_free,
 };
 
+void Sound::init(const ResourceCreateInfo& info)
+{
+    Resource::init(info);
+
+    data.buffer = {};
+}
+
+void Sound::destroy()
+{
+    if(!data.buffer.null())
+    {
+        allocator.free(data.buffer);
+    }
+
+    Resource::destroy();
+}
+
 Error Sound::load(StringView file_path)
 {
-    if (File::exists(file_path) == false)
+    if (!File::exists(file_path))
     {
         RMDebugInfo("Couldn't load the font '{}'", file_path);
         return MakeError(ErrorCode::FileNotFound);
@@ -60,26 +77,20 @@ Error Sound::load(StringView file_path)
     drwav wav = {};
     drwav_init_memory(&wav, content.ptr(), content.len, &alloc_callbacks);
 
+    if(wav.channels > Audio::output_get_channels())
+    {
+        RMDebugInfo("The WAV file({}) contains more channels than are supported, find({}), supported({})",
+            file_path, wav.channels, Audio::output_get_channels()
+        );
+    }
+
     const size_t total_samples = static_cast<size_t>(wav.totalPCMFrameCount * wav.channels);
     const usize bytes_per_sample = wav.bitsPerSample / 8;
-    auto buffer = allocator.array<u8>(total_samples * bytes_per_sample);
+    data.buffer = allocator.array<u8>(total_samples * bytes_per_sample);
 
-    (void)drwav_read_pcm_frames(&wav, wav.totalPCMFrameCount, buffer.ptr());
-
-    //AudioSourceVoiceCreateInfo sv_create_info;
-
-    // TODO: This is only for 16-bits
-    //sv_create_info.awf.channel_number = wav.channels;
-    //sv_create_info.awf.samples_per_sec = wav.sampleRate;
-    //sv_create_info.awf.bits_per_sample = wav.bitsPerSample;
-    //sv_create_info.awf.block_align = wav.channels * (wav.bitsPerSample / 8);
-    //sv_create_info.awf.avg_bytes_per_sec = sv_create_info.awf.samples_per_sec * sv_create_info.awf.block_align;
-    //sv_create_info.buffer = buffer;
-
-    //data.source_voice = Audio::create_source_voice(sv_create_info);
+    (void)drwav_read_pcm_frames_f32(&wav, wav.totalPCMFrameCount, reinterpret_cast<f32*>(data.buffer.ptr()));
 
     drwav_uninit(&wav);
-    allocator.free(buffer);
     allocator.free(content);
 
     return ErrorCode::Ok;

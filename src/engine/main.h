@@ -2,12 +2,16 @@
 #error "this file should be included in the project not the engine"
 #endif
 
-#include "systems/system.h"
+#include "audio/audio_service.h"
 #include "render_device/render_device.h"
 #include "resource/resource_manager.h"
+#include "systems/system.h"
 
 SystemInfo _system_infos[] =
 {
+#if defined(BREAD_SYSTEM_AUDIOSERVICE)
+	AudioService::get_system_info(),
+#endif
 #if defined(BREAD_SYSTEM_RENDERDEVICE)
 	RenderDevice::get_system_info(),
 #endif

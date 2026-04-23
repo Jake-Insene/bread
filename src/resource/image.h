@@ -11,20 +11,28 @@ struct Image : Resource
 {
     RESOURCE(RESOURCE_IMAGE, LoadFromAssets, ResourceExtensions("png"))
 
-    enum ImageFormat
+    enum class ImageFormat
     {
-        FORMAT_UNKNOWN = 0,
-        FORMAT_RGB8,
-        FORMAT_RGBA8,
+        Unknown = 0,
+        RGB8,
+        RGBA8,
     };
+
+    struct InternalData
+    {
+        Slice<u8> pixels;
+        Vector2I size;
+        ImageFormat format;
+    } data;
     
-    Slice<u8> pixels;
-    Vector2I size;
-    ImageFormat format;
-    
+    void init(const ResourceCreateInfo& info);
     void destroy();
     
     Error load(StringView file_path);
     void unload();
+
+    Slice<u8> get_raw_pixels() const { return data.pixels; }
+    Vector2I get_size() const { return data.size; }
+    ImageFormat get_format() const { return data.format; }
 };
 

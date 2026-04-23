@@ -12,8 +12,13 @@ struct Sound : Resource
 
     struct InternalData
     {
+        u32 bytes_per_sample;
+        Slice<u8> buffer;
         //Audio::SourceVoiceID source_voice;
     } data;
+
+	void init(const ResourceCreateInfo& info);
+    void destroy();
 
     Error load(StringView file_path);
 
