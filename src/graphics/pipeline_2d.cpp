@@ -11,7 +11,7 @@ PipelineInfo Pipeline2D::make_default(const Pipeline2DInfo& info)
         .bind_point = GPU::PipelineBindPoint::Graphics,
         .shader = info.shader,
         .vertex_input = info.vertex_input,
-        .input_assembly = { .topology = GPU::PrimitiveTopology::TriangleList },
+        .input_assembly = { .topology = info.primitive_topology },
         .rasterizer_state =
         {
             .depth_clamp_enable = false,

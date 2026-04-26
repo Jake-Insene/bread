@@ -50,6 +50,10 @@ struct FragmentInput
     nointerpolation half4 Color;
     float2 UV;
     float4 ClipPosition : SV_Position;
+#if defined(INSTANCE_CIRCLE)
+    float2 LocalPosition;
+    half Radius;
+#endif
 };
 
 FragmentInput Vertex(ObjectData Object);
@@ -64,14 +68,18 @@ FragmentInput VertexMain(VertexInput Input, uint VertexIndex : SV_VertexID)
 
     Object.UV = UVPositions[VertexIndex % 6];
 
+#if defined(INSTANCE_SPRITE) || defined(INSTANCE_QUAD) || defined(INSTANCE_CIRCLE)
     float2 VertexPosition = QuadPositions[VertexIndex % 6];
     Object.VertexPosition = float4(VertexPosition, 0, 1);
+#elif defined(INSTANCE_LINE)
+    Object.VertexPosition = float4(1, 1, 0, 1);
+#endif
 
 #if defined(INSTANCE_SPRITE) || defined(INSTANCE_QUAD)
     Object.InstancePosition = float4((VertexPosition * Input.Attrib2.zw) + Input.Attrib2.xy, 0, 1);
 #elif defined(INSTANCE_LINE)
     Object.InstancePosition = float4(VertexIndex == 0 ? Input.Attrib2.xy : Input.Attrib2.zw, 0, 1);
-#elif defined(INSTANCE_CRICLE)
+#elif defined(INSTANCE_CIRCLE)
     Object.InstancePosition = float4((VertexPosition * Input.Attrib2.zz) + Input.Attrib2.xy, 0, 1);
 #endif
     
@@ -83,6 +91,10 @@ FragmentInput VertexMain(VertexInput Input, uint VertexIndex : SV_VertexID)
     );
 
     FragmentInput Output = Vertex(Object);
+#if defined(INSTANCE_CIRCLE)
+    Output.LocalPosition = (VertexPosition - float2(0.5, 0.5)) * 2.0;
+    Output.Radius = half(Input.Attrib2.z);
+#endif
     
     return Output;
 }

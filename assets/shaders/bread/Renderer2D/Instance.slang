@@ -25,6 +25,7 @@ half4 Fragment(FragmentInput Input) : SV_Target
 #elif defined(INSTANCE_QUAD) || defined(INSTANCE_LINE)
     return Input.Color;
 #elif defined(INSTANCE_CIRCLE)
-    return Input.Color;
+    half Dist = distance(half2(Input.LocalPosition), half2(0, 0));
+    return half4(Input.Color.xyz, Dist > 1H ? 0H : 1H);
 #endif
 }

@@ -16,6 +16,7 @@ struct GPUMemoryAllocator;
 
 struct Renderer2DCreateInfo : RendererCreateInfo
 {
+    u32 max_instances_per_primitive;
 };
 
 struct Renderer2D : Renderer

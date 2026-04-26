@@ -14,7 +14,7 @@ void Renderer2D::init(const Renderer2DCreateInfo& info)
             .graphics_device = info.graphics_device,
             .gpu_memory_allocator = info.gpu_memory_allocator,
             .max_frames_in_flight = info.max_frames_in_flight,
-            .max_instances_per_type = 4096,
+            .max_instances_per_type = info.max_instances_per_primitive,
             .surface_format = info.surface_format,
         }
     );

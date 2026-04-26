@@ -44,6 +44,7 @@ void RendererBatch2D::init(const RendererBatch2DCreateInfo& batch_info)
     );
 
     constexpr usize PipelineVersionSizes[] = { sizeof(SpriteInstance), sizeof(QuadInstance), sizeof(LineInstance), sizeof(CircleInstance) };
+    constexpr GPU::PrimitiveTopology PipelineTopologies[] = { GPU::PrimitiveTopology::TriangleList, GPU::PrimitiveTopology::TriangleList, GPU::PrimitiveTopology::LineList, GPU::PrimitiveTopology::TriangleList };
     Graphics::Pipeline* pipelines[] = {nullptr, nullptr, nullptr, nullptr};
     for(usize i = 0; i < 4; i++)
     {
@@ -87,6 +88,7 @@ void RendererBatch2D::init(const RendererBatch2DCreateInfo& batch_info)
                     .bindings = bindings,
                     .attributes = Slice(&attributes[0], attribute_count),
                 },
+                .primitive_topology = PipelineTopologies[i],
                 .constant_blocks = {},
                 .set_layout_infos = set_layouts,
                 .rendering_info =
@@ -275,7 +277,7 @@ void RendererBatch2D::begin_batch_record(const FrameInfo& frame_info, Graphics::
         GPU::BufferCopyRegion region =
         {
             .source_offset = vertex_buffer_info.offset + line_offset_begin,
-            .destination_offset = vertex_buffer_info.offset + line_offset_end,
+            .destination_offset = vertex_buffer_info.offset + line_offset_begin,
             .size = line_count * sizeof(LineInstance),
         };
         GPU::command_buffer_copy_buffer(encoder.command_buffer,
@@ -336,7 +338,7 @@ void RendererBatch2D::commit_quad(const QuadInstance& quad)
         (void)batches.add({
             .pipeline = quad_pipeline,
             .set = nullptr,
-            .offset = quad_offset_begin,
+            .offset = quad_offset_begin + (quads.count * sizeof(QuadInstance)),
             .vertices_per_instance = 6,
             .instance_count = 0,
         });
@@ -352,7 +354,7 @@ void RendererBatch2D::commit_line(const LineInstance& line)
         (void)batches.add({
             .pipeline = line_pipeline,
             .set = nullptr,
-            .offset = line_offset_begin,
+            .offset = line_offset_begin + (lines.count * sizeof(LineInstance)),
             .vertices_per_instance = 2,
             .instance_count = 0,
         });
@@ -369,7 +371,7 @@ void RendererBatch2D::commit_circle(const CircleInstance& circle)
         (void)batches.add({
             .pipeline = circle_pipeline,
             .set = nullptr,
-            .offset = circle_offset_begin,
+            .offset = circle_offset_begin + (circles.count * sizeof(CircleInstance)),
             .vertices_per_instance = 6,
             .instance_count = 0,
         });
