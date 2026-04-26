@@ -85,6 +85,8 @@ void Renderer::begin_frame()
         frame.in_flight_fence = nullptr;
     }
 
+    FrameFlags frame_flags = FrameFlags(0);
+    GPU::TextureID image = GPU::TextureID::invalid();
     if(image_index == MaxValue<u32> && image_acquired)
     {
         frame.in_flight_fence = command_queue->execute_empty(
@@ -98,13 +100,17 @@ void Renderer::begin_frame()
     else if(image_acquired && image_index != MaxValue<u32>)
     {
         frame_was_acquired = true;
-        current_frame_info =
-        {
-            .frame_index = frame_index,
-            .image_index = image_index,
-            .image = swap_chain->get_image(image_index).texture,
-        };
+        frame_flags |= FrameFlags::Acquired;
+        image = swap_chain->get_image(image_index).texture;    
     }
+
+    current_frame_info =
+    {
+        .flags = frame_flags,
+        .frame_index = frame_index,
+        .image_index = image_index,
+        .image = image,
+    };
 }
 
 void Renderer::end_frame()

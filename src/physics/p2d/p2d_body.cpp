@@ -12,17 +12,17 @@ void P2DBody::init(const mem::Allocator& allocator, Physics2D::BodyID id, Opaque
     collision_mask = Physics2D::CollisionMask(Physics2D::DEFAULT_COLLISION_MASK);
 
 	data.force_accumulator = Vector2();
-	data.torque_accumulator = 0.f;
-	data.angular_velocity = 0.f;
+	data.torque_accumulator = 0.F;
+	data.angular_velocity = 0.F;
 
 	shape.init(allocator);
 	data.shape_transformed.init(allocator);
-    set_mass(1.f);
-    set_friction(0.1f);
-    set_air_friction(0.001f);
-    set_restitution(0.5f);
+    set_mass(1.F);
+    set_friction(0.1F);
+    set_air_friction(0.001F);
+    set_restitution(0.5F);
     set_velocity(Vector2());
-    set_angular_velocity(0.f);
+    set_angular_velocity(0.F);
     set_transform(Transform2D());
     
 	_compute_inertia();
@@ -98,12 +98,12 @@ void P2DBody::set_mass(f32 new_mass)
 	if (new_mass > 0)
 	{
 		data.mass = new_mass;
-		data.inv_mass = 1.f / new_mass;
+		data.inv_mass = 1.F / new_mass;
 	}
 	else
 	{
-		data.mass = 0.f;
-		data.inv_mass = 0.f;
+		data.mass = 0.F;
+		data.inv_mass = 0.F;
 	}
 }
 
@@ -142,20 +142,21 @@ void P2DBody::step(f32 dt)
 {
 	integrate(dt);
 
-	data.velocity *= (1 - data.air_friction * dt);
-	data.angular_velocity *= (1 - data.air_friction * dt);
+	data.velocity *= (1 - (data.air_friction * dt));
+	data.angular_velocity *= (1 - (data.air_friction * dt));
 
 	data.force_accumulator = Vector2();
 	
 	// Simple sleep based on velocity
-	const f32 rest_threshold = 0.001f;
-	if (data.velocity.dot(data.velocity) < rest_threshold * rest_threshold)
+	const f32 rest_threshold = 0.001F;
+	const f32 rest_threshold_square = rest_threshold * rest_threshold;
+	if (data.velocity.dot(data.velocity) < rest_threshold_square)
 	{
 		data.velocity = Vector2();
 	}
 	if (math::abs(data.angular_velocity) < rest_threshold)
 	{
-		data.angular_velocity = 0.f;
+		data.angular_velocity = 0.F;
 	}
 }
 
@@ -169,11 +170,11 @@ void P2DBody::_compute_inertia()
 	data.inertia = shape.calculate_inertia(data.mass);
 	if(data.inertia > 0)
 	{
-		data.inv_inertia = 1.f / data.inertia;
+		data.inv_inertia = 1.F / data.inertia;
 	}
 	else
 	{
-		data.inv_inertia = 0.f;
+		data.inv_inertia = 0.F;
 	}
 }
 

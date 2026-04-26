@@ -8,7 +8,7 @@ void Camera::init(const CreateInfo& info)
     Object::init(info);
 
     data.old_pos = Vector2();
-    data.old_rot = 0.f;
+    data.old_rot = 0.F;
     data.position_mode = POSITION_TOP_LEFT;
     data.transform = Transform2D();
 
@@ -30,7 +30,9 @@ Transform2D Camera::get_camera_transform(const Vector2& viewport_size, f32 dt, b
     case POSITION_TOP_LEFT:
     {
         if (!update)
+        {
             break;
+        }
 
         if (smooth_position)
         {
@@ -46,7 +48,9 @@ Transform2D Camera::get_camera_transform(const Vector2& viewport_size, f32 dt, b
     case POSITION_CENTERED:
     {
         if (!update)
+        {
             break;
+        }
 
         const Vector2 display_size = viewport_size;
         Vector2 centered_pos = camera_position;

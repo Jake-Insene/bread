@@ -6,7 +6,7 @@
 P2DCollision::SupportPoint P2DCollision::find_support_point(const Vector2& normal_edge, const Vector2& point_on_edge, const P2DShape& other_points)
 {
 	SupportPoint sp = {};
-	f32 current_depthest_penetration = 0.f;
+	f32 current_depthest_penetration = 0.F;
 
 	for (usize i = 0; i < other_points.vertices.count; i++)
 	{
@@ -87,7 +87,7 @@ CollisionManifold P2DCollision::polygon_v_polygon(
 
 void P2DCollision::positional_correction(const CollisionManifold& manifold, P2DBody& body_a, P2DBody& body_b)
 {
-	const f32 correction_percentage = 0.5f;
+	const f32 correction_percentage = 0.5F;
 
 	f32 inv_mass_a = body_a.get_inv_mass();
 	f32 inv_mass_b = body_b.get_inv_mass();
@@ -95,9 +95,9 @@ void P2DCollision::positional_correction(const CollisionManifold& manifold, P2DB
 
 	if (inv_mass_sum > 0)
 	{
-		inv_mass_sum = 1.f / inv_mass_sum;
+		inv_mass_sum = 1.F / inv_mass_sum;
 	}
-	else if (inv_mass_sum == 0.f)
+	else if (inv_mass_sum == 0.F)
 	{
 		return;
 	}
@@ -147,7 +147,7 @@ void P2DCollision::resolve_collision(const CollisionManifold& manifold, P2DBody&
 	const Vector2 relative_velocity = velocity_b - velocity_a;
 	const f32 relative_velocity_along_normal = relative_velocity.dot(manifold.normal);
 
-	if (relative_velocity_along_normal > 0.f)
+	if (relative_velocity_along_normal > 0.F)
 	{
 		return;
 	}
@@ -155,13 +155,13 @@ void P2DCollision::resolve_collision(const CollisionManifold& manifold, P2DBody&
 	f32 inv_restitution_sum = body_a.get_restitution() + body_b.get_restitution();
 	if (inv_restitution_sum > 0)
 	{
-		inv_restitution_sum = 1.f / inv_restitution_sum;
+		inv_restitution_sum = 1.F / inv_restitution_sum;
 	}
 
 	f32 inv_friction_sum = body_a.get_friction() + body_b.get_friction();
 	if(inv_friction_sum > 0)
 	{
-		inv_friction_sum = 1.f / inv_friction_sum;
+		inv_friction_sum = 1.F / inv_friction_sum;
 	}
 
 	const f32 e = (2 * body_a.get_restitution() * body_b.get_restitution()) * inv_restitution_sum;
@@ -175,7 +175,7 @@ void P2DCollision::resolve_collision(const CollisionManifold& manifold, P2DBody&
 	const f32 cross_n_sum = (p_to_centeroid_cross_normal_a * p_to_centeroid_cross_normal_a * inv_inertia_a)
 							+ (p_to_centeroid_cross_normal_b * p_to_centeroid_cross_normal_b * inv_inertia_b);
 
-	f32 j = -(1.f + e) * relative_velocity_along_normal;
+	f32 j = -(1.F + e) * relative_velocity_along_normal;
 	j /= (inv_mass_sum + cross_n_sum);
 
 	const Vector2 impulse_vector = manifold.normal * j;
@@ -191,7 +191,7 @@ void P2DCollision::resolve_collision(const CollisionManifold& manifold, P2DBody&
 	Vector2 tangent = (relative_velocity - velocity_normal_direction) * -1;
 	const f32 friction = (2 * body_a.get_friction() * body_b.get_friction()) * inv_friction_sum;
 
-	if(tangent.x > 0.0001 || tangent.y > 0.0001)
+	if(tangent.x > 0.0001F || tangent.y > 0.0001F)
 	{
 		tangent.normalize();
 	}
@@ -202,14 +202,14 @@ void P2DCollision::resolve_collision(const CollisionManifold& manifold, P2DBody&
 		(p_to_centeroid_cross_tangent_a * p_to_centeroid_cross_tangent_a * inv_inertia_a)
 		+ (p_to_centeroid_cross_tangent_b * p_to_centeroid_cross_tangent_b * inv_inertia_b);
 
-	f32 frictional_impulse = -(1.f + e) * relative_velocity.dot(tangent) * friction;
+	f32 frictional_impulse = -(1.F + e) * relative_velocity.dot(tangent) * friction;
 	frictional_impulse /= (inv_mass_sum + cross_sum_tangent);
 
 	frictional_impulse = math::min(frictional_impulse, j);
 
 	const Vector2 frictional_impulse_vector = tangent * frictional_impulse;
 	body_a.add_velocity(
-		((frictional_impulse_vector * body_a.get_inv_mass())) * -1.f
+		((frictional_impulse_vector * body_a.get_inv_mass())) * -1.F
 	);
 	body_b.add_velocity(
 		(frictional_impulse_vector * body_b.get_inv_mass())

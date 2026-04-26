@@ -25,13 +25,13 @@ static inline DWORD WINAPI _thread_handler(void* _arg)
     Win32OS::ThreadData* data = thread_data->cast<Win32OS::ThreadData*>();
 
     _mutex_lock(&data->thread_srw);
-    data->state = Win32OS::THREAD_STATE_RUNNING;
+    data->state = Win32OS::ThreadState::Running;
     _mutex_unlock(&data->thread_srw);
 
     data->fn(data->arg);
 
     _mutex_lock(&data->thread_srw);
-    data->state = Win32OS::THREAD_STATE_TERMINATED;
+    data->state = Win32OS::ThreadState::Terminated;
     _mutex_unlock(&data->thread_srw);
 
     ExitThread(0);
@@ -52,16 +52,19 @@ void Win32OS::initialize(const mem::Allocator& allocator)
     GetSystemInfo(&info);
     data.page_size = static_cast<usize>(info.dwPageSize);
 
+    data.thread_allocate_srw = SRWLOCK_INIT;
     data.threads = FreeList<ThreadData,OS::ThreadID>::with_size(allocator, InitialThreadCount);
+    data.mutex_allocate_srw = SRWLOCK_INIT;
     data.mutexes = FreeList<MutexData, OS::MutexID>::with_size(allocator, InitialMutexCount);
+    data.semaphore_allocate_srw = SRWLOCK_INIT;
     data.semaphores = FreeList<SemaphoreData, OS::SemaphoreID>::with_size(allocator, InitialSemaphoreCount);
 
-    // First data thread is reserved for main thread
+    // First data thread is reserved for main thread.
     OS::ThreadID main_thread = _thread_data_allocate();
     auto& thread_data = _thread_data_get(main_thread);
 
     thread_data.handle = GetCurrentThread();
-    thread_data.state = THREAD_STATE_RUNNING;
+    thread_data.state = ThreadState::Running;
     thread_data.thread_srw = SRWLOCK_INIT;
 }
 
@@ -151,12 +154,12 @@ Slice<u8> Win32OS::map_memory(usize memory_size, OS::MapAccess access)
     return ptr;
 }
 
-void Win32OS::unmap_memory(Slice<u8> memory)
+void Win32OS::unmap_memory(const Slice<u8>& memory)
 {
     VirtualFreeEx(GetCurrentProcess(), memory.items, 0, MEM_RELEASE);
 }
 
-OS::QueryMemory Win32OS::query_memory(Slice<u8> memory)
+OS::QueryMemory Win32OS::query_memory(const Slice<u8>& memory)
 {
     MEMORY_BASIC_INFORMATION mem_info;
     VirtualQueryEx(GetCurrentProcess(), memory.items, &mem_info, sizeof(mem_info));
@@ -170,6 +173,8 @@ OS::QueryMemory Win32OS::query_memory(Slice<u8> memory)
 
 OS::ThreadID Win32OS::thread_create(OS::ThreadFn fn, Opaque* arg)
 {
+    _mutex_lock(&data.thread_allocate_srw);
+
     OS::ThreadID tid = _thread_data_allocate();
     ThreadData& thread_data = _thread_data_get(tid);
 
@@ -179,50 +184,61 @@ OS::ThreadID Win32OS::thread_create(OS::ThreadFn fn, Opaque* arg)
     );
     DebugAssert(thread_handle != nullptr, "can't create a new thread");
    
-    mem::set(Slice(thread_data.name), 0i8);
+    mem::set(Slice(thread_data.name), 0I8);
 
     thread_data.arg = arg;
     thread_data.fn = fn;
     thread_data.handle = thread_handle;
-    thread_data.state = Win32OS::THREAD_STATE_NONE;
+    thread_data.state = Win32OS::ThreadState::Unknown;
     thread_data.thread_srw = SRWLOCK_INIT;
 
     ResumeThread(thread_data.handle);
 
+    _mutex_unlock(&data.thread_allocate_srw);
     return tid;
 }
 
 void Win32OS::thread_destroy(OS::ThreadID tid)
 {
+    _mutex_lock(&data.thread_allocate_srw);
     FailOn(thread_join(tid) == false, "couldn't join the thread {}", tid.id);
 
     ThreadData& thread_data = _thread_data_get(tid);
     CloseHandle(thread_data.handle);
  
     data.threads.remove(tid);
+    _mutex_unlock(&data.thread_allocate_srw);
 }
 
 bool Win32OS::thread_join(OS::ThreadID tid)
 {
+    _mutex_lock(&data.thread_allocate_srw);
+    
     ThreadData& thread_data = _thread_data_get(tid);
-    if (WaitForSingleObjectEx(thread_data.handle, INFINITE, FALSE) == WAIT_FAILED)
-    {
-        return false;
-    }
+    bool result = WaitForSingleObjectEx(thread_data.handle, INFINITE, FALSE) == WAIT_FAILED;
 
-    return true;
+    _mutex_unlock(&data.thread_allocate_srw);
+    return result;
 }
 
 void Win32OS::thread_set_name(OS::ThreadID tid, StringView new_name)
 {
+    _mutex_lock(&data.thread_allocate_srw);
+
     ThreadData& thread_data = _thread_data_get(tid);
     mem::copy(Slice(thread_data.name), new_name);
 
     SetThreadDescription(thread_data.handle, reinterpret_cast<PCWSTR>(thread_data.name));
+
+    _mutex_unlock(&data.thread_allocate_srw);
 }
 
 StringView Win32OS::thread_get_name(OS::ThreadID tid)
 {
+    // TODO: thread_data.name could be rewrited on other thread,
+    // the read could be valid but the content can change
+    _mutex_lock(&data.thread_allocate_srw);
+
     ThreadData& thread_data = _thread_data_get(tid);
 
     CHAR* name_address = nullptr;
@@ -230,79 +246,109 @@ StringView Win32OS::thread_get_name(OS::ThreadID tid)
     usize len = __string_len(name_address);
     mem::copy(Slice(thread_data.name), Slice(name_address, len));
 
+    _mutex_unlock(&data.thread_allocate_srw);
     return StringView(thread_data.name, len);
 }
 
 OS::MutexID Win32OS::mutex_create()
 {
+    _mutex_lock(&data.mutex_allocate_srw);
+
     OS::MutexID mid = _mutex_data_allocate();
     MutexData& mutex_data = _mutex_data_get(mid);
 
     mutex_data.srw = SRWLOCK_INIT;
 
+    _mutex_unlock(&data.mutex_allocate_srw);
     return mid;
 }
 
 void Win32OS::mutex_destroy(OS::MutexID mid)
 {
+    _mutex_lock(&data.mutex_allocate_srw);
     data.mutexes.remove(mid);
+    _mutex_unlock(&data.mutex_allocate_srw);
 }
 
 void Win32OS::mutex_lock(OS::MutexID mid)
 {
-    MutexData& mutex_data = _mutex_data_get(mid);
+    _mutex_lock(&data.mutex_allocate_srw);
+    // Needs to be a copy
+    MutexData mutex_data = _mutex_data_get(mid);
+    _mutex_unlock(&data.mutex_allocate_srw);
+
     _mutex_lock(&mutex_data.srw);
 }
 
 bool Win32OS::mutex_try_lock(OS::MutexID mid)
 {
-    MutexData& mutex_data = _mutex_data_get(mid);
+    _mutex_lock(&data.mutex_allocate_srw);
+    // Needs to be a copy
+    MutexData mutex_data = _mutex_data_get(mid);
+    _mutex_unlock(&data.mutex_allocate_srw);
+
     return _mutex_try_lock(&mutex_data.srw);
 }
 
 void Win32OS::mutex_unlock(OS::MutexID mid)
 {
-    MutexData& mutex_data = _mutex_data_get(mid);
+    _mutex_lock(&data.mutex_allocate_srw);
+    // Needs to be a copy
+    MutexData mutex_data = _mutex_data_get(mid);
+    _mutex_unlock(&data.mutex_allocate_srw);
+    
     _mutex_unlock(&mutex_data.srw);
 }
 
-
 OS::SemaphoreID Win32OS::semaphore_create(usize initial_value)
 {
+    _mutex_lock(&data.semaphore_allocate_srw);
+
     OS::SemaphoreID sid = _semaphore_data_allocate();
     SemaphoreData& semaphore_data = _semaphore_data_get(sid);
     
     semaphore_data.handle = CreateSemaphoreA(nullptr, LONG(initial_value), MaxValue<i32>, nullptr);
     DebugAssert(semaphore_data.handle != nullptr, "can't create a new semaphore");
 
+    _mutex_unlock(&data.semaphore_allocate_srw);
     return sid;
 }
 
 void Win32OS::semaphore_destroy(OS::SemaphoreID sid)
 {
-    SemaphoreData& semaphore_data = _semaphore_data_get(sid);
+    _mutex_lock(&data.semaphore_allocate_srw);
+    // Needs to be a copy
+    SemaphoreData semaphore_data = _semaphore_data_get(sid);
+    _mutex_unlock(&data.semaphore_allocate_srw);
+
     CloseHandle(semaphore_data.handle);
 }
 
 void Win32OS::semaphore_signal(OS::SemaphoreID sid)
 {
-    SemaphoreData& semaphore_data = _semaphore_data_get(sid);
+    _mutex_lock(&data.semaphore_allocate_srw);
+    // Needs to be a copy
+    SemaphoreData semaphore_data = _semaphore_data_get(sid);
+    _mutex_unlock(&data.semaphore_allocate_srw);
+
     ReleaseSemaphore(semaphore_data.handle, 1, nullptr);
 }
 
 void Win32OS::semaphore_wait(OS::SemaphoreID sid)
 {
-    SemaphoreData& semaphore_data = _semaphore_data_get(sid);
+    _mutex_lock(&data.semaphore_allocate_srw);
+    // Needs to be a copy
+    SemaphoreData semaphore_data = _semaphore_data_get(sid);
+    _mutex_unlock(&data.semaphore_allocate_srw);
+    
     WaitForSingleObject(semaphore_data.handle, INFINITE);
 }
 
 bool Win32OS::set_current_directory(StringView dir)
 {
-    char path[256]{};
+    char path[256] = {};
     mem::copy(Slice(path), dir);
-    if (SetCurrentDirectory(dir.ptr()))
-        return true;
-    return false;
+    return SetCurrentDirectoryA(dir.ptr()) == TRUE;
 }
 
 OS::ThreadID Win32OS::_thread_data_allocate()

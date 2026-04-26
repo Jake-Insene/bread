@@ -1,0 +1,139 @@
+#pragma once
+#include "math/mat4.h"
+#include "math/vec2.h"
+#include "math/color.h"
+#include "math/rect_2d.h"
+#include "graphics/pipeline_2d.h"
+#include "renderer/framed_buffer.h"
+#include "renderer/framed_pool.h"
+#include "renderer/renderer.h"
+
+
+struct RendererBatch2DCreateInfo
+{
+    mem::Allocator allocator;
+    Graphics::Device* graphics_device;
+    GPUMemoryAllocator* gpu_memory_allocator;
+    u32 max_frames_in_flight;
+    // this is more like max number of instances in a frame per type instead of a batch
+    u32 max_instances_per_type;
+    GPU::TextureFormat surface_format;
+};
+
+struct RendererBatch2D
+{
+    struct FrameInfo : Renderer::FrameInfo
+    {
+        Vector2 viewport_size;
+    };
+
+    struct alignas(Vector4) SpriteInstance
+    {
+        // attrib 0
+        Vector2 xx;
+        Vector2 yy;
+        // attrib 1
+        Vector2 zz;
+        Color color;
+        u32 material_index;
+        // attrib 2
+        Rect2D rect;
+        // attrib 3
+        Rect2D uv_rect;
+    };
+    static_assert(sizeof(SpriteInstance) / sizeof(Vector4) <= GPU::MaxVertexInputAttributes, "Instance shouldn't use more than GPU::MaxVertexInputAttributes attributes");
+    static_assert(mem::align_up(sizeof(SpriteInstance), sizeof(Vector4)) == sizeof(SpriteInstance), "Invalid Instance alignment");
+    
+    struct alignas(Vector4) QuadInstance
+    {
+        // attrib 0
+        Vector2 xx;
+        Vector2 yy;
+        // attrib 1
+        Vector2 zz;
+        Color color;
+        u32 material_index;
+        // attrib 2
+        Rect2D rect;
+    };
+    static_assert(sizeof(QuadInstance) / sizeof(Vector4) <= GPU::MaxVertexInputAttributes, "Instance shouldn't use more than GPU::MaxVertexInputAttributes attributes");
+    static_assert(mem::align_up(sizeof(QuadInstance), sizeof(Vector4)) == sizeof(QuadInstance), "Invalid Instance alignment");
+
+    struct alignas(Vector4) LineInstance
+    {
+        // attrib 0
+        Vector2 xx;
+        Vector2 yy;
+        // attrib 1
+        Vector2 zz;
+        Color color;
+        u32 material_index;
+        // attrib 2
+        Vector2 point1;
+        Vector2 point2;
+    };
+    static_assert(sizeof(LineInstance) / sizeof(Vector4) <= GPU::MaxVertexInputAttributes, "Instance shouldn't use more than GPU::MaxVertexInputAttributes attributes");
+    static_assert(mem::align_up(sizeof(LineInstance), sizeof(Vector4)) == sizeof(LineInstance), "Invalid Instance alignment");
+
+    struct alignas(Vector4) CircleInstance
+    {
+        // attrib 0
+        Vector2 xx;
+        Vector2 yy;
+        // attrib 1
+        Vector2 zz;
+        Color color;
+        u32 material_index;
+        // attrib 2
+        Vector2 point;
+        f32 radius;
+        f32 padding;
+    };
+    static_assert(sizeof(CircleInstance) / sizeof(Vector4) <= GPU::MaxVertexInputAttributes, "Instance shouldn't use more than GPU::MaxVertexInputAttributes attributes");
+    static_assert(mem::align_up(sizeof(CircleInstance), sizeof(Vector4)) == sizeof(CircleInstance), "Invalid Instance alignment");
+    
+    struct Batch
+    {
+        Graphics::Pipeline* pipeline;
+        Graphics::DescriptorSetRef set;
+        usize offset; // in buffer
+
+        u32 instance_count;
+    };
+    static constexpr usize MaxInstancePerBatch = 128;
+
+    mem::Allocator allocator;
+    Graphics::Device* graphics_device;
+
+    Graphics::Pipeline* sprite_pipeline;
+    Graphics::Pipeline* quad_pipeline;
+    Graphics::Pipeline* line_pipeline;
+    Graphics::Pipeline* circle_pipeline;
+
+    usize instance_buffer_size;
+    usize sprite_offset_begin;
+    usize sprite_offset_end;
+    usize quad_offset_begin;
+    usize quad_offset_end;
+    usize line_offset_begin;
+    usize line_offset_end;
+    usize circle_offset_begin;
+    usize circle_offset_end;
+
+    FramedDeviceBuffer instance_buffer;
+    FramedMappedBuffer uniform_buffer;
+    FramedPool uniform_pool;
+
+    Array<Batch> batches;
+
+    void init(const RendererBatch2DCreateInfo& batch_info);
+    void destroy();
+
+    void prepare_scene(const FrameInfo& frame_info);
+    void build_batch(const FrameInfo& frame_info);
+    void finish_scene(const FrameInfo& frame_info);
+
+    void begin_batch_record(const FrameInfo& frame_info, Graphics::CommandEncoder& encoder);
+    void end_batch_record(const FrameInfo& frame_info, Graphics::CommandEncoder& encoder);
+};
+

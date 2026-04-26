@@ -12,7 +12,7 @@ struct PlatformIntricics
 {
 
 	template<typename T>
-		requires(IsFloatingPoint<T>)
+	requires(IsFloatingPoint<T>)
 	[[nodiscard]] static T sqrt(T x)
 	{
 		if constexpr (IsSame<T, f32>)
@@ -29,7 +29,7 @@ struct PlatformIntricics
 	}
 
 	template<typename T>
-		requires(IsFloatingPoint<T>)
+	requires(IsFloatingPoint<T>)
 	[[nodiscard]] static T vecdot(T x1, T y1, T x2, T y2)
 	{
 		if constexpr (IsSame<T, f32>)
@@ -46,7 +46,7 @@ struct PlatformIntricics
 	}
 
 	template<typename T>
-		requires(IsFloatingPoint<T>)
+	requires(IsFloatingPoint<T>)
 	static void vecnormalize(T& x1, T& y1)
 	{
 		if constexpr (IsSame<T, f32>)
@@ -61,7 +61,7 @@ struct PlatformIntricics
 			x1 = fields[0];
 			y1 = fields[1];
 #elif BREAD_ARM64
-            float32x2_t v = vdup_n_f32(0.f);
+            float32x2_t v = vdup_n_f32(0.F);
             v = vset_lane_f32(x1, v, 0);
             v = vset_lane_f32(y1, v, 1);
             const float32x2_t squared = vmul_f32(v, v);

@@ -57,12 +57,12 @@ Slice<u8> OS::map_memory(usize memory_size, MapAccess access)
 	return PlatformOS::map_memory(memory_size, access);
 }
 
-void OS::unmap_memory(Slice<u8> memory)
+void OS::unmap_memory(const Slice<u8>& memory)
 {
 	PlatformOS::unmap_memory(memory);
 }
 
-OS::QueryMemory OS::query_memory(Slice<u8> memory)
+OS::QueryMemory OS::query_memory(const Slice<u8>& memory)
 {
 	return PlatformOS::query_memory(memory);
 }

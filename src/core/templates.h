@@ -335,6 +335,11 @@ struct FunctionDecomposed<RT(T::*)(TArgs...) const>
 template<typename T>
 struct FunctionDecomposed : FunctionDecomposed<decltype(&T::operator())> {};
 
+template<typename T>
+using EnumIntType = Conditional<sizeof(T) == 1, u8,
+    Conditional<sizeof(T) == 2, u16,
+    Conditional<sizeof(T) == 4, u32, u64>>>;
+
 
 // Generic Functions
 

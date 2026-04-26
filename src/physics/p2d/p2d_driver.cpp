@@ -286,14 +286,14 @@ void P2DDriver::body_set_type(Physics2D::BodyID body_id, Physics2D::BodyType new
     switch (new_type)
     {
     case Physics2D::STATIC:
-        body.set_mass(0.f);
+        body.set_mass(0.F);
         body.set_velocity(Vector2());
         break;
     case Physics2D::KINEMATIC:
-        body.set_mass(0.f);
+        body.set_mass(0.F);
         break;
     case Physics2D::DYNAMIC:
-        body.set_mass(body.get_mass() > 0.f ? body.get_mass() : 1.f);
+        body.set_mass(body.get_mass() > 0.F ? body.get_mass() : 1.F);
         break;
     default:
         break;
@@ -381,7 +381,7 @@ void P2DDriver::body_apply_force(Physics2D::BodyID body_id, const Vector2& force
 void P2DDriver::body_apply_impulse(Physics2D::BodyID body_id, const Vector2& impulse, const Vector2&)
 {
     P2DBody& body = _get_body(body_id);
-    if (body.get_inv_mass() > 0.f)
+    if (body.get_inv_mass() > 0.F)
     {
         body.set_velocity(body.get_velocity() + impulse * body.get_inv_mass());
     }

@@ -363,7 +363,7 @@ GPU::DeviceID VulkanDriver::device_create(const GPU::DeviceCreateInfo& ci)
                 }
             }
 
-            if(finded == false)
+            if(!finded)
             {
                 uniques[unique_count] = v;
                 unique_count++;
@@ -374,7 +374,7 @@ GPU::DeviceID VulkanDriver::device_create(const GPU::DeviceCreateInfo& ci)
     VkDeviceQueueCreateInfo queue_infos[VkFamilyCount] = {};
     for(usize i = 0; i < unique_count; i++)
     {
-        f32 priority = 1.f;
+        f32 priority = 1.F;
         queue_infos[i] =
         {
             .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
@@ -1552,7 +1552,7 @@ GPU::PipelineID VulkanDriver::pipeline_create(const GPU::PipelineCreateInfo& ci)
         .depthBiasEnable = VK_FALSE,
         .depthBiasConstantFactor = 0,
         .depthBiasClamp = 0,
-        .depthBiasSlopeFactor = 1.f,
+        .depthBiasSlopeFactor = 1.F,
         .lineWidth = ci.rasterizer_state.line_width,
     };
 
@@ -1630,7 +1630,7 @@ GPU::PipelineID VulkanDriver::pipeline_create(const GPU::PipelineCreateInfo& ci)
     {
         vk_push_ranges[i] =
         {
-            .stageFlags = VkShaderStageFlags(VkUtils::_vk_get_shader_stage(ci.pipeline_layout.constant_blocks[i].stages)),
+            .stageFlags = VkUtils::_vk_get_shader_stage(ci.pipeline_layout.constant_blocks[i].stages),
             .offset = ci.pipeline_layout.constant_blocks[i].offset,
             .size = ci.pipeline_layout.constant_blocks[i].size,
         };

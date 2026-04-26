@@ -13,6 +13,7 @@
 #include <WaaSApi.h>
 #include <audioclient.h>
 #include <mmdeviceapi.h>
+#include <d3d12.h>
 
 #undef far
 #undef near

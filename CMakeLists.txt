@@ -107,6 +107,7 @@ file(GLOB ENGINE_SRC
     src/renderer/framed_buffer.cpp
     src/renderer/framed_pool.cpp
     src/renderer/renderer_2d.cpp
+    src/renderer/renderer_batch_2d.cpp
     src/renderer/renderer.cpp
     
     src/resource/font.cpp

@@ -4,6 +4,8 @@
 #include "platform/platform_header.h"
 
 
+
+// TODO: Make multithread functions thread safe and multithread.
 struct Win32OS
 {
     static constexpr usize InitialThreadCount = 16;
@@ -12,11 +14,11 @@ struct Win32OS
 
     static constexpr usize MaxThreadNameLen = 128;
 
-    enum ThreadState
+    enum class ThreadState
     {
-        THREAD_STATE_NONE = 0,
-        THREAD_STATE_RUNNING = 1,
-        THREAD_STATE_TERMINATED = 2,
+        Unknown = 0,
+        Running,
+        Terminated,
     };
 
     struct ThreadData
@@ -51,8 +53,13 @@ struct Win32OS
         f64 program_start;
         usize page_size;
 
+        SRWLOCK thread_allocate_srw;
         FreeList<ThreadData, OS::ThreadID> threads;
+
+        SRWLOCK mutex_allocate_srw;
         FreeList<MutexData, OS::MutexID> mutexes;
+        
+        SRWLOCK semaphore_allocate_srw;
         FreeList<SemaphoreData, OS::SemaphoreID> semaphores;
     };
 
@@ -73,8 +80,8 @@ struct Win32OS
     static OS::VoidFunction get_proc_address(MemoryAddress library, StringView symbol_name);
 
     static Slice<u8> map_memory(usize memory_size, OS::MapAccess access);
-    static void unmap_memory(Slice<u8> memory);
-    static OS::QueryMemory query_memory(Slice<u8> memory);
+    static void unmap_memory(const Slice<u8>& memory);
+    static OS::QueryMemory query_memory(const Slice<u8>& memory);
 
     static OS::ThreadID thread_create(OS::ThreadFn fn, Opaque* arg);
     static void thread_destroy(OS::ThreadID tid);

@@ -12,8 +12,8 @@ struct [[nodiscard]] Projection : Mat4
     {
         Projection matrix = Projection
         {
-            Vector4(2.f / (right - left), 0, 0, -(right + left) / (right - left)),
-            Vector4(0, 2.f / (top - bottom), 0, -(top + bottom) / (top - bottom)),
+            Vector4(2.F / (right - left), 0, 0, -(right + left) / (right - left)),
+            Vector4(0, 2.F / (top - bottom), 0, -(top + bottom) / (top - bottom)),
             Vector4(0, 0, -1 / (far - near),  -near) / (far - near),
             Vector4(0, 0, 0, 1)
         };
@@ -28,9 +28,9 @@ struct [[nodiscard]] Projection : Mat4
     {
         Projection matrix = Projection
         {
-            Vector4((right - left) / 2.f, 0, 0, (left + right) / 2.f),
-            Vector4(0, (top - bottom) / 2.f, 0, (top + bottom) / 2.f),
-            Vector4(0, 0, (far - near) / -1,  -(far + near) / 1.f),
+            Vector4((right - left) / 2.F, 0, 0, (left + right) / 2.F),
+            Vector4(0, (top - bottom) / 2.F, 0, (top + bottom) / 2.F),
+            Vector4(0, 0, (far - near) / -1,  -(far + near) / 1.F),
             Vector4(0, 0, 0, 1)
         };
 

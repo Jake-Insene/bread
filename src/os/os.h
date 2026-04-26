@@ -38,8 +38,8 @@ struct OS
     static VoidFunction get_proc_address(MemoryAddress library, StringView symbol_name);
 
     static Slice<u8> map_memory(usize memory_size, MapAccess access);
-    static void unmap_memory(Slice<u8> memory);
-    static QueryMemory query_memory(Slice<u8> memory);
+    static void unmap_memory(const Slice<u8>& memory);
+    static QueryMemory query_memory(const Slice<u8>& memory);
 
     static ThreadID thread_create(ThreadFn fn, Opaque* arg);
     static void thread_destroy(ThreadID tid);

@@ -24,8 +24,14 @@ struct Renderer
 {
     static constexpr usize MaxFramesInFlight = 3;
 
+    enum class FrameFlags
+    {
+        Acquired = Bit(0),
+    };
+
     struct FrameInfo
     {
+        FrameFlags flags;
         u32 frame_index;
         u32 image_index;
         GPU::TextureID image;
@@ -60,5 +66,7 @@ struct Renderer
     void begin_frame();
     void end_frame();
 
-    virtual void render() = 0;
+    virtual void render(const FrameInfo& frame_info) = 0;
 };
+
+EnableBitOp(Renderer::FrameFlags);

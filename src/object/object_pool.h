@@ -19,6 +19,12 @@ struct [[nodiscard]] ObjectPool
     static constexpr usize InitialBlockCount = 4;
     static constexpr usize ObjectPerBlock = 256;
 
+    static constexpr usize SlotIndexMask = 0xFFFF'FFFF;
+    static constexpr usize SlotIndexBitOffset = 0;
+
+    static constexpr usize BlockIndexMask = 0xFF'0000'0000;
+    static constexpr usize BlockIndexBitOffset = 32;
+
     struct BlockMetadata
     {
         StringView name;
@@ -72,8 +78,8 @@ struct [[nodiscard]] ObjectPool
     Opaque* _get_object(ObjectID object_id);
     void _register_object(const BlockMetadata& object_metadata);
 
-    [[nodiscard]] constexpr u32 _id_slot(ObjectID object_id) const { return object_id & 0xFFFF'FFFF; }
-    [[nodiscard]] constexpr u8 _id_block(ObjectID object_id) const { return (object_id >> 32) & 0xFF; }
+    [[nodiscard]] constexpr u32 _id_slot(ObjectID object_id) const { return object_id & SlotIndexMask; }
+    [[nodiscard]] constexpr u8 _id_block(ObjectID object_id) const { return (object_id & BlockIndexMask) >> BlockIndexBitOffset; }
 };
 
 

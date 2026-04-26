@@ -19,7 +19,7 @@ PipelineInfo Pipeline2D::make_default(const Pipeline2DInfo& info)
             .polygon_mode = GPU::PolygonMode::Fill,
             .cull_mode = GPU::CullMode::Front,
             .front_face = GPU::FrontFace::ClockWise,
-            .line_width = 1.f,
+            .line_width = 1.F,
         },
         .multisample_state =
         {
@@ -35,8 +35,8 @@ PipelineInfo Pipeline2D::make_default(const Pipeline2DInfo& info)
             .depth_write_enable = false,
             .depth_bounds_test_enable = false,
             .stencil_test_enable = false,
-            .min_depth_bounds = 0.f,
-            .max_depth_bounds = 1.f,
+            .min_depth_bounds = 0.F,
+            .max_depth_bounds = 1.F,
         },
         .constant_blocks = info.constant_blocks,
         .set_layout_infos = info.set_layout_infos,

@@ -16,10 +16,10 @@ struct ObjectID
     
     constexpr ObjectID()
         : id(InvalidID) {}
-    constexpr ObjectID(InternalID id)
-        : id(id) {}
+    constexpr ObjectID(InternalID _id)
+        : id(_id) {}
     
-    [[nodiscard]] bool constexpr operator==(ObjectID o) const { return id == o.id; }
+    [[nodiscard]] bool constexpr operator==(ObjectID _id) const { return id == _id.id; }
     
     [[nodiscard]] constexpr operator InternalID() const { return id; }
 

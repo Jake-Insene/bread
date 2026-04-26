@@ -12,10 +12,18 @@
 #define EnableBitOp(enum_type) \
 	constexpr enum_type operator|(enum_type lhs, enum_type rhs)\
 	{\
-		return static_cast<enum_type>(static_cast<usize>(lhs) | static_cast<usize>(rhs));\
+		return static_cast<enum_type>(static_cast<u64>(lhs) | static_cast<u64>(rhs));\
+	}\
+	constexpr void operator|=(enum_type& lhs, enum_type rhs)\
+	{\
+		reinterpret_cast<EnumIntType<enum_type>&>(lhs) |= static_cast<EnumIntType<enum_type>>(rhs);\
 	}\
 	constexpr enum_type operator&(enum_type lhs, enum_type rhs)\
 	{\
-		return static_cast<enum_type>(static_cast<usize>(lhs) & static_cast<usize>(rhs));\
+		return static_cast<enum_type>(static_cast<u64>(lhs) & static_cast<u64>(rhs));\
+	}\
+	constexpr void operator&=(enum_type& lhs, enum_type rhs)\
+	{\
+		reinterpret_cast<EnumIntType<enum_type>&>(lhs) &= static_cast<EnumIntType<enum_type>>(rhs);\
 	}\
 

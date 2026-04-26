@@ -7,7 +7,9 @@
 void AudioPlayer::play()
 {
     if (get_sound() == nullptr)
+    {
         return;
+    }
 
     //Audio::source_voice_play(get_sound()->get_source_voice());
     data.playing = true;
@@ -21,7 +23,9 @@ void AudioPlayer::stop()
 void AudioPlayer::set_loop(bool enable)
 {
     if (data.loop == enable)
+    {
         return;
+    }
 
     data.loop = enable;
 }
