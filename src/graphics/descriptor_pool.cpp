@@ -72,8 +72,11 @@ void DescriptorPool::free(DescriptorSetRef set_ref)
             break;
         }
     }
+    
     if (!is_allocated)
+    {
         return;
+    }
     
     (void)available_sets.add(set_ref);
 }

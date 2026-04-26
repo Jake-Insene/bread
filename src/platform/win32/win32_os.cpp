@@ -201,24 +201,27 @@ OS::ThreadID Win32OS::thread_create(OS::ThreadFn fn, Opaque* arg)
 void Win32OS::thread_destroy(OS::ThreadID tid)
 {
     _mutex_lock(&data.thread_allocate_srw);
-    FailOn(thread_join(tid) == false, "couldn't join the thread {}", tid.id);
 
     ThreadData& thread_data = _thread_data_get(tid);
-    CloseHandle(thread_data.handle);
- 
+    HANDLE handle = thread_data.handle;
     data.threads.remove(tid);
+
     _mutex_unlock(&data.thread_allocate_srw);
+
+    WaitForSingleObjectEx(handle, INFINITE, FALSE);
+    CloseHandle(handle);
 }
 
 bool Win32OS::thread_join(OS::ThreadID tid)
 {
     _mutex_lock(&data.thread_allocate_srw);
-    
+
     ThreadData& thread_data = _thread_data_get(tid);
-    bool result = WaitForSingleObjectEx(thread_data.handle, INFINITE, FALSE) == WAIT_FAILED;
+    HANDLE handle = thread_data.handle;
 
     _mutex_unlock(&data.thread_allocate_srw);
-    return result;
+
+    return WaitForSingleObjectEx(handle, INFINITE, FALSE) != WAIT_FAILED;
 }
 
 void Win32OS::thread_set_name(OS::ThreadID tid, StringView new_name)

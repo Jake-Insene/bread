@@ -1,5 +1,6 @@
 #pragma once
 #include "mem/allocator.h"
+#include "os/mutex.h"
 #include "gpu/gpu.h"
 #include "graphics/buffer.h"
 #include "graphics/command_queue.h"
@@ -20,6 +21,7 @@ namespace Graphics
 struct Device
 {
     mem::Allocator allocator;
+    Mutex mutex;
 
     GPU::PhysicalDeviceID gpu_physical_device;
     GPU::DeviceID gpu_device;
