@@ -94,9 +94,9 @@ struct RendererBatch2D
     struct Batch
     {
         Graphics::Pipeline* pipeline;
-        Graphics::DescriptorSetRef set;
+        Graphics::DescriptorSet* set;
         usize offset; // in buffer
-
+        u32 vertices_per_instance;
         u32 instance_count;
     };
     static constexpr usize MaxInstancePerBatch = 128;
@@ -125,6 +125,16 @@ struct RendererBatch2D
 
     Array<Batch> batches;
 
+    u32 quad_count;
+    u32 line_count;
+    u32 circle_count;
+
+    Array<QuadInstance> quads;
+    Array<LineInstance> lines;
+    Array<CircleInstance> circles;
+
+    Graphics::Pipeline* last_pipeline;
+
     void init(const RendererBatch2DCreateInfo& batch_info);
     void destroy();
 
@@ -134,5 +144,9 @@ struct RendererBatch2D
 
     void begin_batch_record(const FrameInfo& frame_info, Graphics::CommandEncoder& encoder);
     void end_batch_record(const FrameInfo& frame_info, Graphics::CommandEncoder& encoder);
+
+    void commit_quad(const QuadInstance& quad);
+    void commit_line(const LineInstance& line);
+    void commit_circle(const CircleInstance& circle);
 };
 

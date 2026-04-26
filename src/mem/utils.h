@@ -29,9 +29,24 @@ constexpr T align_down(T value, T alignment)
     return value & ~(alignment - 1);
 }
 
+/*
+* Compare src1 and src2 elements,
+* both must be of the same type.
+* src1.len must be the same as src2.len.
+*
+* @param src1 Source 1
+* @param src2 Source 2
+*/
 template<typename T>
 constexpr bool compare(Slice<const T> src1, Slice<const T> src2);
 
+/*
+* Copy src.len elements into dest,
+* both must be of the same type.
+*
+* @param dest Destination slice
+* @param src Source slice
+*/
 template<typename T, typename U>
 constexpr void copy(Slice<T> dest, const Slice<U>& src);
 

@@ -29,6 +29,21 @@ void Renderer2D::destroy()
     Renderer::destroy();
 }
 
+void Renderer2D::commit_quad(const RendererBatch2D::QuadInstance& quad)
+{
+    batcher.commit_quad(quad);
+}
+
+void Renderer2D::commit_line(const RendererBatch2D::LineInstance& line)
+{
+    batcher.commit_line(line);
+}
+
+void Renderer2D::commit_circle(const RendererBatch2D::CircleInstance& circle)
+{
+    batcher.commit_circle(circle);
+}
+
 void Renderer2D::render(const FrameInfo& frame_info)
 {
     if(!HasValue(frame_info.flags & FrameFlags::Acquired))

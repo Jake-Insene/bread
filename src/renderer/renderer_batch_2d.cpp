@@ -166,6 +166,16 @@ void RendererBatch2D::init(const RendererBatch2DCreateInfo& batch_info)
     }
 
     batches = Array<Batch>::with_size(allocator, 32);
+
+    quad_count = 0;
+    line_count = 0;
+    circle_count = 0;
+
+    quads = Array<QuadInstance>::with_size(allocator, batch_info.max_instances_per_type);
+    lines = Array<LineInstance>::with_size(allocator, batch_info.max_instances_per_type);
+    circles = Array<CircleInstance>::with_size(allocator, batch_info.max_instances_per_type);
+
+    last_pipeline = nullptr;
 }
 
 void RendererBatch2D::destroy()
@@ -179,11 +189,17 @@ void RendererBatch2D::destroy()
     uniform_buffer.destroy();
     uniform_pool.destroy();
 
+    quads.destroy();
+    lines.destroy();
+    circles.destroy();
+
     batches.destroy();
 }
 
 void RendererBatch2D::prepare_scene(const FrameInfo& frame_info)
 {
+    last_pipeline = nullptr;
+
     Renderer2D::SceneUniform* scene_uniform = reinterpret_cast<Renderer2D::SceneUniform*>(uniform_buffer.get_mapped(frame_info.frame_index).ptr());
     scene_uniform->view = Mat4::identity();
     scene_uniform->projection = Projection::orthographic(
@@ -201,61 +217,165 @@ void RendererBatch2D::prepare_scene(const FrameInfo& frame_info)
 void RendererBatch2D::build_batch(const FrameInfo& frame_info)
 {
     // build batches
-    u8* quad_buffer = instance_buffer.get_mapped_staging(frame_info.frame_index).ptr();
-    quad_buffer += quad_offset_begin;
+    u8* staging_ptr = instance_buffer.get_mapped_staging(frame_info.frame_index).ptr();
 
-    QuadInstance* quad_instance = reinterpret_cast<QuadInstance*>(quad_buffer);
+    QuadInstance* quad_buffer = reinterpret_cast<QuadInstance*>(staging_ptr + quad_offset_begin);
+    mem::copy(Slice(quad_buffer, quads.count), Slice(quads.items.items, quads.count));
+    quad_count = quads.count;
 
-    quad_instance[0].xx = Vector2(1, 0);
-    quad_instance[0].yy = Vector2(0, 1);
-    quad_instance[0].zz = Vector2(0, 0);
-    quad_instance[0].color = Color(255, 255, 255, 255);
-    quad_instance[0].rect = Rect2D(0, 0, 100, 100);
+    LineInstance* line_buffer = reinterpret_cast<LineInstance*>(staging_ptr + line_offset_begin);
+    mem::copy(Slice(line_buffer, lines.count), Slice(lines.items.items, lines.count));
+    line_count = lines.count;
 
+    CircleInstance* circle_buffer = reinterpret_cast<CircleInstance*>(staging_ptr + circle_offset_begin);
+    mem::copy(Slice(circle_buffer, circles.count), Slice(circles.items.items, circles.count));
+    circle_count = circles.count;
+
+    Graphics::DescriptorSet* uniform_set = uniform_pool.get_set(frame_info.frame_index);
+    for (Batch& batch : batches.iter())
+    {
+        batch.set = uniform_set;
+    }
 }
 
 void RendererBatch2D::finish_scene(const FrameInfo&)
 {
-
+    quads.clear();
+    lines.clear();
+    circles.clear();
 }
 
 void RendererBatch2D::begin_batch_record(const FrameInfo& frame_info, Graphics::CommandEncoder& encoder)
 {
-    // doing staging, improve the copy
     FramedBuffer::BufferInfo vertex_buffer_info = instance_buffer.get_buffer_info(frame_info.frame_index);
-    GPU::BufferCopyRegion copy_regions[] =
-    {
-        {
-            .source_offset = vertex_buffer_info.offset,
-            .destination_offset = vertex_buffer_info.offset,
-            .size = instance_buffer_size,
-        }
-    };
-
     Graphics::Buffer* vb = instance_buffer.get_buffer();
     Graphics::Buffer* svb = instance_buffer.get_staging_buffer();
-    GPU::command_buffer_copy_buffer(encoder.command_buffer,
+
+    // Copy per type
+    // quad
+    if(quad_count > 0)
+    {
+        GPU::BufferCopyRegion region =
         {
-            .source_buffer = svb->gpu_buffer,
-            .destination_buffer = vb->gpu_buffer,
-            .copy_regions = copy_regions,
-        }
-    );
+            .source_offset = vertex_buffer_info.offset + quad_offset_begin,
+            .destination_offset = vertex_buffer_info.offset + quad_offset_begin,
+            .size = quad_count * sizeof(QuadInstance),
+        };
+        GPU::command_buffer_copy_buffer(encoder.command_buffer,
+            {
+                .source_buffer = svb->gpu_buffer,
+                .destination_buffer = vb->gpu_buffer,
+                .copy_regions = Slice(&region, 1),
+            }
+        );
+    }
+    // line
+    if(line_count > 0)
+    {
+        GPU::BufferCopyRegion region =
+        {
+            .source_offset = vertex_buffer_info.offset + line_offset_begin,
+            .destination_offset = vertex_buffer_info.offset + line_offset_end,
+            .size = line_count * sizeof(LineInstance),
+        };
+        GPU::command_buffer_copy_buffer(encoder.command_buffer,
+            {
+                .source_buffer = svb->gpu_buffer,
+                .destination_buffer = vb->gpu_buffer,
+                .copy_regions = Slice(&region, 1),
+            }
+        );
+    }
+    // circle
+    if(circle_count > 0)
+    {
+        GPU::BufferCopyRegion region =
+        {
+            .source_offset = vertex_buffer_info.offset + circle_offset_begin,
+            .destination_offset = vertex_buffer_info.offset + circle_offset_begin,
+            .size = circle_count * sizeof(CircleInstance),
+        };
+        GPU::command_buffer_copy_buffer(encoder.command_buffer,
+            {
+                .source_buffer = svb->gpu_buffer,
+                .destination_buffer = vb->gpu_buffer,
+                .copy_regions = Slice(&region, 1),
+            }
+        );
+    }
+
+    quad_count = 0;
+    line_count = 0;
+    circle_count = 0;
 }
 
 void RendererBatch2D::end_batch_record(const FrameInfo& frame_info, Graphics::CommandEncoder& encoder)
 {
     FramedBuffer::BufferInfo vertex_buffer_info = instance_buffer.get_buffer_info(frame_info.frame_index);
-    
-    encoder.bind_pipeline(GPU::PipelineBindPoint::Graphics, quad_pipeline);
-    
-    Graphics::DescriptorSet* uniform_set = uniform_pool.get_set(frame_info.frame_index);
-    encoder.bind_set(GPU::PipelineBindPoint::Graphics, quad_pipeline, 0, Slice(&uniform_set, 1));
 
     Graphics::Buffer* vb = instance_buffer.get_buffer();
-    usize quad_offset = vertex_buffer_info.offset + quad_offset_begin;
-    encoder.bind_vertex_buffers(0, Slice(&vb, 1), Slice(&quad_offset, 1));
 
-    encoder.draw(6, 1, 0, 0);
+    for (const Batch& batch : batches.iter())
+    {
+        encoder.bind_pipeline(GPU::PipelineBindPoint::Graphics, batch.pipeline);
+        Graphics::DescriptorSet* sets[] = { batch.set };
+        encoder.bind_set(GPU::PipelineBindPoint::Graphics, batch.pipeline, 0, sets);
+
+        usize buffer_offset = vertex_buffer_info.offset + batch.offset;
+        encoder.bind_vertex_buffers(0, Slice(&vb, 1), Slice(&buffer_offset, 1));
+
+        encoder.draw(batch.vertices_per_instance, batch.instance_count, 0, 0);
+    }
+
+    batches.clear();
+}
+
+void RendererBatch2D::commit_quad(const QuadInstance& quad)
+{
+    if (last_pipeline != quad_pipeline) {
+        (void)batches.add({
+            .pipeline = quad_pipeline,
+            .set = nullptr,
+            .offset = quad_offset_begin,
+            .vertices_per_instance = 6,
+            .instance_count = 0,
+        });
+        last_pipeline = quad_pipeline;
+    }
+    (void)quads.add(quad);
+    batches.get(batches.count - 1).instance_count++;
+}
+
+void RendererBatch2D::commit_line(const LineInstance& line)
+{
+    if (last_pipeline != line_pipeline) {
+        (void)batches.add({
+            .pipeline = line_pipeline,
+            .set = nullptr,
+            .offset = line_offset_begin,
+            .vertices_per_instance = 2,
+            .instance_count = 0,
+        });
+        last_pipeline = line_pipeline;
+    }
+    (void)lines.add(line);
+    batches.get(batches.count - 1).instance_count++;
+}
+
+void RendererBatch2D::commit_circle(const CircleInstance& circle)
+{
+    if (last_pipeline != circle_pipeline)
+    {
+        (void)batches.add({
+            .pipeline = circle_pipeline,
+            .set = nullptr,
+            .offset = circle_offset_begin,
+            .vertices_per_instance = 6,
+            .instance_count = 0,
+        });
+        last_pipeline = circle_pipeline;
+    }
+    (void)circles.add(circle);
+    batches.get(batches.count - 1).instance_count++;
 }
 

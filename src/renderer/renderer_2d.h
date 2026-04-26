@@ -33,4 +33,8 @@ struct Renderer2D : Renderer
     void destroy();
 
     virtual void render(const FrameInfo& frame_info) override;
+
+    void commit_quad(const RendererBatch2D::QuadInstance& quad);
+    void commit_line(const RendererBatch2D::LineInstance& line);
+    void commit_circle(const RendererBatch2D::CircleInstance& circle);
 };
