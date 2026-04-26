@@ -16,7 +16,18 @@ void* operator new(size_t)
     return reinterpret_cast<void*>(0xFFFFFFFF'FFFFFFFF);
 }
 
+void* operator new[](size_t)
+{
+    FailOn(true, "avoid 'new' statements!");
+    return reinterpret_cast<void*>(0xFFFFFFFF'FFFFFFFF);
+}
+
 void operator delete(void*)
+{
+    FailOn(true, "avoid 'delete' statements!");
+}
+
+void operator delete[](void*)
 {
     FailOn(true, "avoid 'delete' statements!");
 }

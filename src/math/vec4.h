@@ -25,8 +25,6 @@ union [[nodiscard]] Vector4T
     
     template<typename T2>
     constexpr explicit Vector4T(const Vector4T<T2>& v) : x(T2(v.x)), y(T2(v.y)), z(T2(v.z)), w(T2(v.w)) {}
-    constexpr explicit Vector4T(const Vector2T<T>& v1, const Vector2T<T>& v2) : x(v1.x), y(v1.y), z(v2.x), w(v2.y) {}
-    constexpr explicit Vector4T(const Vector2T<T>& v1, const T z, const T w) : x(v1.x), y(v1.y), z(z), w(w) {}
 
     [[nodiscard]] constexpr T& operator[](const usize index)
     {

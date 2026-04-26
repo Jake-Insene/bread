@@ -27,7 +27,7 @@ struct RendererBatch2D
         Vector2 viewport_size;
     };
 
-    struct alignas(Vector4) SpriteInstance
+    struct alignas(sizeof(Vector4)) SpriteInstance
     {
         // attrib 0
         Vector2 xx;
@@ -44,7 +44,7 @@ struct RendererBatch2D
     static_assert(sizeof(SpriteInstance) / sizeof(Vector4) <= GPU::MaxVertexInputAttributes, "Instance shouldn't use more than GPU::MaxVertexInputAttributes attributes");
     static_assert(mem::align_up(sizeof(SpriteInstance), sizeof(Vector4)) == sizeof(SpriteInstance), "Invalid Instance alignment");
     
-    struct alignas(Vector4) QuadInstance
+    struct alignas(sizeof(Vector4)) QuadInstance
     {
         // attrib 0
         Vector2 xx;
@@ -59,7 +59,7 @@ struct RendererBatch2D
     static_assert(sizeof(QuadInstance) / sizeof(Vector4) <= GPU::MaxVertexInputAttributes, "Instance shouldn't use more than GPU::MaxVertexInputAttributes attributes");
     static_assert(mem::align_up(sizeof(QuadInstance), sizeof(Vector4)) == sizeof(QuadInstance), "Invalid Instance alignment");
 
-    struct alignas(Vector4) LineInstance
+    struct alignas(sizeof(Vector4)) LineInstance
     {
         // attrib 0
         Vector2 xx;
@@ -75,7 +75,7 @@ struct RendererBatch2D
     static_assert(sizeof(LineInstance) / sizeof(Vector4) <= GPU::MaxVertexInputAttributes, "Instance shouldn't use more than GPU::MaxVertexInputAttributes attributes");
     static_assert(mem::align_up(sizeof(LineInstance), sizeof(Vector4)) == sizeof(LineInstance), "Invalid Instance alignment");
 
-    struct alignas(Vector4) CircleInstance
+    struct alignas(sizeof(Vector4)) CircleInstance
     {
         // attrib 0
         Vector2 xx;
@@ -87,7 +87,6 @@ struct RendererBatch2D
         // attrib 2
         Vector2 point;
         f32 radius;
-        f32 padding;
     };
     static_assert(sizeof(CircleInstance) / sizeof(Vector4) <= GPU::MaxVertexInputAttributes, "Instance shouldn't use more than GPU::MaxVertexInputAttributes attributes");
     static_assert(mem::align_up(sizeof(CircleInstance), sizeof(Vector4)) == sizeof(CircleInstance), "Invalid Instance alignment");

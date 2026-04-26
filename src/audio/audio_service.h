@@ -3,10 +3,6 @@
 #include "systems/system.h"
 
 
-struct AudioServiceCreateInfo
-{
-    mem::Allocator allocator;
-};
 
 struct AudioService : System<AudioService>
 {
