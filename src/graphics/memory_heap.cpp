@@ -7,6 +7,7 @@ namespace Graphics
 void MemoryHeap::init(const mem::Allocator& _allocator, Device* _parent, const GPU::MemoryHeapCreateInfo& info)
 {
     DeviceObject::init(_allocator, _parent);
+    heap_size = info.heap_size;
     memory_heap = GPU::memory_heap_create(info);
 }
 
@@ -18,12 +19,21 @@ void MemoryHeap::destroy()
 
 Slice<u8> MemoryHeap::map(usize offset, usize len)
 {
-    return GPU::memory_heap_map(memory_heap, offset, len);
+    if (map_count == 0)
+    {
+        mapped_memory = GPU::memory_heap_map(memory_heap, 0, heap_size);
+    }
+    map_count++;
+    return Slice<u8>(mapped_memory.items + offset, len);
 }
 
-void MemoryHeap::unmap(Slice<u8> memory)
+void MemoryHeap::unmap(const Slice<u8>&)
 {
-    GPU::memory_heap_unmap(memory_heap, memory);
+    map_count--;
+    if (map_count == 0)
+    {
+        GPU::memory_heap_unmap(memory_heap, mapped_memory);
+    }
 }
 
 }

@@ -28,7 +28,7 @@ struct Buffer : DeviceObject
     void destroy();
 
     Slice<u8> map(usize offset, usize len);
-    void unmap(Slice<u8> memory);
+    void unmap(const Slice<u8>& memory);
 };
 
 }

@@ -30,7 +30,7 @@ Slice<u8> Buffer::map(usize offset, usize len)
     return heap->map(heap_offset + offset, len);
 }
 
-void Buffer::unmap(Slice<u8> memory)
+void Buffer::unmap(const Slice<u8>& memory)
 {
     heap->unmap(memory);
 }

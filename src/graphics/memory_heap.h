@@ -10,12 +10,15 @@ namespace Graphics
 struct MemoryHeap : DeviceObject
 {
     GPU::MemoryHeapID memory_heap;
+    usize heap_size;
+    u32 map_count = 0;
+    Slice<u8> mapped_memory;
 
     void init(const mem::Allocator& _allocator, Device* _parent, const GPU::MemoryHeapCreateInfo& info);
     void destroy();
 
     Slice<u8> map(usize offset, usize len);
-    void unmap(Slice<u8> memory);
+    void unmap(const Slice<u8>& memory);
 };
 
 }
