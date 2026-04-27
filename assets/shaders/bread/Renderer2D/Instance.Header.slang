@@ -52,7 +52,6 @@ struct FragmentInput
     float4 ClipPosition : SV_Position;
 #if defined(INSTANCE_CIRCLE)
     float2 LocalPosition;
-    half Radius;
 #endif
 };
 
@@ -82,7 +81,7 @@ FragmentInput VertexMain(VertexInput Input, uint VertexIndex : SV_VertexID)
 #elif defined(INSTANCE_CIRCLE)
     Object.InstancePosition = float4((VertexPosition * Input.Attrib2.zz) + Input.Attrib2.xy, 0, 1);
 #endif
-    
+
     Object.WorldTransform = float4x4(
         float4(Input.Attrib0.xy, 0, Input.Attrib1.x),
         float4(Input.Attrib0.zw, 0, Input.Attrib1.y),
@@ -93,9 +92,8 @@ FragmentInput VertexMain(VertexInput Input, uint VertexIndex : SV_VertexID)
     FragmentInput Output = Vertex(Object);
 #if defined(INSTANCE_CIRCLE)
     Output.LocalPosition = (VertexPosition - float2(0.5, 0.5)) * 2.0;
-    Output.Radius = half(Input.Attrib2.z);
 #endif
-    
+
     return Output;
 }
 
