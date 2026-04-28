@@ -357,14 +357,11 @@ void GPU::descriptor_set_update_descriptors(DescriptorSetID descriptor_set, cons
 	current_adapter.descriptor_set_update_descriptors(descriptor_set, update_info);
 }
 
-GPU::PipelineID GPU::pipeline_create(const GPU::PipelineCreateInfo& ci)
+GPU::PipelineLayoutID GPU::pipeline_layout_create(const PipelineLayoutCreateInfo &ci)
 {
 	GPUFailOn(ci.device.is_valid() == false, "invalid device");
-    GPUFailOn(ci.bind_point == GPU::PipelineBindPoint::Unknown, "invalid pipeline bind point");
-    GPUFailOn(ci.input_assembly.topology == GPU::PrimitiveTopology::Unknown, "invalid topology");
-    GPUFailOn(ci.shader_stages.len == 0, "at least one shader stage was expected");
 
-	for(GPU::ConstantBlock cb : ci.pipeline_layout.constant_blocks)
+	for(GPU::ConstantBlock cb : ci.constant_blocks)
 	{
 		GPUFailOn(cb.size > GPU::MaxConstantBlockSize, "a constant block size must be less than or equal to 128 bytes");
     	GPUFailOn(
@@ -372,6 +369,23 @@ GPU::PipelineID GPU::pipeline_create(const GPU::PipelineCreateInfo& ci)
     	    "a constant block size must be GPU::ConstantBlockAlignment bytes aligned"
     	);
 	}
+
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.pipeline_layout_create(ci));
+}
+
+void GPU::pipeline_layout_destroy(PipelineLayoutID pipeline_layout)
+{
+    GPUFailOn(pipeline_layout.is_valid() == false, "invalid pipeline layout");
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(pipeline_layout, current_adapter.pipeline_layout_destroy(pipeline_layout));
+}
+
+GPU::PipelineID GPU::pipeline_create(const GPU::PipelineCreateInfo& ci)
+{
+	GPUFailOn(ci.device.is_valid() == false, "invalid device");
+    GPUFailOn(ci.bind_point == GPU::PipelineBindPoint::Unknown, "invalid pipeline bind point");
+    GPUFailOn(ci.input_assembly.topology == GPU::PrimitiveTopology::Unknown, "invalid topology");
+    GPUFailOn(ci.shader_stages.len == 0, "at least one shader stage was expected");
+    GPUFailOn(ci.pipeline_layout.is_valid() == false, "invalid pipeline layout");
 	
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.pipeline_create(ci));
 }
@@ -473,13 +487,13 @@ void GPU::command_buffer_bind_pipeline(CommandBufferID command_buffer, PipelineB
 	current_adapter.command_buffer_bind_pipeline(command_buffer, bind_point, pipeline);
 }
 
-void GPU::command_buffer_bind_descriptor_sets(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineID pipeline, u32 base_set, const Slice<DescriptorSetID>& descriptor_sets)
+void GPU::command_buffer_bind_descriptor_sets(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineLayoutID pipeline_layout, u32 base_set, const Slice<DescriptorSetID>& descriptor_sets)
 {
     GPUFailOn(command_buffer.is_valid() == false, "invalid command buffer");
 	GPUFailOn(bind_point == GPU::PipelineBindPoint::Unknown, "invalid bind point");
-    GPUFailOn(pipeline.is_valid() == false, "invalid pipeline");
+    GPUFailOn(pipeline_layout.is_valid() == false, "invalid pipeline layout");
     GPUFailOn(descriptor_sets.len == 0, "invalid descriptor set count");
-	current_adapter.command_buffer_bind_descriptor_sets(command_buffer, bind_point, pipeline, base_set, descriptor_sets);
+	current_adapter.command_buffer_bind_descriptor_sets(command_buffer, bind_point, pipeline_layout, base_set, descriptor_sets);
 }
 
 
@@ -490,12 +504,13 @@ void GPU::command_buffer_bind_vertex_buffers(CommandBufferID command_buffer, u32
 	current_adapter.command_buffer_bind_vertex_buffers(command_buffer, base_binding, buffers, offsets);
 }
 
-void GPU::command_buffer_constant_block(GPU::CommandBufferID command_buffer, GPU::PipelineID pipeline, GPU::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address)
+void GPU::command_buffer_constant_block(GPU::CommandBufferID command_buffer, PipelineLayoutID pipeline_layout, GPU::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address)
 {
 	GPUFailOn(command_buffer.is_valid() == false, "invalid command buffer");
+	GPUFailOn(pipeline_layout.is_valid() == false, "invalid pipeline layout");
 	GPUFailOn(stages == GPU::ShaderStage(0), "invalid shader stages");
     GPUFailOn(size == 0, "invalid constant block size");
-	current_adapter.command_buffer_constant_block(command_buffer, pipeline, stages, offset, size, block_address);
+	current_adapter.command_buffer_constant_block(command_buffer, pipeline_layout, stages, offset, size, block_address);
 }
 
 void GPU::command_buffer_set_viewports(CommandBufferID command_buffer, u32 base_viewport, const Slice<Viewport>& viewports)

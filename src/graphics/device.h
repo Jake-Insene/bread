@@ -8,6 +8,7 @@
 #include "graphics/device_object.h"
 #include "graphics/fence.h"
 #include "graphics/memory_heap.h"
+#include "graphics/pipeline_layout.h"
 #include "graphics/pipeline.h"
 #include "graphics/queue.h"
 #include "graphics/sampler.h"
@@ -48,6 +49,7 @@ struct Device
     Buffer* create_buffer(GPU::BufferUsage usage, usize size, MemoryHeap* heap, usize heap_offset);
     Sampler* create_sampler(const SamplerInfo& sampler_info);
     DescriptorPool* create_descriptor_pool(u32 max_sets, Slice<const GPU::DescriptorPoolSize> sizes);
+    PipelineLayout* create_pipeline_layout(const PipelineLayoutInfo& pipeline_layout_info);
     Pipeline* create_pipeline(const PipelineInfo& pipeline_info);
     CommandQueue* create_command_queue(Queue& queue);
 

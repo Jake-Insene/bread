@@ -120,6 +120,10 @@ struct GPUDebugLayer
 			.free_func_name = "GPU::descriptor_set_free",
 		},
 		{
+			.resource_name = "GPU::PipelineLayoutID",
+			.free_func_name = "GPU::pipeline_layout_destroy",
+		},
+		{
 			.resource_name = "GPU::PipelineID",
 			.free_func_name = "GPU::pipeline_destroy",
 		},
@@ -201,6 +205,10 @@ struct GPUDebugLayer
 		else if constexpr (IsSame<ResourceID, GPU::DescriptorSetID>)
 		{
 			return GPU::ObjectType::DescriptorSet;
+		}
+		else if constexpr (IsSame<ResourceID, GPU::PipelineLayoutID>)
+		{
+			return GPU::ObjectType::PipelineLayout;
 		}
 		else if constexpr (IsSame<ResourceID, GPU::PipelineID>)
 		{

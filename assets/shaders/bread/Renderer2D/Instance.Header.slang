@@ -48,11 +48,13 @@ struct VertexInput
 struct FragmentInput
 {
     nointerpolation half4 Color;
-    nointerpolation uint TextureIndex;
     float2 UV;
     float4 ClipPosition : SV_Position;
 #if defined(INSTANCE_CIRCLE)
-    float2 LocalPosition;
+float2 LocalPosition;
+#endif
+#if defined(INSTANCE_SPRITE)
+    nointerpolation uint TextureIndex;
 #endif
 };
 
@@ -65,7 +67,6 @@ FragmentInput VertexMain(VertexInput Input, uint VertexIndex : SV_VertexID)
 
     uint InputUintColor = reinterpret<uint>(Input.Attrib1.z);
     Object.Color = unpackUnorm4x8ToHalf(InputUintColor);
-    Object.TextureIndex = reinterpret<uint>(Input.Attrib1.w);
 
     Object.UV = UVPositions[VertexIndex % 6];
 
@@ -92,7 +93,9 @@ FragmentInput VertexMain(VertexInput Input, uint VertexIndex : SV_VertexID)
     );
 
     FragmentInput Output = Vertex(Object);
-    Output.TextureIndex = Object.TextureIndex;
+#if defined(INSTANCE_SPRITE)
+    Output.TextureIndex = reinterpret<uint>(Input.Attrib1.w);
+#endif
 #if defined(INSTANCE_CIRCLE)
     Output.LocalPosition = (VertexPosition - float2(0.5, 0.5)) * 2.0;
 #endif

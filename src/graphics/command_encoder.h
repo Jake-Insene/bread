@@ -9,6 +9,7 @@ struct RenderDevice;
 namespace Graphics
 {
 
+struct PipelineLayout;
 struct Pipeline;
 struct Buffer;
 struct DescriptorSet;
@@ -27,7 +28,7 @@ struct CommandEncoder
     void texture_barrier(const GPU::PipelineTextureBarrier& barrier);
 
     void bind_pipeline(GPU::PipelineBindPoint bind_point, Pipeline* pipeline);
-    void bind_set(GPU::PipelineBindPoint bind_point, Pipeline* pipeline, u32 base_set, const Slice<DescriptorSet*>& sets);
+    void bind_set(GPU::PipelineBindPoint bind_point, PipelineLayout* pipeline_layout, u32 base_set, const Slice<DescriptorSet*>& sets);
     void bind_vertex_buffers(u32 base_binding, const Slice<Buffer*>& buffers, const Slice<usize>& offsets);
 
     void set_viewports(u32 base_viewport, const Slice<GPU::Viewport>& viewports);

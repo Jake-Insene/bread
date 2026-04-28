@@ -238,11 +238,19 @@ struct VulkanDriver
 		GPU::DescriptorPoolID descriptor_pool;
 	};
 
+	struct PipelineLayout
+	{
+		VkDevice vk_device;
+		VkPipelineLayout vk_pipeline_layout;
+
+		GPU::DeviceID device;
+		GPU::PipelineLayoutID pipeline_layout;
+	};
+
 	struct Pipeline
 	{
 		VkDevice vk_device;
 		VkPipeline vk_pipeline;
-		VkPipelineLayout vk_pipeline_layout;
 
 		GPU::DeviceID device;
 		GPU::PipelineID pipeline;
@@ -285,6 +293,7 @@ struct VulkanDriver
 		FreeList<DescriptorSetLayout, GPU::DescriptorSetLayoutID> descriptor_set_layouts;
 		FreeList<DescriptorPool, GPU::DescriptorPoolID> descriptor_pools;
 		FreeList<DescriptorSet, GPU::DescriptorSetID> descriptor_sets;
+		FreeList<PipelineLayout, GPU::PipelineLayoutID> pipeline_layouts;
 		FreeList<Pipeline, GPU::PipelineID> pipelines;
 		FreeList<CommandPool, GPU::CommandPoolID> command_pools;
 		FreeList<CommandBuffer, GPU::CommandBufferID> command_buffers;
@@ -369,6 +378,9 @@ struct VulkanDriver
 	static void descriptor_set_free(GPU::DescriptorSetID descriptor_set);
 	static void descriptor_set_update_descriptors(GPU::DescriptorSetID descriptor_set, const GPU::UpdateDescriptorInfo& update_info);
 
+	static GPU::PipelineLayoutID pipeline_layout_create(const GPU::PipelineLayoutCreateInfo& ci);
+	static void pipeline_layout_destroy(GPU::PipelineLayoutID pipeline_layout);
+
 	static GPU::PipelineID pipeline_create(const GPU::PipelineCreateInfo& ci);
 	static void pipeline_destroy(GPU::PipelineID pipeline);
 
@@ -392,9 +404,9 @@ struct VulkanDriver
 	static void command_buffer_copy_buffer(GPU::CommandBufferID command_buffer, const GPU::BufferCopyInfo& copy_info);
 
 	static void command_buffer_bind_pipeline(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineID pipeline);
-	static void command_buffer_bind_descriptor_sets(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineID pipeline, u32 base_set, const Slice<GPU::DescriptorSetID>& descriptor_sets);
+	static void command_buffer_bind_descriptor_sets(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineLayoutID pipeline_layout, u32 base_set, const Slice<GPU::DescriptorSetID>& descriptor_sets);
 	static void command_buffer_bind_vertex_buffers(GPU::CommandBufferID command_buffer, u32 base_binding, const Slice<GPU::BufferID>& buffers, const Slice<usize>& offsets);
-	static void command_buffer_constant_block(GPU::CommandBufferID command_buffer, GPU::PipelineID pipeline, GPU::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address);
+	static void command_buffer_constant_block(GPU::CommandBufferID command_buffer, GPU::PipelineLayoutID pipeline_layout, GPU::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address);
 
 	static void command_buffer_set_viewports(GPU::CommandBufferID command_buffer, u32 base_viewport, const Slice<GPU::Viewport>& viewports);
 	static void command_buffer_set_scissors(GPU::CommandBufferID command_buffer, u32 base_scissor, const Slice<GPU::Scissor>& scissors);
@@ -414,6 +426,7 @@ struct VulkanDriver
 	static DescriptorSetLayout& _get_descriptor_set_layout(GPU::DescriptorSetLayoutID descriptor_set_layout) { return data.descriptor_set_layouts.get(descriptor_set_layout); }
 	static DescriptorPool& _get_descriptor_pool(GPU::DescriptorPoolID descriptor_pool) { return data.descriptor_pools.get(descriptor_pool); }
 	static DescriptorSet& _get_descriptor_set(GPU::DescriptorSetID descriptor_set) { return data.descriptor_sets.get(descriptor_set); }
+	static PipelineLayout& _get_pipeline_layout(GPU::PipelineLayoutID pipeline_layout) { return data.pipeline_layouts.get(pipeline_layout); }
 	static Pipeline& _get_pipeline(GPU::PipelineID pipeline) { return data.pipelines.get(pipeline); }
 	static CommandPool& _get_command_pool(GPU::CommandPoolID command_pool) { return data.command_pools.get(command_pool); }
 	static CommandBuffer& _get_command_buffer(GPU::CommandBufferID command_buffer) { return data.command_buffers.get(command_buffer); }

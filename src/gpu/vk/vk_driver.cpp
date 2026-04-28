@@ -55,6 +55,8 @@ InternalGPU::GPUAdapter VulkanDriver::get_adapter()
         .descriptor_set_allocate = &VulkanDriver::descriptor_set_allocate,
         .descriptor_set_free = &VulkanDriver::descriptor_set_free,
         .descriptor_set_update_descriptors = &VulkanDriver::descriptor_set_update_descriptors,
+        .pipeline_layout_create = &VulkanDriver::pipeline_layout_create,
+        .pipeline_layout_destroy = &VulkanDriver::pipeline_layout_destroy,
         .pipeline_create = &VulkanDriver::pipeline_create,
         .pipeline_destroy = &VulkanDriver::pipeline_destroy,
         .command_pool_create = &VulkanDriver::command_pool_create,
@@ -100,6 +102,7 @@ void VulkanDriver::initialize(const mem::Allocator &allocator)
     data.descriptor_set_layouts = FreeList<DescriptorSetLayout, GPU::DescriptorSetLayoutID>::with_allocator(allocator);
     data.descriptor_pools = FreeList<DescriptorPool, GPU::DescriptorPoolID>::with_allocator(allocator);
     data.descriptor_sets = FreeList<DescriptorSet, GPU::DescriptorSetID>::with_allocator(allocator);
+    data.pipeline_layouts = FreeList<PipelineLayout, GPU::PipelineLayoutID>::with_allocator(allocator);
     data.pipelines = FreeList<Pipeline, GPU::PipelineID>::with_allocator(allocator);
     data.command_pools = FreeList<CommandPool, GPU::CommandPoolID>::with_allocator(allocator);
     data.command_buffers = FreeList<CommandBuffer, GPU::CommandBufferID>::with_allocator(allocator);
@@ -179,6 +182,7 @@ void VulkanDriver::shutdown()
     data.descriptor_set_layouts.destroy();
     data.descriptor_pools.destroy();
     data.descriptor_sets.destroy();
+    data.pipeline_layouts.destroy();
     data.pipelines.destroy();
     data.command_pools.destroy();
     data.command_buffers.destroy();
@@ -1455,6 +1459,61 @@ void VulkanDriver::descriptor_set_update_descriptors(GPU::DescriptorSetID descri
     );
 }
 
+GPU::PipelineLayoutID VulkanDriver::pipeline_layout_create(const GPU::PipelineLayoutCreateInfo& ci)
+{
+    LogicalDevice& ld = _get_logical_device(ci.device);
+    mem::Allocator allocator = acquire_tmp_allocator();
+
+    GPU::PipelineLayoutID pipeline_layout_id = data.pipeline_layouts.add(PipelineLayout());
+    PipelineLayout& pipe_layout = _get_pipeline_layout(pipeline_layout_id);
+    pipe_layout.vk_device = ld.vk_device;
+    pipe_layout.device = ci.device;
+    pipe_layout.pipeline_layout = pipeline_layout_id;
+
+    Slice<VkPushConstantRange> vk_push_ranges = allocator.array<VkPushConstantRange>(ci.constant_blocks.len);
+    for(usize i = 0; i < ci.constant_blocks.len; i++)
+    {
+        vk_push_ranges[i] =
+        {
+            .stageFlags = VkUtils::_vk_get_shader_stage(ci.constant_blocks[i].stages),
+            .offset = ci.constant_blocks[i].offset,
+            .size = ci.constant_blocks[i].size,
+        };
+    }
+
+    Slice<VkDescriptorSetLayout> vk_set_layouts = allocator.array<VkDescriptorSetLayout>(ci.set_layouts.len);
+    for(usize i = 0; i < ci.set_layouts.len; i++)
+    {
+        vk_set_layouts[i] = _get_descriptor_set_layout(ci.set_layouts[i]).vk_set_layout;
+    }
+
+    VkPipelineLayoutCreateInfo vk_pipeline_layout_info =
+    {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .setLayoutCount = static_cast<uint32_t>(vk_set_layouts.len),
+        .pSetLayouts = vk_set_layouts.ptr(),
+        .pushConstantRangeCount = static_cast<uint32_t>(vk_push_ranges.len),
+        .pPushConstantRanges = vk_push_ranges.ptr(),
+    };
+
+    VkResult result = ld.vk.vkCreatePipelineLayout(ld.vk_device, &vk_pipeline_layout_info, Vulkan::allocation_callbacks(), &pipe_layout.vk_pipeline_layout);
+    VKFailOn(result != VK_SUCCESS, "vkCreatePipelineLayout({})", Vulkan::result_as_string(result));
+
+    return pipeline_layout_id;
+}
+
+void VulkanDriver::pipeline_layout_destroy(GPU::PipelineLayoutID pipeline_layout)
+{
+    PipelineLayout& pipe_layout = _get_pipeline_layout(pipeline_layout);
+    LogicalDevice& ld = _get_logical_device(pipe_layout.device);
+
+    ld.vk.vkDestroyPipelineLayout(pipe_layout.vk_device, pipe_layout.vk_pipeline_layout, Vulkan::allocation_callbacks()); 
+
+    data.pipeline_layouts.remove(pipeline_layout);
+}
+
 GPU::PipelineID VulkanDriver::pipeline_create(const GPU::PipelineCreateInfo& ci)
 {
     LogicalDevice& ld = _get_logical_device(ci.device);
@@ -1626,37 +1685,7 @@ GPU::PipelineID VulkanDriver::pipeline_create(const GPU::PipelineCreateInfo& ci)
     };
 
     // Creating the layout
-
-    Slice<VkPushConstantRange> vk_push_ranges = allocator.array<VkPushConstantRange>(ci.pipeline_layout.constant_blocks.len);
-    for(usize i = 0; i < ci.pipeline_layout.constant_blocks.len; i++)
-    {
-        vk_push_ranges[i] =
-        {
-            .stageFlags = VkUtils::_vk_get_shader_stage(ci.pipeline_layout.constant_blocks[i].stages),
-            .offset = ci.pipeline_layout.constant_blocks[i].offset,
-            .size = ci.pipeline_layout.constant_blocks[i].size,
-        };
-    }
-
-    Slice<VkDescriptorSetLayout> vk_set_layouts = allocator.array<VkDescriptorSetLayout>(ci.pipeline_layout.set_layouts.len);
-    for(usize i = 0; i < ci.pipeline_layout.set_layouts.len; i++)
-    {
-        vk_set_layouts[i] = _get_descriptor_set_layout(ci.pipeline_layout.set_layouts[i]).vk_set_layout;
-    }
-
-    VkPipelineLayoutCreateInfo vk_pipeline_layout_info =
-    {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-        .pNext = nullptr,
-        .flags = 0,
-        .setLayoutCount = static_cast<uint32_t>(vk_set_layouts.len),
-        .pSetLayouts = vk_set_layouts.ptr(),
-        .pushConstantRangeCount = static_cast<uint32_t>(vk_push_ranges.len),
-        .pPushConstantRanges = vk_push_ranges.ptr(),
-    };
-
-    VkResult result = ld.vk.vkCreatePipelineLayout(ld.vk_device, &vk_pipeline_layout_info, Vulkan::allocation_callbacks(), &pipe.vk_pipeline_layout);
-    VKFailOn(result != VK_SUCCESS, "vkCreatePipelineLayout({})", Vulkan::result_as_string(result));
+    VkPipelineLayout vk_pipeline_layout = _get_pipeline_layout(ci.pipeline_layout).vk_pipeline_layout;
 
     Slice<VkFormat> vk_color_attachment_formats = allocator.array<VkFormat>(ci.rendering_info.render_attachments.len);
     for(usize i = 0; i < vk_color_attachment_formats.len; i++)
@@ -1697,14 +1726,14 @@ GPU::PipelineID VulkanDriver::pipeline_create(const GPU::PipelineCreateInfo& ci)
         .pDepthStencilState = &vk_depth_stencil_state, // TODO: implement depth stencil
         .pColorBlendState = &vk_color_blend_state,
         .pDynamicState = &vk_dynamic_state,
-        .layout = pipe.vk_pipeline_layout,
+        .layout = vk_pipeline_layout,
         .renderPass = ld.additional_extension_support.has_dynamic_rendering ? nullptr : render_pass->vk_render_pass,
         .subpass = 0,
         .basePipelineHandle = VK_NULL_HANDLE,
         .basePipelineIndex = 0,
     };
 
-    result = ld.vk.vkCreateGraphicsPipelines(
+    VkResult result = ld.vk.vkCreateGraphicsPipelines(
         ld.vk_device, VK_NULL_HANDLE, 1, &vk_graphics_pipeline_info,
         Vulkan::allocation_callbacks(), &pipe.vk_pipeline
     );
@@ -1726,7 +1755,6 @@ void VulkanDriver::pipeline_destroy(GPU::PipelineID pipeline)
     LogicalDevice& ld = _get_logical_device(pipe.device);
 
     ld.vk.vkDestroyPipeline(pipe.vk_device, pipe.vk_pipeline, Vulkan::allocation_callbacks());
-    ld.vk.vkDestroyPipelineLayout(pipe.vk_device, pipe.vk_pipeline_layout, Vulkan::allocation_callbacks()); 
 
     data.pipelines.remove(pipeline);
 }
@@ -2060,10 +2088,10 @@ void VulkanDriver::command_buffer_bind_pipeline(GPU::CommandBufferID command_buf
     ld.vk.vkCmdBindPipeline(cmd_buffer.vk_command_buffer, VkUtils::_vk_get_bind_point(bind_point), pipe.vk_pipeline);
 }
 
-void VulkanDriver::command_buffer_bind_descriptor_sets(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineID pipeline, u32 base_set, const Slice<GPU::DescriptorSetID>& descriptor_sets)
+void VulkanDriver::command_buffer_bind_descriptor_sets(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineLayoutID pipeline_layout, u32 base_set, const Slice<GPU::DescriptorSetID>& descriptor_sets)
 {
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
-    Pipeline& pipe = _get_pipeline(pipeline);
+    PipelineLayout& pipe_layout = _get_pipeline_layout(pipeline_layout);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
     mem::Allocator allocator = acquire_tmp_allocator();
 
@@ -2074,7 +2102,7 @@ void VulkanDriver::command_buffer_bind_descriptor_sets(GPU::CommandBufferID comm
     }
 
     ld.vk.vkCmdBindDescriptorSets(
-        cmd_buffer.vk_command_buffer, VkUtils::_vk_get_bind_point(bind_point), pipe.vk_pipeline_layout,
+        cmd_buffer.vk_command_buffer, VkUtils::_vk_get_bind_point(bind_point), pipe_layout.vk_pipeline_layout,
         base_set, static_cast<uint32_t>(vk_descriptor_sets.len), vk_descriptor_sets.ptr(), 0, nullptr 
     );
 }
@@ -2099,14 +2127,14 @@ void VulkanDriver::command_buffer_bind_vertex_buffers(GPU::CommandBufferID comma
     allocator.free(mem::to_bytes(vk_buffers));
 }
 
-void VulkanDriver::command_buffer_constant_block(GPU::CommandBufferID command_buffer, GPU::PipelineID pipeline, GPU::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address)
+void VulkanDriver::command_buffer_constant_block(GPU::CommandBufferID command_buffer, GPU::PipelineLayoutID pipeline_layout, GPU::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address)
 {   
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
-    Pipeline& pipe = _get_pipeline(pipeline);
+    PipelineLayout& pipe_layout = _get_pipeline_layout(pipeline_layout);
 
     ld.vk.vkCmdPushConstants(
-        cmd_buffer.vk_command_buffer, pipe.vk_pipeline_layout, VkUtils::_vk_get_shader_stage(stages),
+        cmd_buffer.vk_command_buffer, pipe_layout.vk_pipeline_layout, VkUtils::_vk_get_shader_stage(stages),
         offset, size, reinterpret_cast<void*>(block_address)
     );
 }

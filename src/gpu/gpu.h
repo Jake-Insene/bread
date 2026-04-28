@@ -37,6 +37,7 @@ struct GPU
 		DescriptorSetLayout,
 		DescriptorPool,
 		DescriptorSet,
+		PipelineLayout,
 		Pipeline,
 		CommandPool,
 		CommandBuffer,
@@ -58,6 +59,7 @@ struct GPU
 	using DescriptorSetLayoutID = ID<u32, struct _DescriptorSetLayout>;
 	using DescriptorPoolID = ID<u32, struct _DescriptorPoolTag>;
 	using DescriptorSetID = ID<u32, struct _DescriptorSet>;
+	using PipelineLayoutID = ID<u32, struct _PipelineLayoutTag>;
 	using PipelineID = ID<u32, struct _PipelineTag>;
 	using CommandPoolID = ID<u32, struct _CommandPoolID>;
 	using CommandBufferID = ID<u32, struct _CommandBufferTag>;
@@ -583,6 +585,26 @@ struct GPU
 	static void descriptor_set_update_descriptors(DescriptorSetID descriptor_set, const UpdateDescriptorInfo& update_info);
 
 	/*
+	* Pipeline Layout API
+	*/
+	struct ConstantBlock
+	{
+		ShaderStage stages;
+		u32 offset;
+		u32 size;
+	};
+
+	struct PipelineLayoutCreateInfo
+	{
+		DeviceID device;
+		Slice<const ConstantBlock> constant_blocks;
+		Slice<const DescriptorSetLayoutID> set_layouts;
+	};
+
+	static PipelineLayoutID pipeline_layout_create(const PipelineLayoutCreateInfo& ci);
+	static void pipeline_layout_destroy(PipelineLayoutID pipeline_layout);
+
+	/*
 	* Pipeline API
 	*/
 	static constexpr usize MaxVertexInputBindings = 16;
@@ -702,19 +724,6 @@ struct GPU
 		f32 max_depth_bounds;		
 	};
 
-	struct ConstantBlock
-	{
-		ShaderStage stages;
-		u32 offset;
-		u32 size;
-	};
-
-	struct PipelineLayout
-	{
-		Slice<const ConstantBlock> constant_blocks;
-		Slice<const DescriptorSetLayoutID> set_layouts;
-	};
-
 	struct RenderingInfo
 	{
 		Slice<TextureFormat> render_attachments;
@@ -730,7 +739,7 @@ struct GPU
 		RasterizerState rasterizer_state;
 		MultisampleState multisample_state;
 		DepthStencilState depth_stencil_state;
-		PipelineLayout pipeline_layout;
+		PipelineLayoutID pipeline_layout;
 		RenderingInfo rendering_info;
 	};
 
@@ -900,9 +909,9 @@ struct GPU
 	static void command_buffer_copy_buffer(CommandBufferID command_buffer, const BufferCopyInfo& copy_info);
 
 	static void command_buffer_bind_pipeline(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineID pipeline);
-	static void command_buffer_bind_descriptor_sets(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineID pipeline, u32 base_set, const Slice<DescriptorSetID>& descriptor_sets);
+	static void command_buffer_bind_descriptor_sets(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineLayoutID pipeline_layout, u32 base_set, const Slice<DescriptorSetID>& descriptor_sets);
 	static void command_buffer_bind_vertex_buffers(CommandBufferID command_buffer, u32 base_binding, const Slice<BufferID>& buffers, const Slice<usize>& offsets);
-	static void command_buffer_constant_block(CommandBufferID command_buffer, PipelineID pipeline, ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address);
+	static void command_buffer_constant_block(CommandBufferID command_buffer, PipelineLayoutID pipeline_layout, ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address);
 
 	static void command_buffer_set_viewports(CommandBufferID command_buffer, u32 base_viewport, const Slice<Viewport>& viewports);
 	static void command_buffer_set_scissors(CommandBufferID command_buffer, u32 base_scissor, const Slice<Scissor>& scissors);

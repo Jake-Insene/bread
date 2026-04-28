@@ -48,6 +48,7 @@ file(GLOB ENGINE_SRC
     src/graphics/fence.cpp
     src/graphics/memory_heap.cpp
     src/graphics/pipeline_2d.cpp
+    src/graphics/pipeline_layout.cpp
     src/graphics/pipeline.cpp
     src/graphics/queue.cpp
     src/graphics/sampler.cpp

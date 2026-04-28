@@ -118,6 +118,7 @@ struct RendererBatch2D
     mem::Allocator allocator;
     Graphics::Device* graphics_device;
 
+    Graphics::PipelineLayout* batch_pipeline_layout;
     Graphics::Pipeline* sprite_pipeline;
     Graphics::Pipeline* quad_pipeline;
     Graphics::Pipeline* line_pipeline;

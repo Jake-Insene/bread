@@ -1,6 +1,7 @@
 #include "graphics/command_encoder.h"
 
 #include "graphics/descriptor_set.h"
+#include "graphics/pipeline_layout.h"
 #include "graphics/pipeline.h"
 
 
@@ -37,7 +38,7 @@ void CommandEncoder::bind_pipeline(GPU::PipelineBindPoint bind_point, Pipeline* 
     GPU::command_buffer_bind_pipeline(command_buffer, bind_point, pipeline->gpu_pipeline);
 }
 
-void CommandEncoder::bind_set(GPU::PipelineBindPoint bind_point, Pipeline* pipeline, u32 base_set, const Slice<DescriptorSet*>& sets)
+void CommandEncoder::bind_set(GPU::PipelineBindPoint bind_point, PipelineLayout* pipeline_layout, u32 base_set, const Slice<DescriptorSet*>& sets)
 {
     Slice<GPU::DescriptorSetID> descriptor_sets = allocator.array<GPU::DescriptorSetID>(sets.len);
     for(usize i = 0; i < descriptor_sets.len; i++)
@@ -45,7 +46,7 @@ void CommandEncoder::bind_set(GPU::PipelineBindPoint bind_point, Pipeline* pipel
         descriptor_sets[i] = sets[i]->descriptor_set;
     }
 
-    GPU::command_buffer_bind_descriptor_sets(command_buffer, bind_point, pipeline->gpu_pipeline, base_set, descriptor_sets);
+    GPU::command_buffer_bind_descriptor_sets(command_buffer, bind_point, pipeline_layout->gpu_pipeline_layout, base_set, descriptor_sets);
 }
 
 void CommandEncoder::bind_vertex_buffers(u32 base_binding, const Slice<Buffer*>& buffers, const Slice<usize>& offsets)

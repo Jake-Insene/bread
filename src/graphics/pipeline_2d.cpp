@@ -38,8 +38,7 @@ PipelineInfo Pipeline2D::make_default(const Pipeline2DInfo& info)
             .min_depth_bounds = 0.F,
             .max_depth_bounds = 1.F,
         },
-        .constant_blocks = info.constant_blocks,
-        .set_layout_infos = info.set_layout_infos,
+        .pipeline_layout = info.pipeline_layout,
         .rendering_info = info.rendering_info,
     };
 }

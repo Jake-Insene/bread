@@ -174,6 +174,15 @@ DescriptorPool* Device::create_descriptor_pool(u32 max_sets, Slice<const GPU::De
     return descriptor_pool;
 }
 
+PipelineLayout* Device::create_pipeline_layout(const PipelineLayoutInfo& pipeline_layout_info)
+{
+    mutex.lock();
+    PipelineLayout* pipe_layout = _allocate_object<PipelineLayout>();
+    pipe_layout->init(allocator, this, gpu_device, pipeline_layout_info);
+    mutex.unlock();
+    return pipe_layout;
+}
+
 Pipeline* Device::create_pipeline(const PipelineInfo& pipeline_info)
 {
     mutex.lock();

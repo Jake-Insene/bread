@@ -1,5 +1,6 @@
 #include "renderer/renderer_batch_2d.h"
 
+#include "graphics/pipeline_layout.h"
 #include "math/projection.h"
 #include "renderer/renderer_2d.h"
 
@@ -43,6 +44,28 @@ void RendererBatch2D::init(const RendererBatch2DCreateInfo& batch_info)
         }
     );
 
+    // same layout for now
+    GPU::DescriptorBinding frame_bindings[] =
+    {
+        { .type = GPU::DescriptorType::UniformBuffer, .binding = 0, .count = 1, .stages = GPU::ShaderStage::Vertex, },
+        { .type = GPU::DescriptorType::CombinedTextureSampler, .binding = 1, .count = 16, .stages = GPU::ShaderStage::Fragment, },
+    };
+
+    Graphics::DescriptorSetLayoutCreateInfo set_layouts[] =
+    {
+        // Frame set
+        {
+            .bindings = frame_bindings,
+        }
+    };
+
+    batch_pipeline_layout = graphics_device->create_pipeline_layout(
+        {
+            .constant_blocks = {},
+            .set_layout_infos = set_layouts,
+        }
+    );
+
     constexpr usize PipelineVersionSizes[] = { sizeof(SpriteInstance), sizeof(QuadInstance), sizeof(LineInstance), sizeof(CircleInstance) };
     constexpr GPU::PrimitiveTopology PipelineTopologies[] = { GPU::PrimitiveTopology::TriangleList, GPU::PrimitiveTopology::TriangleList, GPU::PrimitiveTopology::LineList, GPU::PrimitiveTopology::TriangleList };
     Graphics::Pipeline* pipelines[] = {nullptr, nullptr, nullptr, nullptr};
@@ -66,20 +89,6 @@ void RendererBatch2D::init(const RendererBatch2DCreateInfo& batch_info)
             };
         }
 
-        GPU::DescriptorBinding frame_bindings[] =
-        {
-            { .type = GPU::DescriptorType::UniformBuffer, .binding = 0, .count = 1, .stages = GPU::ShaderStage::Vertex, },
-            { .type = GPU::DescriptorType::CombinedTextureSampler, .binding = 1, .count = 16, .stages = GPU::ShaderStage::Fragment, },
-        };
-        
-        Graphics::DescriptorSetLayoutCreateInfo set_layouts[] =
-        {
-            // Frame set
-            {
-                .bindings = frame_bindings,
-            }
-        };
-
         GPU::TextureFormat image_format = batch_info.surface_format;
         Graphics::PipelineInfo pipeline_info = Graphics::Pipeline2D::make_default(
             {
@@ -89,8 +98,7 @@ void RendererBatch2D::init(const RendererBatch2DCreateInfo& batch_info)
                     .attributes = Slice(&attributes[0], attribute_count),
                 },
                 .primitive_topology = PipelineTopologies[i],
-                .constant_blocks = {},
-                .set_layout_infos = set_layouts,
+                .pipeline_layout = batch_pipeline_layout,
                 .rendering_info =
                 {
                     .render_attachments = Slice(&image_format, 1),
@@ -156,7 +164,7 @@ void RendererBatch2D::init(const RendererBatch2DCreateInfo& batch_info)
     descriptor_sets = Array<Graphics::DescriptorSetRef>::with_size(allocator, max_descriptor_set_count);
     for(usize i = 0; i < max_descriptor_set_count; i++)
     {
-        (void)descriptor_sets.add(descriptor_pool->allocate(sprite_pipeline->get_set_layout(0)));
+        (void)descriptor_sets.add(descriptor_pool->allocate(batch_pipeline_layout->get_layout(0)));
     }
 
     batches = Array<Batch>::with_size(allocator, 32);
@@ -176,6 +184,8 @@ void RendererBatch2D::init(const RendererBatch2DCreateInfo& batch_info)
 
 void RendererBatch2D::destroy()
 {
+    batch_pipeline_layout->destroy();
+
     sprite_pipeline->destroy();
     quad_pipeline->destroy();
     line_pipeline->destroy();
@@ -355,7 +365,7 @@ void RendererBatch2D::end_batch_record(const FrameInfo& frame_info, Graphics::Co
     {
         encoder.bind_pipeline(GPU::PipelineBindPoint::Graphics, batch.pipeline);
         Graphics::DescriptorSet* sets[] = { batch.set };
-        encoder.bind_set(GPU::PipelineBindPoint::Graphics, batch.pipeline, 0, sets);
+        encoder.bind_set(GPU::PipelineBindPoint::Graphics, batch_pipeline_layout, 0, sets);
 
         usize buffer_offset = vertex_buffer_info.offset + batch.offset;
         encoder.bind_vertex_buffers(0, Slice(&vb, 1), Slice(&buffer_offset, 1));

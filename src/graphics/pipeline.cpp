@@ -1,5 +1,7 @@
 #include "graphics/pipeline.h"
 
+#include "graphics/pipeline_layout.h"
+
 
 
 namespace Graphics
@@ -8,16 +10,6 @@ namespace Graphics
 void Pipeline::init(const mem::Allocator& _allocator, Device* _parent, GPU::DeviceID gpu_device, const PipelineInfo& info)
 {
     DeviceObject::init(_allocator, _parent);
-    gpu_set_layouts = allocator.array<GPU::DescriptorSetLayoutID>(info.set_layout_infos.len);
-    for(usize i = 0; i < info.set_layout_infos.len; i++)
-    {
-        gpu_set_layouts[i] = GPU::descriptor_set_layout_create(
-            {
-                .device = gpu_device,
-                .bindings = info.set_layout_infos[i].bindings,
-            }
-        );
-    }
 
     GPU::ShaderStageInfo shader_stages[] =
     {
@@ -35,11 +27,7 @@ void Pipeline::init(const mem::Allocator& _allocator, Device* _parent, GPU::Devi
         .rasterizer_state = info.rasterizer_state,
         .multisample_state = info.multisample_state,
         .depth_stencil_state = info.depth_stencil_state,
-        .pipeline_layout =
-        {
-            .constant_blocks = info.constant_blocks,
-            .set_layouts = gpu_set_layouts,
-        },
+        .pipeline_layout = info.pipeline_layout->gpu_pipeline_layout,
         .rendering_info = info.rendering_info,
     };
 
@@ -47,22 +35,10 @@ void Pipeline::init(const mem::Allocator& _allocator, Device* _parent, GPU::Devi
 }
 
 void Pipeline::destroy()
-{
-    for(GPU::DescriptorSetLayoutID gpu_set_layout : gpu_set_layouts)
-    {
-        GPU::descriptor_set_layout_destroy(gpu_set_layout);
-    }
-    allocator.free(mem::to_bytes(gpu_set_layouts));
-    
+{    
     GPU::pipeline_destroy(gpu_pipeline);
     DeviceObject::destroy();
 }
 
-GPU::DescriptorSetLayoutID Pipeline::get_set_layout(usize set_index)
-{
-    DebugAssert(set_index < gpu_set_layouts.len, "invalid set index");
-
-    return gpu_set_layouts[set_index];
-}
 
 }

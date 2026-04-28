@@ -64,6 +64,9 @@ struct GPUAdapter
 	VTFunc(void, descriptor_set_free, GPU::DescriptorSetID descriptor_set);
 	VTFunc(void, descriptor_set_update_descriptors, GPU::DescriptorSetID descriptor_set, const GPU::UpdateDescriptorInfo& update_info);
 
+	VTFunc(GPU::PipelineLayoutID, pipeline_layout_create, const GPU::PipelineLayoutCreateInfo& ci);
+	VTFunc(void, pipeline_layout_destroy, GPU::PipelineLayoutID pipeline_layout);
+
 	VTFunc(GPU::PipelineID, pipeline_create, const GPU::PipelineCreateInfo& ci);
 	VTFunc(void, pipeline_destroy, GPU::PipelineID pipeline);
 
@@ -86,9 +89,9 @@ struct GPUAdapter
 	VTFunc(void, command_buffer_copy_buffer, GPU::CommandBufferID command_buffer, const GPU::BufferCopyInfo& copy_info);
 
 	VTFunc(void, command_buffer_bind_pipeline, GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineID pipeline);
-	VTFunc(void, command_buffer_bind_descriptor_sets, GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineID pipeline, u32 base_set, const Slice<GPU::DescriptorSetID>& descriptor_sets);
+	VTFunc(void, command_buffer_bind_descriptor_sets, GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineLayoutID pipeline_layout, u32 base_set, const Slice<GPU::DescriptorSetID>& descriptor_sets);
 	VTFunc(void, command_buffer_bind_vertex_buffers, GPU::CommandBufferID command_buffer, u32 base_binding, const Slice<GPU::BufferID>& buffers, const Slice<usize>& offsets);
-	VTFunc(void, command_buffer_constant_block, GPU::CommandBufferID command_buffer, GPU::PipelineID pipeline, GPU::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address);
+	VTFunc(void, command_buffer_constant_block, GPU::CommandBufferID command_buffer, GPU::PipelineLayoutID pipeline_layout, GPU::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address);
 	
 	VTFunc(void, command_buffer_set_viewports, GPU::CommandBufferID command_buffer, u32 base_viewport, const Slice<GPU::Viewport>& viewports);
 	VTFunc(void, command_buffer_set_scissors, GPU::CommandBufferID command_buffer, u32 base_scissor, const Slice<GPU::Scissor>& scissors);

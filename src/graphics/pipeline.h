@@ -8,10 +8,7 @@
 namespace Graphics
 {
 
-struct DescriptorSetLayoutCreateInfo
-{
-	Slice<const GPU::DescriptorBinding> bindings;
-};
+struct PipelineLayout;
 
 struct PipelineInfo
 {
@@ -22,20 +19,16 @@ struct PipelineInfo
     GPU::RasterizerState rasterizer_state;
 	GPU::MultisampleState multisample_state;
     GPU::DepthStencilState depth_stencil_state;
-	Slice<const GPU::ConstantBlock> constant_blocks;
-	Slice<const DescriptorSetLayoutCreateInfo> set_layout_infos;
+    PipelineLayout* pipeline_layout;
     GPU::RenderingInfo rendering_info;
 };
 
 struct Pipeline : DeviceObject
 {
     GPU::PipelineID gpu_pipeline;
-    Slice<GPU::DescriptorSetLayoutID> gpu_set_layouts;
 
     void init(const mem::Allocator& _allocator, Device* _parent, GPU::DeviceID gpu_device, const PipelineInfo& info);
     void destroy();
-
-    GPU::DescriptorSetLayoutID get_set_layout(usize set_index);
 };
 
 }
