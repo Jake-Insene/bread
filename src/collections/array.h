@@ -170,6 +170,20 @@ struct [[nodiscard]] Array
         DebugAssert(index < self.count, "index out of range");
         return self.items[index];
     }
+
+    template<typename Self>
+    [[nodiscard]] auto& first(this Self& self)
+    {
+        DebugAssert(self.count > 0, "there is no 'first'");
+        return self.items[0];
+    }
+
+    template<typename Self>
+    [[nodiscard]] auto& last(this Self& self)
+    {
+        DebugAssert(self.count > 0, "there is no 'last'");
+        return self.items[self.count - 1];
+    }
     
     [[nodiscard]] Type& add(const Type& item)
     {

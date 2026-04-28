@@ -17,18 +17,14 @@ struct DescriptorSetInfo
 
 union WriteInfo
 {
-    struct
-    {
-        GPU::BufferID buffer;
-        usize offset;
-        usize range;
-    } buffer;
-    struct
-    {
-        GPU::TextureID texture;
-        GPU::TextureLayout layout;
-        GPU::SamplerID sampler;
-    } texture;
+    GPU::DescriptorBufferInfo buffer;
+    GPU::DescriptorTextureInfo texture;
+};
+
+struct WriteArrayInfo
+{
+    Slice<GPU::DescriptorBufferInfo> buffers;
+    Slice<GPU::DescriptorTextureInfo> textures;
 };
 
 struct DeferredWrite
@@ -36,6 +32,7 @@ struct DeferredWrite
     u32 binding;
     GPU::DescriptorType type;
     WriteInfo write;
+    WriteArrayInfo write_array;
 };
 
 struct DescriptorSet
@@ -55,7 +52,8 @@ struct DescriptorSet
     void set_deferred(bool _use_deferred) { use_deferred = _use_deferred; }
 
     void set_uniform_buffer(u32 binding, const Buffer* buffer, usize offset, usize range);
-    void set_combined_texture_sampler(u32 binding, GPU::TextureID texture, GPU::TextureLayout layout, Sampler& sampler);
+    void set_combined_texture_sampler(u32 binding, GPU::TextureID texture, GPU::TextureLayout layout, Sampler* sampler);
+    void set_combined_texture_sampler_array(u32 binding, Slice<GPU::TextureID> textures, GPU::TextureLayout layout, Slice<Graphics::Sampler*> samplers);
 
     void sync_writes();
 };

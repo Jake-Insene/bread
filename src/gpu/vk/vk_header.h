@@ -55,7 +55,7 @@ struct Vulkan
     static AdditionalExtensionSupport check_device_extensions(VkPhysicalDevice physical_device);
     static void check_device_features(VkPhysicalDevice physical_device);
 
-    static const char** get_device_extensions(VkPhysicalDevice physical_device, const AdditionalExtensionSupport& add_ext, const mem::Allocator& allocator);
+    static const char** get_device_extensions(VkPhysicalDevice physical_device, const AdditionalExtensionSupport& add_ext, const mem::Allocator& allocator, uint32_t* extension_count);
     static VkPhysicalDeviceFeatures2* get_device_features(const AdditionalExtensionSupport& add_ext, const mem::Allocator& allocator);
 
     static bool _has_extension(const Slice<VkExtensionProperties>& vk_device_extensions, const char* ext_name);

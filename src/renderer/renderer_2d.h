@@ -4,6 +4,7 @@
 #include "math/color.h"
 #include "math/rect_2d.h"
 #include "graphics/device.h"
+#include "graphics/sampler.h"
 #include "graphics/pipeline_2d.h"
 #include "render_device/core/gpu_memory_allocator.h"
 #include "renderer/framed_buffer.h"
@@ -29,12 +30,14 @@ struct Renderer2D : Renderer
     };
 
     RendererBatch2D batcher;
+    Graphics::Sampler* sampler;
 
     void init(const Renderer2DCreateInfo& info);
     void destroy();
 
     virtual void render(const FrameInfo& frame_info) override;
 
+    void commit_sprite(const RendererBatch2D::SpriteInstance& sprite, GPU::TextureID texture);
     void commit_quad(const RendererBatch2D::QuadInstance& quad);
     void commit_line(const RendererBatch2D::LineInstance& line);
     void commit_circle(const RendererBatch2D::CircleInstance& circle);

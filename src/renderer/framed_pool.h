@@ -11,8 +11,6 @@ struct FramedPoolCreateInfo
     Slice<GPU::DescriptorPoolSize> sizes;
     u32 max_sets;
     u32 frame_count;
-
-    GPU::DescriptorSetLayoutID gpu_set_layout;
 };
 
 struct FramedPool
@@ -20,11 +18,10 @@ struct FramedPool
     mem::Allocator allocator;
     Graphics::Device* graphics_device;
 
-    Graphics::DescriptorPool* descriptor_pool;
-    Array<Graphics::DescriptorSetRef> framed_sets;
+    Array<Graphics::DescriptorPool*> pools;
 
     void init(const FramedPoolCreateInfo& info);
     void destroy();
 
-    Graphics::DescriptorSet* get_set(usize frame_index); 
+    Graphics::DescriptorPool* get_pool(usize frame_index); 
 };

@@ -207,7 +207,7 @@ VkInstance Vulkan::create_instance()
         .applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0),
         .pEngineName = VkEngineName.ptr(),
         .engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0),
-        .apiVersion = get_api_version(),
+        .apiVersion = VK_MAKE_API_VERSION(0, 1, 1, 0),
     };
 
     // Validation layer
@@ -415,17 +415,17 @@ void Vulkan::check_device_features(VkPhysicalDevice physical_device)
 }
 
 const char** Vulkan::get_device_extensions(VkPhysicalDevice physical_device, const AdditionalExtensionSupport& add_ext, 
-    const mem::Allocator& allocator)
+    const mem::Allocator& allocator, uint32_t* extension_count)
 {
     Unused(physical_device);
     usize additional_extension_count = 0;
     if(add_ext.has_dynamic_rendering)
     {
-        additional_extension_count++;
+        additional_extension_count += 3;
     }
     if(add_ext.has_imageless_framebuffer)
     {
-        additional_extension_count++;
+        additional_extension_count += 2;
     }
 
     Slice<const char*> extensions = allocator.array<const char*>(ArraySize(VkCoreDeviceExtensions) + additional_extension_count);
@@ -437,12 +437,16 @@ const char** Vulkan::get_device_extensions(VkPhysicalDevice physical_device, con
     if(add_ext.has_dynamic_rendering)
     {
         extensions[index++] = VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME;
+        extensions[index++] = VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME;
+        extensions[index++] = VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME;
     }
     if(add_ext.has_imageless_framebuffer)
     {
         extensions[index++] = VK_KHR_IMAGELESS_FRAMEBUFFER_EXTENSION_NAME;
+        extensions[index++] = VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME;
     }
 
+    *extension_count = index;
     return extensions.ptr();
 }
 

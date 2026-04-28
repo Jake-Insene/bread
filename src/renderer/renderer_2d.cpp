@@ -18,6 +18,24 @@ void Renderer2D::init(const Renderer2DCreateInfo& info)
             .surface_format = info.surface_format,
         }
     );
+
+    sampler = graphics_device->create_sampler(
+        {
+            .min_filter = GPU::Filter::Nearest,
+            .mag_filter = GPU::Filter::Nearest,
+            .mipmap_mode = GPU::SamplerMipMapMode::Nearest,
+            .address_mode_u = GPU::SamplerAddressMode::Repeat,
+            .address_mode_v = GPU::SamplerAddressMode::Repeat,
+            .address_mode_w = GPU::SamplerAddressMode::Repeat,
+            .mip_lod_bias = 0.F,
+            .anisotropy_enable = true,
+            .max_anisotropy = 1,
+            .compare_enable = false,
+            .compare_op = GPU::CompareOp::Always,
+            .min_lod = 0.F,
+            .max_lod = 0.F,
+        }
+    );
 }
 
 void Renderer2D::destroy()
@@ -26,7 +44,13 @@ void Renderer2D::destroy()
     graphics_device->get_present_queue().wait_idle();
     
     batcher.destroy();
+    sampler->destroy();
     Renderer::destroy();
+}
+
+void Renderer2D::commit_sprite(const RendererBatch2D::SpriteInstance& sprite, GPU::TextureID texture)
+{
+    batcher.commit_sprite(sprite, texture, sampler);
 }
 
 void Renderer2D::commit_quad(const RendererBatch2D::QuadInstance& quad)

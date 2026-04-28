@@ -47,6 +47,7 @@ void DescriptorSet::set_uniform_buffer(u32 binding, const Buffer* buffer, usize 
                         .range = range,
                     }
                 },
+                .write_array = {},
             }
         );
     }
@@ -70,7 +71,7 @@ void DescriptorSet::set_uniform_buffer(u32 binding, const Buffer* buffer, usize 
     }
 }
 
-void DescriptorSet::set_combined_texture_sampler(u32 binding, GPU::TextureID texture, GPU::TextureLayout layout, Sampler& sampler)
+void DescriptorSet::set_combined_texture_sampler(u32 binding, GPU::TextureID texture, GPU::TextureLayout layout, Sampler* sampler)
 {
     if(use_deferred)
     {
@@ -85,9 +86,10 @@ void DescriptorSet::set_combined_texture_sampler(u32 binding, GPU::TextureID tex
                     {
                         .texture = texture,
                         .layout = layout,
-                        .sampler = sampler.gpu_sampler,
+                        .sampler = sampler->gpu_sampler,
                     }
                 },
+                .write_array = {},
             }
         );
     }
@@ -95,7 +97,7 @@ void DescriptorSet::set_combined_texture_sampler(u32 binding, GPU::TextureID tex
     {
         GPU::DescriptorTextureInfo textures[] =
         {
-            { .texture = texture, .layout = layout, .sampler = sampler.gpu_sampler, },
+            { .texture = texture, .layout = layout, .sampler = sampler->gpu_sampler, },
         };
 
         GPU::WriteDescriptorInfo write_info[] =
@@ -111,9 +113,58 @@ void DescriptorSet::set_combined_texture_sampler(u32 binding, GPU::TextureID tex
     }
 }
 
+void DescriptorSet::set_combined_texture_sampler_array(u32 binding, Slice<GPU::TextureID> textures, GPU::TextureLayout layout, Slice<Graphics::Sampler*> samplers)
+{
+    if(use_deferred)
+    {
+        Slice<GPU::DescriptorTextureInfo> write_textures = allocator.array<GPU::DescriptorTextureInfo>(textures.len);
+        for(usize i = 0; i < textures.len; i++)
+        {
+            write_textures[i].texture = textures[i];
+            write_textures[i].layout = layout;
+            write_textures[i].sampler = samplers[i]->gpu_sampler;
+        }
+
+        deferred_textures++;
+        (void)deferred_writes.add(
+            {
+                .binding = binding,
+                .type = GPU::DescriptorType::CombinedTextureSampler,
+                .write = {},
+                .write_array =
+                {
+                    .buffers = {},
+                    .textures = write_textures,
+                },
+            }
+        );
+    }
+    else
+    {
+        GPU::DescriptorTextureInfo* texture_infos = allocator.array<GPU::DescriptorTextureInfo>(textures.len).ptr();
+        for(usize i = 0; i < textures.len; i++)
+        {
+            texture_infos[i] = { .texture = textures[i], .layout = layout, .sampler = samplers[i]->gpu_sampler };
+        }
+        
+        GPU::WriteDescriptorInfo write_info[] =
+        {
+            { .binding = binding, .array_element = 0, .count = u32(textures.len), .type = GPU::DescriptorType::CombinedTextureSampler, .textures = Slice(texture_infos, textures.len), .buffers = {}, },
+        };
+        
+        GPU::descriptor_set_update_descriptors(descriptor_set,
+            {
+                .write_infos = write_info,
+            }
+        );
+        
+        allocator.free(mem::to_bytes(Slice(texture_infos, textures.len)));
+    }
+}
+
 void DescriptorSet::sync_writes()
 {
-    if(use_deferred && deferred_writes.count)
+    if(use_deferred && deferred_writes.count != 0)
     {
         Slice<GPU::WriteDescriptorInfo> writes = allocator.array<GPU::WriteDescriptorInfo>(deferred_writes.count);
         Slice<GPU::DescriptorBufferInfo> buffers = allocator.array<GPU::DescriptorBufferInfo>(deferred_buffers);
@@ -133,24 +184,29 @@ void DescriptorSet::sync_writes()
 
             if(IsAnyEqual(deferred_write.type, GPU::DescriptorType::UniformBuffer, GPU::DescriptorType::StorageBuffer))
             {
-                buffers[buffer_index] =
+                if(deferred_write.write_array.buffers.len != 0)
                 {
-                    .buffer = deferred_write.write.buffer.buffer,
-                    .offset = deferred_write.write.buffer.offset,
-                    .range = deferred_write.write.buffer.range,
-                };
-                writes[i].buffers = Slice(&buffers[buffer_index], 1);
+                    writes[i].count = deferred_write.write_array.buffers.len;
+                    writes[i].buffers = deferred_write.write_array.buffers;
+                }
+                else
+                {
+                    buffers[buffer_index] = deferred_write.write.buffer;
+                    writes[i].buffers = Slice(&buffers[buffer_index], 1);
+                }
                 buffer_index++;
             }
             else if(IsAnyEqual(deferred_write.type, GPU::DescriptorType::CombinedTextureSampler))
             {
-                textures[texture_index] =
+                if(deferred_write.write_array.textures.len != 0)
                 {
-                    .texture = deferred_write.write.texture.texture,
-                    .layout = deferred_write.write.texture.layout,
-                    .sampler = deferred_write.write.texture.sampler,
-                };
-                writes[i].textures = Slice(&textures[texture_index], 1);
+                    writes[i].count = deferred_write.write_array.textures.len;
+                    writes[i].textures = deferred_write.write_array.textures;
+                }
+                else {
+                    textures[texture_index] = deferred_write.write.texture;
+                    writes[i].textures = Slice(&textures[texture_index], 1);
+                }
                 texture_index++;
             }
         }
@@ -163,6 +219,18 @@ void DescriptorSet::sync_writes()
         allocator.free(mem::to_bytes(writes));
         allocator.free(mem::to_bytes(buffers));
         allocator.free(mem::to_bytes(textures));
+
+        for(const DeferredWrite& deferred_write : deferred_writes.iter())
+        {
+            if(deferred_write.write_array.buffers.len != 0)
+            {
+                allocator.free(mem::to_bytes(deferred_write.write_array.buffers));
+            }
+            else if(deferred_write.write_array.textures.len != 0)
+            {
+                allocator.free(mem::to_bytes(deferred_write.write_array.textures));
+            }
+        }
         deferred_writes.clear();
 
         deferred_buffers = 0;

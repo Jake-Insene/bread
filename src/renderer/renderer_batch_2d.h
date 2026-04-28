@@ -22,6 +22,15 @@ struct RendererBatch2DCreateInfo
 
 struct RendererBatch2D
 {
+    enum class BatchType
+    {
+        Unknown = 0,
+        Sprite,
+        Quad,
+        Line,
+        Circle,
+    };
+
     struct FrameInfo : Renderer::FrameInfo
     {
         Vector2 viewport_size;
@@ -35,7 +44,7 @@ struct RendererBatch2D
         // attrib 1
         Vector2 zz;
         Color color;
-        u32 material_index;
+        u32 texture_index;
         // attrib 2
         Rect2D rect;
         // attrib 3
@@ -93,13 +102,18 @@ struct RendererBatch2D
     
     struct Batch
     {
+        BatchType batch_type;
         Graphics::Pipeline* pipeline;
         Graphics::DescriptorSet* set;
-        usize offset; // in buffer
+        usize offset; // in instance buffer
         u32 vertices_per_instance;
         u32 instance_count;
+        GPU::TextureID textures[16];
+        Graphics::Sampler* samplers[16];
+        u32 texture_count;
     };
     static constexpr usize MaxInstancePerBatch = 128;
+    static constexpr usize MaxBatchesPerFrame = 64;
 
     mem::Allocator allocator;
     Graphics::Device* graphics_device;
@@ -121,19 +135,22 @@ struct RendererBatch2D
 
     FramedDeviceBuffer instance_buffer;
     FramedMappedBuffer uniform_buffer;
-    FramedPool uniform_pool;
+    Graphics::DescriptorPool* descriptor_pool;
+    Array<Graphics::DescriptorSetRef> descriptor_sets;
 
     Array<Batch> batches;
 
+    u32 sprite_count;
     u32 quad_count;
     u32 line_count;
     u32 circle_count;
 
+    Array<SpriteInstance> sprites;
     Array<QuadInstance> quads;
     Array<LineInstance> lines;
     Array<CircleInstance> circles;
 
-    Graphics::Pipeline* last_pipeline;
+    BatchType last_batch_type;
 
     void init(const RendererBatch2DCreateInfo& batch_info);
     void destroy();
@@ -145,6 +162,7 @@ struct RendererBatch2D
     void begin_batch_record(const FrameInfo& frame_info, Graphics::CommandEncoder& encoder);
     void end_batch_record(const FrameInfo& frame_info, Graphics::CommandEncoder& encoder);
 
+    void commit_sprite(const SpriteInstance& sprite, GPU::TextureID texture, Graphics::Sampler* sampler);
     void commit_quad(const QuadInstance& quad);
     void commit_line(const LineInstance& line);
     void commit_circle(const CircleInstance& circle);

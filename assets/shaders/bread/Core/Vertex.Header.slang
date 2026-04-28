@@ -4,6 +4,7 @@
 struct ObjectData
 {
     half4 Color;
+    uint TextureIndex;
     float2 UV;
     float4 VertexPosition;
     float4 InstancePosition;

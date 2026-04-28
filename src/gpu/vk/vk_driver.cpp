@@ -386,6 +386,8 @@ GPU::DeviceID VulkanDriver::device_create(const GPU::DeviceCreateInfo& ci)
         };
     }
 
+    uint32_t extension_count = 0;
+    const char** extensions = Vulkan::get_device_extensions(pd.vk_physical_device, add_ext, allocator, &extension_count);
     VkDeviceCreateInfo vk_device_info =
     {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
@@ -395,8 +397,8 @@ GPU::DeviceID VulkanDriver::device_create(const GPU::DeviceCreateInfo& ci)
         .pQueueCreateInfos = queue_infos,
         .enabledLayerCount = 0,
         .ppEnabledLayerNames = nullptr,
-        .enabledExtensionCount = static_cast<uint32_t>(ArraySize(Vulkan::VkCoreDeviceExtensions)),
-        .ppEnabledExtensionNames = Vulkan::get_device_extensions(pd.vk_physical_device, add_ext, allocator),
+        .enabledExtensionCount = extension_count,
+        .ppEnabledExtensionNames = extensions,
         .pEnabledFeatures = nullptr,
     };
 

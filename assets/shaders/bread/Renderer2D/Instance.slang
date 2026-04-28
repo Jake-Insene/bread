@@ -2,7 +2,7 @@
 
 layout(set = 0, binding = 0) ConstantBuffer<FrameInfo> Frame;
 #if defined(INSTANCE_SPRITE)
-layout(set = 0, binding = 1) Sampler2D BindTexture;
+layout(set = 0, binding = 1) Sampler2D BindTextures[16];
 #endif
 
 FragmentInput Vertex(ObjectData Object)
@@ -21,7 +21,7 @@ FragmentInput Vertex(ObjectData Object)
 half4 Fragment(FragmentInput Input) : SV_Target
 {
 #if defined(INSTANCE_SPRITE)
-    return Input.Color * LoadPixel(BindTexture, Input.UV);
+    return Input.Color * LoadPixel(BindTextures[Input.TextureIndex], Input.UV);
 #elif defined(INSTANCE_QUAD) || defined(INSTANCE_LINE)
     return Input.Color;
 #elif defined(INSTANCE_CIRCLE)

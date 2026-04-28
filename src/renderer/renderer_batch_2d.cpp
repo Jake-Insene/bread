@@ -69,7 +69,7 @@ void RendererBatch2D::init(const RendererBatch2DCreateInfo& batch_info)
         GPU::DescriptorBinding frame_bindings[] =
         {
             { .type = GPU::DescriptorType::UniformBuffer, .binding = 0, .count = 1, .stages = GPU::ShaderStage::Vertex, },
-            { .type = GPU::DescriptorType::CombinedTextureSampler, .binding = 1, .count = 1, .stages = GPU::ShaderStage::Fragment, },
+            { .type = GPU::DescriptorType::CombinedTextureSampler, .binding = 1, .count = 16, .stages = GPU::ShaderStage::Fragment, },
         };
         
         Graphics::DescriptorSetLayoutCreateInfo set_layouts[] =
@@ -146,38 +146,32 @@ void RendererBatch2D::init(const RendererBatch2DCreateInfo& batch_info)
 
     GPU::DescriptorPoolSize pool_sizes[] =
     {
-        { .type = GPU::DescriptorType::UniformBuffer, .count = 1 * batch_info.max_frames_in_flight, },
-        { .type = GPU::DescriptorType::CombinedTextureSampler, .count = 128 * batch_info.max_frames_in_flight, },
+        { .type = GPU::DescriptorType::UniformBuffer, .count = u32(1 * MaxBatchesPerFrame * batch_info.max_frames_in_flight), },
+        { .type = GPU::DescriptorType::CombinedTextureSampler, .count = u32(16 * MaxBatchesPerFrame * batch_info.max_frames_in_flight), },
     };
 
-    uniform_pool.init(
-        {
-            .allocator = allocator,
-            .graphics_device = graphics_device,
-            .sizes = pool_sizes,
-            .max_sets = batch_info.max_frames_in_flight,
-            .frame_count = batch_info.max_frames_in_flight,
-            .gpu_set_layout = sprite_pipeline->get_set_layout(0),
-        }
-    );
+    descriptor_pool = graphics_device->create_descriptor_pool(u32(MaxBatchesPerFrame * batch_info.max_frames_in_flight), pool_sizes);
 
-    for(usize i = 0; i < batch_info.max_frames_in_flight; i++)
+    const usize max_descriptor_set_count = MaxBatchesPerFrame * batch_info.max_frames_in_flight;
+    descriptor_sets = Array<Graphics::DescriptorSetRef>::with_size(allocator, max_descriptor_set_count);
+    for(usize i = 0; i < max_descriptor_set_count; i++)
     {
-        FramedBuffer::BufferInfo buffer_info = uniform_buffer.get_buffer_info(i);
-        uniform_pool.get_set(i)->set_uniform_buffer(0, uniform_buffer.get_buffer(), buffer_info.offset, sizeof(Renderer2D::SceneUniform));
+        (void)descriptor_sets.add(descriptor_pool->allocate(sprite_pipeline->get_set_layout(0)));
     }
 
     batches = Array<Batch>::with_size(allocator, 32);
 
+    sprite_count = 0;
     quad_count = 0;
     line_count = 0;
     circle_count = 0;
 
+    sprites = Array<SpriteInstance>::with_size(allocator, batch_info.max_instances_per_type);
     quads = Array<QuadInstance>::with_size(allocator, batch_info.max_instances_per_type);
     lines = Array<LineInstance>::with_size(allocator, batch_info.max_instances_per_type);
     circles = Array<CircleInstance>::with_size(allocator, batch_info.max_instances_per_type);
 
-    last_pipeline = nullptr;
+    last_batch_type = BatchType::Unknown;
 }
 
 void RendererBatch2D::destroy()
@@ -189,8 +183,10 @@ void RendererBatch2D::destroy()
 
     instance_buffer.destroy();
     uniform_buffer.destroy();
-    uniform_pool.destroy();
+    descriptor_pool->destroy();
+    descriptor_sets.destroy();
 
+    sprites.destroy();
     quads.destroy();
     lines.destroy();
     circles.destroy();
@@ -200,7 +196,7 @@ void RendererBatch2D::destroy()
 
 void RendererBatch2D::prepare_scene(const FrameInfo& frame_info)
 {
-    last_pipeline = nullptr;
+    last_batch_type = BatchType::Unknown;
 
     Renderer2D::SceneUniform* scene_uniform = reinterpret_cast<Renderer2D::SceneUniform*>(uniform_buffer.get_mapped(frame_info.frame_index).ptr());
     scene_uniform->view = Mat4::identity();
@@ -221,6 +217,10 @@ void RendererBatch2D::build_batch(const FrameInfo& frame_info)
     // build batches
     u8* staging_ptr = instance_buffer.get_mapped_staging(frame_info.frame_index).ptr();
 
+    SpriteInstance* sprite_buffer = reinterpret_cast<SpriteInstance*>(staging_ptr + sprite_offset_begin);
+    mem::copy(Slice(sprite_buffer, sprites.count), Slice(sprites.items.items, sprites.count));
+    sprite_count = sprites.count;
+
     QuadInstance* quad_buffer = reinterpret_cast<QuadInstance*>(staging_ptr + quad_offset_begin);
     mem::copy(Slice(quad_buffer, quads.count), Slice(quads.items.items, quads.count));
     quad_count = quads.count;
@@ -233,15 +233,31 @@ void RendererBatch2D::build_batch(const FrameInfo& frame_info)
     mem::copy(Slice(circle_buffer, circles.count), Slice(circles.items.items, circles.count));
     circle_count = circles.count;
 
-    Graphics::DescriptorSet* uniform_set = uniform_pool.get_set(frame_info.frame_index);
+    usize base_set_index = frame_info.frame_index * MaxBatchesPerFrame;
+    usize set_offset = 0;
+    FramedBuffer::BufferInfo buffer_info = uniform_buffer.get_buffer_info(frame_info.frame_index);
+    
     for (Batch& batch : batches.iter())
     {
-        batch.set = uniform_set;
+        DebugAssert(set_offset < MaxBatchesPerFrame, "not enough batches for scene");
+
+        Graphics::DescriptorSetRef set_ref = descriptor_sets.get(base_set_index + set_offset);
+        Graphics::DescriptorSet* set = descriptor_pool->set(set_ref);
+        batch.set = set;
+        set_offset++;
+
+        set->set_uniform_buffer(0, uniform_buffer.get_buffer(), buffer_info.offset, sizeof(Renderer2D::SceneUniform));
+        if (batch.texture_count > 0)
+        {
+            set->set_combined_texture_sampler_array(1, Slice(batch.textures, batch.texture_count), GPU::TextureLayout::ShaderReadOnly, Slice(batch.samplers, batch.texture_count));
+        }
+        set->sync_writes();
     }
 }
 
 void RendererBatch2D::finish_scene(const FrameInfo&)
 {
+    sprites.clear();
     quads.clear();
     lines.clear();
     circles.clear();
@@ -254,6 +270,23 @@ void RendererBatch2D::begin_batch_record(const FrameInfo& frame_info, Graphics::
     Graphics::Buffer* svb = instance_buffer.get_staging_buffer();
 
     // Copy per type
+    // sprite
+    if(sprite_count > 0)
+    {
+        GPU::BufferCopyRegion region =
+        {
+            .source_offset = vertex_buffer_info.offset + sprite_offset_begin,
+            .destination_offset = vertex_buffer_info.offset + sprite_offset_begin,
+            .size = sprite_count * sizeof(SpriteInstance),
+        };
+        GPU::command_buffer_copy_buffer(encoder.command_buffer,
+            {
+                .source_buffer = svb->gpu_buffer,
+                .destination_buffer = vb->gpu_buffer,
+                .copy_regions = Slice(&region, 1),
+            }
+        );
+    }
     // quad
     if(quad_count > 0)
     {
@@ -306,6 +339,7 @@ void RendererBatch2D::begin_batch_record(const FrameInfo& frame_info, Graphics::
         );
     }
 
+    sprite_count = 0;
     quad_count = 0;
     line_count = 0;
     circle_count = 0;
@@ -332,52 +366,135 @@ void RendererBatch2D::end_batch_record(const FrameInfo& frame_info, Graphics::Co
     batches.clear();
 }
 
+void RendererBatch2D::commit_sprite(const SpriteInstance& sprite, GPU::TextureID texture, Graphics::Sampler* sampler)
+{
+    bool need_new_batch = (last_batch_type != BatchType::Sprite);
+    if (!need_new_batch)
+    {
+        Batch& last_batch = batches.last();
+        bool texture_found = false;
+        for (u32 i = 0; i < last_batch.texture_count; i++)
+        {
+            if (last_batch.textures[i] == texture && last_batch.samplers[i] == sampler)
+            {
+                texture_found = true;
+                break;
+            }
+        }
+        if (!texture_found && last_batch.texture_count >= 16)
+        {
+            need_new_batch = true;
+        }
+    }
+
+    if (need_new_batch)
+    {
+        (void)batches.add(
+            {
+                .batch_type = BatchType::Quad,
+                .pipeline = sprite_pipeline,
+                .set = nullptr,
+                .offset = sprite_offset_begin + (sprites.count * sizeof(SpriteInstance)),
+                .vertices_per_instance = 6,
+                .instance_count = 0,
+                .textures = {},
+                .samplers = {},
+                .texture_count = 0,
+            }
+        );
+        last_batch_type = BatchType::Sprite;
+    }
+
+    Batch& current_batch = batches.last();
+    
+    SpriteInstance new_sprite = sprite;
+    new_sprite.texture_index = MaxValue<u32>;
+    for (u32 i = 0; i < current_batch.texture_count; i++)
+    {
+        if (current_batch.textures[i] == texture && current_batch.samplers[i] == sampler)
+        {
+            new_sprite.texture_index = i;
+            break;
+        }
+    }
+    if (new_sprite.texture_index == MaxValue<u32>)
+    {
+        new_sprite.texture_index = current_batch.texture_count;
+        current_batch.textures[new_sprite.texture_index] = texture;
+        current_batch.samplers[new_sprite.texture_index] = sampler;
+        current_batch.texture_count++;
+    }
+
+    (void)sprites.add(new_sprite);
+    current_batch.instance_count++;
+}
+
 void RendererBatch2D::commit_quad(const QuadInstance& quad)
 {
-    if (last_pipeline != quad_pipeline) {
-        (void)batches.add({
-            .pipeline = quad_pipeline,
-            .set = nullptr,
-            .offset = quad_offset_begin + (quads.count * sizeof(QuadInstance)),
-            .vertices_per_instance = 6,
-            .instance_count = 0,
-        });
-        last_pipeline = quad_pipeline;
+    if (last_batch_type != BatchType::Quad)
+    {
+        (void)batches.add(
+            {
+                .batch_type = BatchType::Quad,
+                .pipeline = quad_pipeline,
+                .set = nullptr,
+                .offset = quad_offset_begin + (quads.count * sizeof(QuadInstance)),
+                .vertices_per_instance = 6,
+                .instance_count = 0,
+                .textures = {},
+                .samplers = {},
+                .texture_count = 0,
+            }
+        );
+        last_batch_type = BatchType::Quad;
     }
     (void)quads.add(quad);
-    batches.get(batches.count - 1).instance_count++;
+    batches.last().instance_count++;
 }
 
 void RendererBatch2D::commit_line(const LineInstance& line)
 {
-    if (last_pipeline != line_pipeline) {
-        (void)batches.add({
-            .pipeline = line_pipeline,
-            .set = nullptr,
-            .offset = line_offset_begin + (lines.count * sizeof(LineInstance)),
-            .vertices_per_instance = 2,
-            .instance_count = 0,
-        });
-        last_pipeline = line_pipeline;
+    if (last_batch_type != BatchType::Line)
+    {
+        (void)batches.add(
+            {
+                .batch_type = BatchType::Line,
+                .pipeline = line_pipeline,
+                .set = nullptr,
+                .offset = line_offset_begin + (lines.count * sizeof(LineInstance)),
+                .vertices_per_instance = 2,
+                .instance_count = 0,
+                .textures = {},
+                .samplers = {},
+                .texture_count = 0,
+            }
+        );
+        last_batch_type = BatchType::Line;
     }
     (void)lines.add(line);
-    batches.get(batches.count - 1).instance_count++;
+    batches.last().instance_count++;
 }
 
 void RendererBatch2D::commit_circle(const CircleInstance& circle)
 {
-    if (last_pipeline != circle_pipeline)
+    if (last_batch_type != BatchType::Circle)
     {
-        (void)batches.add({
-            .pipeline = circle_pipeline,
-            .set = nullptr,
-            .offset = circle_offset_begin + (circles.count * sizeof(CircleInstance)),
-            .vertices_per_instance = 6,
-            .instance_count = 0,
-        });
-        last_pipeline = circle_pipeline;
+        (void)batches.add(
+            {
+                .batch_type = BatchType::Circle,
+                .pipeline = circle_pipeline,
+                .set = nullptr,
+                .offset = circle_offset_begin + (circles.count * sizeof(CircleInstance)),
+                .vertices_per_instance = 6,
+                .instance_count = 0,
+                .textures = {},
+                .samplers = {},
+                .texture_count = 0,
+            }
+        );
+        last_batch_type = BatchType::Circle;
     }
     (void)circles.add(circle);
-    batches.get(batches.count - 1).instance_count++;
+    batches.last().instance_count++;
 }
 
