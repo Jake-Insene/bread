@@ -34,6 +34,7 @@ void SwapChain::destroy()
 
 void SwapChain::resize()
 {
+    _try_rebuild();
 }
 
 bool SwapChain::acquire_image(u32* image_index, Graphics::Semaphore* present_complete)

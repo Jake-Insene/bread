@@ -479,6 +479,12 @@ GPU::DeviceID VulkanDriver::device_create(const GPU::DeviceCreateInfo& ci)
 
     ld.device = device_id;
 
+    ld.feature_level = FeatureLevel::Level0;
+    if(ld.additional_extension_support.has_dynamic_rendering)
+    {
+        ld.feature_level = FeatureLevel::Level1;
+    }
+
     return device_id;
 }
 
@@ -497,14 +503,10 @@ void VulkanDriver::device_destroy(GPU::DeviceID device)
     
     for(RenderPassEntry& it : ld.render_pass_cache.iter())
     {
-        for(FramebufferEntry framebuffer : it.second.vk_framebuffers_cache.iter())
-        {
-            ld.vk.vkDestroyFramebuffer(
-                ld.vk_device, framebuffer.second,
-                Vulkan::allocation_callbacks()
-            );
-        }
-        it.second.vk_framebuffers_cache.destroy();
+        ld.vk.vkDestroyFramebuffer(
+            ld.vk_device, it.second.vk_framebuffer,
+            Vulkan::allocation_callbacks()
+        );
         ld.vk.vkDestroyRenderPass(ld.vk_device, it.second.vk_render_pass, Vulkan::allocation_callbacks());
     }
     ld.render_pass_cache.destroy();
@@ -634,21 +636,6 @@ void VulkanDriver::swap_chain_destroy(GPU::SwapChainID swap_chain)
     for(u32 i = 0; i < sc.image_count; i++)
     {
         ld.vk.vkDestroyImageView(sc.vk_device, sc.images[i].vk_image_view, Vulkan::allocation_callbacks());
-
-        Texture& texture = _get_texture(sc.images[i].texture);
-
-        for(RenderPassEntry& render_pass_entry : ld.render_pass_cache.iter())
-        {
-            if(render_pass_entry.second.vk_framebuffers_cache.has(texture.vk_image_view))
-            {
-                ld.vk.vkDestroyFramebuffer(
-                    ld.vk_device, render_pass_entry.second.vk_framebuffers_cache.get(texture.vk_image_view),
-                    Vulkan::allocation_callbacks()
-                );
-                render_pass_entry.second.vk_framebuffers_cache.remove(texture.vk_image_view);
-            }
-        }
-     
         data.textures.remove(sc.images[i].texture);
     }
     get_allocator().free(mem::to_bytes(sc.images));
@@ -1705,7 +1692,7 @@ GPU::PipelineID VulkanDriver::pipeline_create(const GPU::PipelineCreateInfo& ci)
     };
 
     RenderPassCache* render_pass = nullptr;
-    if(!ld.additional_extension_support.has_dynamic_rendering)
+    if(ld.feature_level == FeatureLevel::Level0)
     {
         render_pass = &_get_render_pass_for_pipeline(ld, ci.rendering_info);
     }
@@ -1713,7 +1700,7 @@ GPU::PipelineID VulkanDriver::pipeline_create(const GPU::PipelineCreateInfo& ci)
     VkGraphicsPipelineCreateInfo vk_graphics_pipeline_info =
     {
         .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-        .pNext = ld.additional_extension_support.has_dynamic_rendering ? &vk_pipeline_rendering_info : nullptr,
+        .pNext = ld.feature_level == FeatureLevel::Level1 ? &vk_pipeline_rendering_info : nullptr,
         .flags = 0,
         .stageCount = static_cast<uint32_t>(vk_shader_stages.len),
         .pStages = vk_shader_stages.ptr(),
@@ -1727,8 +1714,8 @@ GPU::PipelineID VulkanDriver::pipeline_create(const GPU::PipelineCreateInfo& ci)
         .pColorBlendState = &vk_color_blend_state,
         .pDynamicState = &vk_dynamic_state,
         .layout = vk_pipeline_layout,
-        .renderPass = ld.additional_extension_support.has_dynamic_rendering ? nullptr : render_pass->vk_render_pass,
-        .subpass = 0,
+        .renderPass = ld.feature_level == FeatureLevel::Level1 ? nullptr : render_pass->vk_render_pass,
+        .subpass = 0, // TODO: can change
         .basePipelineHandle = VK_NULL_HANDLE,
         .basePipelineIndex = 0,
     };
@@ -1883,7 +1870,44 @@ void VulkanDriver::command_buffer_begin_renderpass(GPU::CommandBufferID command_
         },
     };
 
-    if(ld.additional_extension_support.has_dynamic_rendering)
+    switch(ld.feature_level)
+    {
+    case FeatureLevel::Level0:
+    {
+        VkRenderPass vk_render_pass;
+        VkFramebuffer vk_framebuffer;
+        _get_render_pass_and_framebuffer_for(ld, tex, begin_info, &vk_render_pass, &vk_framebuffer);
+
+        VkRenderPassAttachmentBeginInfoKHR vk_attachment_begin_info =
+        {
+            .sType = VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO_KHR,
+            .pNext = nullptr,
+            .attachmentCount = 1,
+            .pAttachments = &tex.vk_image_view,
+        };
+
+        VkRenderPassBeginInfo vk_begin_info =
+        {
+            .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+            .pNext = &vk_attachment_begin_info,
+            .renderPass = vk_render_pass,
+            .framebuffer = vk_framebuffer,
+            .renderArea = vk_render_area,
+            .clearValueCount = 1,
+            .pClearValues = &vk_clear_value,
+        };
+
+        VkSubpassBeginInfoKHR vk_subpass_begin_info =
+        {
+            .sType = VK_STRUCTURE_TYPE_SUBPASS_BEGIN_INFO_KHR,
+            .pNext = nullptr,
+            .contents = VK_SUBPASS_CONTENTS_INLINE,
+        };
+
+        ld.vk.vkCmdBeginRenderPass2KHR(cmd_buffer.vk_command_buffer, &vk_begin_info, &vk_subpass_begin_info);
+    }
+        break;
+    case FeatureLevel::Level1:
     {
         VkImageView vk_resolve_view = VK_NULL_HANDLE;
         VkImageLayout vk_resolve_layout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -1922,25 +1946,11 @@ void VulkanDriver::command_buffer_begin_renderpass(GPU::CommandBufferID command_
         };
 
         ld.vk.vkCmdBeginRenderingKHR(cmd_buffer.vk_command_buffer, &vk_rendering_info);
-        return;
     }
-
-    VkRenderPass vk_render_pass;
-    VkFramebuffer vk_framebuffer;
-    _get_render_pass_and_framebuffer_for(ld, tex, begin_info, &vk_render_pass, &vk_framebuffer);
-
-    VkRenderPassBeginInfo vk_begin_info =
-    {
-        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-        .pNext = nullptr,
-        .renderPass = vk_render_pass,
-        .framebuffer = vk_framebuffer,
-        .renderArea = vk_render_area,
-        .clearValueCount = 1,
-        .pClearValues = &vk_clear_value,
-    };
-
-    ld.vk.vkCmdBeginRenderPass(cmd_buffer.vk_command_buffer, &vk_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+        break;
+    default:
+        break;
+    }
 }
 
 void VulkanDriver::command_buffer_end_renderpass(GPU::CommandBufferID command_buffer, const GPU::RenderPassEndInfo& end_info)
@@ -1950,13 +1960,26 @@ void VulkanDriver::command_buffer_end_renderpass(GPU::CommandBufferID command_bu
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
 
-    if(ld.additional_extension_support.has_dynamic_rendering)
+    switch(ld.feature_level)
     {
-        ld.vk.vkCmdEndRenderingKHR(cmd_buffer.vk_command_buffer);
-        return;
-    }
+    case FeatureLevel::Level0:
+    {
+        VkSubpassEndInfoKHR vk_subpass_end_info =
+        {
+            .sType = VK_STRUCTURE_TYPE_SUBPASS_END_INFO_KHR,
+            .pNext = nullptr,
+        };
 
-    ld.vk.vkCmdEndRenderPass(cmd_buffer.vk_command_buffer);
+        ld.vk.vkCmdEndRenderPass2KHR(cmd_buffer.vk_command_buffer, &vk_subpass_end_info);
+    }
+        break;
+    case FeatureLevel::Level1:
+        ld.vk.vkCmdEndRenderingKHR(cmd_buffer.vk_command_buffer);
+        break;
+    default:
+        VKFailOn(true, "invalid feature level");
+        break;
+    }
 }
 
 void VulkanDriver::command_buffer_memory_barrier(GPU::CommandBufferID command_buffer, const GPU::PipelineMemoryBarrier& memory_barrier)
@@ -2304,8 +2327,10 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice&
         return ld.render_pass_cache.get(render_pass_key);
     }
 
-    VkAttachmentDescription vk_attachment_info =
+    VkAttachmentDescription2KHR vk_attachment_info =
     {
+        .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2_KHR,
+        .pNext = nullptr,
         .flags = 0,
         .format = texture.vk_format,
         .samples = VK_SAMPLE_COUNT_1_BIT,
@@ -2317,16 +2342,22 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice&
         .finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     };
 
-    VkAttachmentReference vk_color_attachment =
+    VkAttachmentReference2KHR vk_color_attachment =
     {
+        .sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2_KHR,
+        .pNext = nullptr,
         .attachment = 0,
         .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        .aspectMask = 0,
     };
 
-    VkSubpassDescription vk_subpass =
+    VkSubpassDescription2KHR vk_subpass =
     {
+        .sType = VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_2_KHR,
+        .pNext = nullptr,
         .flags = 0,
         .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+        .viewMask = 0,
         .inputAttachmentCount = 0,
         .pInputAttachments = nullptr,
         .colorAttachmentCount = 1,
@@ -2337,9 +2368,9 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice&
         .pPreserveAttachments = nullptr,
     };
 
-    VkRenderPassCreateInfo vk_render_pass_info =
+    VkRenderPassCreateInfo2KHR vk_render_pass_info =
     {
-        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO_2_KHR,
         .pNext = nullptr,
         .flags = 0,
         .attachmentCount = 1,
@@ -2348,12 +2379,14 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice&
         .pSubpasses = &vk_subpass,
         .dependencyCount = 0,
         .pDependencies = nullptr,
+        .correlatedViewMaskCount = 0,
+        .pCorrelatedViewMasks = nullptr,
     };
 
     RenderPassCache& render_pass_cache = ld.render_pass_cache.insert(render_pass_key, RenderPassCache());
-    render_pass_cache.vk_framebuffers_cache = HashMap<VkImageView, VkFramebuffer>::with_size(get_allocator(), 3);
+    render_pass_cache.vk_framebuffer = VK_NULL_HANDLE;
     render_pass_cache.device = ld.device;
-    ld.vk.vkCreateRenderPass(ld.vk_device, &vk_render_pass_info, Vulkan::allocation_callbacks(), &render_pass_cache.vk_render_pass);
+    ld.vk.vkCreateRenderPass2KHR(ld.vk_device, &vk_render_pass_info, Vulkan::allocation_callbacks(), &render_pass_cache.vk_render_pass);
     
     return render_pass_cache;
 }
@@ -2361,6 +2394,7 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice&
 VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for_pipeline(LogicalDevice& ld,
     const GPU::RenderingInfo& pipeline_rendering_info)
 {
+    // TODO: only one render attachment is supported.
     VkDriverRenderPassKey render_pass_key =
     {
         .format = pipeline_rendering_info.render_attachments[0],
@@ -2372,8 +2406,10 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for_pipeline(Logic
         return ld.render_pass_cache.get(render_pass_key);
     }
 
-    VkAttachmentDescription vk_attachment_info =
+    VkAttachmentDescription2KHR vk_attachment_info =
     {
+        .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2_KHR,
+        .pNext = nullptr,
         .flags = 0,
         .format = VkUtils::_vk_get_texture_format(pipeline_rendering_info.render_attachments[0]),
         .samples = VK_SAMPLE_COUNT_1_BIT,
@@ -2385,16 +2421,22 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for_pipeline(Logic
         .finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     };
 
-    VkAttachmentReference vk_color_attachment =
+    VkAttachmentReference2KHR vk_color_attachment =
     {
+        .sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2_KHR,
+        .pNext = nullptr,
         .attachment = 0,
         .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        .aspectMask = 0,
     };
 
-    VkSubpassDescription vk_subpass =
+    VkSubpassDescription2KHR vk_subpass =
     {
+        .sType = VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_2_KHR,
+        .pNext = nullptr,
         .flags = 0,
         .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+        .viewMask = 0,
         .inputAttachmentCount = 0,
         .pInputAttachments = nullptr,
         .colorAttachmentCount = 1,
@@ -2405,9 +2447,9 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for_pipeline(Logic
         .pPreserveAttachments = nullptr,
     };
 
-    VkRenderPassCreateInfo vk_render_pass_info =
+    VkRenderPassCreateInfo2KHR vk_render_pass_info =
     {
-        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO_2_KHR,
         .pNext = nullptr,
         .flags = 0,
         .attachmentCount = 1,
@@ -2416,12 +2458,14 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for_pipeline(Logic
         .pSubpasses = &vk_subpass,
         .dependencyCount = 0,
         .pDependencies = nullptr,
+        .correlatedViewMaskCount = 0,
+        .pCorrelatedViewMasks = nullptr,
     };
 
     RenderPassCache& render_pass_cache = ld.render_pass_cache.insert(render_pass_key, RenderPassCache());
-    render_pass_cache.vk_framebuffers_cache = HashMap<VkImageView, VkFramebuffer>::with_size(get_allocator(), 3);
+    render_pass_cache.vk_framebuffer = VK_NULL_HANDLE;
     render_pass_cache.device = ld.device;
-    ld.vk.vkCreateRenderPass(ld.vk_device, &vk_render_pass_info, Vulkan::allocation_callbacks(), &render_pass_cache.vk_render_pass);
+    ld.vk.vkCreateRenderPass2KHR(ld.vk_device, &vk_render_pass_info, Vulkan::allocation_callbacks(), &render_pass_cache.vk_render_pass);
     
     return render_pass_cache;
 }
@@ -2431,28 +2475,49 @@ void VulkanDriver::_get_render_pass_and_framebuffer_for(LogicalDevice& ld, Textu
 {
     RenderPassCache& render_pass_cache = _get_render_pass_for(ld, texture, begin_info);
 
-    if(render_pass_cache.vk_framebuffers_cache.has(texture.vk_image_view))
+    if(render_pass_cache.vk_framebuffer != VK_NULL_HANDLE)
     {
-        *vk_framebuffer = render_pass_cache.vk_framebuffers_cache.get(texture.vk_image_view);
+        *vk_render_pass = render_pass_cache.vk_render_pass;
+        *vk_framebuffer = render_pass_cache.vk_framebuffer;
+        return;
     }
-    else
-    {
-        VkFramebufferCreateInfo vk_framebuffer_info =
-        {
-            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = 0,
-            .renderPass = render_pass_cache.vk_render_pass,
-            .attachmentCount = 1,
-            .pAttachments = &texture.vk_image_view,
-            .width = texture.extent.x,
-            .height = texture.extent.y,
-            .layers = texture.extent.z,
-        };
 
-        ld.vk.vkCreateFramebuffer(ld.vk_device, &vk_framebuffer_info, Vulkan::allocation_callbacks(), vk_framebuffer);
-        render_pass_cache.vk_framebuffers_cache.insert(texture.vk_image_view, *vk_framebuffer);
-    }
+    VkFramebufferAttachmentImageInfoKHR vk_framebuffer_attachment_image_info =
+    {
+        .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENT_IMAGE_INFO_KHR,
+        .pNext = nullptr,
+        .flags = 0,
+        .usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+        .width = texture.extent.x,
+        .height = texture.extent.y,
+        .layerCount = 1,
+        .viewFormatCount = 1,
+        .pViewFormats = &texture.vk_format,
+    };
+
+    VkFramebufferAttachmentsCreateInfoKHR vk_framebuffer_attachments_info =
+    {
+        .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENTS_CREATE_INFO_KHR,
+        .pNext = nullptr,
+        .attachmentImageInfoCount = 1,
+        .pAttachmentImageInfos = &vk_framebuffer_attachment_image_info,
+    };
+
+    VkFramebufferCreateInfo vk_framebuffer_info =
+    {
+        .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+        .pNext = &vk_framebuffer_attachments_info,
+        .flags = VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT_KHR,
+        .renderPass = render_pass_cache.vk_render_pass,
+        .attachmentCount = 1,
+        .pAttachments = nullptr,
+        .width = texture.extent.x,
+        .height = texture.extent.y,
+        .layers = texture.extent.z,
+    };
+
+    ld.vk.vkCreateFramebuffer(ld.vk_device, &vk_framebuffer_info, Vulkan::allocation_callbacks(), vk_framebuffer);
+    render_pass_cache.vk_framebuffer = *vk_framebuffer;
 
     *vk_render_pass = render_pass_cache.vk_render_pass;
 }

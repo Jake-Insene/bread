@@ -21,12 +21,14 @@ struct Vulkan
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
         VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME,
         VK_EXT_INDEX_TYPE_UINT8_EXTENSION_NAME,
+        VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
+        VK_KHR_IMAGELESS_FRAMEBUFFER_EXTENSION_NAME,
+        VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME,
     };
 
     struct AdditionalExtensionSupport
     {
         bool has_dynamic_rendering;
-        bool has_imageless_framebuffer;
     };
 
     static StringView result_as_string(VkResult result)

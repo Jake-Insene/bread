@@ -143,7 +143,7 @@ void Vulkan::load_device_procs(DeviceVulkanTable& table, VkDevice device)
     VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyDescriptorSetLayout);
 
     // render pass
-    VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateRenderPass);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateRenderPass2KHR);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyRenderPass);
 
     // pipeline
@@ -167,8 +167,8 @@ void Vulkan::load_device_procs(DeviceVulkanTable& table, VkDevice device)
     VK_DEVICE_REQUIRED_LOAD(table, device, vkEndCommandBuffer);
 
     // vk_khr_create_renderpass2
-    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdBeginRenderPass);
-    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdEndRenderPass);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdBeginRenderPass2KHR);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkCmdEndRenderPass2KHR);
 
     // vk_khr_dynamic_rendering
     VK_DEVICE_TRY_LOAD(table, device, vkCmdBeginRenderingKHR, vkCmdBeginRenderingKHR);
@@ -296,7 +296,7 @@ VkSurfaceKHR Vulkan::create_surface(VkInstance instance, MemoryAddress native_ha
     if(native_handle == 0)
     {
         static bool initialized_dummy_class = false;
-        if(initialized_dummy_class == false)
+        if(!initialized_dummy_class)
         {
             WNDCLASS wc = {};
             wc.lpfnWndProc = &DefWindowProcA;
@@ -347,17 +347,7 @@ Vulkan::AdditionalExtensionSupport Vulkan::check_device_extensions(VkPhysicalDev
     usize finded_count = 0;
     for (const char* ext : VkCoreDeviceExtensions)
     {
-        StringView ext_view = Vulkan::vulkan_string_to_sv(ext);
-        bool finded = false;
-        for (VkExtensionProperties& act_ext : vk_device_extensions)
-        {
-            StringView reported_ext = Vulkan::vulkan_string_to_sv(act_ext.extensionName);
-            if (ext_view.equals(reported_ext))
-            {
-                finded = true;
-                break;
-            }
-        }
+        bool finded = _has_extension(vk_device_extensions, ext);
 
         if(finded)
         {
@@ -374,7 +364,6 @@ Vulkan::AdditionalExtensionSupport Vulkan::check_device_extensions(VkPhysicalDev
 
     AdditionalExtensionSupport additional_extension_support = {};
     additional_extension_support.has_dynamic_rendering = _has_extension(vk_device_extensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
-    additional_extension_support.has_imageless_framebuffer = _has_extension(vk_device_extensions, VK_KHR_IMAGELESS_FRAMEBUFFER_EXTENSION_NAME);
 
     return additional_extension_support;
 }
@@ -385,9 +374,13 @@ void Vulkan::check_device_features(VkPhysicalDevice physical_device)
     vk_float16_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES_KHR;
     vk_float16_features.pNext = nullptr;
 
+    VkPhysicalDeviceImagelessFramebufferFeaturesKHR vk_imageless_framebuffer = {};
+    vk_imageless_framebuffer.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGELESS_FRAMEBUFFER_FEATURES_KHR;
+    vk_imageless_framebuffer.pNext = &vk_float16_features;
+
     VkPhysicalDeviceVulkan11Features vk_1_1_features = {};
     vk_1_1_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
-    vk_1_1_features.pNext = &vk_float16_features;
+    vk_1_1_features.pNext = &vk_imageless_framebuffer;
 
     VkPhysicalDeviceFeatures2 vk_features =
     {
@@ -423,10 +416,6 @@ const char** Vulkan::get_device_extensions(VkPhysicalDevice physical_device, con
     {
         additional_extension_count += 3;
     }
-    if(add_ext.has_imageless_framebuffer)
-    {
-        additional_extension_count += 2;
-    }
 
     Slice<const char*> extensions = allocator.array<const char*>(ArraySize(VkCoreDeviceExtensions) + additional_extension_count);
     for(usize i = 0; i < ArraySize(VkCoreDeviceExtensions); i++)
@@ -438,12 +427,6 @@ const char** Vulkan::get_device_extensions(VkPhysicalDevice physical_device, con
     {
         extensions[index++] = VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME;
         extensions[index++] = VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME;
-        extensions[index++] = VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME;
-    }
-    if(add_ext.has_imageless_framebuffer)
-    {
-        extensions[index++] = VK_KHR_IMAGELESS_FRAMEBUFFER_EXTENSION_NAME;
-        extensions[index++] = VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME;
     }
 
     *extension_count = index;
@@ -467,10 +450,16 @@ VkPhysicalDeviceFeatures2* Vulkan::get_device_features(const AdditionalExtension
     vk_float16_features->pNext = vk_dynamic_rendering_features;
     vk_float16_features->shaderFloat16 = VK_TRUE;
 
+    VkPhysicalDeviceImagelessFramebufferFeaturesKHR* vk_imageless_framebuffer =
+        allocator.object<VkPhysicalDeviceImagelessFramebufferFeaturesKHR>();
+    vk_imageless_framebuffer->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGELESS_FRAMEBUFFER_FEATURES_KHR;
+    vk_imageless_framebuffer->pNext = vk_float16_features;
+    vk_imageless_framebuffer->imagelessFramebuffer = VK_TRUE;
+
     VkPhysicalDeviceVulkan11Features* vk_1_1_features =
         allocator.object<VkPhysicalDeviceVulkan11Features>();
     vk_1_1_features->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
-    vk_1_1_features->pNext = vk_float16_features;
+    vk_1_1_features->pNext = vk_imageless_framebuffer;
     vk_1_1_features->shaderDrawParameters = VK_TRUE;
     vk_1_1_features->storageInputOutput16 = VK_TRUE;
 

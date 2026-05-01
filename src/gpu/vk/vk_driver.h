@@ -67,7 +67,7 @@ struct VulkanDriver
 	struct RenderPassCache
 	{
 		VkRenderPass vk_render_pass;
-		HashMap<VkImageView, VkFramebuffer> vk_framebuffers_cache;
+		VkFramebuffer vk_framebuffer;
 
 		GPU::DeviceID device;
 	};
@@ -75,6 +75,14 @@ struct VulkanDriver
 	// RenderPass Hash
 	using RenderPassEntry = HashMap<VkDriverRenderPassKey, RenderPassCache>::KeyValue;
 	using FramebufferEntry = HashMap<VkImageView, VkFramebuffer>::KeyValue;
+
+	enum class FeatureLevel
+	{
+		// shader_float16_int8, index_type_uint8, create_renderpass2, imageless_framebuffer
+		Level0 = 0,
+		// dynamic rendering
+		Level1,
+	};
 
 	struct LogicalDevice
 	{
@@ -102,6 +110,8 @@ struct VulkanDriver
 		Slice<DeviceQueue> device_queues;
 
 		DeviceVulkanTable vk;
+		
+		FeatureLevel feature_level;
 
 		// device resources
 		HashMap<VkDriverRenderPassKey, RenderPassCache> render_pass_cache;
