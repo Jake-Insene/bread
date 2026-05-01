@@ -21,16 +21,22 @@ void FramedBuffer::destroy()
 void FramedDeviceBuffer::init(const FramedBufferCreateInfo& info)
 {
     FramedBuffer::init(info);
-    buffer_allocation = gpu_memory_allocator->allocate(GPUMemoryAllocator::AllocationTag::Buffer, info.frame_count * buffer_size);
-    staging_allocation = gpu_memory_allocator->allocate(GPUMemoryAllocator::AllocationTag::Staging, info.frame_count * buffer_size);
    
     buffer = graphics_device->create_buffer(
-        info.usage | GPU::BufferUsage::TransferDestination, info.frame_count * buffer_size,
+        info.usage | GPU::BufferUsage::TransferDestination, info.frame_count * buffer_size
+    );
+    staging_buffer = graphics_device->create_buffer(
+        info.usage | GPU::BufferUsage::TransferSource, info.frame_count * buffer_size
+    );
+
+    buffer_allocation = gpu_memory_allocator->allocate(GPUMemoryAllocator::AllocationTag::Buffer, buffer->get_requirements());
+    staging_allocation = gpu_memory_allocator->allocate(GPUMemoryAllocator::AllocationTag::Staging, staging_buffer->get_requirements());
+
+    buffer->bind_memory(
         gpu_memory_allocator->allocation_get_heap(buffer_allocation),
         gpu_memory_allocator->allocation_get_offset(buffer_allocation)
     );
-    staging_buffer = graphics_device->create_buffer(
-        info.usage | GPU::BufferUsage::TransferSource, info.frame_count * buffer_size,
+    staging_buffer->bind_memory(
         gpu_memory_allocator->allocation_get_heap(staging_allocation),
         gpu_memory_allocator->allocation_get_offset(staging_allocation)
     );
@@ -62,12 +68,14 @@ void FramedMappedBuffer::init(const FramedBufferCreateInfo& info)
 {
     FramedBuffer::init(info);
 
-    mapped_buffer_allocation = gpu_memory_allocator->allocate(GPUMemoryAllocator::AllocationTag::Staging, info.frame_count * buffer_size);
     mapped_buffer = graphics_device->create_buffer(
-        info.usage, info.frame_count * buffer_size,
+        info.usage, info.frame_count * buffer_size
+    );;
+    mapped_buffer_allocation = gpu_memory_allocator->allocate(GPUMemoryAllocator::AllocationTag::Staging, mapped_buffer->get_requirements());
+    mapped_buffer->bind_memory(
         gpu_memory_allocator->allocation_get_heap(mapped_buffer_allocation),
         gpu_memory_allocator->allocation_get_offset(mapped_buffer_allocation)
-    );;
+    );
 
     for(usize i = 0; i < info.frame_count; i++)
     {

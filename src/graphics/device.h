@@ -14,6 +14,7 @@
 #include "graphics/sampler.h"
 #include "graphics/semaphore.h"
 #include "graphics/swap_chain.h"
+#include "graphics/texture.h"
 
 
 namespace Graphics
@@ -46,8 +47,9 @@ struct Device
     Fence* create_fence(bool signaled);
     Semaphore* create_semaphore();
     MemoryHeap* create_memory_heap(GPU::HeapUsage usage, usize size);
-    Buffer* create_buffer(GPU::BufferUsage usage, usize size, MemoryHeap* heap, usize heap_offset);
+    Buffer* create_buffer(GPU::BufferUsage usage, usize size);
     Sampler* create_sampler(const SamplerInfo& sampler_info);
+    Texture* create_texture(const TextureInfo& texture_info);
     DescriptorPool* create_descriptor_pool(u32 max_sets, Slice<const GPU::DescriptorPoolSize> sizes);
     PipelineLayout* create_pipeline_layout(const PipelineLayoutInfo& pipeline_layout_info);
     Pipeline* create_pipeline(const PipelineInfo& pipeline_info);

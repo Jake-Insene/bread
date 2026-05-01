@@ -147,6 +147,8 @@ struct GPU
     	DontCare,
 	};
 
+	// ====== STRUCTS ======
+	
 	/*
 	* Physical Device API
 	*/
@@ -329,6 +331,19 @@ struct GPU
 		usize heap_size;
 	};
 
+	struct MemoryRequirements
+	{
+		usize size;
+		usize alignment;
+		HeapUsage heap_usage;
+	};
+
+	struct BindMemoryInfo
+	{
+		MemoryHeapID memory_heap;
+		usize heap_offset;
+	};
+
 	static MemoryHeapID memory_heap_create(const MemoryHeapCreateInfo& ci);
 	static void memory_heap_destroy(MemoryHeapID memory_heap);
 
@@ -352,12 +367,13 @@ struct GPU
 		DeviceID device;
 		BufferUsage usage;
 		usize size;
-		MemoryHeapID memory_heap;
-		usize heap_offset;
 	};
 
 	static BufferID buffer_create(const BufferCreateInfo& ci);
 	static void buffer_destroy(BufferID buffer);
+
+	static MemoryRequirements buffer_get_memory_requirements(BufferID buffer);
+	static void buffer_bind_memory_heap(BufferID buffer, const BindMemoryInfo& bind_info);
 
 	/*
 	* Sampler API
@@ -491,13 +507,14 @@ struct GPU
 		TextureTiling tiling;
 		TextureUsage usage;
 		TextureLayout initial_layout;
-
-		MemoryHeapID memory_heap;
-		usize heap_offset;
+		TextureSubresourceRanges subresource_range;
 	};
 
 	static TextureID texture_create(const TextureCreateInfo& ci);
 	static void texture_destroy(TextureID texture);
+
+	static MemoryRequirements texture_get_memory_requirements(TextureID texture);
+	static void texture_bind_memory_heap(TextureID texture, const BindMemoryInfo& bind_info);
 
 	/*
 	* Descriptor Set

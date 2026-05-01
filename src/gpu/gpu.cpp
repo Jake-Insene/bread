@@ -211,11 +211,7 @@ void GPU::queue_wait_idle(QueueID queue)
 GPU::MemoryHeapID GPU::memory_heap_create(const MemoryHeapCreateInfo& ci)
 {
 	GPUFailOn(ci.device.is_valid() == false, "invalid device");
-    GPUFailOn(ci.heap_usage == GPU::HeapUsage::CPUExclusive, "invalid heap usage");
-    GPUFailOn(
-		mem::align_up(ci.heap_size, GPU::HeapAlignment) != ci.heap_size,
-		"invalid heap alignment"
-	);
+    GPUFailOn(ci.heap_usage == GPU::HeapUsage::Unknown, "invalid heap usage");
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.memory_heap_create(ci));
 }
 
@@ -243,11 +239,6 @@ GPU::BufferID GPU::buffer_create(const BufferCreateInfo& ci)
 {
 	GPUFailOn(ci.device.is_valid() == false, "invalid device");
     GPUFailOn(ci.usage == GPU::BufferUsage(0), "invalid buffer usage");
-    GPUFailOn(
-		mem::align_up(ci.size, GPU::MinHeapResourceAlignment) != ci.size,
-		"invalid buffer alignment"
-	);
-    GPUFailOn(ci.memory_heap.is_valid() == false, "invalid memory heap");
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.buffer_create(ci));
 }
 
@@ -255,6 +246,19 @@ void GPU::buffer_destroy(BufferID buffer)
 {
     GPUFailOn(buffer.is_valid() == false, "invalid buffer");
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(buffer, current_adapter.buffer_destroy(buffer));
+}
+
+GPU::MemoryRequirements GPU::buffer_get_memory_requirements(BufferID buffer)
+{
+	GPUFailOn(buffer.is_valid() == false, "invalid buffer");
+	return current_adapter.buffer_get_memory_requirements(buffer);
+}
+
+void GPU::buffer_bind_memory_heap(BufferID buffer, const BindMemoryInfo& bind_info)
+{
+	GPUFailOn(buffer.is_valid() == false, "invalid buffer");
+    GPUFailOn(bind_info.memory_heap.is_valid() == false, "invalid memory heap");
+	current_adapter.buffer_bind_memory_heap(buffer, bind_info);
 }
 
 GPU::SamplerID GPU::sampler_create(const SamplerCreateInfo& ci)
@@ -287,7 +291,6 @@ GPU::TextureID GPU::texture_create(const TextureCreateInfo& ci)
     GPUFailOn(ci.sample_count == GPU::SampleCount::Unknown, "invalid texture sample count");
     GPUFailOn(ci.tiling == GPU::TextureTiling::Unknown, "invalid texture tiling");
     GPUFailOn(ci.usage == GPU::TextureUsage(0), "invalid texture usage");
-    GPUFailOn(ci.memory_heap.is_valid() == false, "invalid texture memory heap");
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter.texture_create(ci));
 }
 
@@ -295,6 +298,19 @@ void GPU::texture_destroy(TextureID texture)
 {
     GPUFailOn(texture.is_valid() == false, "invalid texture");
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(texture, current_adapter.texture_destroy(texture));
+}
+
+GPU::MemoryRequirements GPU::texture_get_memory_requirements(TextureID texture)
+{
+	GPUFailOn(texture.is_valid() == false, "invalid texture");
+	return current_adapter.texture_get_memory_requirements(texture);
+}
+
+void GPU::texture_bind_memory_heap(TextureID texture, const BindMemoryInfo& bind_info)
+{
+	GPUFailOn(texture.is_valid() == false, "invalid texture");
+    GPUFailOn(bind_info.memory_heap.is_valid() == false, "invalid memory heap");
+	current_adapter.texture_bind_memory_heap(texture, bind_info);
 }
 
 GPU::DescriptorSetLayoutID GPU::descriptor_set_layout_create(const DescriptorSetLayoutCreateInfo& ci)

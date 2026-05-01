@@ -21,10 +21,6 @@ void GPUResourceManager::destroy()
 
 GPUTextureID GPUResourceManager::create_texture(const TextureAllocateInfo& alloc_info)
 {
-    GPUMemoryAllocationID allocation = gpu_memory_allocator->allocate(
-        GPUMemoryAllocator::AllocationTag::Texture, alloc_info.pixels.len
-    );
-
     GPU::TextureID gpu_texture = GPU::texture_create(
         {
             .device = graphics_device->gpu_device,
@@ -37,7 +33,24 @@ GPUTextureID GPUResourceManager::create_texture(const TextureAllocateInfo& alloc
             .tiling = GPU::TextureTiling::Optimal,
             .usage = GPU::TextureUsage::TransferDestination | GPU::TextureUsage::Sampled,
             .initial_layout = GPU::TextureLayout::Unknown,
-            .memory_heap = gpu_memory_allocator->allocation_get_heap(allocation)->memory_heap,
+            .subresource_range =
+            {
+                .aspect = GPU::TextureAspect::Color,
+                .base_mip_level = 0,
+                .level_count = 1,
+                .base_array_layer = 0,
+                .layer_count = 1,
+            },
+        }
+    );
+
+    GPUMemoryAllocationID allocation = gpu_memory_allocator->allocate(
+        GPUMemoryAllocator::AllocationTag::Texture, GPU::texture_get_memory_requirements(gpu_texture)
+    );
+
+    GPU::texture_bind_memory_heap(gpu_texture,
+        {
+            .memory_heap = gpu_memory_allocator->allocation_get_heap(allocation)->gpu_memory_heap,
             .heap_offset = gpu_memory_allocator->allocation_get_offset(allocation),
         }
     );

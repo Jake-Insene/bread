@@ -104,6 +104,7 @@ struct DeviceVulkanTable
     PFN_vkCreateBuffer vkCreateBuffer;
     PFN_vkDestroyBuffer vkDestroyBuffer;
     PFN_vkBindBufferMemory2 vkBindBufferMemory2;
+    PFN_vkGetBufferMemoryRequirements2 vkGetBufferMemoryRequirements2;
     
     PFN_vkCreateBufferView vkCreateBufferView;
     PFN_vkDestroyBufferView vkDestroyBufferView;
@@ -114,6 +115,7 @@ struct DeviceVulkanTable
     PFN_vkCreateImage vkCreateImage;
     PFN_vkDestroyImage vkDestroyImage;
     PFN_vkBindImageMemory2 vkBindImageMemory2;
+    PFN_vkGetImageMemoryRequirements2 vkGetImageMemoryRequirements2;
 
     PFN_vkCreateImageView vkCreateImageView;
     PFN_vkDestroyImageView vkDestroyImageView;

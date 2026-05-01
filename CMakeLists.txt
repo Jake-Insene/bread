@@ -55,6 +55,7 @@ file(GLOB ENGINE_SRC
     src/graphics/semaphore.cpp
     src/graphics/shader.cpp
     src/graphics/swap_chain.cpp
+    src/graphics/texture.cpp
 
     src/input/input.cpp
     

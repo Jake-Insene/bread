@@ -180,11 +180,9 @@ struct VulkanDriver
 	{
 		VkDevice vk_device;
 		VkBuffer vk_buffer;
-		VkBufferView vk_buffer_view;
 
 		GPU::DeviceID device;
 		GPU::BufferID buffer;
-		GPU::MemoryHeapID memory_heap;
 	};
 
 	struct Sampler
@@ -201,6 +199,7 @@ struct VulkanDriver
 		VkDevice vk_device;
 		VkImage vk_image;
 		VkImageView vk_image_view;
+		VkImageViewCreateInfo vk_image_view_info;
 		
 		VkFormat vk_format;
 
@@ -371,12 +370,16 @@ struct VulkanDriver
 
 	static GPU::BufferID buffer_create(const GPU::BufferCreateInfo& ci);
 	static void buffer_destroy(GPU::BufferID buffer);
+	static GPU::MemoryRequirements buffer_get_memory_requirements(GPU::BufferID buffer);
+	static void buffer_bind_memory_heap(GPU::BufferID buffer, const GPU::BindMemoryInfo& bind_info);
 
 	static GPU::SamplerID sampler_create(const GPU::SamplerCreateInfo& ci);
 	static void sampler_destroy(GPU::SamplerID sampler);
 	
 	static GPU::TextureID texture_create(const GPU::TextureCreateInfo& ci);
 	static void texture_destroy(GPU::TextureID texture);
+	static GPU::MemoryRequirements texture_get_memory_requirements(GPU::TextureID texture);
+	static void texture_bind_memory_heap(GPU::TextureID texture, const GPU::BindMemoryInfo& bind_info);
 
 	static GPU::DescriptorSetLayoutID descriptor_set_layout_create(const GPU::DescriptorSetLayoutCreateInfo& ci);
 	static void descriptor_set_layout_destroy(GPU::DescriptorSetLayoutID descriptor_set_layout);
@@ -456,4 +459,5 @@ struct VulkanDriver
 
 	static GPU::DeviceType _vk_device_type_to_device_type(VkPhysicalDeviceType vk_device_type);
 	static GPU::PresentMode _vk_present_mode_to_present_mode(VkPresentModeKHR vk_present_mode);
+	static GPU::HeapUsage _vk_memory_property_to_heap_usage(VkMemoryPropertyFlags vk_memory_properties);
 };

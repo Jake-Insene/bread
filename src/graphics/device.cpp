@@ -133,7 +133,7 @@ MemoryHeap* Device::create_memory_heap(GPU::HeapUsage usage, usize size)
     return heap;
 }
 
-Buffer* Device::create_buffer(GPU::BufferUsage usage, usize size, MemoryHeap* heap, usize heap_offset)
+Buffer* Device::create_buffer(GPU::BufferUsage usage, usize size)
 {
     mutex.lock();
     Buffer* buffer = _allocate_object<Buffer>();
@@ -142,8 +142,6 @@ Buffer* Device::create_buffer(GPU::BufferUsage usage, usize size, MemoryHeap* he
             .gpu_device = gpu_device,
             .usage = usage,
             .size = size,
-            .heap = heap,
-            .heap_offset = heap_offset,
         }
     );
     mutex.unlock();
@@ -157,6 +155,15 @@ Sampler* Device::create_sampler(const SamplerInfo& sampler_info)
     sampler->init(allocator, this, gpu_device, sampler_info);
     mutex.unlock();
     return sampler;
+}
+
+Texture* Device::create_texture(const TextureInfo& texture_info)
+{
+    mutex.lock();
+    Texture* texture = _allocate_object<Texture>();
+    texture->init(allocator, this, gpu_device, texture_info);
+    mutex.unlock();
+    return texture;
 }
 
 DescriptorPool* Device::create_descriptor_pool(u32 max_sets, Slice<const GPU::DescriptorPoolSize> sizes)

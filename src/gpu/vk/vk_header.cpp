@@ -113,6 +113,8 @@ void Vulkan::load_device_procs(DeviceVulkanTable& table, VkDevice device)
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateBuffer);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyBuffer);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkBindBufferMemory2);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkGetBufferMemoryRequirements2);
+
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateBufferView);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyBufferView);
 
@@ -123,7 +125,8 @@ void Vulkan::load_device_procs(DeviceVulkanTable& table, VkDevice device)
     // image
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateImage);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyImage);
-    VK_DEVICE_REQUIRED_LOAD(table, device, vkBindImageMemory2)
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkBindImageMemory2);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkGetImageMemoryRequirements2);
 
     // image view
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateImageView);

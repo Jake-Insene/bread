@@ -48,6 +48,7 @@ struct GPUMemoryAllocator
     {
         Graphics::MemoryHeap* heap;
         usize heap_size;
+        GPU::HeapUsage heap_usage;
         AllocationTag tag;
         usize heap_index;
 
@@ -66,7 +67,7 @@ struct GPUMemoryAllocator
     void init(const GPUMemoryAllocatorCreateInfo& info);
     void destroy();
 
-    GPUMemoryAllocationID allocate(AllocationTag tag, usize size);
+    GPUMemoryAllocationID allocate(AllocationTag tag, const GPU::MemoryRequirements& requirements);
     void free(GPUMemoryAllocationID allocation);
 
     Graphics::Buffer* begin_staging(usize size);
@@ -77,8 +78,6 @@ struct GPUMemoryAllocator
     Graphics::MemoryHeap* allocation_get_heap(GPUMemoryAllocationID allocation);
     [[nodiscard]] usize allocation_get_offset(GPUMemoryAllocationID allocation);
 
-    Heap& _request_heap_for(AllocationTag tag, usize size);
-    Heap& _create_heap(AllocationTag tag, usize size);
-
-    GPU::HeapUsage _tag_get_gpu_usage(AllocationTag tag);
+    Heap& _request_heap_for(AllocationTag tag, usize size, GPU::HeapUsage heap_usage);
+    Heap& _create_heap(AllocationTag tag, usize size, GPU::HeapUsage heap_usage);
 };

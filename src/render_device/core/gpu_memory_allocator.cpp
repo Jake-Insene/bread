@@ -11,13 +11,14 @@ void GPUMemoryAllocator::init(const GPUMemoryAllocatorCreateInfo& info)
     heaps = Array<Heap>::with_size(allocator, 4);
     allocations = FreeList<Allocation, GPUMemoryAllocationID>::with_size(allocator, 4);
 
+    staging_buffer = graphics_device->create_buffer(
+        GPU::BufferUsage::TransferSource, StagingHeapInitialSize
+    );
+
     staging_heap = graphics_device->create_memory_heap(
         GPU::HeapUsage::CPUGPUCoherent, StagingHeapInitialSize
     );
-
-    staging_buffer = graphics_device->create_buffer(
-        GPU::BufferUsage::TransferSource, StagingHeapInitialSize, staging_heap, 0
-    );
+    staging_buffer->bind_memory(staging_heap, 0);
 
     staging_heap_current_size = StagingHeapInitialSize;
     mapped_staging_heap = staging_heap->map(0, staging_heap_current_size);
@@ -38,9 +39,9 @@ void GPUMemoryAllocator::destroy()
     allocations.destroy();
 }
 
-GPUMemoryAllocationID GPUMemoryAllocator::allocate(AllocationTag tag, usize size)
+GPUMemoryAllocationID GPUMemoryAllocator::allocate(AllocationTag tag, const GPU::MemoryRequirements& requirements)
 {
-    usize aligned_size = mem::align_up(size, GPU::MinHeapResourceAlignment);
+    usize aligned_size = mem::align_up(requirements.size, requirements.alignment);
 
     GPUMemoryAllocationID allocation_id = GPUMemoryAllocationID::invalid();
     
@@ -71,7 +72,8 @@ GPUMemoryAllocationID GPUMemoryAllocator::allocate(AllocationTag tag, usize size
         }
     }
 
-    Heap& new_heap = _create_heap(tag, aligned_size);
+    // TODO: creating always a heap.
+    Heap& new_heap = _create_heap(tag, aligned_size, requirements.heap_usage);
     Allocation new_allocation =
     {
         .heap_index = new_heap.heap_index,
@@ -131,28 +133,34 @@ Graphics::MemoryHeap* GPUMemoryAllocator::allocation_get_heap(GPUMemoryAllocatio
     return allocations.get(allocation).offset;
 }
 
-GPUMemoryAllocator::Heap& GPUMemoryAllocator::_request_heap_for(AllocationTag tag, usize size)
+GPUMemoryAllocator::Heap& GPUMemoryAllocator::_request_heap_for(AllocationTag tag, usize size, GPU::HeapUsage heap_usage)
 {
     for(Heap& heap : heaps.iter())
     {
-        if(heap.tag == tag)
+        if(heap.tag == tag && heap.heap_usage == heap_usage)
         {
             return heap;
         }
     }
 
-    return _create_heap(tag, size);
+    return _create_heap(tag, size, heap_usage);
 }
 
-GPUMemoryAllocator::Heap& GPUMemoryAllocator::_create_heap(AllocationTag tag, usize size)
+GPUMemoryAllocator::Heap& GPUMemoryAllocator::_create_heap(AllocationTag tag, usize size, GPU::HeapUsage heap_usage)
 {
     usize heap_size =  mem::align_up(size, GPU::HeapAlignment);
+
+    GPU::HeapUsage required_heap_usage = heap_usage;
+    if(tag == AllocationTag::Staging && required_heap_usage == GPU::HeapUsage::GPUExclusive)
+    {
+        required_heap_usage = GPU::HeapUsage::CPUGPUCoherent;
+    }
+
     Heap new_heap =
     {
-        .heap = graphics_device->create_memory_heap(
-            _tag_get_gpu_usage(tag), heap_size
-        ),
+        .heap = graphics_device->create_memory_heap(required_heap_usage, heap_size),
         .heap_size = heap_size,
+        .heap_usage = required_heap_usage,
         .tag = tag,
         .heap_index = heaps.count,
         .first_allocation = GPUMemoryAllocationID::invalid(),
@@ -162,20 +170,4 @@ GPUMemoryAllocator::Heap& GPUMemoryAllocator::_create_heap(AllocationTag tag, us
 }
 
 
-GPU::HeapUsage GPUMemoryAllocator::_tag_get_gpu_usage(AllocationTag tag)
-{
-    switch(tag)
-    {
-    case AllocationTag::Staging:
-        return GPU::HeapUsage::CPUGPUCoherent;
-    case AllocationTag::Texture:
-    case AllocationTag::Buffer:
-        return GPU::HeapUsage::GPUExclusive;
-    case AllocationTag::MappedBuffer:
-        return GPU::HeapUsage::CPUGPUCoherent;
-    }
-
-    FailOn(true, "invalid allocation tag");
-    return GPU::HeapUsage();
-}
 

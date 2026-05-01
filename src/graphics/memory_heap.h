@@ -9,7 +9,7 @@ namespace Graphics
 
 struct MemoryHeap : DeviceObject
 {
-    GPU::MemoryHeapID memory_heap;
+    GPU::MemoryHeapID gpu_memory_heap;
     usize heap_size;
     u32 map_count = 0;
     Slice<u8> mapped_memory;

@@ -47,12 +47,16 @@ struct GPUAdapter
 
 	VTFunc(GPU::BufferID, buffer_create, const GPU::BufferCreateInfo& ci);
 	VTFunc(void, buffer_destroy, GPU::BufferID buffer);
+	VTFunc(GPU::MemoryRequirements, buffer_get_memory_requirements, GPU::BufferID buffer);
+	VTFunc(void, buffer_bind_memory_heap, GPU::BufferID buffer, const GPU::BindMemoryInfo& bind_info);
 
 	VTFunc(GPU::SamplerID, sampler_create, const GPU::SamplerCreateInfo& ci);
 	VTFunc(void, sampler_destroy, GPU::SamplerID sampler);
 
 	VTFunc(GPU::TextureID, texture_create, const GPU::TextureCreateInfo& ci);
 	VTFunc(void, texture_destroy, GPU::TextureID texture);
+	VTFunc(GPU::MemoryRequirements, texture_get_memory_requirements, GPU::TextureID texture);
+	VTFunc(void, texture_bind_memory_heap, GPU::TextureID texture, const GPU::BindMemoryInfo& bind_info);
 
 	VTFunc(GPU::DescriptorSetLayoutID, descriptor_set_layout_create, const GPU::DescriptorSetLayoutCreateInfo& ci);
 	VTFunc(void, descriptor_set_layout_destroy, GPU::DescriptorSetLayoutID descriptor_set_layout);

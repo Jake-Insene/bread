@@ -44,10 +44,14 @@ InternalGPU::GPUAdapter VulkanDriver::get_adapter()
         .memory_heap_unmap = &VulkanDriver::memory_heap_unmap,
         .buffer_create = &VulkanDriver::buffer_create,
         .buffer_destroy = &VulkanDriver::buffer_destroy,
+        .buffer_get_memory_requirements = &VulkanDriver::buffer_get_memory_requirements,
+        .buffer_bind_memory_heap = &VulkanDriver::buffer_bind_memory_heap,
         .sampler_create = &VulkanDriver::sampler_create,
         .sampler_destroy = &VulkanDriver::sampler_destroy,
         .texture_create = &VulkanDriver::texture_create,
         .texture_destroy = &VulkanDriver::texture_destroy,
+        .texture_get_memory_requirements = &VulkanDriver::texture_get_memory_requirements,
+        .texture_bind_memory_heap = &VulkanDriver::texture_bind_memory_heap,
         .descriptor_set_layout_create = &VulkanDriver::descriptor_set_layout_create,
         .descriptor_set_layout_destroy = &VulkanDriver::descriptor_set_layout_destroy,
         .descriptor_pool_create = &VulkanDriver::descriptor_pool_create,
@@ -966,7 +970,7 @@ GPU::MemoryHeapID VulkanDriver::memory_heap_create(const GPU::MemoryHeapCreateIn
 
     if(vk_type_index == MaxValue<uint32_t> && ci.heap_usage == GPU::HeapUsage::CPUGPUCoherent)
     {
-        vk_memory_flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+        vk_memory_flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
         for(uint32_t i = 0; i < ld.vk_physical_device_memory_properties.memoryTypeCount; i++)
         {
             VkMemoryType mem_type = ld.vk_physical_device_memory_properties.memoryTypes[i];
@@ -1032,12 +1036,10 @@ GPU::BufferID VulkanDriver::buffer_create(const GPU::BufferCreateInfo& ci)
     LogicalDevice& ld = _get_logical_device(ci.device);
     GPU::BufferID buffer_id = data.buffers.add(Buffer());
     Buffer& buffer = _get_buffer(buffer_id);
-    MemoryHeap& heap = _get_memory_heap(ci.memory_heap);
 
     buffer.vk_device = ld.vk_device;
     buffer.device = ci.device;
     buffer.buffer = buffer_id;
-    buffer.memory_heap = ci.memory_heap;
 
     VkBufferCreateInfo vk_buffer_info =
     {
@@ -1054,18 +1056,6 @@ GPU::BufferID VulkanDriver::buffer_create(const GPU::BufferCreateInfo& ci)
     VkResult result = ld.vk.vkCreateBuffer(ld.vk_device, &vk_buffer_info, Vulkan::allocation_callbacks(), &buffer.vk_buffer);
     VKFailOn(result != VK_SUCCESS, "vkCreateBuffer({})", Vulkan::result_as_string(result));
 
-    VkBindBufferMemoryInfo vk_bind_info =
-    {
-        .sType = VK_STRUCTURE_TYPE_BIND_BUFFER_MEMORY_INFO,
-        .pNext = nullptr,
-        .buffer = buffer.vk_buffer,
-        .memory = heap.vk_memory,
-        .memoryOffset = ci.heap_offset,
-    };
-
-    result = ld.vk.vkBindBufferMemory2(ld.vk_device, 1, &vk_bind_info);
-    VKFailOn(result != VK_SUCCESS, "vkBindBufferMemory2({})", Vulkan::result_as_string(result));
-
     return buffer_id;
 }
 
@@ -1077,6 +1067,69 @@ void VulkanDriver::buffer_destroy(GPU::BufferID buffer)
     ld.vk.vkDestroyBuffer(b.vk_device, b.vk_buffer, Vulkan::allocation_callbacks());
 
     data.buffers.remove(buffer);
+}
+
+GPU::MemoryRequirements VulkanDriver::buffer_get_memory_requirements(GPU::BufferID buffer)
+{
+    Buffer& b = _get_buffer(buffer);
+    LogicalDevice& ld = _get_logical_device(b.device);
+
+    VkBufferMemoryRequirementsInfo2 vk_buffer_req =
+    {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_REQUIREMENTS_INFO_2,
+        .pNext = nullptr,
+        .buffer = b.vk_buffer,
+    };
+
+    VkMemoryRequirements2 vk_memory_requirements =
+    {
+        .sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2,
+        .pNext = nullptr,
+        .memoryRequirements = {},
+    };
+    
+    ld.vk.vkGetBufferMemoryRequirements2(ld.vk_device, &vk_buffer_req, &vk_memory_requirements);
+
+    GPU::MemoryRequirements requirements =
+    {
+        .size = vk_memory_requirements.memoryRequirements.size,
+        .alignment = vk_memory_requirements.memoryRequirements.alignment,
+        .heap_usage = GPU::HeapUsage::Unknown,
+    };
+
+    for(uint32_t i = 0; i < ld.vk_physical_device_memory_properties.memoryTypeCount; i++)
+    {
+        if(!HasValue((1 << i) & vk_memory_requirements.memoryRequirements.memoryTypeBits))
+        {
+            continue;
+        }
+
+        requirements.heap_usage = _vk_memory_property_to_heap_usage(ld.vk_physical_device_memory_properties.memoryTypes[i].propertyFlags);
+        break;
+    }
+
+    VKFailOn(requirements.heap_usage == GPU::HeapUsage::Unknown, "invalid heap usage");
+
+    return requirements;
+}
+
+void VulkanDriver::buffer_bind_memory_heap(GPU::BufferID buffer, const GPU::BindMemoryInfo& bind_info)
+{
+    Buffer& b = _get_buffer(buffer);
+    LogicalDevice& ld = _get_logical_device(b.device);
+    MemoryHeap& heap = _get_memory_heap(bind_info.memory_heap);
+
+    VkBindBufferMemoryInfo vk_bind_info =
+    {
+        .sType = VK_STRUCTURE_TYPE_BIND_BUFFER_MEMORY_INFO,
+        .pNext = nullptr,
+        .buffer = b.vk_buffer,
+        .memory = heap.vk_memory,
+        .memoryOffset = bind_info.heap_offset,
+    };
+
+    VkResult result = ld.vk.vkBindBufferMemory2(ld.vk_device, 1, &vk_bind_info);
+    VKFailOn(result != VK_SUCCESS, "vkBindBufferMemory2({})", Vulkan::result_as_string(result));
 }
 
 GPU::SamplerID VulkanDriver::sampler_create(const GPU::SamplerCreateInfo& ci)
@@ -1165,21 +1218,7 @@ GPU::TextureID VulkanDriver::texture_create(const GPU::TextureCreateInfo& ci)
     VkResult result = ld.vk.vkCreateImage(ld.vk_device, &vk_image_info, Vulkan::allocation_callbacks(), &tex.vk_image);
     VKFailOn(result != VK_SUCCESS, "vkCreateImage({})", Vulkan::result_as_string(result));
 
-    MemoryHeap& heap = _get_memory_heap(ci.memory_heap);
-
-    VkBindImageMemoryInfo vk_bind_info =
-    {
-        .sType = VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_INFO,
-        .pNext = nullptr,
-        .image = tex.vk_image,
-        .memory = heap.vk_memory,
-        .memoryOffset = ci.heap_offset,
-    };
-    
-    ld.vk.vkBindImageMemory2(ld.vk_device, 1, &vk_bind_info);
-
-    // The view needs the memory first
-    VkImageViewCreateInfo vk_view_info =
+    tex.vk_image_view_info =
     {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .pNext = nullptr,
@@ -1191,16 +1230,13 @@ GPU::TextureID VulkanDriver::texture_create(const GPU::TextureCreateInfo& ci)
         .subresourceRange =
         {
             // TODO: check if format is depth or stencil
-            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-            .baseMipLevel = 0,
-            .levelCount = ci.mip_levels,
-            .baseArrayLayer = 0,
-            .layerCount = ci.array_levels,
+            .aspectMask = VkUtils::_vk_get_aspect_masks(ci.subresource_range.aspect),
+            .baseMipLevel = ci.subresource_range.base_mip_level,
+            .levelCount = ci.subresource_range.level_count,
+            .baseArrayLayer = ci.subresource_range.base_array_layer,
+            .layerCount = ci.subresource_range.layer_count,
         },
     };
-
-    result = ld.vk.vkCreateImageView(ld.vk_device, &vk_view_info, Vulkan::allocation_callbacks(), &tex.vk_image_view);
-    VKFailOn(result != VK_SUCCESS, "vkCreateImageView({})", Vulkan::result_as_string(result));
 
     return texture_id;
 }
@@ -1214,6 +1250,71 @@ void VulkanDriver::texture_destroy(GPU::TextureID texture)
     ld.vk.vkDestroyImageView(tex.vk_device, tex.vk_image_view, Vulkan::allocation_callbacks());
 
     data.textures.remove(texture);
+}
+
+GPU::MemoryRequirements VulkanDriver::texture_get_memory_requirements(GPU::TextureID texture)
+{
+    Texture& tex = _get_texture(texture);
+    LogicalDevice& ld = _get_logical_device(tex.device);
+
+    VkImageMemoryRequirementsInfo2 vk_buffer_req =
+    {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_REQUIREMENTS_INFO_2,
+        .pNext = nullptr,
+        .image = tex.vk_image,
+    };
+
+    VkMemoryRequirements2 vk_memory_requirements =
+    {
+        .sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2,
+        .pNext = nullptr,
+        .memoryRequirements = {},
+    };
+    
+    ld.vk.vkGetImageMemoryRequirements2(ld.vk_device, &vk_buffer_req, &vk_memory_requirements);
+
+    GPU::MemoryRequirements requirements =
+    {
+        .size = vk_memory_requirements.memoryRequirements.size,
+        .alignment = vk_memory_requirements.memoryRequirements.alignment,
+        .heap_usage = GPU::HeapUsage::Unknown,
+    };
+
+    for(uint32_t i = 0; i < ld.vk_physical_device_memory_properties.memoryTypeCount; i++)
+    {
+        if(!HasValue((1 << i) & vk_memory_requirements.memoryRequirements.memoryTypeBits))
+        {
+            continue;
+        }
+
+        requirements.heap_usage = _vk_memory_property_to_heap_usage(ld.vk_physical_device_memory_properties.memoryTypes[i].propertyFlags);
+        break;
+    }
+
+    VKFailOn(requirements.heap_usage == GPU::HeapUsage::Unknown, "invalid heap usage");
+
+    return requirements;
+}
+
+void VulkanDriver::texture_bind_memory_heap(GPU::TextureID texture, const GPU::BindMemoryInfo &bind_info)
+{
+    Texture& tex = _get_texture(texture);
+    LogicalDevice& ld = _get_logical_device(tex.device);
+    MemoryHeap& heap = _get_memory_heap(bind_info.memory_heap);
+
+    VkBindImageMemoryInfo vk_bind_info =
+    {
+        .sType = VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_INFO,
+        .pNext = nullptr,
+        .image = tex.vk_image,
+        .memory = heap.vk_memory,
+        .memoryOffset = bind_info.heap_offset,
+    };
+
+    ld.vk.vkBindImageMemory2(ld.vk_device, 1, &vk_bind_info);
+
+    VkResult result = ld.vk.vkCreateImageView(ld.vk_device, &tex.vk_image_view_info, Vulkan::allocation_callbacks(), &tex.vk_image_view);
+    VKFailOn(result != VK_SUCCESS, "vkCreateImageView({})", Vulkan::result_as_string(result));
 }
 
 GPU::DescriptorSetLayoutID VulkanDriver::descriptor_set_layout_create(const GPU::DescriptorSetLayoutCreateInfo& ci)
@@ -2554,5 +2655,28 @@ GPU::PresentMode VulkanDriver::_vk_present_mode_to_present_mode(VkPresentModeKHR
 
     VKFailOn(true, "invalid vulkan present mode");
     return GPU::PresentMode::Unknown;
+}
+
+GPU::HeapUsage VulkanDriver::_vk_memory_property_to_heap_usage(VkMemoryPropertyFlags vk_memory_properties)
+{
+    VkMemoryPropertyFlags cpu_exclusive = VkUtils::_vk_get_memory_properties(GPU::HeapUsage::CPUExclusive);
+    VkMemoryPropertyFlags gpu_exclusive = VkUtils::_vk_get_memory_properties(GPU::HeapUsage::GPUExclusive);
+    VkMemoryPropertyFlags cpu_gpu_coherent = VkUtils::_vk_get_memory_properties(GPU::HeapUsage::CPUGPUCoherent);
+
+    if(HasValue(vk_memory_properties & cpu_exclusive))
+    {
+        return GPU::HeapUsage::CPUExclusive;
+    }
+    if(HasValue(vk_memory_properties & gpu_exclusive))
+    {
+        return GPU::HeapUsage::GPUExclusive;
+    }
+    if(HasValue(vk_memory_properties & cpu_gpu_coherent))
+    {
+        return GPU::HeapUsage::CPUGPUCoherent;
+    }
+
+    VKFailOn(true, "invalid vulkan memory properties");
+
 }
 

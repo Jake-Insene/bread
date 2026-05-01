@@ -14,8 +14,6 @@ struct BufferInfo
     GPU::DeviceID gpu_device;
     GPU::BufferUsage usage;
     usize size;
-    MemoryHeap* heap;
-    usize heap_offset;
 };
 
 struct Buffer : DeviceObject
@@ -26,6 +24,9 @@ struct Buffer : DeviceObject
     
     void init(const mem::Allocator& _allocator, Device* _parent, const BufferInfo& info);
     void destroy();
+
+    GPU::MemoryRequirements get_requirements() const;
+    void bind_memory(MemoryHeap* memory_heap, usize offset);
 
     Slice<u8> map(usize offset, usize len);
     void unmap(const Slice<u8>& memory);
