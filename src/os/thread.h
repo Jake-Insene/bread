@@ -1,11 +1,15 @@
 #pragma once
-#include "os/os.h"
+#include "core/header.h"
+
+
 
 struct [[nodiscard]] Thread
 {
-	OS::ThreadID id;
+    using ThreadFn = void(*)(Opaque*);
+	
+	Opaque* impl;
 
-	static Thread create(OS::ThreadFn fn, Opaque* arg);
+	static Thread create(ThreadFn fn, Opaque* arg);
 
 	void destroy() const;
 

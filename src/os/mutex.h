@@ -1,10 +1,10 @@
 #pragma once
-#include "os/os.h"
+#include "core/header.h"
 
 
 struct [[nodiscard]] Mutex
 {
-    OS::MutexID id;
+    Opaque* impl;
 
     static Mutex create();
 

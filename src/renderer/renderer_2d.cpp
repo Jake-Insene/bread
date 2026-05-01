@@ -124,9 +124,9 @@ void Renderer2D::render(const FrameInfo& frame_info)
             .extent = Vector2U(size),
             .render_attachment =
             {
-                .image = frame_info.image,
+                .texture = frame_info.image,
                 .layout = GPU::TextureLayout::RenderOutput,
-                .resolve_image = GPU::TextureID::invalid(),
+                .resolve_texture = GPU::TextureID::invalid(),
                 .resolve_layout = GPU::TextureLayout::Unknown,
                 .load_op = GPU::LoadOp::Clear,
                 .store_op = GPU::StoreOp::Store,

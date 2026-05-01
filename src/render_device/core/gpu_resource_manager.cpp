@@ -89,7 +89,7 @@ GPUTextureID GPUResourceManager::create_texture(const TextureAllocateInfo& alloc
                         .source_buffer = buffer->gpu_buffer,
                         .source_offset = 0,
                         .row_length = 0,
-                        .image_height = 0,
+                        .texture_height = 0,
                         .destination_texture = gpu_texture,
                         .destination_layout = GPU::TextureLayout::TransferDestination,
                         .subresource_layer =

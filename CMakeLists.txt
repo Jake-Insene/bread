@@ -161,7 +161,10 @@ elseif(WIN32)
         src/platform/win32/win32_file.cpp
         src/platform/win32/win32_main.cpp
         src/platform/win32/win32_math.cpp
+        src/platform/win32/win32_mutex.cpp
         src/platform/win32/win32_os.cpp
+        src/platform/win32/win32_semaphore.cpp
+        src/platform/win32/win32_thread.cpp
     )
     set(PLATFORM_LIBRARIES opengl32 xaudio2 dbghelp ole32.lib)
 endif()

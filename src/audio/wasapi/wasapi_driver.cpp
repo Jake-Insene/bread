@@ -23,14 +23,18 @@ void WASAPIDriver::initialize(const mem::Allocator& allocator)
 
     IMMDeviceEnumerator* enumerator = nullptr;
 
-    CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL,
-                    __uuidof(IMMDeviceEnumerator), (void**)&enumerator);
+    CoCreateInstance(
+        __uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL,
+        __uuidof(IMMDeviceEnumerator), reinterpret_cast<void**>(&enumerator)
+    );
 
     enumerator->GetDefaultAudioEndpoint(eRender, eConsole, &data.output_device.device);
     enumerator->Release();
 
-    data.output_device.device->Activate(__uuidof(IAudioClient), CLSCTX_ALL,
-                    nullptr, (void**)&data.output_device.audio_client);
+    data.output_device.device->Activate(
+        __uuidof(IAudioClient), CLSCTX_ALL,
+        nullptr, reinterpret_cast<void**>(&data.output_device.audio_client)
+    );
     
     data.output_device.format = Audio::Format::Unknown;    
     WAVEFORMATEX* mix_format = {};
@@ -99,8 +103,10 @@ void WASAPIDriver::initialize(const mem::Allocator& allocator)
 
     data.output_device.audio_client->GetBufferSize(&data.output_device.frame_count);
 
-    data.output_device.audio_client->GetService(__uuidof(IAudioRenderClient),
-                        (void**)&data.output_device.render_client);
+    data.output_device.audio_client->GetService(
+        __uuidof(IAudioRenderClient),
+        reinterpret_cast<void**>(&data.output_device.render_client)
+    );
 
     WASAPIDebugInfo("Output service was installed with:"
         "\n\tFormat: {}"

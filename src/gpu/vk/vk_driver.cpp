@@ -1949,7 +1949,7 @@ void VulkanDriver::command_buffer_begin_renderpass(GPU::CommandBufferID command_
 {
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
-    Texture& tex = _get_texture(begin_info.render_attachment.image);
+    Texture& tex = _get_texture(begin_info.render_attachment.texture);
 
     VkClearValue vk_clear_value = {};
     vk_clear_value.color.float32[0] = begin_info.render_attachment.clear_color.r;
@@ -2012,9 +2012,9 @@ void VulkanDriver::command_buffer_begin_renderpass(GPU::CommandBufferID command_
     {
         VkImageView vk_resolve_view = VK_NULL_HANDLE;
         VkImageLayout vk_resolve_layout = VK_IMAGE_LAYOUT_UNDEFINED;
-        if(begin_info.render_attachment.resolve_image.is_valid())
+        if(begin_info.render_attachment.resolve_texture.is_valid())
         {
-            vk_resolve_view = _get_texture(begin_info.render_attachment.resolve_image).vk_image_view;
+            vk_resolve_view = _get_texture(begin_info.render_attachment.resolve_texture).vk_image_view;
             vk_resolve_layout = VkUtils::_vk_get_image_layout(begin_info.render_attachment.resolve_layout);
         }
 
@@ -2153,7 +2153,7 @@ void VulkanDriver::command_buffer_copy_buffer_to_texture(GPU::CommandBufferID co
     {
         .bufferOffset = copy_info.source_offset,
         .bufferRowLength = copy_info.row_length,
-        .bufferImageHeight = copy_info.image_height,
+        .bufferImageHeight = copy_info.texture_height,
         .imageSubresource = vk_subresource_layer,
         .imageOffset =
         {

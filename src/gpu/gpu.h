@@ -822,9 +822,9 @@ struct GPU
 
 	struct RenderAttachmentInfo
 	{
-		TextureID image;
+		TextureID texture;
 		TextureLayout layout;
-		TextureID resolve_image;
+		TextureID resolve_texture;
 		TextureLayout resolve_layout;
 		LoadOp load_op;
 		StoreOp store_op;
@@ -876,7 +876,7 @@ struct GPU
 		BufferID source_buffer;
 		usize source_offset;
 		u32 row_length;
-		u32 image_height;
+		u32 texture_height;
 		TextureID destination_texture;
 		TextureLayout destination_layout;
 		TextureSubresourceLayers subresource_layer;
