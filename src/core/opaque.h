@@ -17,19 +17,19 @@ struct Opaque
 
     
     template<typename T>
-    static inline Opaque* from(T& reference) { return reinterpret_cast<Opaque*>(&reference); }
+    static Opaque* from(T& reference) { return reinterpret_cast<Opaque*>(&reference); }
 
     /*
     * Returns the address of the object as a plain number.
     */
-    [[nodiscard]] inline MemoryAddress address() const { return reinterpret_cast<MemoryAddress>(this); }
+    [[nodiscard]] MemoryAddress address() const { return reinterpret_cast<MemoryAddress>(this); }
 
     /*
     * Reinterprets the object as a diferent type.
     * @tparam Type the type of the object to cast to.
     */
     template<typename Type, typename Self>
-    [[nodiscard]] inline Type cast(this Self& self) Function(FunctionUnsafe)
+    [[nodiscard]] Type cast(this Self& self) Function(FunctionUnsafe)
     {
         return reinterpret_cast<Type>(&self);
     };

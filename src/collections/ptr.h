@@ -95,7 +95,7 @@ struct Ptr
         memory = nullptr;
     }
 
-    inline T* get() const
+    T* get() const
     { 
         DebugAssert(memory != nullptr, "memory is null"); 
         return memory; 
