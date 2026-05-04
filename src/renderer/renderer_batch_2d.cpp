@@ -102,6 +102,8 @@ void RendererBatch2D::init(const RendererBatch2DCreateInfo& batch_info)
                 .rendering_info =
                 {
                     .render_attachments = Slice(&image_format, 1),
+                    .depth_format = GPU::TextureFormat::Unknown,
+                    .stencil_format = GPU::TextureFormat::Unknown,
                 },
             }
         );

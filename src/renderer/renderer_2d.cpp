@@ -118,26 +118,32 @@ void Renderer2D::render(const FrameInfo& frame_info)
             },
         }
     );
+
+    GPU::AttachmentInfo render_attachment =
+    {
+        .texture = frame_info.image,
+        .layout = GPU::TextureLayout::RenderOutput,
+        .resolve_texture = GPU::TextureID::invalid(),
+        .resolve_layout = GPU::TextureLayout::Unknown,
+        .load_op = GPU::LoadOp::Clear,
+        .store_op = GPU::StoreOp::Store,
+        .clear_value =
+        {
+            .clear_color =
+            {
+                .r = 0.F,
+                .g = 0.F,
+                .b = 0.F,
+                .a = 1.F,
+            }
+        },
+    };
+
     encoder.begin_renderpass(
         {
             .offset = Vector2I(0, 0),
-            .extent = Vector2U(size),
-            .render_attachment =
-            {
-                .texture = frame_info.image,
-                .layout = GPU::TextureLayout::RenderOutput,
-                .resolve_texture = GPU::TextureID::invalid(),
-                .resolve_layout = GPU::TextureLayout::Unknown,
-                .load_op = GPU::LoadOp::Clear,
-                .store_op = GPU::StoreOp::Store,
-                .clear_color =
-                {
-                    .r = 0.F,
-                    .g = 0.F,
-                    .b = 0.F,
-                    .a = 1.F,
-                },
-            },
+            .extent = Vector3U(size.x, size.y, 1),
+            .render_attachments = Slice(&render_attachment, 1),
             .depth_attachment = {},
             .stencil_attachment = {},
         }

@@ -8,6 +8,45 @@
 #include "os/os.h"
 
 
+VkDriverRenderPassKey VkDriverRenderPassKey::from_render_pass_begin_info(const GPU::RenderPassBeginInfo& begin_info)
+{
+	VkDriverRenderPassKey key = {};
+
+	for(usize i = 0; i < begin_info.render_attachments.len; i++)
+	{
+#define ATTACHMENT_I(n, attachment_ref)\
+		if(i == n)\
+		{\
+			key.attachment_##n.attachment.format = static_cast<u32>(VulkanDriver::_get_texture(attachment_ref.texture).format);\
+			key.attachment_##n.attachment.layout = static_cast<u32>(attachment_ref.layout);\
+			key.attachment_##n.attachment.load_op = static_cast<u32>(attachment_ref.load_op);\
+			key.attachment_##n.attachment.store_op = static_cast<u32>(attachment_ref.store_op);\
+		}
+		ATTACHMENT_I(0, begin_info.render_attachments[0])
+		ATTACHMENT_I(1, begin_info.render_attachments[1])
+		ATTACHMENT_I(2, begin_info.render_attachments[2])
+		ATTACHMENT_I(3, begin_info.render_attachments[3])
+#undef ATTACHMENT_I
+	}
+
+    if(begin_info.depth_attachment.texture.is_valid())
+    {
+        key.attachment_4.attachment.format = static_cast<u32>(VulkanDriver::_get_texture(begin_info.depth_attachment.texture).format);
+		key.attachment_4.attachment.layout = static_cast<u32>(begin_info.depth_attachment.layout);
+		key.attachment_4.attachment.load_op = static_cast<u32>(begin_info.depth_attachment.load_op);
+		key.attachment_4.attachment.store_op = static_cast<u32>(begin_info.depth_attachment.store_op);
+    }
+    if(begin_info.stencil_attachment.texture.is_valid())
+    {
+        key.attachment_5.attachment.format = static_cast<u32>(VulkanDriver::_get_texture(begin_info.stencil_attachment.texture).format);
+		key.attachment_5.attachment.layout = static_cast<u32>(begin_info.stencil_attachment.layout);
+		key.attachment_5.attachment.load_op = static_cast<u32>(begin_info.stencil_attachment.load_op);
+		key.attachment_5.attachment.store_op = static_cast<u32>(begin_info.stencil_attachment.store_op);
+    }
+
+	return key;
+}
+
 
 InternalGPU::GPUAdapter VulkanDriver::get_adapter()
 {
@@ -484,10 +523,10 @@ GPU::DeviceID VulkanDriver::device_create(const GPU::DeviceCreateInfo& ci)
     ld.device = device_id;
 
     ld.feature_level = FeatureLevel::Level0;
-    if(ld.additional_extension_support.has_dynamic_rendering)
-    {
-        ld.feature_level = FeatureLevel::Level1;
-    }
+    //if(ld.additional_extension_support.has_dynamic_rendering)
+    //{
+    //    ld.feature_level = FeatureLevel::Level1;
+    //}
 
     return device_id;
 }
@@ -687,7 +726,7 @@ GPU::AcquireResult VulkanDriver::swap_chain_acquire_next_image(GPU::SwapChainID 
     {
         return GPU::AcquireResult::Suboptimal;
     }
-    else if(result == VK_ERROR_OUT_OF_DATE_KHR)
+    if(result == VK_ERROR_OUT_OF_DATE_KHR)
     {
         return GPU::AcquireResult::OutOfDate;
     }
@@ -709,7 +748,7 @@ GPU::FenceID VulkanDriver::fence_create(const GPU::FenceCreateInfo& ci)
     {
         .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
         .pNext = nullptr,
-        .flags = ci.signaled == true ? VK_FENCE_CREATE_SIGNALED_BIT : VkFenceCreateFlags(0),
+        .flags = ci.signaled ? VK_FENCE_CREATE_SIGNALED_BIT : VkFenceCreateFlags(0),
     };
     
     VkResult result = ld.vk.vkCreateFence(ld.vk_device, &fence_info, Vulkan::allocation_callbacks(), &fence.vk_fence);
@@ -776,7 +815,7 @@ void VulkanDriver::fence_wait_for(Slice<GPU::FenceID> fences, bool wait_for_all,
 
     VkResult result = ld.vk.vkWaitForFences(
         ld.vk_device, static_cast<uint32_t>(vk_fences.len), vk_fences.ptr(),
-        wait_for_all == true ? VK_TRUE : VK_FALSE, timeout
+        wait_for_all ? VK_TRUE : VK_FALSE, timeout
     );
     VKFailOn(result != VK_SUCCESS, "vkWaitForFences({})", Vulkan::result_as_string(result));   
 }
@@ -929,7 +968,7 @@ GPU::AcquireResult VulkanDriver::queue_present(GPU::QueueID queue, const GPU::Qu
     {
         return GPU::AcquireResult::Suboptimal;
     }
-    else if(call_result == VK_ERROR_OUT_OF_DATE_KHR)
+    if(call_result == VK_ERROR_OUT_OF_DATE_KHR)
     {
         return GPU::AcquireResult::OutOfDate;
     }
@@ -1788,8 +1827,10 @@ GPU::PipelineID VulkanDriver::pipeline_create(const GPU::PipelineCreateInfo& ci)
         .viewMask = 0,
         .colorAttachmentCount = static_cast<uint32_t>(vk_color_attachment_formats.len),
         .pColorAttachmentFormats = vk_color_attachment_formats.ptr(),
-        .depthAttachmentFormat = VK_FORMAT_UNDEFINED,
-        .stencilAttachmentFormat = VK_FORMAT_UNDEFINED,
+        .depthAttachmentFormat = ci.rendering_info.depth_format == GPU::TextureFormat::Unknown ?
+            VK_FORMAT_UNDEFINED : VkUtils::_vk_get_texture_format(ci.rendering_info.depth_format),
+        .stencilAttachmentFormat = ci.rendering_info.stencil_format == GPU::TextureFormat::Unknown ?
+            VK_FORMAT_UNDEFINED : VkUtils::_vk_get_texture_format(ci.rendering_info.stencil_format),
     };
 
     RenderPassCache* render_pass = nullptr;
@@ -1949,13 +1990,38 @@ void VulkanDriver::command_buffer_begin_renderpass(GPU::CommandBufferID command_
 {
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
-    Texture& tex = _get_texture(begin_info.render_attachment.texture);
 
-    VkClearValue vk_clear_value = {};
-    vk_clear_value.color.float32[0] = begin_info.render_attachment.clear_color.r;
-    vk_clear_value.color.float32[1] = begin_info.render_attachment.clear_color.g;
-    vk_clear_value.color.float32[2] = begin_info.render_attachment.clear_color.b;
-    vk_clear_value.color.float32[3] = begin_info.render_attachment.clear_color.a;
+    VkClearValue vk_clear_values[6] = {};
+
+    bool has_depth = begin_info.depth_attachment.texture.is_valid();
+
+    u32 vk_attachment_count = static_cast<u32>(begin_info.render_attachments.len) + u32(has_depth);
+
+    for(usize i = 0; i < begin_info.render_attachments.len; i++)
+    {
+        vk_clear_values[i].color =
+        {
+            .float32 =
+            {
+                begin_info.render_attachments[i].clear_value.clear_color.r,
+                begin_info.render_attachments[i].clear_value.clear_color.g,
+                begin_info.render_attachments[i].clear_value.clear_color.b,
+                begin_info.render_attachments[i].clear_value.clear_color.a,
+            }
+        };
+    }
+
+    if(has_depth)
+    {
+        vk_clear_values[begin_info.render_attachments.len] =
+        {
+            .depthStencil =
+            {
+                .depth = begin_info.depth_attachment.clear_value.depth_stencil.depth,
+                .stencil = begin_info.depth_attachment.clear_value.depth_stencil.stencil,
+            },
+        };
+    }
 
     VkRect2D vk_render_area =
     {
@@ -1966,8 +2032,8 @@ void VulkanDriver::command_buffer_begin_renderpass(GPU::CommandBufferID command_
         },
         .extent = 
         {
-            .width = begin_info.extent.width,
-            .height = begin_info.extent.height
+            .width = begin_info.extent.x,
+            .height = begin_info.extent.y
         },
     };
 
@@ -1977,14 +2043,20 @@ void VulkanDriver::command_buffer_begin_renderpass(GPU::CommandBufferID command_
     {
         VkRenderPass vk_render_pass;
         VkFramebuffer vk_framebuffer;
-        _get_render_pass_and_framebuffer_for(ld, tex, begin_info, &vk_render_pass, &vk_framebuffer);
+        _get_render_pass_and_framebuffer_for(ld, begin_info, &vk_render_pass, &vk_framebuffer);
+
+        VkImageView vk_image_views[6] = {};
+        for(usize i = 0; i < begin_info.render_attachments.len; i++)
+        {
+            vk_image_views[i] = _get_texture(begin_info.render_attachments[i].texture).vk_image_view;
+        }
 
         VkRenderPassAttachmentBeginInfoKHR vk_attachment_begin_info =
         {
             .sType = VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO_KHR,
             .pNext = nullptr,
-            .attachmentCount = 1,
-            .pAttachments = &tex.vk_image_view,
+            .attachmentCount = vk_attachment_count,
+            .pAttachments = vk_image_views,
         };
 
         VkRenderPassBeginInfo vk_begin_info =
@@ -1994,8 +2066,8 @@ void VulkanDriver::command_buffer_begin_renderpass(GPU::CommandBufferID command_
             .renderPass = vk_render_pass,
             .framebuffer = vk_framebuffer,
             .renderArea = vk_render_area,
-            .clearValueCount = 1,
-            .pClearValues = &vk_clear_value,
+            .clearValueCount = vk_attachment_count,
+            .pClearValues = vk_clear_values,
         };
 
         VkSubpassBeginInfoKHR vk_subpass_begin_info =
@@ -2010,27 +2082,44 @@ void VulkanDriver::command_buffer_begin_renderpass(GPU::CommandBufferID command_
         break;
     case FeatureLevel::Level1:
     {
-        VkImageView vk_resolve_view = VK_NULL_HANDLE;
-        VkImageLayout vk_resolve_layout = VK_IMAGE_LAYOUT_UNDEFINED;
-        if(begin_info.render_attachment.resolve_texture.is_valid())
+        VkRenderingAttachmentInfoKHR vk_color_attachments[4] = {};
+        for(usize i = 0; i < begin_info.render_attachments.len; i++)
         {
-            vk_resolve_view = _get_texture(begin_info.render_attachment.resolve_texture).vk_image_view;
-            vk_resolve_layout = VkUtils::_vk_get_image_layout(begin_info.render_attachment.resolve_layout);
+            vk_color_attachments[i] =
+            {
+                .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR,
+                .pNext = nullptr,
+                .imageView = _get_texture(begin_info.render_attachments[i].texture).vk_image_view,
+                .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                .resolveMode = VK_RESOLVE_MODE_NONE,
+                .resolveImageView = VK_NULL_HANDLE,
+                .resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+                .loadOp = VkUtils::_vk_get_load_op(begin_info.render_attachments[i].load_op),
+                .storeOp = VkUtils::_vk_get_store_op(begin_info.render_attachments[i].store_op),
+                .clearValue = vk_clear_values[i],
+            };
         }
 
-        VkRenderingAttachmentInfoKHR vk_color_attachment =
+        VkRenderingAttachmentInfo vk_depth_attachment = {};
+        if(begin_info.depth_attachment.texture.is_valid())
         {
-            .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR,
-            .pNext = nullptr,
-            .imageView = tex.vk_image_view,
-            .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-            .resolveMode = VK_RESOLVE_MODE_NONE,
-            .resolveImageView = vk_resolve_view,
-            .resolveImageLayout = vk_resolve_layout,
-            .loadOp = VkUtils::_vk_get_load_op(begin_info.render_attachment.load_op),
-            .storeOp = VkUtils::_vk_get_store_op(begin_info.render_attachment.store_op),
-            .clearValue = vk_clear_value,
-        };
+            vk_depth_attachment =
+            {
+                .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR,
+                .pNext = nullptr,
+                .imageView = _get_texture(begin_info.depth_attachment.texture).vk_image_view,
+                .imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                .resolveMode = VK_RESOLVE_MODE_NONE,
+                .resolveImageView = VK_NULL_HANDLE,
+                .resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+                .loadOp = VkUtils::_vk_get_load_op(begin_info.depth_attachment.load_op),
+                .storeOp = VkUtils::_vk_get_store_op(begin_info.depth_attachment.store_op),
+                .clearValue =
+                {
+                    vk_clear_values[begin_info.render_attachments.len]
+                },
+            };
+        }
 
         VkRenderingInfoKHR vk_rendering_info =
         {
@@ -2038,10 +2127,10 @@ void VulkanDriver::command_buffer_begin_renderpass(GPU::CommandBufferID command_
             .pNext = nullptr,
             .flags = 0,
             .renderArea = vk_render_area,
-            .layerCount = 1,
+            .layerCount = begin_info.extent.z,
             .viewMask = 0,
-            .colorAttachmentCount = 1,
-            .pColorAttachments = &vk_color_attachment,
+            .colorAttachmentCount = static_cast<u32>(begin_info.render_attachments.len),
+            .pColorAttachments = vk_color_attachments,
             .pDepthAttachment = nullptr,
             .pStencilAttachment = nullptr,
         };
@@ -2414,43 +2503,81 @@ VkShaderModule VulkanDriver::_vk_create_shader_module(LogicalDevice& ld, const G
     return vk_module;
 }
 
-VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice& ld, Texture& texture, const GPU::RenderPassBeginInfo& begin_info)
+VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice& ld, const GPU::RenderPassBeginInfo& begin_info)
 {
-    VkDriverRenderPassKey render_pass_key =
-    {
-        .format = texture.format,
-        .load_op = begin_info.render_attachment.load_op,
-        .store_op = begin_info.render_attachment.store_op,
-    };
+    VkDriverRenderPassKey render_pass_key = VkDriverRenderPassKey::from_render_pass_begin_info(begin_info);
 
     if(ld.render_pass_cache.has(render_pass_key))
     {
         return ld.render_pass_cache.get(render_pass_key);
     }
 
-    VkAttachmentDescription2KHR vk_attachment_info =
-    {
-        .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2_KHR,
-        .pNext = nullptr,
-        .flags = 0,
-        .format = texture.vk_format,
-        .samples = VK_SAMPLE_COUNT_1_BIT,
-        .loadOp = VkUtils::_vk_get_load_op(begin_info.render_attachment.load_op),
-        .storeOp = VkUtils::_vk_get_store_op(begin_info.render_attachment.store_op),
-        .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-        .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-        .initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        .finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-    };
+    bool has_depth = begin_info.depth_attachment.texture.is_valid();
 
-    VkAttachmentReference2KHR vk_color_attachment =
+    VkAttachmentDescription2KHR vk_attachment_descriptions[6] = {};
+    u32 vk_attachment_count = static_cast<u32>(begin_info.render_attachments.len) + u32(has_depth);
+
+    for(u32 i = 0; i < begin_info.render_attachments.len; i++)
     {
-        .sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2_KHR,
-        .pNext = nullptr,
-        .attachment = 0,
-        .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        .aspectMask = 0,
-    };
+        vk_attachment_descriptions[i] =
+        {
+            .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2_KHR,
+            .pNext = nullptr,
+            .flags = 0,
+            .format = _get_texture(begin_info.render_attachments[i].texture).vk_format,
+            .samples = VK_SAMPLE_COUNT_1_BIT,
+            .loadOp = VkUtils::_vk_get_load_op(begin_info.render_attachments[i].load_op),
+            .storeOp = VkUtils::_vk_get_store_op(begin_info.render_attachments[i].store_op),
+            .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+            .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+            .initialLayout = VkUtils::_vk_get_image_layout(begin_info.render_attachments[i].layout),
+            .finalLayout = VkUtils::_vk_get_image_layout(begin_info.render_attachments[i].layout),
+        };
+    }
+
+    if(has_depth)
+    {
+        vk_attachment_descriptions[4] =
+        {
+            .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2_KHR,
+            .pNext = nullptr,
+            .flags = 0,
+            .format = _get_texture(begin_info.depth_attachment.texture).vk_format,
+            .samples = VK_SAMPLE_COUNT_1_BIT,
+            .loadOp = VkUtils::_vk_get_load_op(begin_info.depth_attachment.load_op),
+            .storeOp = VkUtils::_vk_get_store_op(begin_info.depth_attachment.store_op),
+            .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+            .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+            .initialLayout = VkUtils::_vk_get_image_layout(begin_info.depth_attachment.layout),
+            .finalLayout = VkUtils::_vk_get_image_layout(begin_info.depth_attachment.layout),
+        };
+    }
+
+    VkAttachmentReference2KHR vk_color_attachments[4] = {};
+    VkAttachmentReference2KHR vk_depth_attachment = {};
+    for(u32 i = 0; i < begin_info.render_attachments.len; i++)
+    {
+        vk_color_attachments[i] =
+        {
+            .sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2_KHR,
+            .pNext = nullptr,
+            .attachment = i,
+            .layout = VkUtils::_vk_get_image_layout(begin_info.render_attachments[i].layout),
+            .aspectMask = 0,
+        };
+    }
+
+    if(has_depth)
+    {
+        vk_depth_attachment =
+        {
+            .sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2_KHR,
+            .pNext = nullptr,
+            .attachment = static_cast<u32>(begin_info.render_attachments.len),
+            .layout = VkUtils::_vk_get_image_layout(begin_info.depth_attachment.layout),
+            .aspectMask = 0,
+        };
+    }
 
     VkSubpassDescription2KHR vk_subpass =
     {
@@ -2461,10 +2588,10 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice&
         .viewMask = 0,
         .inputAttachmentCount = 0,
         .pInputAttachments = nullptr,
-        .colorAttachmentCount = 1,
-        .pColorAttachments = &vk_color_attachment,
+        .colorAttachmentCount = static_cast<u32>(begin_info.render_attachments.len),
+        .pColorAttachments = vk_color_attachments,
         .pResolveAttachments = nullptr,
-        .pDepthStencilAttachment = nullptr,
+        .pDepthStencilAttachment = has_depth ? &vk_depth_attachment : nullptr,
         .preserveAttachmentCount = 0,
         .pPreserveAttachments = nullptr,
     };
@@ -2474,8 +2601,8 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice&
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO_2_KHR,
         .pNext = nullptr,
         .flags = 0,
-        .attachmentCount = 1,
-        .pAttachments = &vk_attachment_info,
+        .attachmentCount = vk_attachment_count,
+        .pAttachments = vk_attachment_descriptions,
         .subpassCount = 1,
         .pSubpasses = &vk_subpass,
         .dependencyCount = 0,
@@ -2486,6 +2613,7 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice&
 
     RenderPassCache& render_pass_cache = ld.render_pass_cache.insert(render_pass_key, RenderPassCache());
     render_pass_cache.vk_framebuffer = VK_NULL_HANDLE;
+    render_pass_cache.vk_attachment_count = vk_attachment_count;
     render_pass_cache.device = ld.device;
     ld.vk.vkCreateRenderPass2KHR(ld.vk_device, &vk_render_pass_info, Vulkan::allocation_callbacks(), &render_pass_cache.vk_render_pass);
     
@@ -2495,41 +2623,61 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for(LogicalDevice&
 VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for_pipeline(LogicalDevice& ld,
     const GPU::RenderingInfo& pipeline_rendering_info)
 {
-    // TODO: only one render attachment is supported.
-    VkDriverRenderPassKey render_pass_key =
-    {
-        .format = pipeline_rendering_info.render_attachments[0],
-        .load_op = GPU::LoadOp::Load,
-        .store_op = GPU::StoreOp::Store,
-    };
+    VkDriverRenderPassKey render_pass_key = VkDriverRenderPassKey::from_rendering_info(pipeline_rendering_info);
     if(ld.render_pass_cache.has(render_pass_key))
     {
         return ld.render_pass_cache.get(render_pass_key);
     }
 
-    VkAttachmentDescription2KHR vk_attachment_info =
-    {
-        .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2_KHR,
-        .pNext = nullptr,
-        .flags = 0,
-        .format = VkUtils::_vk_get_texture_format(pipeline_rendering_info.render_attachments[0]),
-        .samples = VK_SAMPLE_COUNT_1_BIT,
-        .loadOp = VkUtils::_vk_get_load_op(render_pass_key.load_op),
-        .storeOp = VkUtils::_vk_get_store_op(render_pass_key.store_op),
-        .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-        .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-        .initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        .finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-    };
+    bool has_depth = pipeline_rendering_info.depth_format != GPU::TextureFormat::Unknown;
+    //bool has_stencil = pipeline_rendering_info.stencil_format != GPU::TextureFormat::Unknown;
 
-    VkAttachmentReference2KHR vk_color_attachment =
+    VkAttachmentDescription2KHR vk_attachment_descriptions[6] = {};
+    u32 vk_attachment_count = static_cast<u32>(pipeline_rendering_info.render_attachments.len) + u32(has_depth);
+
+    for(u32 i = 0; i < pipeline_rendering_info.render_attachments.len; i++)
     {
-        .sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2_KHR,
-        .pNext = nullptr,
-        .attachment = 0,
-        .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-        .aspectMask = 0,
-    };
+        vk_attachment_descriptions[i] =
+        {
+            .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2_KHR,
+            .pNext = nullptr,
+            .flags = 0,
+            .format = VkUtils::_vk_get_texture_format(pipeline_rendering_info.render_attachments[i]),
+            .samples = VK_SAMPLE_COUNT_1_BIT,
+            .loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+            .storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+            .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+            .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+            .initialLayout = VK_IMAGE_LAYOUT_GENERAL,
+            .finalLayout = VK_IMAGE_LAYOUT_GENERAL,
+        };
+    }
+
+    VkAttachmentReference2KHR vk_color_attachments[4] = {};
+    VkAttachmentReference2KHR vk_depth_attachment = {};
+    for(u32 i = 0; i < pipeline_rendering_info.render_attachments.len; i++)
+    {
+        vk_color_attachments[i] =
+        {
+            .sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2_KHR,
+            .pNext = nullptr,
+            .attachment = i,
+            .layout = VK_IMAGE_LAYOUT_GENERAL,
+            .aspectMask = 0,
+        };
+    }
+
+    if(has_depth)
+    {
+        vk_depth_attachment =
+        {
+            .sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2_KHR,
+            .pNext = nullptr,
+            .attachment = static_cast<u32>(pipeline_rendering_info.render_attachments.len),
+            .layout = VK_IMAGE_LAYOUT_GENERAL,
+            .aspectMask = 0,
+        };
+    }
 
     VkSubpassDescription2KHR vk_subpass =
     {
@@ -2540,10 +2688,10 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for_pipeline(Logic
         .viewMask = 0,
         .inputAttachmentCount = 0,
         .pInputAttachments = nullptr,
-        .colorAttachmentCount = 1,
-        .pColorAttachments = &vk_color_attachment,
+        .colorAttachmentCount = static_cast<u32>(pipeline_rendering_info.render_attachments.len),
+        .pColorAttachments = vk_color_attachments,
         .pResolveAttachments = nullptr,
-        .pDepthStencilAttachment = nullptr,
+        .pDepthStencilAttachment = has_depth ? &vk_depth_attachment : nullptr,
         .preserveAttachmentCount = 0,
         .pPreserveAttachments = nullptr,
     };
@@ -2553,8 +2701,8 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for_pipeline(Logic
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO_2_KHR,
         .pNext = nullptr,
         .flags = 0,
-        .attachmentCount = 1,
-        .pAttachments = &vk_attachment_info,
+        .attachmentCount = vk_attachment_count,
+        .pAttachments = vk_attachment_descriptions,
         .subpassCount = 1,
         .pSubpasses = &vk_subpass,
         .dependencyCount = 0,
@@ -2565,16 +2713,17 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for_pipeline(Logic
 
     RenderPassCache& render_pass_cache = ld.render_pass_cache.insert(render_pass_key, RenderPassCache());
     render_pass_cache.vk_framebuffer = VK_NULL_HANDLE;
+    render_pass_cache.vk_attachment_count = vk_attachment_count;
     render_pass_cache.device = ld.device;
     ld.vk.vkCreateRenderPass2KHR(ld.vk_device, &vk_render_pass_info, Vulkan::allocation_callbacks(), &render_pass_cache.vk_render_pass);
     
     return render_pass_cache;
 }
 
-void VulkanDriver::_get_render_pass_and_framebuffer_for(LogicalDevice& ld, Texture& texture, const GPU::RenderPassBeginInfo& begin_info,
+void VulkanDriver::_get_render_pass_and_framebuffer_for(LogicalDevice& ld, const GPU::RenderPassBeginInfo& begin_info,
     VkRenderPass* vk_render_pass, VkFramebuffer* vk_framebuffer)
 {
-    RenderPassCache& render_pass_cache = _get_render_pass_for(ld, texture, begin_info);
+    RenderPassCache& render_pass_cache = _get_render_pass_for(ld, begin_info);
 
     if(render_pass_cache.vk_framebuffer != VK_NULL_HANDLE)
     {
@@ -2583,25 +2732,49 @@ void VulkanDriver::_get_render_pass_and_framebuffer_for(LogicalDevice& ld, Textu
         return;
     }
 
-    VkFramebufferAttachmentImageInfoKHR vk_framebuffer_attachment_image_info =
+    bool has_depth = begin_info.depth_attachment.texture.is_valid();
+
+    VkFramebufferAttachmentImageInfoKHR vk_framebuffer_attachment_image_infos[6] = {};
+    for(usize i = 0; i < begin_info.render_attachments.len; i++)
     {
-        .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENT_IMAGE_INFO_KHR,
-        .pNext = nullptr,
-        .flags = 0,
-        .usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-        .width = texture.extent.x,
-        .height = texture.extent.y,
-        .layerCount = 1,
-        .viewFormatCount = 1,
-        .pViewFormats = &texture.vk_format,
-    };
+        Texture& tex = _get_texture(begin_info.render_attachments[i].texture);
+        vk_framebuffer_attachment_image_infos[i] =
+        {
+            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENT_IMAGE_INFO_KHR,
+            .pNext = nullptr,
+            .flags = 0,
+            .usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+            .width = tex.extent.x,
+            .height = tex.extent.y,
+            .layerCount = tex.extent.z,
+            .viewFormatCount = 1,
+            .pViewFormats = &tex.vk_format,
+        };
+    }
+
+    if(has_depth)
+    {
+        Texture& tex = _get_texture(begin_info.depth_attachment.texture);
+        vk_framebuffer_attachment_image_infos[begin_info.render_attachments.len] =
+        {
+            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENT_IMAGE_INFO_KHR,
+            .pNext = nullptr,
+            .flags = 0,
+            .usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+            .width = tex.extent.x,
+            .height = tex.extent.y,
+            .layerCount = tex.extent.z,
+            .viewFormatCount = 1,
+            .pViewFormats = &tex.vk_format,
+        };
+    }    
 
     VkFramebufferAttachmentsCreateInfoKHR vk_framebuffer_attachments_info =
     {
         .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENTS_CREATE_INFO_KHR,
         .pNext = nullptr,
-        .attachmentImageInfoCount = 1,
-        .pAttachmentImageInfos = &vk_framebuffer_attachment_image_info,
+        .attachmentImageInfoCount = render_pass_cache.vk_attachment_count,
+        .pAttachmentImageInfos = vk_framebuffer_attachment_image_infos,
     };
 
     VkFramebufferCreateInfo vk_framebuffer_info =
@@ -2610,11 +2783,11 @@ void VulkanDriver::_get_render_pass_and_framebuffer_for(LogicalDevice& ld, Textu
         .pNext = &vk_framebuffer_attachments_info,
         .flags = VK_FRAMEBUFFER_CREATE_IMAGELESS_BIT_KHR,
         .renderPass = render_pass_cache.vk_render_pass,
-        .attachmentCount = 1,
+        .attachmentCount = render_pass_cache.vk_attachment_count,
         .pAttachments = nullptr,
-        .width = texture.extent.x,
-        .height = texture.extent.y,
-        .layers = texture.extent.z,
+        .width = begin_info.extent.x,
+        .height = begin_info.extent.y,
+        .layers = begin_info.extent.z,
     };
 
     ld.vk.vkCreateFramebuffer(ld.vk_device, &vk_framebuffer_info, Vulkan::allocation_callbacks(), vk_framebuffer);

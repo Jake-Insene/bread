@@ -743,7 +743,9 @@ struct GPU
 
 	struct RenderingInfo
 	{
-		Slice<TextureFormat> render_attachments;
+		Slice<TextureFormat> render_attachment_formats;
+		TextureFormat depth_attachment_format;
+		TextureFormat stencil_attachment_format;
 	};
 
 	struct PipelineCreateInfo
@@ -815,12 +817,24 @@ struct GPU
 		f32 a;
 	};
 
+	struct ClearDepthStencil
+	{
+		f32 depth;
+		u32 stencil;
+	};
+
+	union ClearValue
+	{
+		ClearColor clear_color;
+		ClearDepthStencil depth_stencil;
+	};
+
 	struct CommandBufferAllocateInfo
 	{
 		CommandPoolID pool;
 	};
 
-	struct RenderAttachmentInfo
+	struct AttachmentInfo
 	{
 		TextureID texture;
 		TextureLayout layout;
@@ -828,16 +842,16 @@ struct GPU
 		TextureLayout resolve_layout;
 		LoadOp load_op;
 		StoreOp store_op;
-		ClearColor clear_color;
+		ClearValue clear_value;
 	};
 
 	struct RenderPassBeginInfo
 	{
 		Vector2I offset;
-		Vector2U extent;
-		RenderAttachmentInfo render_attachment;
-		RenderAttachmentInfo depth_attachment;
-		RenderAttachmentInfo stencil_attachment;
+		Vector3U extent;
+		Slice<AttachmentInfo> render_attachments;
+		AttachmentInfo depth_attachment;
+		AttachmentInfo stencil_attachment;
 	};
 
 	struct RenderPassEndInfo

@@ -7,46 +7,105 @@
 #include "platform/platform_header.h"
 
 
-
-template<>
-struct HashOfType<VkImage>
+struct VkDriverAttachmentInfo
 {
-    [[nodiscard]] static constexpr u64 hashfunc(const VkFormat& k)
-    {
-        return k;
-    }
+	u32 format : 10;
+	u32 layout : 4;
+	u32 load_op : 2;
+	u32 store_op : 2;
+};
 
-    [[nodiscard]] static constexpr bool compare(const VkFormat& k1, const VkFormat& k2)
-    {
-        return k1 == k2;
-    }
+union VkDriverAttachment
+{
+	VkDriverAttachmentInfo attachment;
+	u32 bits;
 };
 
 struct VkDriverRenderPassKey
 {
-	GPU::TextureFormat format : 16;
-	GPU::LoadOp load_op : 4;
-	GPU::StoreOp store_op : 4;
+	VkDriverAttachment attachment_0;
+	VkDriverAttachment attachment_1;
+	VkDriverAttachment attachment_2;
+	VkDriverAttachment attachment_3;
+	VkDriverAttachment attachment_4;
+	VkDriverAttachment attachment_5;
+
+	static VkDriverRenderPassKey from_rendering_info(const GPU::RenderingInfo& rendering_info)
+	{
+		VkDriverRenderPassKey key = {};
+
+		for(usize i = 0; i < rendering_info.render_attachments.len; i++)
+		{
+#define ATTACHMENT_I(n, attachment_format)\
+			if(i == n)\
+			{\
+				key.attachment_##n.attachment.format = static_cast<u32>(attachment_format);\
+				key.attachment_##n.attachment.layout = 0;\
+				key.attachment_##n.attachment.load_op = 0;\
+				key.attachment_##n.attachment.store_op = 0;\
+			}
+			ATTACHMENT_I(0, rendering_info.render_attachments[0])
+			ATTACHMENT_I(1, rendering_info.render_attachments[1])
+			ATTACHMENT_I(2, rendering_info.render_attachments[2])
+			ATTACHMENT_I(3, rendering_info.render_attachments[3])
+		}
+#undef ATTACHMENT_I
+		if(rendering_info.depth_format != GPU::TextureFormat::Unknown)
+		{
+			key.attachment_4.attachment.format = static_cast<u32>(rendering_info.depth_format);
+			key.attachment_4.attachment.layout = 0;
+			key.attachment_4.attachment.load_op = 0;
+			key.attachment_4.attachment.store_op = 0;
+		}
+		if(rendering_info.stencil_format != GPU::TextureFormat::Unknown)
+		{
+			key.attachment_5.attachment.format = static_cast<u32>(rendering_info.stencil_format);
+			key.attachment_5.attachment.layout = 0;
+			key.attachment_5.attachment.load_op = 0;
+			key.attachment_5.attachment.store_op = 0;
+		}
+
+		return key;
+	}
+
+	static VkDriverRenderPassKey from_render_pass_begin_info(const GPU::RenderPassBeginInfo& begin_info);
 };
 
 template<>
 struct HashOfType<VkDriverRenderPassKey>
 {
-	// 0-15: texture format
-	// 16-19: load op
-	// 20-23: store op
+	[[nodiscard]] static constexpr bool compare_attachment(const VkDriverAttachment& attachment_a, const VkDriverAttachment& attachment_b)
+	{
+		return attachment_a.bits == attachment_b.bits;
+	}
+
 	[[nodiscard]] static constexpr u64 hashfunc(const VkDriverRenderPassKey& k)
     {
-        return u64(k.format)
-			| (u64(k.load_op) << (16))
-			| u64(k.store_op) << (16 + 4);
+		u64 hash = 0x9e3779b97f4a7c15ULL;
+
+		hash ^= static_cast<u64>(k.attachment_0.bits) * 0xbf58476d1ce4e5b9ULL;
+		hash ^= static_cast<u64>(k.attachment_1.bits) * 0x94d049bb133111ebULL;
+		hash ^= static_cast<u64>(k.attachment_2.bits) * 0x9e3779b97f4a7c15ULL;
+		hash ^= static_cast<u64>(k.attachment_3.bits) * 0xbf58476d1ce4e5b9ULL;
+		hash ^= static_cast<u64>(k.attachment_4.bits) * 0x94d049bb133111ebULL;
+		hash ^= static_cast<u64>(k.attachment_5.bits) * 0x9e3779b97f4a7c15ULL;
+
+		// final mix
+		hash ^= hash >> 30;
+		hash *= 0xbf58476d1ce4e5b9ULL;
+		hash ^= hash >> 27;
+
+		return hash;
     }
 
     [[nodiscard]] static constexpr bool compare(const VkDriverRenderPassKey& k1, const VkDriverRenderPassKey& k2)
     {
-        return k1.format == k2.format
-			&& k1.load_op == k2.load_op
-			&& k1.store_op == k2.store_op;
+        return compare_attachment(k1.attachment_0, k2.attachment_0)
+			&& compare_attachment(k1.attachment_1, k2.attachment_1)
+			&& compare_attachment(k1.attachment_2, k2.attachment_2)
+			&& compare_attachment(k1.attachment_3, k2.attachment_3)
+			&& compare_attachment(k1.attachment_4, k2.attachment_4)
+			&& compare_attachment(k1.attachment_5, k2.attachment_5);
     }
 };
 
@@ -68,6 +127,8 @@ struct VulkanDriver
 	{
 		VkRenderPass vk_render_pass;
 		VkFramebuffer vk_framebuffer;
+
+		u32 vk_attachment_count;
 
 		GPU::DeviceID device;
 	};
@@ -452,10 +513,10 @@ struct VulkanDriver
 
 	static VkShaderModule _vk_create_shader_module(LogicalDevice& ld, const GPU::ShaderStageInfo& shader_stage_info);
 
-	static RenderPassCache& _get_render_pass_for(LogicalDevice& ld, Texture& texture, const GPU::RenderPassBeginInfo& begin_info);
+	static RenderPassCache& _get_render_pass_for(LogicalDevice& ld, const GPU::RenderPassBeginInfo& begin_info);
 	static RenderPassCache& _get_render_pass_for_pipeline(LogicalDevice& ld, const GPU::RenderingInfo& pipeline_rendering_info);
-	static void _get_render_pass_and_framebuffer_for(LogicalDevice& ld, Texture& texture, 
-		const GPU::RenderPassBeginInfo& begin_info, VkRenderPass* vk_render_pass, VkFramebuffer* vk_framebuffer);
+	static void _get_render_pass_and_framebuffer_for(LogicalDevice& ld, const GPU::RenderPassBeginInfo& begin_info,
+		VkRenderPass* vk_render_pass, VkFramebuffer* vk_framebuffer);
 
 	static GPU::DeviceType _vk_device_type_to_device_type(VkPhysicalDeviceType vk_device_type);
 	static GPU::PresentMode _vk_present_mode_to_present_mode(VkPresentModeKHR vk_present_mode);
