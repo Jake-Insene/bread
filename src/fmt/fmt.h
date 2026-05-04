@@ -17,7 +17,9 @@ void __undef_function(...);
 consteval void __fail_compile_time_on(bool condition, const char* message)
 {
 	if (condition)
+	{
 		__undef_function(message);
+	}
 }
 
 struct FmtInterval
@@ -117,7 +119,7 @@ struct FormatString
 };
 
 template<bool NewLine, typename... TArgs>
-void format(const io::Writer& writer, const FormatString<TypeIdentity<TArgs>&&...>& fmt, TArgs&&...);
+void format(const io::Writer& writer, const FormatString<TypeIdentity<TArgs>&&...>& fmt, TArgs&&... args);
 
 }
 
@@ -204,7 +206,9 @@ void __format_single_argument(const io::Writer& writer, T&& arg)
 		for (usize i = 0; i < arg.len; i++)
 		{
 			if(i != 0)
+			{
 				writer.write(mem::to_const_bytes(StringView(", ")));
+			}
 			__format_single_argument<typename RemoveReference<decltype(arg)>::Type>(writer, Move(arg[i]));
 		}
 		writer.write(mem::to_const_bytes(StringView("]")));
@@ -245,9 +249,13 @@ void format(const io::Writer& writer, const FormatString<TypeIdentity<TArgs>&&..
 	StringView view = fmtstring.view();
 
 	if constexpr (FString::WriteIntervalCount == 1)
+	{
 		writer.write(mem::to_const_bytes(view));
+	}
 	else
+	{
 		__format_argument<FString::WriteIntervalCount, TArgs...>(writer, view, fmtstring, Forward<TArgs>(args)...);
+	}
 
 	if constexpr (NewLine)
 	{

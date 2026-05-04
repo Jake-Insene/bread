@@ -1,5 +1,5 @@
 # C++ Standard
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 # Useful for language servers

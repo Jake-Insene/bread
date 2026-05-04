@@ -1,8 +1,6 @@
 #include "physics/p2d/p2d_body.h"
 
 
-
-
 void P2DBody::init(const mem::Allocator& allocator, Physics2D::BodyID id, Opaque* ud)
 {
 	self = id;

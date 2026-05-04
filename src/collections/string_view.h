@@ -13,6 +13,8 @@ struct [[nodiscard]] StringView : Slice<const char>
 
     constexpr StringView(const Slice<char>& str) : Slice(str.items, str.len) {}
     
+    constexpr StringView(const Slice<const char>& str) : Slice(str.items, str.len) {}
+
     [[nodiscard]] constexpr const char* ptr() const { return items; }
 
     constexpr StringView add(const usize offset) const

@@ -108,6 +108,12 @@ struct RemovePointerT<const T*>
 };
 
 template<typename T>
+struct RemovePointerT<const T* const>
+{
+    using Type = const T;
+};
+
+template<typename T>
 using RemovePointer = typename RemovePointerT<T>::Type;
 
 template<typename T>
