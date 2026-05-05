@@ -34,7 +34,7 @@ struct VkDriverRenderPassKey
 	{
 		VkDriverRenderPassKey key = {};
 
-		for(usize i = 0; i < rendering_info.render_attachments.len; i++)
+		for(usize i = 0; i < rendering_info.render_attachment_formats.len; i++)
 		{
 #define ATTACHMENT_I(n, attachment_format)\
 			if(i == n)\
@@ -44,22 +44,22 @@ struct VkDriverRenderPassKey
 				key.attachment_##n.attachment.load_op = 0;\
 				key.attachment_##n.attachment.store_op = 0;\
 			}
-			ATTACHMENT_I(0, rendering_info.render_attachments[0])
-			ATTACHMENT_I(1, rendering_info.render_attachments[1])
-			ATTACHMENT_I(2, rendering_info.render_attachments[2])
-			ATTACHMENT_I(3, rendering_info.render_attachments[3])
+			ATTACHMENT_I(0, rendering_info.render_attachment_formats[0])
+			ATTACHMENT_I(1, rendering_info.render_attachment_formats[1])
+			ATTACHMENT_I(2, rendering_info.render_attachment_formats[2])
+			ATTACHMENT_I(3, rendering_info.render_attachment_formats[3])
 		}
 #undef ATTACHMENT_I
-		if(rendering_info.depth_format != GPU::TextureFormat::Unknown)
+		if(rendering_info.depth_attachment_format != GPU::TextureFormat::Unknown)
 		{
-			key.attachment_4.attachment.format = static_cast<u32>(rendering_info.depth_format);
+			key.attachment_4.attachment.format = static_cast<u32>(rendering_info.depth_attachment_format);
 			key.attachment_4.attachment.layout = 0;
 			key.attachment_4.attachment.load_op = 0;
 			key.attachment_4.attachment.store_op = 0;
 		}
-		if(rendering_info.stencil_format != GPU::TextureFormat::Unknown)
+		if(rendering_info.stencil_attachment_format != GPU::TextureFormat::Unknown)
 		{
-			key.attachment_5.attachment.format = static_cast<u32>(rendering_info.stencil_format);
+			key.attachment_5.attachment.format = static_cast<u32>(rendering_info.stencil_attachment_format);
 			key.attachment_5.attachment.layout = 0;
 			key.attachment_5.attachment.load_op = 0;
 			key.attachment_5.attachment.store_op = 0;

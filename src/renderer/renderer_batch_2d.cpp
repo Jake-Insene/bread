@@ -101,9 +101,9 @@ void RendererBatch2D::init(const RendererBatch2DCreateInfo& batch_info)
                 .pipeline_layout = batch_pipeline_layout,
                 .rendering_info =
                 {
-                    .render_attachments = Slice(&image_format, 1),
-                    .depth_format = GPU::TextureFormat::Unknown,
-                    .stencil_format = GPU::TextureFormat::Unknown,
+                    .render_attachment_formats = Slice(&image_format, 1),
+                    .depth_attachment_format = GPU::TextureFormat::Unknown,
+                    .stencil_attachment_format = GPU::TextureFormat::Unknown,
                 },
             }
         );

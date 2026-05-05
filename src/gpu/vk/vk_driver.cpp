@@ -1814,10 +1814,10 @@ GPU::PipelineID VulkanDriver::pipeline_create(const GPU::PipelineCreateInfo& ci)
     // Creating the layout
     VkPipelineLayout vk_pipeline_layout = _get_pipeline_layout(ci.pipeline_layout).vk_pipeline_layout;
 
-    Slice<VkFormat> vk_color_attachment_formats = allocator.array<VkFormat>(ci.rendering_info.render_attachments.len);
+    Slice<VkFormat> vk_color_attachment_formats = allocator.array<VkFormat>(ci.rendering_info.render_attachment_formats.len);
     for(usize i = 0; i < vk_color_attachment_formats.len; i++)
     {
-        vk_color_attachment_formats[i] = VkUtils::_vk_get_texture_format(ci.rendering_info.render_attachments[i]);
+        vk_color_attachment_formats[i] = VkUtils::_vk_get_texture_format(ci.rendering_info.render_attachment_formats[i]);
     }
 
     VkPipelineRenderingCreateInfoKHR vk_pipeline_rendering_info =
@@ -1827,10 +1827,10 @@ GPU::PipelineID VulkanDriver::pipeline_create(const GPU::PipelineCreateInfo& ci)
         .viewMask = 0,
         .colorAttachmentCount = static_cast<uint32_t>(vk_color_attachment_formats.len),
         .pColorAttachmentFormats = vk_color_attachment_formats.ptr(),
-        .depthAttachmentFormat = ci.rendering_info.depth_format == GPU::TextureFormat::Unknown ?
-            VK_FORMAT_UNDEFINED : VkUtils::_vk_get_texture_format(ci.rendering_info.depth_format),
-        .stencilAttachmentFormat = ci.rendering_info.stencil_format == GPU::TextureFormat::Unknown ?
-            VK_FORMAT_UNDEFINED : VkUtils::_vk_get_texture_format(ci.rendering_info.stencil_format),
+        .depthAttachmentFormat = ci.rendering_info.depth_attachment_format == GPU::TextureFormat::Unknown ?
+            VK_FORMAT_UNDEFINED : VkUtils::_vk_get_texture_format(ci.rendering_info.depth_attachment_format),
+        .stencilAttachmentFormat = ci.rendering_info.stencil_attachment_format == GPU::TextureFormat::Unknown ?
+            VK_FORMAT_UNDEFINED : VkUtils::_vk_get_texture_format(ci.rendering_info.stencil_attachment_format),
     };
 
     RenderPassCache* render_pass = nullptr;
@@ -2629,20 +2629,20 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for_pipeline(Logic
         return ld.render_pass_cache.get(render_pass_key);
     }
 
-    bool has_depth = pipeline_rendering_info.depth_format != GPU::TextureFormat::Unknown;
+    bool has_depth = pipeline_rendering_info.depth_attachment_format != GPU::TextureFormat::Unknown;
     //bool has_stencil = pipeline_rendering_info.stencil_format != GPU::TextureFormat::Unknown;
 
     VkAttachmentDescription2KHR vk_attachment_descriptions[6] = {};
-    u32 vk_attachment_count = static_cast<u32>(pipeline_rendering_info.render_attachments.len) + u32(has_depth);
+    u32 vk_attachment_count = static_cast<u32>(pipeline_rendering_info.render_attachment_formats.len) + u32(has_depth);
 
-    for(u32 i = 0; i < pipeline_rendering_info.render_attachments.len; i++)
+    for(u32 i = 0; i < pipeline_rendering_info.render_attachment_formats.len; i++)
     {
         vk_attachment_descriptions[i] =
         {
             .sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2_KHR,
             .pNext = nullptr,
             .flags = 0,
-            .format = VkUtils::_vk_get_texture_format(pipeline_rendering_info.render_attachments[i]),
+            .format = VkUtils::_vk_get_texture_format(pipeline_rendering_info.render_attachment_formats[i]),
             .samples = VK_SAMPLE_COUNT_1_BIT,
             .loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
             .storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
@@ -2655,7 +2655,7 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for_pipeline(Logic
 
     VkAttachmentReference2KHR vk_color_attachments[4] = {};
     VkAttachmentReference2KHR vk_depth_attachment = {};
-    for(u32 i = 0; i < pipeline_rendering_info.render_attachments.len; i++)
+    for(u32 i = 0; i < pipeline_rendering_info.render_attachment_formats.len; i++)
     {
         vk_color_attachments[i] =
         {
@@ -2673,7 +2673,7 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for_pipeline(Logic
         {
             .sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2_KHR,
             .pNext = nullptr,
-            .attachment = static_cast<u32>(pipeline_rendering_info.render_attachments.len),
+            .attachment = static_cast<u32>(pipeline_rendering_info.render_attachment_formats.len),
             .layout = VK_IMAGE_LAYOUT_GENERAL,
             .aspectMask = 0,
         };
@@ -2688,7 +2688,7 @@ VulkanDriver::RenderPassCache& VulkanDriver::_get_render_pass_for_pipeline(Logic
         .viewMask = 0,
         .inputAttachmentCount = 0,
         .pInputAttachments = nullptr,
-        .colorAttachmentCount = static_cast<u32>(pipeline_rendering_info.render_attachments.len),
+        .colorAttachmentCount = static_cast<u32>(pipeline_rendering_info.render_attachment_formats.len),
         .pColorAttachments = vk_color_attachments,
         .pResolveAttachments = nullptr,
         .pDepthStencilAttachment = has_depth ? &vk_depth_attachment : nullptr,
