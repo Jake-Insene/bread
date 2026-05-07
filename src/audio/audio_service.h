@@ -1,24 +1,27 @@
 #pragma once
 #include "mem/allocator.h"
-#include "systems/system.h"
+#include "os/atomic.h"
+#include "os/thread.h"
 
 
-
-struct AudioService : System<AudioService>
+struct AudioServiceCreateInfo
 {
-    static constexpr SystemDependency Dependencies[] =
-    {
-        SystemDependency::of("IdentitySystem")
-    };
-
-    static constexpr StringView _name = "AudioService";
-    static constexpr SystemInfo get_system_info()
-    {
-        return System::get_system_info_with_name(_name);
-    }
-
     mem::Allocator allocator;
+};
 
-    void initialize(const SystemInitializeInfo& info);
+struct AudioService
+{
+    struct InternalData
+    {
+        mem::Allocator allocator;
+
+        Atomic<bool> request_destroy;
+
+        Thread output_thread;
+    } data;
+
+    void initialize(const AudioServiceCreateInfo& info);
     void shutdown();
+
+    void tick();
 };

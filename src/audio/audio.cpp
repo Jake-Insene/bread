@@ -69,3 +69,28 @@ u32 Audio::output_get_bits_per_sample()
 	return current_adapter.output_get_bits_per_sample();
 }
 
+void Audio::output_start()
+{
+	current_adapter.output_start();
+}
+
+void Audio::output_stop()
+{
+	current_adapter.output_stop();
+}
+
+bool Audio::output_wait_for_event()
+{
+	return current_adapter.output_wait_for_event();
+}
+
+Opaque* Audio::output_get_buffer(u32* out_frame_count)
+{
+	return current_adapter.output_get_buffer(out_frame_count);
+}
+
+void Audio::output_release_buffer(u32 frame_count)
+{
+	current_adapter.output_release_buffer(frame_count);
+}
+

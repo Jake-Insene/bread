@@ -156,6 +156,7 @@ elseif(WIN32)
         # Audio drivers
         src/audio/wasapi/wasapi_driver.cpp
 
+        src/platform/win32/win32_atomic.cpp
         src/platform/win32/win32_display.cpp
         src/platform/win32/win32_engine.cpp
         src/platform/win32/win32_file.cpp

@@ -13,6 +13,11 @@ Audio::VTable WASAPIDriver::get_vtable()
         .output_get_channels = &WASAPIDriver::output_get_channels,
         .output_get_samples_per_sec = &WASAPIDriver::output_get_samples_per_sec,
         .output_get_bits_per_sample = &WASAPIDriver::output_get_bits_per_sample,
+        .output_start = &WASAPIDriver::output_start,
+        .output_stop = &WASAPIDriver::output_stop,
+        .output_wait_for_event = &WASAPIDriver::output_wait_for_event,
+        .output_get_buffer = &WASAPIDriver::output_get_buffer,
+        .output_release_buffer = &WASAPIDriver::output_release_buffer,
     };
 }
 
@@ -108,6 +113,9 @@ void WASAPIDriver::initialize(const mem::Allocator& allocator)
         reinterpret_cast<void**>(&data.output_device.render_client)
     );
 
+    data.event_handle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    data.output_device.audio_client->SetEventHandle(data.event_handle);
+
     WASAPIDebugInfo("Output service was installed with:"
         "\n\tFormat: {}"
         "\n\tChannels: {}"
@@ -122,6 +130,7 @@ void WASAPIDriver::initialize(const mem::Allocator& allocator)
 
 void WASAPIDriver::shutdown()
 {
+    CloseHandle(data.event_handle);
     data.output_device.render_client->Release();
     data.output_device.audio_client->Release();
     data.output_device.device->Release();
@@ -145,5 +154,42 @@ u32 WASAPIDriver::output_get_samples_per_sec()
 u32 WASAPIDriver::output_get_bits_per_sample()
 {
     return data.output_device.bits_per_sample;
+}
+
+void WASAPIDriver::output_start()
+{
+    data.output_device.audio_client->Start();
+}
+
+void WASAPIDriver::output_stop()
+{
+    data.output_device.audio_client->Stop();
+}
+
+bool WASAPIDriver::output_wait_for_event()
+{
+    return WaitForSingleObject(data.event_handle, INFINITE) == WAIT_OBJECT_0;
+}
+
+Opaque* WASAPIDriver::output_get_buffer(u32* out_frame_count)
+{
+    u32 padding = 0;
+    data.output_device.audio_client->GetCurrentPadding(&padding);
+    u32 frames_available = data.output_device.frame_count - padding;
+
+    *out_frame_count = frames_available;
+    if (frames_available == 0)
+    {
+        return nullptr;
+    }
+
+    BYTE* buffer = nullptr;
+    data.output_device.render_client->GetBuffer(frames_available, &buffer);
+    return reinterpret_cast<Opaque*>(buffer);
+}
+
+void WASAPIDriver::output_release_buffer(u32 frame_count)
+{
+    data.output_device.render_client->ReleaseBuffer(frame_count, 0);
 }
 

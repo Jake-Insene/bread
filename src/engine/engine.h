@@ -3,9 +3,12 @@
 #include "display/window.h"
 #include "engine/engine_runtime.h"
 #include "engine/configuration.h"
-#include "systems/system_manager.h"
 
 
+struct AudioService;
+struct RenderDevice;
+struct ResourceManager;
+struct SystemManager;
 
 struct Scene;
 struct InputEvent;
@@ -20,6 +23,21 @@ struct Engine
     };
 
     static inline InternalData local_data = {};
+
+    static AudioService* get_audio_service()
+    {
+        return local_data.engine_runtime->get_audio_service();
+    }
+
+    static RenderDevice* get_render_device()
+    {
+        return local_data.engine_runtime->get_render_device();
+    }
+
+    static ResourceManager* get_resource_manager()
+    {
+        return local_data.engine_runtime->get_resource_manager();
+    }
 
     static SystemManager* get_system_manager()
     {

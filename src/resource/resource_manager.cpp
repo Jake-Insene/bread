@@ -15,7 +15,7 @@
 #include <external/stb_image.h>
 
 
-void ResourceManager::initialize(const SystemInitializeInfo& info)
+void ResourceManager::initialize(const ResourceManagerCreateInfo& info)
 {
     allocator = info.allocator;
 
@@ -225,7 +225,7 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
             .pixels = image->get_raw_pixels(),
         };
         
-        tex->texture_ref = Engine::get_system_manager()->get_system<RenderDevice>()->get_resource_manager()->create_texture(create_info);
+        tex->texture_ref = Engine::get_render_device()->get_gpu_resource_manager()->create_texture(create_info);
         tex->size = image->get_size();
         cached_images.insert(image, tex);
     }

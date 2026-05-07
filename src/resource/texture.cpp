@@ -13,7 +13,7 @@ void Texture::init(const ResourceCreateInfo& info)
 
 void Texture::destroy()
 {
-    Engine::get_system_manager()->get_system<RenderDevice>()->get_resource_manager()->destroy_texture(texture_ref);
+    Engine::get_render_device()->get_gpu_resource_manager()->destroy_texture(texture_ref);
     Resource::destroy();
 }
 

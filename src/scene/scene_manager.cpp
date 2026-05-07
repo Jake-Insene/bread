@@ -28,7 +28,7 @@ void SceneManager::initialize(const mem::Allocator& _allocator)
 
 void SceneManager::shutdown()
 {
-    if(current_scene)
+    if(current_scene != nullptr)
     {
 		SceneCallRef(current_scene, on_exit);
 		SceneCallRef(current_scene, on_destroy);
@@ -55,7 +55,9 @@ void SceneManager::change_scene(Scene* new_scene)
 void SceneManager::step()
 {
     if (current_scene == nullptr)
+    {
         return;
+    }
 
     _handle_change_scene();
 
@@ -139,7 +141,9 @@ void SceneManager::recreate_window()
 void SceneManager::set_keep_viewport(bool _keep_viewport)
 {
     if (keep_viewport == _keep_viewport)
+    {
         return;
+    }
 
     keep_viewport = _keep_viewport;
 }
@@ -147,7 +151,9 @@ void SceneManager::set_keep_viewport(bool _keep_viewport)
 void SceneManager::set_viewport_size(const Vector2I& new_vp_size)
 {
     if (viewport_size == new_vp_size)
+    {
         return;
+    }
 
     viewport_size = new_vp_size;
 }
@@ -155,13 +161,15 @@ void SceneManager::set_viewport_size(const Vector2I& new_vp_size)
 void SceneManager::scene_handle_event(const InputEvent& event)
 {
     if (current_scene == nullptr)
+    {
         return;
+    }
 
     switch (event.type)
     {
     case InputEventType::Touch:
     {
-        auto& et = event.get<InputEventTouch>();
+        const InputEventTouch& et = event.get<InputEventTouch>();
         InputEventTouch new_event = et;
         new_event = et;
 
@@ -171,7 +179,7 @@ void SceneManager::scene_handle_event(const InputEvent& event)
     break;
     case InputEventType::MouseButton:
     {
-        auto& et = event.get<InputEventMouseButton>();
+        const InputEventMouseButton& et = event.get<InputEventMouseButton>();
         InputEventMouseButton new_event = et;
         new_event = et;
 
@@ -204,8 +212,10 @@ void SceneManager::_render_manager_tick()
 
 void SceneManager::_handle_change_scene()
 {
-    if (change_scene_info.requested == false)
+    if (!change_scene_info.requested)
+    {
         return;
+    }
 
     change_scene_info.requested = false;
     SceneCallRef(current_scene, on_exit);

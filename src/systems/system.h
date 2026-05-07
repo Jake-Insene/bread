@@ -30,8 +30,9 @@ struct SystemDependency
 
 enum class SystemFlags
 {
+    None = 0,
+
     Tick = Bit(0),
-    OnEvent = Bit(1),
 };
 
 EnableBitOp(SystemFlags);

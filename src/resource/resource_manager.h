@@ -4,7 +4,6 @@
 #include "collections/string_map.h"
 #include "gpu/gpu.h"
 #include "resource/resource.h"
-#include "systems/system.h"
 
 
 struct Image;
@@ -13,19 +12,13 @@ struct TileSet;
 struct Texture;
 
 
-struct ResourceManager final : System<ResourceManager>
+struct ResourceManagerCreateInfo
 {
-    static constexpr SystemDependency Dependencies[] =
-    {
-        SystemDependency::of("RenderDevice")
-    };
+    mem::Allocator allocator;
+};
 
-    static constexpr StringView _name = "ResourceManager";
-    static constexpr SystemInfo get_system_info()
-    {
-        return System::get_system_info_with_name(_name);
-    }
-
+struct ResourceManager
+{
     static constexpr usize DefaultFontSize = 32;
     
     struct TextureLoadInfo
@@ -46,10 +39,8 @@ struct ResourceManager final : System<ResourceManager>
 
     [[nodiscard]] mem::Allocator& get_allocator() { return allocator; }
 
-    void initialize(const SystemInitializeInfo& info);
+    void initialize(const ResourceManagerCreateInfo& info);
     void shutdown();
-
-    void on_event(const InputEvent&) {}
 
     [[nodiscard]] Result<Resource*, Error> load_resource(ResourceType type,
         ResourceTypeSpecification specification, StringView path);

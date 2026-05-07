@@ -1,8 +1,10 @@
 #pragma once
+#include "audio/audio_service.h"
 #include "concurrency/job_queue.h"
 #include "display/window.h"
 #include "engine/configuration.h"
 #include "mem/generic_allocator.h"
+#include "render_device/render_device.h"
 #include "resource/texture.h"
 #include "resource/resource_manager.h"
 #include "resource/sprite_animation.h"
@@ -72,6 +74,9 @@ struct EngineRuntime
     mem::GenericAllocator allocator;
 
     SceneManager scene_manager;
+    AudioService audio_service;
+    RenderDevice render_device;
+    ResourceManager resource_manager;
     
     SystemManager system_manager;
 
@@ -96,18 +101,22 @@ struct EngineRuntime
     void request_recreate_window();
 
     // Utility functions
+    AudioService* get_audio_service() { return &audio_service; }
+    RenderDevice* get_render_device() { return &render_device; }
+    ResourceManager* get_resource_manager() { return &resource_manager; }
+
     SystemManager* get_system_manager() { return &system_manager; }
 
-    GPU::PhysicalDeviceID get_selected_gpu_device() { return physical_device; }
+    GPU::PhysicalDeviceID get_selected_gpu_device() const { return physical_device; }
 
-    i32 get_fps() { return fps; }
+    i32 get_fps() const { return fps; }
 
 	EngineConfiguration& get_configuration() { return __configuration__; }
 
     Window get_main_window() { return main_window; }
 
     void set_vsync(bool vsync);
-    bool get_vsync() { return vsync_cache; }
+    bool get_vsync() const { return vsync_cache; }
 
     template<typename Fn> 
     void add_main_job(Fn fn)

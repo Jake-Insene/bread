@@ -62,14 +62,32 @@ void EngineRuntime::initialize()
     main_window = Window(Display::window_create());
 
     Audio::initialize(allocator_ref, Audio::DriverType::Default);
-
-    scene_manager.initialize(allocator_ref);
     Physics2D::initialize(allocator_ref, Physics2D::DEFAULT_DRIVER);
 
     // Initialize subsystems first
-    system_manager.allocate_systems(__get_requested_systems__());
+    audio_service.initialize(
+        {
+            .allocator = allocator_ref,
+        }
+    );
 
+    render_device.initialize(
+        {
+            .allocator = allocator_ref,
+        }
+    );
+
+    resource_manager.initialize(
+        {
+            .allocator = allocator_ref,
+        }
+    );
+
+    system_manager.allocate_systems(__get_requested_systems__());
+    
     main_window.set_size(__configuration__.viewport_size);
+    
+    scene_manager.initialize(allocator_ref);
     scene_manager.set_keep_viewport(__configuration__.keep_viewport);
     scene_manager.set_viewport_size(__configuration__.viewport_size);
     set_vsync(__configuration__.vsync);
@@ -85,6 +103,10 @@ void EngineRuntime::initialize()
 void EngineRuntime::shutdown()
 {
     scene_manager.shutdown();
+
+    resource_manager.shutdown();
+    render_device.shutdown();
+    audio_service.shutdown();
 
     system_manager.deallocate_systems();
 

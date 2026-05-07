@@ -92,7 +92,7 @@ static void _load_theme(const mem::Allocator& allocator, const Slice<u8>& font_f
         }
 
         flip_atlas_vertical(allocator, pixels, width, width);
-        theme.font_atlas = Engine::get_system_manager()->get_system<RenderDevice>()->get_resource_manager()->create_texture(
+        theme.font_atlas = Engine::get_render_device()->get_gpu_resource_manager()->create_texture(
             {
                 .type = GPU::TextureType::Texture2D,
                 .format = GPU::TextureFormat::R8Srgb,
@@ -124,7 +124,7 @@ void Font::destroy()
             continue;
         }
     
-        Engine::get_system_manager()->get_system<RenderDevice>()->get_resource_manager()->destroy_texture(theme.font_atlas);
+        Engine::get_render_device()->get_gpu_resource_manager()->destroy_texture(theme.font_atlas);
         
         theme.glyphs.destroy();
     }
@@ -142,7 +142,6 @@ Error Font::load(StringView file_path)
         return MakeError(ErrorCode::FileNotFound);
     }
 
-    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
     path.set(file_path);
 
     Slice<u8> content = File::read_all(allocator, file_path);
@@ -175,7 +174,6 @@ const Font::FontTheme& Font::get_font_theme(i32 font_size)
 
 const Font::FontTheme& Font::_theme_with_size(i32 font_size)
 {
-    mem::Allocator allocator = Engine::get_system_manager()->get_system<ResourceManager>()->get_allocator();
     Slice<u8> content = File::read_all(allocator, path.view());
 
     stbtt_fontinfo font;

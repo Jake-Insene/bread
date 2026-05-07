@@ -4,7 +4,7 @@
 #include "log/log.h"
 
 
-void RenderDevice::initialize(const SystemInitializeInfo& info)
+void RenderDevice::initialize(const RenderDeviceCreateInfo& info)
 {
     allocator = info.allocator;
 

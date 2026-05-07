@@ -34,6 +34,8 @@ struct WASAPIDriver
         IMMDeviceEnumerator* enumerator;
         WASAPIDevice output_device;
         WASAPIDevice input_device;
+
+        HANDLE event_handle;
     };
 
     static inline InternalData data;
@@ -47,5 +49,11 @@ struct WASAPIDriver
     static u32 output_get_channels();
     static u32 output_get_samples_per_sec();
     static u32 output_get_bits_per_sample();
+
+    static void output_start();
+    static void output_stop();
+    static bool output_wait_for_event();
+    static Opaque* output_get_buffer(u32* out_frame_count);
+    static void output_release_buffer(u32 frame_count);
 };
 

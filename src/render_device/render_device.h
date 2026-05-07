@@ -3,23 +3,16 @@
 #include "graphics/device.h"
 #include "render_device/core/gpu_memory_allocator.h"
 #include "render_device/core/gpu_resource_manager.h"
-#include "systems/system.h"
 
 
 
-struct RenderDevice final : System<RenderDevice>
+struct RenderDeviceCreateInfo
 {
-    static constexpr SystemDependency Dependencies[] =
-    {
-        SystemDependency::of("IdentitySystem")
-    };
+    mem::Allocator allocator;
+};
 
-    static constexpr StringView _name = "RenderDevice";
-    static constexpr SystemInfo get_system_info()
-    {
-        return System::get_system_info_with_name(_name);
-    }
-
+struct RenderDevice
+{
     mem::Allocator allocator;
 
     Graphics::Device device;
@@ -30,9 +23,9 @@ struct RenderDevice final : System<RenderDevice>
     Graphics::Device* get_graphics_device() { return &device; }
 
     GPUMemoryAllocator* get_gpu_memory_allocator() { return &gpu_memory_allocator; }
-    GPUResourceManager* get_resource_manager() { return &resource_manager; }
+    GPUResourceManager* get_gpu_resource_manager() { return &resource_manager; }
 
-    void initialize(const SystemInitializeInfo& info);
+    void initialize(const RenderDeviceCreateInfo& info);
     void shutdown();
 };
 
