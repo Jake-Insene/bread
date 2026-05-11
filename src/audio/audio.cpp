@@ -50,24 +50,9 @@ InternalAudio::AudioAdapter* Audio::get_adapter()
 	return &current_adapter;
 }
 
-Audio::Format Audio::output_get_format()
-{
-	return current_adapter.output_get_format();
-}
-
-u32 Audio::output_get_channels()
-{
-	return current_adapter.output_get_channels();
-}
-
 u32 Audio::output_get_samples_per_sec()
 {
 	return current_adapter.output_get_samples_per_sec();
-}
-
-u32 Audio::output_get_bits_per_sample()
-{
-	return current_adapter.output_get_bits_per_sample();
 }
 
 void Audio::output_start()
@@ -85,13 +70,14 @@ bool Audio::output_wait_for_event()
 	return current_adapter.output_wait_for_event();
 }
 
-Opaque* Audio::output_get_buffer(u32* out_frame_count)
+u32 Audio::output_get_frame_count()
 {
-	return current_adapter.output_get_buffer(out_frame_count);
+	return current_adapter.output_get_frame_count();
 }
 
-void Audio::output_release_buffer(u32 frame_count)
+void Audio::output_send_frames(const Slice<i16>& frames)
 {
-	current_adapter.output_release_buffer(frame_count);
+	current_adapter.output_send_frames(frames);
 }
+
 

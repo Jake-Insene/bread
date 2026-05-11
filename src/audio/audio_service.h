@@ -14,9 +14,10 @@ struct AudioService
     struct InternalData
     {
         mem::Allocator allocator;
-
+        
         Atomic<bool> request_destroy;
-
+        
+        Slice<i16> output_buffer;
         Thread output_thread;
     } data;
 

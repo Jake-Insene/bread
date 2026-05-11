@@ -49,14 +49,15 @@ void Sound::init(const ResourceCreateInfo& info)
 {
     Resource::init(info);
 
-    data.buffer = {};
+    data.channels = 0;
+    data.samples = {};
 }
 
 void Sound::destroy()
 {
-    if(!data.buffer.null())
+    if(!data.samples.null())
     {
-        allocator.free(data.buffer);
+        allocator.free(mem::to_bytes(data.samples));
     }
 
     Resource::destroy();
@@ -77,18 +78,19 @@ Error Sound::load(StringView file_path)
     drwav wav = {};
     drwav_init_memory(&wav, content.ptr(), content.len, &alloc_callbacks);
 
-    if(wav.channels > Audio::output_get_channels())
+    if(wav.channels != 1 && wav.channels != 2)
     {
-        RMDebugInfo("The WAV file({}) contains more channels than are supported, find({}), supported({})",
-            file_path, wav.channels, Audio::output_get_channels()
+        RMDebugInfo("The WAV file({}) contains a not supported channel count, find({}) expected 1 or 2",
+            file_path, wav.channels
         );
     }
 
-    const size_t total_samples = static_cast<size_t>(wav.totalPCMFrameCount * wav.channels);
-    const usize bytes_per_sample = wav.bitsPerSample / 8;
-    data.buffer = allocator.array<u8>(total_samples * bytes_per_sample);
+    const usize total_samples = static_cast<usize>(wav.totalPCMFrameCount * wav.channels);
+    data.channels = wav.channels;
+    data.samples = allocator.array<i16>(total_samples);
 
-    (void)drwav_read_pcm_frames_f32(&wav, wav.totalPCMFrameCount, reinterpret_cast<f32*>(data.buffer.ptr()));
+    // Always convert 
+    (void)drwav_read_pcm_frames_s16(&wav, wav.totalPCMFrameCount, reinterpret_cast<drwav_int16*>(data.samples.ptr()));
 
     drwav_uninit(&wav);
     allocator.free(content);

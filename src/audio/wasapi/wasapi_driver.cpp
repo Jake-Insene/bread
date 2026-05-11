@@ -9,15 +9,12 @@ InternalAudio::AudioAdapter WASAPIDriver::get_vtable()
     {
         .initialize = &WASAPIDriver::initialize,
         .shutdown = &WASAPIDriver::shutdown,
-        .output_get_format = &WASAPIDriver::output_get_format,
-        .output_get_channels = &WASAPIDriver::output_get_channels,
         .output_get_samples_per_sec = &WASAPIDriver::output_get_samples_per_sec,
-        .output_get_bits_per_sample = &WASAPIDriver::output_get_bits_per_sample,
         .output_start = &WASAPIDriver::output_start,
         .output_stop = &WASAPIDriver::output_stop,
         .output_wait_for_event = &WASAPIDriver::output_wait_for_event,
-        .output_get_buffer = &WASAPIDriver::output_get_buffer,
-        .output_release_buffer = &WASAPIDriver::output_release_buffer,
+        .output_get_frame_count = &WASAPIDriver::output_get_frame_count,
+        .output_send_frames = &WASAPIDriver::output_send_frames,
     };
 }
 
@@ -41,7 +38,7 @@ void WASAPIDriver::initialize(const mem::Allocator& allocator)
         nullptr, reinterpret_cast<void**>(&data.output_device.audio_client)
     );
     
-    data.output_device.format = Audio::Format::Unknown;    
+    data.output_device.wave_format = WAVE_FORMAT_UNKNOWN;    
     WAVEFORMATEX* mix_format = {};
     
     data.output_device.audio_client->GetMixFormat(&mix_format);
@@ -53,12 +50,12 @@ void WASAPIDriver::initialize(const mem::Allocator& allocator)
         if(mem::compare(mem::to_const_bytes(Slice(&extensible->SubFormat, 1)),
             mem::to_const_bytes(Slice(&KSDATAFORMAT_SUBTYPE_PCM, 1))))
         {
-            data.output_device.format = Audio::Format::PCM;
+            data.output_device.wave_format = WAVE_FORMAT_PCM;
         }
         else if(mem::compare(mem::to_const_bytes(Slice(&extensible->SubFormat, 1)),
             mem::to_const_bytes(Slice(&KSDATAFORMAT_SUBTYPE_IEEE_FLOAT, 1))))
         {
-            data.output_device.format = Audio::Format::IEEEFloat;
+            data.output_device.wave_format = WAVE_FORMAT_IEEE_FLOAT;
         }
         else
         {
@@ -67,11 +64,11 @@ void WASAPIDriver::initialize(const mem::Allocator& allocator)
     }
     else if(mix_format->wFormatTag == WAVE_FORMAT_PCM)
     {
-        data.output_device.format = Audio::Format::PCM;
+        data.output_device.wave_format = WAVE_FORMAT_PCM;
     }
     else if(mix_format->wFormatTag == WAVE_FORMAT_IEEE_FLOAT)
     {
-        data.output_device.format = Audio::Format::IEEEFloat;
+        data.output_device.wave_format = WAVE_FORMAT_IEEE_FLOAT;
     }
     else
     {
@@ -121,7 +118,7 @@ void WASAPIDriver::initialize(const mem::Allocator& allocator)
         "\n\tChannels: {}"
         "\n\tSamplesPerSec: {}"
         "\n\tBitsPerSample: {}",
-        data.output_device.format == Audio::Format::PCM ? StringView("I32") : StringView("Float"),
+        data.output_device.wave_format == WAVE_FORMAT_PCM ? StringView("I32") : StringView("Float"),
         data.output_device.channels,
         data.output_device.samples_per_sec,
         data.output_device.bits_per_sample
@@ -136,24 +133,9 @@ void WASAPIDriver::shutdown()
     data.output_device.device->Release();
 }
 
-Audio::Format WASAPIDriver::output_get_format()
-{
-    return data.output_device.format;
-}
-
-u32 WASAPIDriver::output_get_channels()
-{
-    return data.output_device.channels;
-}
-
 u32 WASAPIDriver::output_get_samples_per_sec()
 {
     return data.output_device.samples_per_sec;
-}
-
-u32 WASAPIDriver::output_get_bits_per_sample()
-{
-    return data.output_device.bits_per_sample;
 }
 
 void WASAPIDriver::output_start()
@@ -171,25 +153,62 @@ bool WASAPIDriver::output_wait_for_event()
     return WaitForSingleObject(data.event_handle, INFINITE) == WAIT_OBJECT_0;
 }
 
-Opaque* WASAPIDriver::output_get_buffer(u32* out_frame_count)
+u32 WASAPIDriver::output_get_frame_count()
 {
     u32 padding = 0;
     data.output_device.audio_client->GetCurrentPadding(&padding);
     u32 frames_available = data.output_device.frame_count - padding;
-
-    *out_frame_count = frames_available;
-    if (frames_available == 0)
-    {
-        return nullptr;
-    }
-
-    BYTE* buffer = nullptr;
-    data.output_device.render_client->GetBuffer(frames_available, &buffer);
-    return reinterpret_cast<Opaque*>(buffer);
+    return frames_available;
 }
 
-void WASAPIDriver::output_release_buffer(u32 frame_count)
+void WASAPIDriver::output_send_frames(const Slice<i16>& frames)
 {
+    u32 frame_count = output_get_frame_count();
+
+    u8* buffer_out = nullptr;
+    data.output_device.render_client->GetBuffer(frame_count, &buffer_out);
+    
+    f32* buffer_out_f = reinterpret_cast<f32*>(buffer_out);
+
+    if(data.output_device.wave_format == WAVE_FORMAT_IEEE_FLOAT)
+    {
+        if(data.output_device.channels >= 2)
+        {
+            for(usize i = 0; i < frame_count; i++)
+            {
+                f32 l = frames[(i * Audio::OutputChannels) + 0];
+                f32 r = frames[(i * Audio::OutputChannels) + 1];
+
+                buffer_out_f[(i * data.output_device.channels) + 0] = l;
+                buffer_out_f[(i * data.output_device.channels) + 1] = r;
+                
+                for(usize j = Audio::OutputChannels; j < data.output_device.channels; i++)
+                {
+                    buffer_out_f[(i * data.output_device.channels) + j] = 0.F;
+                }
+            }
+        }
+        else if(data.output_device.channels == 1)
+        {
+            for(usize i = 0; i < frame_count; i++)
+            {
+                f32 l = frames[(i * Audio::OutputChannels) + 0];
+                f32 r = frames[(i * Audio::OutputChannels) + 1];
+
+                f32 normal = (l + r) / 2.F;
+                if(normal > 1.F)
+                {
+                    normal = 1.F;
+                }
+                else if(normal < -1.F)
+                {
+                    normal = -1.F;
+                }
+                buffer_out_f[i] = normal;
+            }
+        }
+    }
+
     data.output_device.render_client->ReleaseBuffer(frame_count, 0);
 }
 

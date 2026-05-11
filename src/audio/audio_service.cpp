@@ -22,17 +22,17 @@ void _audio_output_thread(Opaque* self)
             continue;
         }
 
-        u32 frame_count = 0;
-        f32* buffer = Audio::output_get_buffer(&frame_count)->cast<f32*>();
+        u32 frame_count = Audio::output_get_frame_count();
+        Slice<i16> samples = audio_service->data.output_buffer.slice(frame_count * Audio::OutputChannels);
 
         for(usize i = 0; i < frame_count; i++)
         {
             // fill buffer
-            buffer[(i *2) + 0] = 0.F;
-            buffer[(i *2) + 1] = 0.F;
+            samples[(i * Audio::OutputChannels) + 0] = 0;
+            samples[(i * Audio::OutputChannels) + 1] = 0;
         }
 
-        Audio::output_release_buffer(frame_count);
+        Audio::output_send_frames(samples);
     }
 }
 
@@ -42,6 +42,8 @@ void AudioService::initialize(const AudioServiceCreateInfo& info)
     Audio::output_start();
 
     data.request_destroy = Atomic<bool>::create();
+
+    data.output_buffer = data.allocator.array<i16>(Audio::output_get_samples_per_sec() * Audio::OutputChannels);
     data.output_thread = Thread::create(&_audio_output_thread, Opaque::from(*this));
 }
 
@@ -49,6 +51,7 @@ void AudioService::shutdown()
 {
     data.request_destroy.increment();
     data.output_thread.destroy();
+    data.allocator.free(mem::to_bytes(data.output_buffer));
 
     Audio::output_stop();
 }

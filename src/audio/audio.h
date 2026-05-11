@@ -8,15 +8,14 @@ namespace InternalAudio
 struct AudioAdapter;
 }
 
+/*
+* For the audio services and engine, try to load i16 pcm frames
+* and convert them to device format at the end. Always feed the Audio driver with 2 channels.
+*/
 struct Audio
 {
-    enum class Format
-    {
-        Unknown,
-        PCM,
-        IEEEFloat,
-    };
-
+    static constexpr usize OutputChannels = 2;
+    
     enum class DriverType
     {
         Unknown = 0,
@@ -37,15 +36,12 @@ struct Audio
     
     static InternalAudio::AudioAdapter* get_adapter();
 
-    static Audio::Format output_get_format();
-    static u32 output_get_channels();
     static u32 output_get_samples_per_sec();
-    static u32 output_get_bits_per_sample();
 
     static void output_start();
     static void output_stop();
     static bool output_wait_for_event();
-    static Opaque* output_get_buffer(u32* out_frame_count);
-    static void output_release_buffer(u32 frame_count);
+    static u32 output_get_frame_count();
+    static void output_send_frames(const Slice<i16>& frames);
 };
 

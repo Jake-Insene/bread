@@ -20,7 +20,7 @@ struct WASAPIDriver
         IAudioClient* audio_client;
         IAudioRenderClient* render_client;
 
-        Audio::Format format;
+        u32 wave_format;
         u32 channels;
         u32 samples_per_sec;
         u32 bits_per_sample;
@@ -46,15 +46,13 @@ struct WASAPIDriver
     static void initialize(const mem::Allocator& allocator);
     static void shutdown();
 
-    static Audio::Format output_get_format();
-    static u32 output_get_channels();
     static u32 output_get_samples_per_sec();
-    static u32 output_get_bits_per_sample();
 
     static void output_start();
     static void output_stop();
     static bool output_wait_for_event();
-    static Opaque* output_get_buffer(u32* out_frame_count);
-    static void output_release_buffer(u32 frame_count);
+
+    static u32 output_get_frame_count();
+    static void output_send_frames(const Slice<i16>& frames);
 };
 

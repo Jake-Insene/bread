@@ -4,6 +4,7 @@
 #include "resource/resource.h"
 #include "resource/texture.h"
 
+
 struct SpriteAnimation : Resource
 {
 	RESOURCE(RESOURCE_SPRITE_ANIMATION, NoResourceFlags, ResourceExtensions(""))
