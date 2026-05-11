@@ -406,7 +406,7 @@ struct VulkanDriver
 	static GPU::SwapChainID swap_chain_create(const GPU::SwapChainCreateInfo& ci);
 	static void swap_chain_destroy(GPU::SwapChainID swap_chain);
 	static u32 swap_chain_get_image_count(GPU::SwapChainID swap_chain);
-	static GPU::TextureID swap_chain_get_texture(GPU::SwapChainID swap_chain, u32 image_index);
+	static GPU::TextureID swap_chain_get_image(GPU::SwapChainID swap_chain, u32 image_index);
 	static GPU::AcquireResult swap_chain_acquire_next_image(GPU::SwapChainID swap_chain, const GPU::AcquireInfo& acquire_info, u32* image_index);
 
 	static GPU::FenceID fence_create(const GPU::FenceCreateInfo& ci);

@@ -63,7 +63,7 @@ InternalGPU::GPUAdapter VulkanDriver::get_adapter()
         .swap_chain_create = &VulkanDriver::swap_chain_create,
         .swap_chain_destroy = &VulkanDriver::swap_chain_destroy,
         .swap_chain_get_image_count = &VulkanDriver::swap_chain_get_image_count,
-        .swap_chain_get_texture = &VulkanDriver::swap_chain_get_texture,
+        .swap_chain_get_image = &VulkanDriver::swap_chain_get_image,
         .swap_chain_acquire_next_image = &VulkanDriver::swap_chain_acquire_next_image,
         .fence_create = &VulkanDriver::fence_create,
         .fence_destroy = &VulkanDriver::fence_destroy,
@@ -694,7 +694,7 @@ u32 VulkanDriver::swap_chain_get_image_count(GPU::SwapChainID swap_chain)
     return sc.image_count; 
 }
 
-GPU::TextureID VulkanDriver::swap_chain_get_texture(GPU::SwapChainID swap_chain, u32 image_index)
+GPU::TextureID VulkanDriver::swap_chain_get_image(GPU::SwapChainID swap_chain, u32 image_index)
 {
     SwapChain& sc = _get_swap_chain(swap_chain);
     return sc.images[image_index].texture;

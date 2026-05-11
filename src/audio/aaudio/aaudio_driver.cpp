@@ -1,9 +1,9 @@
 #include "audio/aaudio/aaudio_driver.h"
 
 
-Audio::VTable AAudioDriver::get_vtable()
+InternalAudio::AudioAdapter AAudioDriver::get_vtable()
 {
-    return Audio::VTable
+    return InternalAudio::AudioAdapter
     {
         .initialize = &AAudioDriver::initialize,
         .shutdown = &AAudioDriver::shutdown,

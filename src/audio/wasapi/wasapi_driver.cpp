@@ -3,9 +3,9 @@
 #include "math/funcs.h"
 
 
-Audio::VTable WASAPIDriver::get_vtable()
+InternalAudio::AudioAdapter WASAPIDriver::get_vtable()
 {
-    return Audio::VTable
+    return InternalAudio::AudioAdapter
     {
         .initialize = &WASAPIDriver::initialize,
         .shutdown = &WASAPIDriver::shutdown,

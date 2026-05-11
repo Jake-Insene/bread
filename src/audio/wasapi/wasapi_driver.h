@@ -1,4 +1,5 @@
 #pragma once
+#include "audio/audio_adapter.h"
 #include "audio/audio.h"
 #include "debug/debug.h"
 #include "debug/fail.h"
@@ -40,7 +41,7 @@ struct WASAPIDriver
 
     static inline InternalData data;
 
-    static Audio::VTable get_vtable();
+    static InternalAudio::AudioAdapter get_vtable();
 
     static void initialize(const mem::Allocator& allocator);
     static void shutdown();

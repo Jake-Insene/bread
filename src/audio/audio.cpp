@@ -1,5 +1,6 @@
 #include "audio/audio.h"
 
+#include "audio/audio_adapter.h"
 #include "debug/fail.h"
 
 
@@ -10,7 +11,7 @@
 #endif
 
 
-static inline Audio::VTable current_adapter = {};
+static inline InternalAudio::AudioAdapter current_adapter = {};
 
 void Audio::initialize(const mem::Allocator& allocator, DriverType driver)
 {
@@ -34,7 +35,7 @@ void Audio::initialize(const mem::Allocator& allocator, DriverType driver)
 	current_adapter.initialize(allocator);
 }
 
-void Audio::initialize_from_adapter(const VTable *adapter)
+void Audio::initialize_from_adapter(const InternalAudio::AudioAdapter *adapter)
 {
 	current_adapter = *adapter;
 }
@@ -44,7 +45,7 @@ void Audio::shutdown()
 	current_adapter.shutdown();
 }
 
-Audio::VTable* Audio::get_adapter()
+InternalAudio::AudioAdapter* Audio::get_adapter()
 {
 	return &current_adapter;
 }

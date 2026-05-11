@@ -1,9 +1,10 @@
 #include "physics/physics_2d.h"
 
+#include "physics/physics_2d_adapter.h"
 #include "physics/p2d/p2d_driver.h"
 
 
-static inline Physics2D::VTable physics2d_current_adapter;
+static inline InternalPhysics2D::Adapter physics2d_current_adapter;
 
 void Physics2D::initialize(const mem::Allocator& allocator, Physics2D::DriverType)
 {
@@ -20,12 +21,12 @@ void Physics2D::initialize(const mem::Allocator& allocator, Physics2D::DriverTyp
     physics2d_current_adapter.initialize(allocator);
 }
 
-void Physics2D::initialize_from_adapter(Physics2D::VTable* adapter)
+void Physics2D::initialize_from_adapter(InternalPhysics2D::Adapter* adapter)
 {
     physics2d_current_adapter = *adapter;
 }
 
-Physics2D::VTable* Physics2D::get_adapter()
+InternalPhysics2D::Adapter* Physics2D::get_adapter()
 {
     return &physics2d_current_adapter;
 }

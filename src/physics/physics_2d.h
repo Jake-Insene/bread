@@ -4,6 +4,7 @@
 #include "collections/property.h"
 #include "collections/string_map.h"
 #include "mem/allocator.h"
+#include "math/transform_2d.h"
 #include "physics/shape_2d.h"
 
 
@@ -11,6 +12,10 @@ struct Object;
 struct Object2D;
 struct Transform2D;
 
+namespace InternalPhysics2D
+{
+struct Adapter;
+}
 
 struct Physics2D
 {
@@ -63,66 +68,6 @@ struct Physics2D
     using EventOnBodyEnter = Event<void(*)(AreaID, BodyID)>;
     using EventOnBodyExit = Event<void(*)(AreaID, BodyID)>;
 
-    struct VTable
-    {
-        VTFunc(void, initialize, const mem::Allocator&);
-        VTFunc(void, shutdown);
-
-        VTFunc(void, step, f32);
-
-        VTFunc(BodyID, body_create, Opaque*);
-        VTFunc(void, body_destroy, BodyID);
-        VTFunc(AreaID, area_create, Opaque*);
-        VTFunc(void, area_destroy, AreaID);
-
-        VTFunc(void, body_set_shape, BodyID, const Shape2D&);
-        VTFunc(Shape2D, body_get_shape, BodyID);
-
-        VTFunc(void, body_set_user_data, BodyID, Opaque*);
-        VTFunc(Opaque*, body_get_user_data, BodyID);
-        VTFunc(void, body_set_transform, BodyID, const Transform2D&);
-        VTFunc(Transform2D, body_get_transform, BodyID);
-        VTFunc(void, body_set_type, BodyID, BodyType);
-        VTFunc(void, body_set_velocity, BodyID, const Vector2&);
-        VTFunc(Vector2, body_get_velocity, BodyID);
-        VTFunc(void, body_set_angular_velocity, BodyID, f32);
-        VTFunc(f32, body_get_angular_velocity, BodyID);
-        VTFunc(void, body_set_mass, BodyID, f32);
-        VTFunc(f32, body_get_mass, BodyID);
-        VTFunc(void, body_set_friction, BodyID, f32);
-        VTFunc(f32, body_get_friction, BodyID);
-        VTFunc(void, body_set_air_friction, BodyID, f32);
-        VTFunc(f32, body_get_air_friction, BodyID);
-        VTFunc(void, body_set_restitution, BodyID, f32);
-        VTFunc(f32, body_get_restitution, BodyID);
-        VTFunc(void, body_apply_force, BodyID, const Vector2&, const Vector2&);
-        VTFunc(void, body_apply_impulse, BodyID, const Vector2&, const Vector2&);
-        VTFunc(void, body_set_fixed_rotation, BodyID, bool);
-        VTFunc(bool, body_is_on_floor, BodyID);
-        VTFunc(bool, body_is_on_ceil, BodyID);
-        VTFunc(void, body_set_residence_mask, BodyID, CollisionMask);
-        VTFunc(CollisionMask, body_get_residence_mask, BodyID);
-        VTFunc(void, body_set_collision_mask, BodyID, CollisionMask);
-        VTFunc(CollisionMask, body_get_collision_mask, BodyID);
-        VTFunc(void, body_set_on_collide, BodyID, EventOnCollide);
-
-        VTFunc(void, area_set_shape, AreaID, const Shape2D&);
-        VTFunc(Shape2D, area_get_shape, AreaID);
-
-        VTFunc(void, area_set_user_data, AreaID, Opaque*);
-        VTFunc(Opaque*, area_get_user_data, AreaID);
-        VTFunc(void, area_set_transform, AreaID, const Transform2D&);
-        VTFunc(Transform2D, area_get_transform, AreaID);
-        VTFunc(void, area_set_residence_mask, AreaID, CollisionMask);
-        VTFunc(CollisionMask, area_get_residence_mask, AreaID);
-
-        VTFunc(void, area_set_on_body_enter, AreaID, EventOnBodyEnter);
-        VTFunc(void, area_set_on_body_exit, AreaID, EventOnBodyExit);
-
-        // Internal
-        VTFunc(void, property_change, StringView, PropertyValue);
-    };
-
     struct InternalData
     {
         mem::Allocator allocator;
@@ -133,10 +78,10 @@ struct Physics2D
     static inline InternalData data = {};
 
     static void initialize(const mem::Allocator& allocator, DriverType driver);
-    static void initialize_from_adapter(VTable* adapter);
+    static void initialize_from_adapter(InternalPhysics2D::Adapter* adapter);
     static void shutdown();
     
-    static VTable* get_adapter();
+    static InternalPhysics2D::Adapter* get_adapter();
 
     static void step(f32 dt);
 

@@ -250,7 +250,7 @@ struct GPUDebugLayer
 	void add(ResourceID resource_id)
 	{
 		u32 as_integer = u32(resource_id.id);
-		(void)resource_allocators.get(
+		resource_allocators.get(
 			usize(GetObjectTypeByIDType<ResourceID>())
 		).add(as_integer);
 	}
@@ -259,7 +259,7 @@ struct GPUDebugLayer
 	void remove(ResourceID resource_id)
 	{
 		u32 as_integer = u32(resource_id.id);
-		(void)resource_allocators.get(
+		resource_allocators.get(
 			usize(GetObjectTypeByIDType<ResourceID>())
 		).remove(as_integer);
 	}

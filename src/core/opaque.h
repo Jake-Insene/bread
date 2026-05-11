@@ -20,7 +20,7 @@ struct Opaque
     static Opaque* from(T& reference) { return reinterpret_cast<Opaque*>(&reference); }
 
     /*
-    * Returns the address of the object as a plain number.
+    * Returns the address of the object as a integral number.
     */
     [[nodiscard]] MemoryAddress address() const { return reinterpret_cast<MemoryAddress>(this); }
 

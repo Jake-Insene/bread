@@ -10,14 +10,13 @@
 
 namespace InternalGPU
 {
-	struct GPUAdapter;
+struct GPUAdapter;
 }
-
 
 struct GPU
 {
 	/*
-	*	GPU API
+	* GPU API
 	*/
 
 	enum class ObjectType
@@ -45,27 +44,29 @@ struct GPU
 		ObjectCount = CommandBuffer,
 	};
 
-	using PhysicalDeviceID = ID<u32, struct _PhysicalDeviceTag>;
-	using SurfaceID = ID<u32, struct _SurfaceTag>;
-	using DeviceID = ID<u32, struct _DeviceTag>;
-	using SwapChainID = ID<u32, struct _SwapChainTag>;
-	using FenceID = ID<u32, struct _FenceID>;
-	using SemaphoreID = ID<u32, struct _SemaphoreD>;
-	using QueueID = ID<u32, struct _QueueID>;
-	using MemoryHeapID = ID<u32, struct _MemoryHeapTag>;
-	using BufferID = ID<u32, struct _BufferTag>;
-	using SamplerID = ID<u32, struct _SamplerTag>;
-	using TextureID = ID<u32, struct _TextureTag>;
-	using DescriptorSetLayoutID = ID<u32, struct _DescriptorSetLayout>;
-	using DescriptorPoolID = ID<u32, struct _DescriptorPoolTag>;
-	using DescriptorSetID = ID<u32, struct _DescriptorSet>;
-	using PipelineLayoutID = ID<u32, struct _PipelineLayoutTag>;
-	using PipelineID = ID<u32, struct _PipelineTag>;
-	using CommandPoolID = ID<u32, struct _CommandPoolID>;
-	using CommandBufferID = ID<u32, struct _CommandBufferTag>;
+	using IntegralIDType = u32;
+
+	using PhysicalDeviceID = ID<IntegralIDType, struct _PhysicalDeviceTag>;
+	using SurfaceID = ID<IntegralIDType, struct _SurfaceTag>;
+	using DeviceID = ID<IntegralIDType, struct _DeviceTag>;
+	using SwapChainID = ID<IntegralIDType, struct _SwapChainTag>;
+	using FenceID = ID<IntegralIDType, struct _FenceID>;
+	using SemaphoreID = ID<IntegralIDType, struct _SemaphoreD>;
+	using QueueID = ID<IntegralIDType, struct _QueueID>;
+	using MemoryHeapID = ID<IntegralIDType, struct _MemoryHeapTag>;
+	using BufferID = ID<IntegralIDType, struct _BufferTag>;
+	using SamplerID = ID<IntegralIDType, struct _SamplerTag>;
+	using TextureID = ID<IntegralIDType, struct _TextureTag>;
+	using DescriptorSetLayoutID = ID<IntegralIDType, struct _DescriptorSetLayout>;
+	using DescriptorPoolID = ID<IntegralIDType, struct _DescriptorPoolTag>;
+	using DescriptorSetID = ID<IntegralIDType, struct _DescriptorSet>;
+	using PipelineLayoutID = ID<IntegralIDType, struct _PipelineLayoutTag>;
+	using PipelineID = ID<IntegralIDType, struct _PipelineTag>;
+	using CommandPoolID = ID<IntegralIDType, struct _CommandPoolID>;
+	using CommandBufferID = ID<IntegralIDType, struct _CommandBufferTag>;
 
     static void initialize(const mem::Allocator& allocator);
-    static void initialize_from_adapter(InternalGPU::GPUAdapter* adapter);
+    static void initialize_from_adapter(const InternalGPU::GPUAdapter* adapter);
     static void shutdown();
 
 	static InternalGPU::GPUAdapter* get_adapter();
@@ -170,19 +171,38 @@ struct GPU
 		PhysicalDeviceSurfaceInfo surface;
 	};
 
+	/**
+	* Returns the gpu physical devices installed on this device.
+	*/
 	static Slice<PhysicalDeviceID> physical_devices_enumerate();
+
+	/**
+	* Return the physical device information/capabilities of the given physical device.
+	* @param physical_device The target physical device
+	*/
 	static PhysicalDeviceInfo physical_device_get_info(PhysicalDeviceID physical_device);
 
-	/*
+	/**
 	* Surface API
 	*/
 	struct SurfaceCreateInfo
 	{
+		/**
+		* Platform native window handle.
+		*/
 		MemoryAddress window_native_handle;
 	};
 
-
+	/**
+	* Creates a surface for the given window. Use this to create a SwapChain.
+	* @param ci Surface creation parameters.
+	*/
 	static SurfaceID surface_create(const SurfaceCreateInfo& ci);
+
+	/**
+	* Destroy the given surface.
+	* @warning SwapChains created with this surface will be in an invalid state, they must be destroyed.
+	*/
 	static void surface_destroy(SurfaceID surface);
 
 	/*
@@ -190,10 +210,23 @@ struct GPU
 	*/
 	struct DeviceCreateInfo
 	{
+		/**
+		* Selected physical device.
+		*/
 		PhysicalDeviceID physical_device;
 	};
 
+	/**
+	* Create a logical device that operates with the given device to commit work, allocate memory, etc...
+	* @param ci Device creation parameters.
+	*/
 	static DeviceID device_create(const DeviceCreateInfo& ci);
+
+	/**
+	* Destroy the given logical device.
+	* @warning Any resource allocated from this device must be destroyed before calling this function
+	* ignore this will cause undefined behaviour.
+	*/
 	static void device_destroy(DeviceID device);
 
 	/*
@@ -217,11 +250,31 @@ struct GPU
 
 	struct SwapChainCreateInfo
 	{
+		/*
+		* Logical device where the resource will reside.
+		*/
 		DeviceID device;
+		/*
+		* Surface as present target of the images.
+		*/
 		SurfaceID surface;
+		/*
+		* Present mode/rate
+		*/
 		PresentMode present_mode;
+		/*
+		* Image texture format.
+		* @note RGBA8Srgb/RGBA8Unorm are recomended.
+		*/
 		TextureFormat format;
+		/*
+		* Minimum images to allocate.
+		* @note 3 is recomended.
+		*/
 		u32 min_image_count;
+		/*
+		* Image size, usually window size.
+		*/
 		Vector2U size;
 	};
 
@@ -232,10 +285,17 @@ struct GPU
 		FenceID fence;
 	};
 	
+	/*
+	* Create a swap chain to present content on a surface.
+	*/
 	static SwapChainID swap_chain_create(const SwapChainCreateInfo& ci);
+
+	/*
+	* 
+	*/
 	static void swap_chain_destroy(SwapChainID swap_chain);
 	static u32 swap_chain_get_image_count(SwapChainID swap_chain);
-	static TextureID swap_chain_get_texture(SwapChainID swap_chain, u32 image_index);
+	static TextureID swap_chain_get_image(SwapChainID swap_chain, u32 image_index);
 	static AcquireResult swap_chain_acquire_next_image(SwapChainID swap_chain, const AcquireInfo& acquire_info, u32* image_index);
 
 	/*

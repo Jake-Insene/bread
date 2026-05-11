@@ -2,7 +2,7 @@
 #include "collections/array.h"
 #include "collections/hash_map.h"
 #include "collections/free_list.h"
-#include "physics/physics_2d.h"
+#include "physics/physics_2d_adapter.h"
 
 #include "physics/p2d/p2d_area.h"
 #include "physics/p2d/p2d_body.h"
@@ -52,7 +52,7 @@ struct P2DDriver
 
     static inline InternalData data;
 
-    static Physics2D::VTable get_vtable();
+    static InternalPhysics2D::Adapter get_vtable();
 
     [[nodiscard]] static mem::Allocator& get_allocator()
     {

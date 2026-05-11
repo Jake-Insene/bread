@@ -21,7 +21,7 @@ void GPU::initialize(const mem::Allocator& allocator)
 #endif
 }
 
-void GPU::initialize_from_adapter(InternalGPU::GPUAdapter *adapter)
+void GPU::initialize_from_adapter(const InternalGPU::GPUAdapter *adapter)
 {
 	current_adapter = *adapter;
 }
@@ -98,11 +98,11 @@ u32 GPU::swap_chain_get_image_count(SwapChainID swap_chain)
 	return current_adapter.swap_chain_get_image_count(swap_chain);
 }
 
-GPU::TextureID GPU::swap_chain_get_texture(SwapChainID swap_chain, u32 image_index)
+GPU::TextureID GPU::swap_chain_get_image(SwapChainID swap_chain, u32 image_index)
 {
 	GPUFailOn(swap_chain.is_valid() == false, "invalid swapchain");
     GPUFailOn(image_index >= swap_chain_get_image_count(swap_chain), "invalid image index");
-	return current_adapter.swap_chain_get_texture(swap_chain, image_index);
+	return current_adapter.swap_chain_get_image(swap_chain, image_index);
 }
 
 GPU::AcquireResult GPU::swap_chain_acquire_next_image(SwapChainID swap_chain, const AcquireInfo& acquire_info, u32* image_index)

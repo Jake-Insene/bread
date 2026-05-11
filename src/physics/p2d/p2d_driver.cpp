@@ -9,9 +9,9 @@
 
 
 
-Physics2D::VTable P2DDriver::get_vtable()
+InternalPhysics2D::Adapter P2DDriver::get_vtable()
 {
-    return Physics2D::VTable
+    return InternalPhysics2D::Adapter
     {
         .initialize = &P2DDriver::initialize,
         .shutdown = &P2DDriver::shutdown,
