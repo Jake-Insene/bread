@@ -170,6 +170,7 @@ void WASAPIDriver::output_send_frames(const Slice<i16>& frames)
     
     f32* buffer_out_f = reinterpret_cast<f32*>(buffer_out);
 
+    // TODO: 16/24/32 PCM format support
     if(data.output_device.wave_format == WAVE_FORMAT_IEEE_FLOAT)
     {
         if(data.output_device.channels >= 2)
