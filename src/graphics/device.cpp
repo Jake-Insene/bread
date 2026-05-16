@@ -199,14 +199,14 @@ Pipeline* Device::create_pipeline(const PipelineInfo& pipeline_info)
     return pipe;
 }
 
-CommandQueue* Device::create_command_queue(Queue& queue)
+CommandQueue* Device::create_command_queue(Queue* queue)
 {
     mutex.lock();
     CommandQueue* command_queue = _allocate_object<CommandQueue>();
     command_queue->init(allocator, this,
         {
             .gpu_device = gpu_device,
-            .gpu_queue = queue.gpu_queue,
+            .gpu_queue = queue->gpu_queue,
         }
     );
     mutex.unlock();

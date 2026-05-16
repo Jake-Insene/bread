@@ -75,7 +75,7 @@ u32 Audio::output_get_frame_count()
 	return current_adapter.output_get_frame_count();
 }
 
-void Audio::output_send_frames(const Slice<i16>& frames)
+void Audio::output_send_frames(const Slice<Frame>& frames)
 {
 	current_adapter.output_send_frames(frames);
 }

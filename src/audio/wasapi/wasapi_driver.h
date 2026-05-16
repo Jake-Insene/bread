@@ -53,6 +53,6 @@ struct WASAPIDriver
     static bool output_wait_for_event();
 
     static u32 output_get_frame_count();
-    static void output_send_frames(const Slice<i16>& frames);
+    static void output_send_frames(const Slice<Audio::Frame>& frames);
 };
 

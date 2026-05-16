@@ -40,8 +40,8 @@ void Renderer2D::init(const Renderer2DCreateInfo& info)
 
 void Renderer2D::destroy()
 {
-    graphics_device->get_graphics_queue().wait_idle();
-    graphics_device->get_present_queue().wait_idle();
+    graphics_device->get_graphics_queue()->wait_idle();
+    graphics_device->get_present_queue()->wait_idle();
     
     batcher.destroy();
     sampler->destroy();

@@ -16,7 +16,7 @@ struct AudioAdapter
     VTFunc(void, output_stop);
     VTFunc(bool, output_wait_for_event);
     VTFunc(u32, output_get_frame_count, );
-    VTFunc(void, output_send_frames, const Slice<i16>& frames);
+    VTFunc(void, output_send_frames, const Slice<Audio::Frame>& frames);
 };
 
 }

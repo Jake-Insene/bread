@@ -27,10 +27,10 @@ void RenderDevice::initialize(const RenderDeviceCreateInfo& info)
 
 void RenderDevice::shutdown()
 {
-    device.get_graphics_queue().wait_idle();
-    device.get_compute_queue().wait_idle();
-    device.get_copy_queue().wait_idle();
-    device.get_present_queue().wait_idle();
+    device.get_graphics_queue()->wait_idle();
+    device.get_compute_queue()->wait_idle();
+    device.get_copy_queue()->wait_idle();
+    device.get_present_queue()->wait_idle();
 
     resource_manager.destroy();
     gpu_memory_allocator.destroy();

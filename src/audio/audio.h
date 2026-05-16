@@ -1,5 +1,5 @@
 #pragma once
-#include "audio/audio_structs.h"
+#include "core/header.h"
 #include "mem/allocator.h"
 
 
@@ -15,6 +15,36 @@ struct AudioAdapter;
 struct Audio
 {
     static constexpr usize OutputChannels = 2;
+
+    template<typename T>
+    requires(IsArithmetic<T>)
+    struct FrameT
+    {
+        using Type = T;
+
+        Type left;
+        Type right;
+
+        constexpr FrameT() : left(0), right(0) {}
+        constexpr FrameT(Type _left, Type _right) : left(_left), right(_right) {}
+
+        constexpr void add(const FrameT& frame)
+        {
+            left += frame.left;
+            right += frame.right;
+        }
+
+        template<typename MT>
+        requires(IsArithmetic<MT>)
+        constexpr void mul(const MT value)
+        {
+            left *= value;
+            right *= value;
+        }
+    };
+
+    using Frame = FrameT<i16>;
+    using FrameF = FrameT<f32>;
     
     enum class DriverType
     {
@@ -42,6 +72,6 @@ struct Audio
     static void output_stop();
     static bool output_wait_for_event();
     static u32 output_get_frame_count();
-    static void output_send_frames(const Slice<i16>& frames);
+    static void output_send_frames(const Slice<Frame>& frames);
 };
 

@@ -47,7 +47,7 @@ struct SwapChain : DeviceObject
     void resize();
 
     bool acquire_image(u32* image_index, Semaphore* present_complete);
-    bool present(Queue& present_queue, u32 image_index, const Slice<Semaphore*>& wait_semaphores);
+    bool present(Queue* present_queue, u32 image_index, const Slice<Semaphore*>& wait_semaphores);
 
     usize get_image_count() const { return images.count; }
     ImageInfo& get_image(u32 image_index) { return images.get(image_index); }

@@ -75,7 +75,7 @@ bool SwapChain::acquire_image(u32* image_index, Graphics::Semaphore* present_com
     return true;
 }
 
-bool SwapChain::present(Queue& present_queue, u32 image_index, const Slice<Semaphore*>& wait_semaphores)
+bool SwapChain::present(Queue* present_queue, u32 image_index, const Slice<Semaphore*>& wait_semaphores)
 {
     Slice<GPU::SemaphoreID> gpu_wait_semaphores = allocator.array<GPU::SemaphoreID>(wait_semaphores.len);
     for(usize i = 0; i < gpu_wait_semaphores.len; i++)
@@ -83,7 +83,7 @@ bool SwapChain::present(Queue& present_queue, u32 image_index, const Slice<Semap
         gpu_wait_semaphores[i] = wait_semaphores[i]->gpu_semaphore;
     }
 
-    GPU::AcquireResult result = present_queue.present(
+    GPU::AcquireResult result = present_queue->present(
         {
             .wait_semaphores = gpu_wait_semaphores,
             .swapchains = Slice(&swap_chain, 1),

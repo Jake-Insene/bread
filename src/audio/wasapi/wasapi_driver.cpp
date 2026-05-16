@@ -161,9 +161,9 @@ u32 WASAPIDriver::output_get_frame_count()
     return frames_available;
 }
 
-void WASAPIDriver::output_send_frames(const Slice<i16>& frames)
+void WASAPIDriver::output_send_frames(const Slice<Audio::Frame>& frames)
 {
-    u32 frame_count = output_get_frame_count();
+    u32 frame_count = math::min(output_get_frame_count(), frames.len);
 
     u8* buffer_out = nullptr;
     data.output_device.render_client->GetBuffer(frame_count, &buffer_out);
@@ -177,11 +177,10 @@ void WASAPIDriver::output_send_frames(const Slice<i16>& frames)
         {
             for(usize i = 0; i < frame_count; i++)
             {
-                f32 l = frames[(i * Audio::OutputChannels) + 0];
-                f32 r = frames[(i * Audio::OutputChannels) + 1];
+                Audio::Frame frame = frames[i];
 
-                buffer_out_f[(i * data.output_device.channels) + 0] = l;
-                buffer_out_f[(i * data.output_device.channels) + 1] = r;
+                buffer_out_f[(i * data.output_device.channels) + 0] = f32(frame.left) / 32768.F;
+                buffer_out_f[(i * data.output_device.channels) + 1] = f32(frame.right) / 32768.f;
                 
                 for(usize j = Audio::OutputChannels; j < data.output_device.channels; i++)
                 {
@@ -193,10 +192,9 @@ void WASAPIDriver::output_send_frames(const Slice<i16>& frames)
         {
             for(usize i = 0; i < frame_count; i++)
             {
-                f32 l = frames[(i * Audio::OutputChannels) + 0];
-                f32 r = frames[(i * Audio::OutputChannels) + 1];
+                Audio::Frame frame = frames[i];
 
-                f32 normal = (l + r) / 2.F;
+                f32 normal = (f32(frame.left + frame.right) / 2.F) / 32768.F;
                 if(normal > 1.F)
                 {
                     normal = 1.F;

@@ -61,7 +61,7 @@ void Renderer::begin_frame()
 {
     RenderFrame& frame = frames.get(frame_index);
 
-    if(frame.in_flight_fence)
+    if(frame.in_flight_fence != nullptr)
     {
         frame.in_flight_fence->wait(MaxValue<u64>);
     }
@@ -79,7 +79,7 @@ void Renderer::begin_frame()
         &image_index,
         frame.present_complete_semaphore
     );
-    if(image_acquired && frame.in_flight_fence)
+    if(image_acquired && frame.in_flight_fence != nullptr)
     {
         command_queue->release_fence(frame.in_flight_fence);
         frame.in_flight_fence = nullptr;

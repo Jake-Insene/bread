@@ -49,7 +49,7 @@ void Sound::init(const ResourceCreateInfo& info)
 {
     Resource::init(info);
 
-    data.channels = 0;
+    data.mono = false;
     data.samples = {};
 }
 
@@ -86,7 +86,7 @@ Error Sound::load(StringView file_path)
     }
 
     const usize total_samples = static_cast<usize>(wav.totalPCMFrameCount * wav.channels);
-    data.channels = wav.channels;
+    data.mono = wav.channels == 1;
     data.samples = allocator.array<i16>(total_samples);
 
     // Always convert 
@@ -96,4 +96,20 @@ Error Sound::load(StringView file_path)
     allocator.free(content);
 
     return ErrorCode::Ok;
+}
+
+Audio::Frame Sound::get_frame(usize index) const
+{
+    if(is_stereo())
+    {
+        return Audio::Frame(
+            data.samples[(index * Audio::OutputChannels) + 0],
+            data.samples[(index * Audio::OutputChannels) + 1]
+        );
+    }
+
+    return Audio::Frame(
+        data.samples[index],
+        data.samples[index]
+    );
 }

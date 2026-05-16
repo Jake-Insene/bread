@@ -35,10 +35,10 @@ struct Device
 
     Array<DeviceObject*> allocated_objects;
 
-    Queue& get_graphics_queue() { return graphics_queue; }
-    Queue& get_compute_queue() { return compute_queue; }
-    Queue& get_copy_queue() { return copy_queue; }
-    Queue& get_present_queue() { return present_queue; }
+    Queue* get_graphics_queue() { return &graphics_queue; }
+    Queue* get_compute_queue() { return &compute_queue; }
+    Queue* get_copy_queue() { return &copy_queue; }
+    Queue* get_present_queue() { return &present_queue; }
 
     void init(const mem::Allocator& _allocator, GPU::PhysicalDeviceID _gpu_physical_device);
     void destroy();
@@ -53,7 +53,7 @@ struct Device
     DescriptorPool* create_descriptor_pool(u32 max_sets, Slice<const GPU::DescriptorPoolSize> sizes);
     PipelineLayout* create_pipeline_layout(const PipelineLayoutInfo& pipeline_layout_info);
     Pipeline* create_pipeline(const PipelineInfo& pipeline_info);
-    CommandQueue* create_command_queue(Queue& queue);
+    CommandQueue* create_command_queue(Queue* queue);
 
     void release_object(DeviceObject* child);
 
