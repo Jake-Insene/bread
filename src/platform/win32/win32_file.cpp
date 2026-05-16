@@ -7,12 +7,14 @@
 
 Slice<u8> File::read_all(const mem::Allocator& allocator, StringView path)
 {
-    char tmp[256] = {};
-    mem::copy(Slice(tmp), path);
-	
-	HANDLE file = CreateFileA(tmp, GENERIC_READ, FILE_SHARE_READ, 
+	Slice<char> tmp = allocator.array<char>(path.len + 1);
+	mem::copy(tmp, path);
+
+	HANDLE file = CreateFileA(tmp.ptr(), GENERIC_READ, FILE_SHARE_READ, 
         nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr
     );
+
+	allocator.free(mem::to_bytes(tmp));
 
 	if (file == INVALID_HANDLE_VALUE)
 	{
@@ -55,24 +57,23 @@ File File::get_stdin()
 	};
 }
 
-File File::open(StringView path, OpenMode mode)
+File File::open(const mem::Allocator& allocator, StringView path, OpenMode mode)
 {
-	char tmp[256] = {};
+	Slice<char> tmp = allocator.array<char>(path.len + 1);
+	mem::copy(tmp, path);
 	UINT access = 0;
 
-	mem::copy(Slice(tmp), path);
-
-	if (mode & File::Read)
+	if (HasValue(mode & File::Read))
 	{
 		access |= GENERIC_READ;
 	}
-	if (mode & File::Write)
+	if (HasValue(mode & File::Write))
 	{
 		access |= GENERIC_WRITE;
 	}
 
 	UINT open_or_create = 0;
-	if (mode & File::Create)
+	if (HasValue(mode & File::Create))
 	{
 		open_or_create |= CREATE_ALWAYS;
 	}
@@ -81,9 +82,11 @@ File File::open(StringView path, OpenMode mode)
 		open_or_create |= OPEN_EXISTING;
 	}
 
-	HANDLE file = CreateFileA(tmp, access, FILE_SHARE_READ,
+	HANDLE file = CreateFileA(tmp.ptr(), access, FILE_SHARE_READ,
 		nullptr, open_or_create, FILE_ATTRIBUTE_NORMAL, nullptr
 	);
+
+	allocator.free(mem::to_bytes(tmp));
 
 	return File
 	{
@@ -91,22 +94,28 @@ File File::open(StringView path, OpenMode mode)
 	};
 }
 
-bool File::exists(StringView file_path)
+bool File::exists(const mem::Allocator& allocator, StringView path)
 {
-	char tmp[256] = {};
-	mem::copy(Slice(tmp), file_path);
+	Slice<char> tmp = allocator.array<char>(path.len + 1);
+	mem::copy(tmp, path);
 
-	HANDLE file = CreateFileA(tmp, 0, 0, nullptr, 
+	HANDLE file = CreateFileA(tmp.ptr(), 0, 0, nullptr, 
 		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr
 	);
 
-	return file != INVALID_HANDLE_VALUE;
+	allocator.free(mem::to_bytes(tmp));
+
+	bool finded = file != INVALID_HANDLE_VALUE;
+	CloseHandle(file);
+	return finded;
 }
 
 void File::destroy()
 {
 	if (handle == 0) 
+	{
 		return;
+	}
 
 	CloseHandle(reinterpret_cast<HANDLE>(handle));
 }

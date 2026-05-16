@@ -5,7 +5,6 @@
 
 
 
-// TODO: Make multithread functions thread safe and multithread.
 struct Win32OS
 {
     static constexpr usize InitialThreadCount = 16;
@@ -35,9 +34,9 @@ struct Win32OS
     static void exit(u64 code);
     static usize get_page_size();
 
-    static MemoryAddress load_library(StringView lib_path);
-    static void unload_library(MemoryAddress library);
-    static OS::VoidFunction get_proc_address(MemoryAddress library, StringView symbol_name);
+    static OS::Handle load_library(StringView lib_path);
+    static void unload_library(OS::Handle library);
+    static OS::VoidFunction get_proc_address(OS::Handle library, StringView symbol_name);
 
     static Slice<u8> map_memory(usize memory_size, OS::MapAccess access);
     static void unmap_memory(const Slice<u8>& memory);

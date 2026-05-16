@@ -94,7 +94,8 @@ LONG _exception_handler(EXCEPTION_POINTERS* ep)
 	char module_name_buff[260]{};
 
 	CONTEXT new_context = *ep->ContextRecord;
-	while (StackWalk64(machine, process, thread, &frame, &new_context, NULL, SymFunctionTableAccess64, SymGetModuleBase64, NULL))
+	while (StackWalk64(machine, process, thread, &frame, &new_context, NULL, SymFunctionTableAccess64, SymGetModuleBase64, NULL)
+		!= 0)
 	{
 		DWORD line = 0;
 
@@ -114,10 +115,10 @@ LONG _exception_handler(EXCEPTION_POINTERS* ep)
 
 		char symbol_buffer[sizeof(IMAGEHLP_SYMBOL64) + 255];
 		PIMAGEHLP_SYMBOL64 symbol = reinterpret_cast<PIMAGEHLP_SYMBOL64>(symbol_buffer);
-		symbol->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL64) + 255;
+		symbol->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL64);
 		symbol->MaxNameLength = 254;
 
-		if (SymGetSymFromAddr64(process, frame.AddrPC.Offset, NULL, symbol))
+		if (SymGetSymFromAddr64(process, frame.AddrPC.Offset, NULL, symbol) != 0)
 		{
 			function_name = StringView(symbol->Name, __string_len(symbol->Name));
 		}
@@ -125,7 +126,7 @@ LONG _exception_handler(EXCEPTION_POINTERS* ep)
 		DWORD offset = 0;
 		IMAGEHLP_LINE64 line_hlp = {};
 		line_hlp.SizeOfStruct = sizeof(IMAGEHLP_LINE);
-		if (SymGetLineFromAddr64(process, frame.AddrPC.Offset, &offset, &line_hlp))
+		if (SymGetLineFromAddr64(process, frame.AddrPC.Offset, &offset, &line_hlp) != 0)
 		{
 			file_name = StringView(line_hlp.FileName, __string_len(line_hlp.FileName));
 			line = line_hlp.LineNumber;
@@ -155,7 +156,7 @@ void engine_loop()
 
 	if (enable_console)
 	{
-		if (!AttachConsole(ATTACH_PARENT_PROCESS))
+		if (AttachConsole(ATTACH_PARENT_PROCESS) == FALSE)
 		{
 			AllocConsole();
 		}
@@ -169,12 +170,14 @@ void engine_loop()
 	while (true)
 	{
 		MSG msg;
-		if (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
+		if (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE) != 0)
 		{
 			TranslateMessage(&msg);
 			DispatchMessageA(&msg);
 			if (msg.message == WM_QUIT)
+			{
 				break;
+			}
 		}
 
 		engine.step();

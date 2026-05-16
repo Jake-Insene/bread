@@ -33,8 +33,8 @@ struct File
     static File get_stdout();
     static File get_stdin();
 
-    static File open(StringView path, OpenMode mode);
-    static bool exists(StringView path);
+    static File open(const mem::Allocator& allocator, StringView path, OpenMode mode);
+    static bool exists(const mem::Allocator& allocator, StringView path);
 
     void destroy();
 

@@ -15,13 +15,13 @@ struct alignas(16) Atomic
 {
     static_assert(sizeof(T) <= 8, "only primitive types");
 
-    T memory;
+    u64 memory;
 
     static Atomic create()
     {
         return Atomic
         {
-            .memory = T(),
+            .memory = static_cast<u64>(T()),
         };
     }
 

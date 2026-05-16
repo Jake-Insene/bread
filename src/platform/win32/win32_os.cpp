@@ -42,27 +42,32 @@ usize Win32OS::get_page_size()
     return data.page_size;
 }
 
-MemoryAddress Win32OS::load_library(StringView lib_path)
+OS::Handle Win32OS::load_library(StringView lib_path)
 {
-    return reinterpret_cast<MemoryAddress>(LoadLibraryA(lib_path.ptr()));
+    Slice<char> path = get_allocator().array<char>(lib_path.len + 1);
+    mem::copy(path, lib_path);
+
+    OS::Handle library = reinterpret_cast<OS::Handle>(LoadLibraryA(path.ptr()));
+    get_allocator().free(mem::to_bytes(path));
+
+    return library;
 }
 
-void Win32OS::unload_library(MemoryAddress library)
+void Win32OS::unload_library(OS::Handle library)
 {
     FreeLibrary(reinterpret_cast<HMODULE>(library));
 }
 
-OS::VoidFunction Win32OS::get_proc_address(MemoryAddress library, StringView symbol_name)
+OS::VoidFunction Win32OS::get_proc_address(OS::Handle library, StringView symbol_name)
 {
-    Slice<char> chars = get_allocator().array<char>(symbol_name.len + 1);
-    mem::copy(chars, symbol_name);
-    chars[chars.len-1] = 0;
-
+    Slice<char> symbol = get_allocator().array<char>(symbol_name.len + 1);
+    mem::copy(symbol, symbol_name);
+    
     OS::VoidFunction func = reinterpret_cast<OS::VoidFunction>(
-        GetProcAddress(reinterpret_cast<HMODULE>(library), chars.ptr())
+        GetProcAddress(reinterpret_cast<HMODULE>(library), symbol.ptr())
     );
-
-    get_allocator().free(mem::to_bytes(chars));
+    
+    get_allocator().free(mem::to_bytes(symbol));
     return func;
 }
 
@@ -123,7 +128,10 @@ OS::QueryMemory Win32OS::query_memory(const Slice<u8>& memory)
 
 bool Win32OS::set_current_directory(StringView dir)
 {
-    char path[256] = {};
-    mem::copy(Slice(path), dir);
-    return SetCurrentDirectoryA(dir.ptr()) == TRUE;
+    Slice<char> path = get_allocator().array<char>(dir.len + 1);
+    mem::copy(path, dir);
+    bool result = SetCurrentDirectoryA(path.ptr()) == TRUE;
+    get_allocator().free(mem::to_bytes(path));
+
+    return result;
 }

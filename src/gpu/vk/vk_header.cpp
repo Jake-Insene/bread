@@ -35,7 +35,7 @@ VkAllocationCallbacks* Vulkan::allocation_callbacks()
     return &_vk_allocation_callbacks;
 }
 
-void Vulkan::load_core_procs(MemoryAddress vk_lib)
+void Vulkan::load_core_procs(OS::Handle vk_lib)
 {
     VK_REQUIRED_LOAD(vkCreateInstance, vk_lib);
     VK_REQUIRED_LOAD(vkDestroyInstance, vk_lib);

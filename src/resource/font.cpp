@@ -36,9 +36,9 @@ static void _load_theme(const mem::Allocator& allocator, const Slice<u8>& font_f
     
     bool success = false;
     i32 width = 512;
-    while(success == false)
+    while(success)
     {
-        Slice<u8> pixels = allocator.alloc(width * width, 16);
+        Slice<u8> pixels = allocator.alloc(i64(width * width), 16);
 
         stbtt_PackBegin(&pack_context, pixels.ptr(), width, width, width, 0, 0);
 
@@ -46,6 +46,7 @@ static void _load_theme(const mem::Allocator& allocator, const Slice<u8>& font_f
             &pack_context, font_file_content.ptr(), 0, 
             f32(theme.font_size), 0, Font::MinimumGlyphCount, ranges
         );
+
         if(result != 1)
         {
             width *= 2;
@@ -53,10 +54,8 @@ static void _load_theme(const mem::Allocator& allocator, const Slice<u8>& font_f
             allocator.free(pixels);
             continue;
         }
-        else
-        {
-            success = true;  
-        }
+
+        success = true;  
 
         for (u32 glyph_index = 0; glyph_index < Font::MinimumGlyphCount; glyph_index++)
         {
@@ -73,17 +72,17 @@ static void _load_theme(const mem::Allocator& allocator, const Slice<u8>& font_f
             f32 line_advance = (ascent - descent + line_gap) * scale;
             glyph.advance.height = line_advance;
             
-            f32 u0 = ranges[glyph_index].x0;
-            f32 v0 = ranges[glyph_index].y0;
-            f32 u1 = ranges[glyph_index].x1;
-            f32 v1 = ranges[glyph_index].y1;
+            f32 u0 = f32(ranges[glyph_index].x0);
+            f32 v0 = f32(ranges[glyph_index].y0);
+            f32 u1 = f32(ranges[glyph_index].x1);
+            f32 v1 = f32(ranges[glyph_index].y1);
             
-            f32 glyph_width = f32(u1 - u0);
-            f32 glyph_height = f32(v1 - v0);
+            f32 glyph_width = u1 - u0;
+            f32 glyph_height = v1 - v0;
 
             // Conversion of the top-left coordinate system to bottom-left coordinate system
             f32 glyph_atlas_pos_x = u0;
-            f32 glyph_atlas_pos_y = width - v0 - glyph_height;
+            f32 glyph_atlas_pos_y = f32(width) - v0 - glyph_height;
 
             glyph.src_rect = Rect2D(
                 Vector2(glyph_atlas_pos_x, glyph_atlas_pos_y),
@@ -136,7 +135,7 @@ void Font::destroy()
 
 Error Font::load(StringView file_path)
 {
-    if (!File::exists(file_path))
+    if (!File::exists(allocator, file_path))
     {
         RMDebugInfo("Couldn't load the font '{}'", file_path);
         return MakeError(ErrorCode::FileNotFound);

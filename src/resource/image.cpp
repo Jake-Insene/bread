@@ -27,7 +27,7 @@ void Image::destroy()
 
 Error Image::load(StringView file_path)
 {
-    if (!File::exists(file_path))
+    if (!File::exists(allocator, file_path))
     {
         RMDebugInfo("Couldn't load the font '{}'", file_path);
         return MakeError(ErrorCode::FileNotFound);

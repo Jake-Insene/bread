@@ -4,6 +4,7 @@
 #include "gpu/gpu_adapter.h"
 #include "gpu/vk/vk_header.h"
 #include "mem/stack_allocator.h"
+#include "os/os.h"
 #include "platform/platform_header.h"
 
 
@@ -373,7 +374,7 @@ struct VulkanDriver
 			uint32_t api_version;
 		} info;
 
-		MemoryAddress vk_lib;
+		OS::Handle vk_lib;
 
 		VkInstance instance;
 		VkSurfaceKHR dummy_surface;

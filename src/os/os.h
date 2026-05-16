@@ -5,6 +5,12 @@
 
 struct OS
 {
+#if defined(BREAD_WIN32)
+    using Handle = void*;
+#else
+    using Handle = MemoryAddress;
+#endif
+
     enum MapAccess
     {
         MapUnknown = 0,
@@ -28,9 +34,9 @@ struct OS
     static void exit(u64 code);
     static usize get_page_size();
 
-    static MemoryAddress load_library(StringView lib_path);
-    static void unload_library(MemoryAddress library);
-    static VoidFunction get_proc_address(MemoryAddress library, StringView symbol_name);
+    static Handle load_library(StringView lib_path);
+    static void unload_library(Handle library);
+    static VoidFunction get_proc_address(Handle library, StringView symbol_name);
 
     static Slice<u8> map_memory(usize memory_size, MapAccess access);
     static void unmap_memory(const Slice<u8>& memory);

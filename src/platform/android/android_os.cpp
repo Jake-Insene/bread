@@ -8,21 +8,10 @@
 void AndroidOS::initialize(const mem::Allocator& allocator)
 {
     data.allocator = allocator;
-
-    data.threads = FreeList<ThreadData,OS::ThreadID>::with_size(allocator, InitialThreadCount);
-    data.mutexes = FreeList<MutexData, OS::MutexID>::with_size(allocator, InitialMutexCount);
-
-    // First data thread is reserved for main thread
-    OS::ThreadID main_thread = _thread_data_allocate();
-    auto& thread_data = _thread_data_get(main_thread);
-
-    thread_data.state = THREAD_STATE_RUNNING;
 }
 
 void AndroidOS::shutdown()
 {
-    data.mutexes.destroy();
-    data.threads.destroy();
 }
 
 f64 AndroidOS::get_time()
@@ -42,27 +31,32 @@ usize AndroidOS::get_page_size()
     return (usize)sysconf(_SC_PAGESIZE);
 }
 
-MemoryAddress AndroidOS::load_library(StringView lib_path)
+OS::Handle AndroidOS::load_library(StringView lib_path)
 {
-    return reinterpret_cast<MemoryAddress>(dlopen(lib_path.ptr(), RTLD_NOW | RTLD_NOW));
+    Slice<char> path = get_allocator().array<char>(lib_path.len + 1);
+    mem::copy(path, lib_path);
+    
+    OS::Handle library = reinterpret_cast<OS::Handle>(dlopen(path.ptr(), RTLD_NOW | RTLD_NOW));
+    get_allocator().free(mem::to_bytes(path));
+
+    return library;
 }
 
-void AndroidOS::unload_library(MemoryAddress library)
+void AndroidOS::unload_library(OS::Handle library)
 {
     dlclose(reinterpret_cast<void*>(library));
 }
 
-OS::VoidFunction AndroidOS::get_proc_address(MemoryAddress library, StringView symbol_name)
+OS::VoidFunction AndroidOS::get_proc_address(OS::Handle library, StringView symbol_name)
 {
-    Slice<char> chars = get_allocator().array<char>(symbol_name.len + 1);
-    mem::copy(chars, symbol_name);
-    chars[chars.len-1] = 0;
+    Slice<char> symbol = get_allocator().array<char>(symbol_name.len + 1);
+    mem::copy(symbol, symbol_name);
 
     OS::VoidFunction func = reinterpret_cast<OS::VoidFunction>(
-        dlsym(reinterpret_cast<void*>(library), chars.ptr())
+        dlsym(reinterpret_cast<void*>(library), symbol.ptr())
     );
 
-    get_allocator().free(mem::to_bytes(chars));
+    get_allocator().free(mem::to_bytes(symbol));
     return func;
 }
 
@@ -95,91 +89,15 @@ Slice<u8> AndroidOS::map_memory(usize memory_size, OS::MapAccess access)
     return ptr;
 }
 
-void AndroidOS::unmap_memory(Slice<u8> memory)
+void AndroidOS::unmap_memory(const Slice<u8>& memory)
 {
     munmap(memory.items, memory.len);
 }
 
-OS::QueryMemory AndroidOS::query_memory(Slice<u8> memory)
+OS::QueryMemory AndroidOS::query_memory(const Slice<u8>& memory)
 {
     Unused(memory);
     return OS::QueryMemory();
-}
-
-OS::ThreadID AndroidOS::thread_create(OS::ThreadFn fn, Opaque* arg)
-{
-    Unused(fn, arg);
-    return OS::ThreadID();
-}
-
-void AndroidOS::thread_destroy(OS::ThreadID tid)
-{
-    Unused(tid);
-}
-
-bool AndroidOS::thread_join(OS::ThreadID tid)
-{
-    Unused(tid);
-    return false;
-}
-
-void AndroidOS::thread_set_name(OS::ThreadID tid, StringView new_name)
-{
-    Unused(tid, new_name);
-}
-
-StringView AndroidOS::thread_get_name(OS::ThreadID tid)
-{
-    Unused(tid);
-    return StringView();
-}
-
-OS::MutexID AndroidOS::mutex_create()
-{
-    return OS::MutexID();
-}
-
-void AndroidOS::mutex_destroy(OS::MutexID mid)
-{
-    Unused(mid);
-}
-
-void AndroidOS::mutex_lock(OS::MutexID mid)
-{
-    Unused(mid);
-}
-
-bool AndroidOS::mutex_try_lock(OS::MutexID mid)
-{
-    Unused(mid);
-    return false;
-}
-
-void AndroidOS::mutex_unlock(OS::MutexID mid)
-{
-    Unused(mid);
-}
-
-
-OS::SemaphoreID AndroidOS::semaphore_create(usize initial_value)
-{
-    Unused(initial_value);
-    return OS::SemaphoreID();
-}
-
-void AndroidOS::semaphore_destroy(OS::SemaphoreID sid)
-{
-    Unused(sid);
-}
-
-void AndroidOS::semaphore_signal(OS::SemaphoreID sid)
-{
-    Unused(sid);
-}
-
-void AndroidOS::semaphore_wait(OS::SemaphoreID sid)
-{
-    Unused(sid);
 }
 
 bool AndroidOS::set_current_directory(StringView dir)
@@ -188,32 +106,3 @@ bool AndroidOS::set_current_directory(StringView dir)
     return true;
 }
 
-OS::ThreadID AndroidOS::_thread_data_allocate()
-{
-    return data.threads.add(ThreadData());
-}
-
-AndroidOS::ThreadData& AndroidOS::_thread_data_get(OS::ThreadID tid)
-{
-    return data.threads.get(tid);
-}
-
-OS::MutexID AndroidOS::_mutex_data_allocate()
-{
-    return data.mutexes.add(MutexData());
-}
-
-AndroidOS::MutexData& AndroidOS::_mutex_data_get(OS::MutexID mid)
-{
-    return data.mutexes.get(mid);
-}
-
-OS::SemaphoreID AndroidOS::_semaphore_data_allocate()
-{
-    return data.semaphores.add(SemaphoreData());
-}
-
-AndroidOS::SemaphoreData& AndroidOS::_semaphore_data_get(OS::SemaphoreID sid)
-{
-    return data.semaphores.get(sid);
-}
