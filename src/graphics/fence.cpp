@@ -4,7 +4,7 @@
 namespace Graphics
 {
 
-void Fence::init(const mem::Allocator& _allocator, Device* _parent, GPU::DeviceID gpu_device, bool signaled)
+void Fence::init(mem::Allocator* _allocator, Device* _parent, GPU::DeviceID gpu_device, bool signaled)
 {
     DeviceObject::init(_allocator, _parent);
     gpu_fence = GPU::fence_create(

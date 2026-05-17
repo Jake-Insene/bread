@@ -165,7 +165,7 @@ struct Scene
 
     struct CreateInfo
     {
-        mem::Allocator allocator;
+        mem::Allocator* allocator;
     };
 
     struct VTable
@@ -197,7 +197,7 @@ struct Scene
     
     template<typename T>
     requires(IsBaseOf<Scene, T>)
-    [[nodiscard]] static T* create(const mem::Allocator& allocator)
+    [[nodiscard]] static T* create(mem::Allocator* allocator)
     {
         CreateInfo info = 
         {
@@ -245,7 +245,7 @@ struct Scene
     */
     const SceneClass* klass;
 
-    mem::Allocator allocator;
+    mem::Allocator* allocator;
     
     struct InternalData
     {

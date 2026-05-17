@@ -62,7 +62,7 @@ void AudioService::initialize(const AudioServiceCreateInfo& info)
 
     data.request_destroy = Atomic<bool>::create();
 
-    data.output_buffer = data.allocator.array<Audio::Frame>(Audio::output_get_samples_per_sec());
+    data.output_buffer = data.allocator->array<Audio::Frame>(Audio::output_get_samples_per_sec());
     data.output_thread = Thread::create(&_audio_output_thread, Opaque::from(*this));
 }
 
@@ -70,7 +70,7 @@ void AudioService::shutdown()
 {
     data.request_destroy.increment();
     data.output_thread.destroy();
-    data.allocator.free(mem::to_bytes(data.output_buffer));
+    data.allocator->free(mem::to_bytes(data.output_buffer));
     data.enqueue_mutex.destroy();
 
     (void)data.mixers.iter().for_each([](Mixer& mixer)

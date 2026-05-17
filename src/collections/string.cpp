@@ -6,7 +6,7 @@
 #include "mem/utils.h"
 
 
-String String::with_allocator(const mem::Allocator& allocator)
+String String::with_allocator(mem::Allocator* allocator)
 {
     return
     {
@@ -16,17 +16,17 @@ String String::with_allocator(const mem::Allocator& allocator)
     };
 }
 
-String String::with_size(const mem::Allocator& allocator, usize size)
+String String::with_size(mem::Allocator* allocator, usize size)
 {
     return
     {
         .allocator = allocator,
-        .chars = mem::from_bytes<char>(allocator.alloc(size, alignof(usize))),
+        .chars = mem::from_bytes<char>(allocator->alloc(size, alignof(usize))),
         .count = 0,
     };
  }
 
-String String::from_chars(const mem::Allocator& allocator, StringView chars)
+String String::from_chars(mem::Allocator* allocator, StringView chars)
 {
     String str = String::with_size(allocator, chars.len);
     
@@ -43,7 +43,7 @@ void String::destroy()
 {
     if(chars.ptr())
     {
-        allocator.free(mem::to_bytes(chars));
+        allocator->free(mem::to_bytes(chars));
     }
 }
 
@@ -57,16 +57,16 @@ void String::resize(usize new_size)
 
     if (!chars.ptr())
     {
-        chars = mem::from_bytes<char>(allocator.alloc(new_size, alignof(usize)));
+        chars = mem::from_bytes<char>(allocator->alloc(new_size, alignof(usize)));
         count = new_size;
         return;
     }
 
-    if (!allocator.realloc(mem::to_bytes(chars), new_size, alignof(usize)))
+    if (!allocator->realloc(mem::to_bytes(chars), new_size, alignof(usize)))
     {
-        Slice<char> new_chars = mem::from_bytes<char>(allocator.alloc(new_size, alignof(usize)));
+        Slice<char> new_chars = mem::from_bytes<char>(allocator->alloc(new_size, alignof(usize)));
         mem::copy(new_chars, chars);
-        allocator.free(mem::to_bytes(chars));
+        allocator->free(mem::to_bytes(chars));
         chars = new_chars;
     }
     else

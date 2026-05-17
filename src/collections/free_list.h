@@ -31,7 +31,7 @@ struct [[nodiscard]] FreeList
     SlotID last_free_element;
     u32 count;
 
-    static FreeList with_allocator(const mem::Allocator& allocator)
+    static FreeList with_allocator(mem::Allocator* allocator)
     {
         return
         {
@@ -41,7 +41,7 @@ struct [[nodiscard]] FreeList
         };
     }
 
-    static FreeList with_size(const mem::Allocator& allocator, usize size)
+    static FreeList with_size(mem::Allocator* allocator, usize size)
     {
         return
         {

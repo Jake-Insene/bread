@@ -5,7 +5,7 @@
 namespace mem
 {
     
-struct GenericAllocator
+struct GenericAllocator : mem::Allocator
 {
     static constexpr u16 MaxPageCount = MaxValue<u16>;
     static constexpr usize DefaultPageListSize = 128ULL;
@@ -45,12 +45,10 @@ struct GenericAllocator
 
     void destroy();
 
-    Slice<u8> alloc(usize size, usize alignment);
-    bool realloc(const Slice<u8>& ptr, usize new_size, usize alignment);
-    void free(const Slice<u8>& ptr);
-    usize get_size_of(const Slice<u8>& ptr) const;
-
-    Allocator allocator();
+    virtual Slice<u8> alloc(usize size, usize alignment) override;
+    virtual bool realloc(const Slice<u8>& ptr, usize new_size, usize alignment) override;
+    virtual void free(const Slice<u8>& ptr) override;
+    virtual usize get_size_of(const Slice<u8>& ptr) const override;
 
     Header* _search_for_available_space(usize aligned_size, usize alignment);
 

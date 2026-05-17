@@ -5,7 +5,7 @@
 
 struct SystemManager
 {
-    mem::Allocator allocator;
+    mem::Allocator* allocator;
 
     enum class SystemState
     {
@@ -23,7 +23,7 @@ struct SystemManager
     Array<SystemInstance> systems;
     Array<usize> flow_order;
 
-    void initialize(const mem::Allocator& _allocator);
+    void initialize(mem::Allocator* _allocator);
     void shutdown();
 
     template<typename T>

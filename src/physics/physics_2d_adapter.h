@@ -7,7 +7,7 @@ namespace InternalPhysics2D
 
 struct Adapter
 {
-    VTFunc(void, initialize, const mem::Allocator&);
+    VTFunc(void, initialize, mem::Allocator*);
     VTFunc(void, shutdown);
 
     VTFunc(void, step, f32);

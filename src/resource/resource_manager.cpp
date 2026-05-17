@@ -34,7 +34,7 @@ void ResourceManager::shutdown()
     for(auto& it : resources.iter())
     {
         it.second.destroy(it.second.resource);
-        allocator.free(
+        allocator->free(
             mem::to_bytes(Slice<Resource>(it.second.resource, 1))
         );
     }
@@ -44,7 +44,7 @@ void ResourceManager::shutdown()
         if(texture)
         {
             texture->destroy();
-            allocator.free(
+            allocator->free(
                 mem::to_bytes(Slice<Texture>(texture, 1))
             );
         }
@@ -168,7 +168,7 @@ Result<Resource*, Error> ResourceManager::_load_image(StringView path)
         Error load_result = image->load(path);
         if (!load_result)
         {
-            get_allocator().free(mem::to_bytes(Slice(image, 1)));
+            get_allocator()->free(mem::to_bytes(Slice(image, 1)));
             return load_result;
         }
 

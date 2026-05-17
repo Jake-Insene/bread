@@ -6,7 +6,7 @@
 namespace Graphics
 {
 
-void Shader::init(const mem::Allocator _allocator, const ShaderInfo& info)
+void Shader::init(mem::Allocator* _allocator, const ShaderInfo& info)
 {
     allocator = _allocator;
 
@@ -16,7 +16,7 @@ void Shader::init(const mem::Allocator _allocator, const ShaderInfo& info)
 
 void Shader::destroy()
 {
-    allocator.free(shader_code);
+    allocator->free(shader_code);
 }
 
 }

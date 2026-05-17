@@ -8,7 +8,7 @@
 namespace Graphics
 {
 
-void CommandQueue::init(const mem::Allocator& _allocator, Device* _parent, const CommandQueueInfo& info)
+void CommandQueue::init(mem::Allocator* _allocator, Device* _parent, const CommandQueueInfo& info)
 {
     DeviceObject::init(_allocator, _parent);
     gpu_device = info.gpu_device;
@@ -63,7 +63,7 @@ CommandEncoder CommandQueue::acquire_encoder()
     tmp_allocator.reset();
     CommandEncoder encoder =
     {
-        .allocator = tmp_allocator.allocator(),
+        .allocator = &tmp_allocator,
         .command_buffer = GPU::command_buffer_allocate(
             {
                 .pool = gpu_command_pool,
@@ -89,8 +89,8 @@ Fence* CommandQueue::execute(const CommandQueueExecuteInfo& info)
     }
 
     // submit encoder
-    Slice<GPU::SemaphoreID> gpu_wait_semaphores = allocator.array<GPU::SemaphoreID>(info.wait_semaphores.len);
-    Slice<GPU::SemaphoreID> gpu_signal_semaphores = allocator.array<GPU::SemaphoreID>(info.signal_semaphores.len);
+    Slice<GPU::SemaphoreID> gpu_wait_semaphores = allocator->array<GPU::SemaphoreID>(info.wait_semaphores.len);
+    Slice<GPU::SemaphoreID> gpu_signal_semaphores = allocator->array<GPU::SemaphoreID>(info.signal_semaphores.len);
     for(usize i = 0; i < gpu_wait_semaphores.len; i++)
     {
         gpu_wait_semaphores[i] = info.wait_semaphores[i]->gpu_semaphore;
@@ -109,8 +109,8 @@ Fence* CommandQueue::execute(const CommandQueueExecuteInfo& info)
             .fence = fence->gpu_fence,
         }
     );
-    allocator.free(mem::to_bytes(gpu_wait_semaphores));
-    allocator.free(mem::to_bytes(gpu_signal_semaphores));
+    allocator->free(mem::to_bytes(gpu_wait_semaphores));
+    allocator->free(mem::to_bytes(gpu_signal_semaphores));
 
     (void)work_submited.add(
         WorkSubmit
@@ -139,8 +139,8 @@ Fence* CommandQueue::execute_empty(const CommandQueueExecuteEmptyInfo& info)
     }
 
     // submit
-    Slice<GPU::SemaphoreID> gpu_wait_semaphores = allocator.array<GPU::SemaphoreID>(info.wait_semaphores.len);
-    Slice<GPU::SemaphoreID> gpu_signal_semaphores = allocator.array<GPU::SemaphoreID>(info.signal_semaphores.len);
+    Slice<GPU::SemaphoreID> gpu_wait_semaphores = allocator->array<GPU::SemaphoreID>(info.wait_semaphores.len);
+    Slice<GPU::SemaphoreID> gpu_signal_semaphores = allocator->array<GPU::SemaphoreID>(info.signal_semaphores.len);
     for(usize i = 0; i < gpu_wait_semaphores.len; i++)
     {
         gpu_wait_semaphores[i] = info.wait_semaphores[i]->gpu_semaphore;
@@ -159,8 +159,8 @@ Fence* CommandQueue::execute_empty(const CommandQueueExecuteEmptyInfo& info)
             .fence = fence->gpu_fence,
         }
     );
-    allocator.free(mem::to_bytes(gpu_wait_semaphores));
-    allocator.free(mem::to_bytes(gpu_signal_semaphores));
+    allocator->free(mem::to_bytes(gpu_wait_semaphores));
+    allocator->free(mem::to_bytes(gpu_signal_semaphores));
     
     (void)work_submited.add(
         WorkSubmit
@@ -181,9 +181,9 @@ void CommandQueue::wait_for_all()
         return;
     }
 
-    mem::Allocator allocator = tmp_allocator.allocator();
+    mem::Allocator* allocator = &tmp_allocator;
 
-    Slice<GPU::FenceID> fences = allocator.array<GPU::FenceID>(work_submited.count);
+    Slice<GPU::FenceID> fences = allocator->array<GPU::FenceID>(work_submited.count);
     for(usize i = 0; i < work_submited.count; i++)
     {
         fences[i] = work_submited.get(i).fence->gpu_fence;

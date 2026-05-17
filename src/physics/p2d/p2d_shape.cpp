@@ -3,7 +3,7 @@
 
 
 
-void P2DShape::init(const mem::Allocator& allocator)
+void P2DShape::init(mem::Allocator* allocator)
 {
     vertices = Array<Vector2>::with_size(allocator, 4);
     normals = Array<Vector2>::with_size(allocator, 4);

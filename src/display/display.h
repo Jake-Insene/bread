@@ -18,7 +18,7 @@ struct Display
 
     struct VTable
     {
-        VTFunc(void, initialize, const mem::Allocator&);
+        VTFunc(void, initialize, mem::Allocator*);
         VTFunc(void, shutdown);
 
         VTFunc(WindowID, window_create);
@@ -29,15 +29,15 @@ struct Display
 
     struct InternalData
     {
-        mem::Allocator allocator;
+        mem::Allocator* allocator;
     };
 
     static inline VTable vtable;
     static inline InternalData data;
 
-    static mem::Allocator get_allocator() { return data.allocator; }
+    static mem::Allocator* get_allocator() { return data.allocator; }
 
-    static void initialize(const mem::Allocator& allocator);
+    static void initialize(mem::Allocator* allocator);
     static void shutdown();
 
     static WindowID window_create();

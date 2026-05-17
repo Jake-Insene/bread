@@ -8,14 +8,14 @@ struct AndroidOS
 {
     struct InternalData
     {
-        mem::Allocator allocator;
+        mem::Allocator* allocator;
     };
 
     static inline InternalData data;
 
-    [[nodiscard]] static mem::Allocator& get_allocator() { return data.allocator; }
+    [[nodiscard]] static mem::Allocator* get_allocator() { return data.allocator; }
 
-    static void initialize(const mem::Allocator& allocator);
+    static void initialize(mem::Allocator* allocator);
     static void shutdown();
 
     static f64 get_time();

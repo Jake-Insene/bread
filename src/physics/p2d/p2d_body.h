@@ -43,7 +43,7 @@ struct [[nodiscard]] P2DBody
     
     Array<PhysicsTileCoord> tiles_on;
 
-    void init(const mem::Allocator& allocator, Physics2D::BodyID id, Opaque* ud);
+    void init(mem::Allocator* allocator, Physics2D::BodyID id, Opaque* ud);
     void destroy();
 
     void apply_force(const Vector2& force, const Vector2& point);

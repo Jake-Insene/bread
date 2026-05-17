@@ -10,7 +10,7 @@ InternalAudio::AudioAdapter AAudioDriver::get_vtable()
     };
 }
 
-void AAudioDriver::initialize(const mem::Allocator& allocator)
+void AAudioDriver::initialize(mem::Allocator* allocator)
 {
     data.allocator = allocator;
 }

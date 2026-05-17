@@ -35,51 +35,50 @@ void operator delete[](void*)
 void EngineRuntime::initialize()
 {
     allocator = {};
-    mem::Allocator allocator_ref = allocator.allocator();
 
     // Initilizing the core components
     Log::debug("[Engine]: Initializing...");
 
     // To use thread and mutexes.
-    OS::initialize(allocator_ref);
+    OS::initialize(&allocator);
 
     // Initializing systems manager
-    system_manager.initialize(allocator_ref);
+    system_manager.initialize(&allocator);
 
-    main_queue = JobQueue::with_size(allocator_ref, DefaultMainQueueSize);
+    main_queue = JobQueue::with_size(&allocator, DefaultMainQueueSize);
     fps = 60;
 
     // Going to the assets folder, crash is intended for now
     // TODO: Find a better way to handle this.
     FailOn(OS::set_current_directory("assets") == false, "assets directory not found")
 
-    GPU::initialize(allocator_ref);
-    Display::initialize(allocator_ref);
+    GPU::initialize(&allocator);
+    Display::initialize(&allocator);
 
     _select_physical_device();
 
     // Allocating main window
     main_window = Window(Display::window_create());
 
-    Audio::initialize(allocator_ref, Audio::DriverType::Default);
-    Physics2D::initialize(allocator_ref, Physics2D::DEFAULT_DRIVER);
+    Audio::initialize(&allocator, Audio::DriverType::Default);
+    Physics2D::initialize(&allocator, Physics2D::DEFAULT_DRIVER);
 
     // Initialize subsystems first
     audio_service.initialize(
         {
-            .allocator = allocator_ref,
+            .allocator = &allocator,
         }
     );
 
     render_device.initialize(
         {
-            .allocator = allocator_ref,
+            .allocator = &allocator,
         }
     );
 
     resource_manager.initialize(
         {
-            .allocator = allocator_ref,
+            .allocator = &allocator,
         }
     );
 
@@ -87,7 +86,7 @@ void EngineRuntime::initialize()
     
     main_window.set_size(__configuration__.viewport_size);
     
-    scene_manager.initialize(allocator_ref);
+    scene_manager.initialize(&allocator);
     scene_manager.set_keep_viewport(__configuration__.keep_viewport);
     scene_manager.set_viewport_size(__configuration__.viewport_size);
     set_vsync(__configuration__.vsync);
@@ -95,7 +94,7 @@ void EngineRuntime::initialize()
     __preload__();
 
     // Entry point for app
-    scene_manager.change_scene(__configuration__.create_main_scene(allocator_ref));
+    scene_manager.change_scene(__configuration__.create_main_scene(&allocator));
 
     can_tick = true;
 }

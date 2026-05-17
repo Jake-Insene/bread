@@ -4,7 +4,7 @@
 namespace Graphics
 {
 
-void SwapChain::init(const mem::Allocator& _allocator, Device* _parent, const SwapChainInfo& info)
+void SwapChain::init(mem::Allocator* _allocator, Device* _parent, const SwapChainInfo& info)
 {
     DeviceObject::init(_allocator, _parent);
     gpu_device = info.gpu_device;
@@ -77,7 +77,7 @@ bool SwapChain::acquire_image(u32* image_index, Graphics::Semaphore* present_com
 
 bool SwapChain::present(Queue* present_queue, u32 image_index, const Slice<Semaphore*>& wait_semaphores)
 {
-    Slice<GPU::SemaphoreID> gpu_wait_semaphores = allocator.array<GPU::SemaphoreID>(wait_semaphores.len);
+    Slice<GPU::SemaphoreID> gpu_wait_semaphores = allocator->array<GPU::SemaphoreID>(wait_semaphores.len);
     for(usize i = 0; i < gpu_wait_semaphores.len; i++)
     {
         gpu_wait_semaphores[i] = wait_semaphores[i]->gpu_semaphore;
@@ -91,7 +91,7 @@ bool SwapChain::present(Queue* present_queue, u32 image_index, const Slice<Semap
         }
     );
 
-    allocator.free(mem::to_bytes(gpu_wait_semaphores));
+    allocator->free(mem::to_bytes(gpu_wait_semaphores));
     if(result == GPU::AcquireResult::Suboptimal || result == GPU::AcquireResult::OutOfDate)
     {
         return _try_rebuild();

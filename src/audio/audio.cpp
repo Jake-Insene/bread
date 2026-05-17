@@ -13,7 +13,7 @@
 
 static inline InternalAudio::AudioAdapter current_adapter = {};
 
-void Audio::initialize(const mem::Allocator& allocator, DriverType driver)
+void Audio::initialize(mem::Allocator* allocator, DriverType driver)
 {
 	switch (driver)
 	{

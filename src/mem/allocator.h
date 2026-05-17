@@ -11,31 +11,20 @@ namespace mem
 struct Allocator
 {
     static constexpr usize DefaultAlignment = sizeof(MemoryAddress) * 2;
-
-    struct VTable
-    {
-        Slice<u8>(Allocator::*alloc)(usize, usize);
-        bool(Allocator::*realloc)(const Slice<u8>&, usize, usize);
-        void(Allocator::*free)(const Slice<u8>&);
-        usize(Allocator::*get_size_of)(const Slice<u8>&);
-    };
         
     /*
     * Allocator API
     */
-    Slice<u8> alloc(usize size, usize alignment) const;
-    bool realloc(const Slice<u8>& ptr, usize new_size, usize alignment) const;
-    void free(const Slice<u8>& ptr) const;
-    usize get_size_of(const Slice<u8>& ptr) const;
+    virtual Slice<u8> alloc(usize size, usize alignment) = 0;
+    virtual bool realloc(const Slice<u8>& ptr, usize new_size, usize alignment) = 0;
+    virtual void free(const Slice<u8>& ptr) = 0;
+    virtual usize get_size_of(const Slice<u8>& ptr) const = 0;
 
     template<typename T>
-    Slice<T> array(usize count) const;
+    Slice<T> array(usize count);
 
     template<typename T, typename... TArgs>
-    T* object(TArgs&&... args) const;
-        
-    VTable* vtable;
-    Allocator* self;
+    T* object(TArgs&&... args);
 };
 
 }
@@ -44,33 +33,33 @@ struct Allocator
 #include "collections/slice.h"
 #include "mem/utils.h"
 
-inline Slice<u8> mem::Allocator::alloc(usize size, usize alignment) const
-{
-    DebugAssert(self != nullptr, "self is null");
-    Slice<u8> ptr = (self->*vtable->alloc)(size, alignment);
-    return ptr;
-}
+// inline Slice<u8> mem::Allocator::alloc(usize size, usize alignment) const
+// {
+//     DebugAssert(self != nullptr, "self is null");
+//     Slice<u8> ptr = (self->*vtable->alloc)(size, alignment);
+//     return ptr;
+// }
 
-inline bool mem::Allocator::realloc(const Slice<u8>& ptr, usize new_size, usize alignment) const
-{
-    DebugAssert(self != nullptr, "self is null");
-    return (self->*vtable->realloc)(ptr, new_size, alignment);
-}
+// inline bool mem::Allocator::realloc(const Slice<u8>& ptr, usize new_size, usize alignment) const
+// {
+//     DebugAssert(self != nullptr, "self is null");
+//     return (self->*vtable->realloc)(ptr, new_size, alignment);
+// }
 
-inline void mem::Allocator::free(const Slice<u8>& ptr) const
-{
-    DebugAssert(self != nullptr, "self is null");
-    (self->*vtable->free)(ptr);
-}
+// inline void mem::Allocator::free(const Slice<u8>& ptr) const
+// {
+//     DebugAssert(self != nullptr, "self is null");
+//     (self->*vtable->free)(ptr);
+// }
 
-inline usize mem::Allocator::get_size_of(const Slice<u8>& ptr) const
-{
-    DebugAssert(self != nullptr, "self is null");
-    return (self->*vtable->get_size_of)(ptr);
-}
+// inline usize mem::Allocator::get_size_of(const Slice<u8>& ptr) const
+// {
+//     DebugAssert(self != nullptr, "self is null");
+//     return (self->*vtable->get_size_of)(ptr);
+// }
 
 template<typename T>
-inline Slice<T> mem::Allocator::array(usize count) const
+inline Slice<T> mem::Allocator::array(usize count)
 {
     static constexpr usize Alignment = ConditionalValue<usize, alignof(T) == 1, 8, alignof(T)>;
     Slice<T> array = mem::from_bytes<T>(alloc(sizeof(T) * count, Alignment));
@@ -79,7 +68,7 @@ inline Slice<T> mem::Allocator::array(usize count) const
 }
 
 template<typename T, typename... TArgs>
-inline T* mem::Allocator::object(TArgs&&... args) const
+inline T* mem::Allocator::object(TArgs&&... args)
 {
     constexpr usize alignment = alignof(T) == 1 ? 16 : alignof(T);
     T* instance = reinterpret_cast<T*>(alloc(sizeof(T), alignment).items);

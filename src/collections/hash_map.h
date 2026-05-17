@@ -43,13 +43,13 @@ struct [[nodiscard]] HashMap
     static constexpr usize InvalidPos = MaxValue<usize>;
     static constexpr usize DefaultCapacity = 16;
 
-    mem::Allocator allocator;
+    mem::Allocator* allocator;
     Slice<MapEntry*> entries;
     usize count;
     MapEntry* first;
     MapEntry* last;
     
-    static HashMap with_allocator(const mem::Allocator& allocator)
+    static HashMap with_allocator(mem::Allocator* allocator)
     {
         return
         {
@@ -61,12 +61,12 @@ struct [[nodiscard]] HashMap
         };
     }
     
-    static HashMap with_size(const mem::Allocator& allocator, const usize size)
+    static HashMap with_size(mem::Allocator* allocator, const usize size)
     {
         return
         {
             .allocator = allocator,
-            .entries = allocator.array<MapEntry*>(size),
+            .entries = allocator->array<MapEntry*>(size),
             .count = 0,
             .first = nullptr,
             .last = nullptr,
@@ -84,10 +84,10 @@ struct [[nodiscard]] HashMap
         {
             if(entry != nullptr)
             {
-                allocator.free(mem::to_bytes(Slice<MapEntry>(entry, 1)));
+                allocator->free(mem::to_bytes(Slice<MapEntry>(entry, 1)));
             }
         }
-        allocator.free(mem::to_bytes(entries));
+        allocator->free(mem::to_bytes(entries));
         entries = {};
     }
 
@@ -98,7 +98,7 @@ struct [[nodiscard]] HashMap
         if(entries.len == 0)
         {
             new_size = new_size > 0 ? new_size : DefaultCapacity;
-            entries = allocator.array<MapEntry*>(new_size);
+            entries = allocator->array<MapEntry*>(new_size);
             return;
         }
 
@@ -107,7 +107,7 @@ struct [[nodiscard]] HashMap
             return;
         }
         
-        Slice<MapEntry*> new_entries = allocator.array<MapEntry*>(new_size);
+        Slice<MapEntry*> new_entries = allocator->array<MapEntry*>(new_size);
 
         for (MapEntry* e = first; e != nullptr; e = e->next)
         {
@@ -122,7 +122,7 @@ struct [[nodiscard]] HashMap
 
         if (entries.ptr())
         {
-            allocator.free(mem::to_bytes(entries));
+            allocator->free(mem::to_bytes(entries));
         }
 
         entries = new_entries;
@@ -265,7 +265,7 @@ struct [[nodiscard]] HashMap
             if(entries[i] == nullptr)
             {
                 MapEntry* entry = mem::from_bytes<MapEntry>(
-                    allocator.alloc(sizeof(MapEntry), alignof(MapEntry))
+                    allocator->alloc(sizeof(MapEntry), alignof(MapEntry))
                 ).ptr();
                 entry->hash = hash;
                 entry->kv = KeyValue(k, value);

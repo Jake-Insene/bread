@@ -5,16 +5,16 @@
 #include "platform/platform_header.h"
 
 
-Slice<u8> File::read_all(const mem::Allocator& allocator, StringView path)
+Slice<u8> File::read_all(mem::Allocator* allocator, StringView path)
 {
-	Slice<char> tmp = allocator.array<char>(path.len + 1);
+	Slice<char> tmp = allocator->array<char>(path.len + 1);
 	mem::copy(tmp, path);
 
 	HANDLE file = CreateFileA(tmp.ptr(), GENERIC_READ, FILE_SHARE_READ, 
         nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr
     );
 
-	allocator.free(mem::to_bytes(tmp));
+	allocator->free(mem::to_bytes(tmp));
 
 	if (file == INVALID_HANDLE_VALUE)
 	{
@@ -22,7 +22,7 @@ Slice<u8> File::read_all(const mem::Allocator& allocator, StringView path)
 	}
 
 	usize length = GetFileSize(file, nullptr);
-    Slice<u8> bytes = allocator.alloc(length, sizeof(usize));
+    Slice<u8> bytes = allocator->alloc(length, sizeof(usize));
 	(void)ReadFile(file, bytes.ptr(), DWORD(length), nullptr, nullptr);
 
 	CloseHandle(file);
@@ -57,9 +57,9 @@ File File::get_stdin()
 	};
 }
 
-File File::open(const mem::Allocator& allocator, StringView path, OpenMode mode)
+File File::open(mem::Allocator* allocator, StringView path, OpenMode mode)
 {
-	Slice<char> tmp = allocator.array<char>(path.len + 1);
+	Slice<char> tmp = allocator->array<char>(path.len + 1);
 	mem::copy(tmp, path);
 	UINT access = 0;
 
@@ -86,7 +86,7 @@ File File::open(const mem::Allocator& allocator, StringView path, OpenMode mode)
 		nullptr, open_or_create, FILE_ATTRIBUTE_NORMAL, nullptr
 	);
 
-	allocator.free(mem::to_bytes(tmp));
+	allocator->free(mem::to_bytes(tmp));
 
 	return File
 	{
@@ -94,16 +94,16 @@ File File::open(const mem::Allocator& allocator, StringView path, OpenMode mode)
 	};
 }
 
-bool File::exists(const mem::Allocator& allocator, StringView path)
+bool File::exists(mem::Allocator* allocator, StringView path)
 {
-	Slice<char> tmp = allocator.array<char>(path.len + 1);
+	Slice<char> tmp = allocator->array<char>(path.len + 1);
 	mem::copy(tmp, path);
 
 	HANDLE file = CreateFileA(tmp.ptr(), 0, 0, nullptr, 
 		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr
 	);
 
-	allocator.free(mem::to_bytes(tmp));
+	allocator->free(mem::to_bytes(tmp));
 
 	bool finded = file != INVALID_HANDLE_VALUE;
 	CloseHandle(file);

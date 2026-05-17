@@ -6,7 +6,7 @@
 namespace Graphics
 {
 
-void Device::init(const mem::Allocator& _allocator, GPU::PhysicalDeviceID _gpu_physical_device)
+void Device::init(mem::Allocator* _allocator, GPU::PhysicalDeviceID _gpu_physical_device)
 {
     allocator = _allocator;
     mutex = Mutex::create();
@@ -68,7 +68,7 @@ void Device::destroy()
 
     for(DeviceObject*& allocated_object : allocated_objects.iter())
     {
-        allocator.free(Slice(reinterpret_cast<u8*>(allocated_object), 1));
+        allocator->free(Slice(reinterpret_cast<u8*>(allocated_object), 1));
     }
     allocated_objects.destroy();
 
@@ -222,7 +222,7 @@ void Device::release_object(DeviceObject* child)
         "the allocated object it's not owned by this device"
     );
     allocated_objects.remove(child);
-    allocator.free(Slice(reinterpret_cast<u8*>(child), 1));
+    allocator->free(Slice(reinterpret_cast<u8*>(child), 1));
     mutex.unlock();
 }
 

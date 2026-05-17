@@ -73,7 +73,7 @@ InternalPhysics2D::Adapter P2DDriver::get_vtable()
     };
 }
 
-void P2DDriver::initialize(const mem::Allocator& allocator)
+void P2DDriver::initialize(mem::Allocator* allocator)
 {
     data.allocator = allocator;
 

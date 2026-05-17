@@ -15,12 +15,12 @@ struct ScopedData<Ptr<T>>
 {
 	using DestroyArgList = TypeList<mem::Allocator>;
 	
-	mem::Allocator allocator;
+	mem::Allocator* allocator;
 
 	ScopedData() : allocator() {}
 
 	template<typename... TArgs>
-	ScopedData(const mem::Allocator& allocator, TArgs&&... args) : allocator(allocator)
+	ScopedData(mem::Allocator* allocator, TArgs&&... args) : allocator(allocator)
 	{
 		Unused(args...);
 	}
@@ -40,25 +40,25 @@ struct Ptr
 {
     T* memory;
 #if defined(DEBUG)
-    void* allocator_self;
+    mem::Allocator* allocator;
 #endif
 
     template<typename... TArgs>
-    static Ptr<T> create(mem::Allocator& allocator, TArgs&&... args)
+    static Ptr<T> create(mem::Allocator* allocator, TArgs&&... args)
     {
-        T* memory = allocator.object<T>(Forward<TArgs>(args)...);
+        T* memory = allocator->object<T>(Forward<TArgs>(args)...);
         
         return Ptr<T>
         {
             .memory = memory,
 #if defined(DEBUG)
-            .allocator_self = allocator.self,
+            .allocator_self = allocator,
 #endif
         };
     }
 
     template<typename... TArgs>
-    static Ptr<T> from_memory(mem::Allocator& allocator, T* memory)
+    static Ptr<T> from_memory(mem::Allocator* allocator, T* memory)
     {
 #if defined(RELEASE)
         Unused(allocator);
@@ -67,7 +67,7 @@ struct Ptr
         {
             .memory = memory,
 #if defined(DEBUG)
-            .allocator_self = allocator.self,
+            .allocator = allocator,
 #endif
         };
     }
@@ -84,14 +84,14 @@ struct Ptr
         };
     }
 
-    void destroy(const mem::Allocator& allocator)
+    void destroy(mem::Allocator* allocator)
     {
-        DebugAssert(allocator.self == allocator_self, "allocator mismatch");
+        DebugAssert(allocator == allocator, "allocator mismatch");
         DebugAssert(memory != nullptr, "memory is null");
 
         DestructObject(*memory);
 
-        allocator.free(mem::to_bytes(Slice<T>(memory, 1)));
+        allocator->free(mem::to_bytes(Slice<T>(memory, 1)));
         memory = nullptr;
     }
 

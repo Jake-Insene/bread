@@ -339,12 +339,12 @@ void Vulkan::destroy_surface(VkInstance instance, VkSurfaceKHR surface)
 
 Vulkan::AdditionalExtensionSupport Vulkan::check_device_extensions(VkPhysicalDevice physical_device)
 {
-    mem::Allocator allocator = VulkanDriver::get_allocator();
+    mem::Allocator* allocator = VulkanDriver::get_allocator();
 
     u32 extension_count;
     vk.vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, nullptr);
     
-    Slice<VkExtensionProperties> vk_device_extensions = allocator.array<VkExtensionProperties>(extension_count);
+    Slice<VkExtensionProperties> vk_device_extensions = allocator->array<VkExtensionProperties>(extension_count);
     vk.vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, vk_device_extensions.ptr());
 
     usize finded_count = 0;
@@ -363,7 +363,7 @@ Vulkan::AdditionalExtensionSupport Vulkan::check_device_extensions(VkPhysicalDev
         "the required extensions were not found"
     );
 
-    allocator.free(mem::to_bytes(vk_device_extensions));
+    allocator->free(mem::to_bytes(vk_device_extensions));
 
     AdditionalExtensionSupport additional_extension_support = {};
     additional_extension_support.has_dynamic_rendering = _has_extension(vk_device_extensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
@@ -411,7 +411,7 @@ void Vulkan::check_device_features(VkPhysicalDevice physical_device)
 }
 
 const char** Vulkan::get_device_extensions(VkPhysicalDevice physical_device, const AdditionalExtensionSupport& add_ext, 
-    const mem::Allocator& allocator, uint32_t* extension_count)
+    mem::Allocator* allocator, uint32_t* extension_count)
 {
     Unused(physical_device);
     usize additional_extension_count = 0;
@@ -420,7 +420,7 @@ const char** Vulkan::get_device_extensions(VkPhysicalDevice physical_device, con
         additional_extension_count += 3;
     }
 
-    Slice<const char*> extensions = allocator.array<const char*>(ArraySize(VkCoreDeviceExtensions) + additional_extension_count);
+    Slice<const char*> extensions = allocator->array<const char*>(ArraySize(VkCoreDeviceExtensions) + additional_extension_count);
     for(usize i = 0; i < ArraySize(VkCoreDeviceExtensions); i++)
     {
         extensions[i] = VkCoreDeviceExtensions[i];
@@ -436,38 +436,38 @@ const char** Vulkan::get_device_extensions(VkPhysicalDevice physical_device, con
     return extensions.ptr();
 }
 
-VkPhysicalDeviceFeatures2* Vulkan::get_device_features(const AdditionalExtensionSupport& add_ext, const mem::Allocator& allocator)
+VkPhysicalDeviceFeatures2* Vulkan::get_device_features(const AdditionalExtensionSupport& add_ext, mem::Allocator* allocator)
 {
     VkPhysicalDeviceDynamicRenderingFeaturesKHR* vk_dynamic_rendering_features = nullptr;
     if(add_ext.has_dynamic_rendering)
     {
         vk_dynamic_rendering_features =
-            allocator.object<VkPhysicalDeviceDynamicRenderingFeaturesKHR>();
+            allocator->object<VkPhysicalDeviceDynamicRenderingFeaturesKHR>();
         vk_dynamic_rendering_features->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
         vk_dynamic_rendering_features->dynamicRendering = VK_TRUE;
     }
 
     VkPhysicalDeviceShaderFloat16Int8FeaturesKHR* vk_float16_features =
-        allocator.object<VkPhysicalDeviceShaderFloat16Int8FeaturesKHR>();
+        allocator->object<VkPhysicalDeviceShaderFloat16Int8FeaturesKHR>();
     vk_float16_features->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES_KHR;
     vk_float16_features->pNext = vk_dynamic_rendering_features;
     vk_float16_features->shaderFloat16 = VK_TRUE;
 
     VkPhysicalDeviceImagelessFramebufferFeaturesKHR* vk_imageless_framebuffer =
-        allocator.object<VkPhysicalDeviceImagelessFramebufferFeaturesKHR>();
+        allocator->object<VkPhysicalDeviceImagelessFramebufferFeaturesKHR>();
     vk_imageless_framebuffer->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGELESS_FRAMEBUFFER_FEATURES_KHR;
     vk_imageless_framebuffer->pNext = vk_float16_features;
     vk_imageless_framebuffer->imagelessFramebuffer = VK_TRUE;
 
     VkPhysicalDeviceVulkan11Features* vk_1_1_features =
-        allocator.object<VkPhysicalDeviceVulkan11Features>();
+        allocator->object<VkPhysicalDeviceVulkan11Features>();
     vk_1_1_features->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
     vk_1_1_features->pNext = vk_imageless_framebuffer;
     vk_1_1_features->shaderDrawParameters = VK_TRUE;
     vk_1_1_features->storageInputOutput16 = VK_TRUE;
 
     VkPhysicalDeviceFeatures2* vk_features =
-        allocator.object<VkPhysicalDeviceFeatures2>();
+        allocator->object<VkPhysicalDeviceFeatures2>();
 
     vk_features->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
     vk_features->pNext = vk_1_1_features;
@@ -504,8 +504,8 @@ void* VKAPI_PTR Vulkan::_vk_driver_allocate(void* pUserData, size_t size, size_t
 {
 	Unused(pUserData, size, alignment, allocationScope);
 
-	mem::Allocator allocator = VulkanDriver::get_allocator();
-	Slice<u8> bytes = allocator.alloc(size, alignment);
+	mem::Allocator* allocator = VulkanDriver::get_allocator();
+	Slice<u8> bytes = allocator->alloc(size, alignment);
 	return bytes.ptr();
 }
 
@@ -513,7 +513,7 @@ void* VKAPI_PTR Vulkan::_vk_driver_reallocate(void* pUserData, void* pOriginal, 
 {
 	Unused(pUserData, pOriginal, size, alignment, allocationScope);
 
-	mem::Allocator allocator = VulkanDriver::get_allocator();
+	mem::Allocator* allocator = VulkanDriver::get_allocator();
     Slice<u8> old_mem = Slice(reinterpret_cast<u8*>(pOriginal), 1);
 
     if(pOriginal == nullptr)
@@ -527,8 +527,8 @@ void* VKAPI_PTR Vulkan::_vk_driver_reallocate(void* pUserData, void* pOriginal, 
         return nullptr;
     }
 
-    usize old_size = allocator.get_size_of(old_mem);
-	bool realloc_result = allocator.realloc(
+    usize old_size = allocator->get_size_of(old_mem);
+	bool realloc_result = allocator->realloc(
 		old_mem, size, alignment
 	);
 
@@ -537,9 +537,9 @@ void* VKAPI_PTR Vulkan::_vk_driver_reallocate(void* pUserData, void* pOriginal, 
 		return old_mem.ptr();
 	}
 
-	Slice<u8> bytes = allocator.alloc(size, alignment);
+	Slice<u8> bytes = allocator->alloc(size, alignment);
     mem::copy(bytes, Slice<const u8>(reinterpret_cast<const u8*>(pOriginal), old_size));
-    allocator.free(old_mem);
+    allocator->free(old_mem);
 	return bytes.ptr();
 }
 
@@ -550,9 +550,9 @@ void VKAPI_PTR Vulkan::_vk_driver_free(void* pUserData, void* pMemory)
 	if (pMemory == nullptr)
 		return;
 
-	mem::Allocator allocator = VulkanDriver::get_allocator();
+	mem::Allocator* allocator = VulkanDriver::get_allocator();
 	Slice<u8> old_mem = Slice(reinterpret_cast<u8*>(pMemory), 1);
-	allocator.free(old_mem);
+	allocator->free(old_mem);
 }
 
 void VKAPI_PTR Vulkan::_vk_driver_internal_allocate(void* pUserData, size_t size, VkInternalAllocationType allocationType, VkSystemAllocationScope allocationScope)
@@ -572,9 +572,9 @@ void Vulkan::_check_instance_extensions()
     uint32_t extension_count = 0;
     vk.vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
 
-    mem::Allocator allocator = VulkanDriver::get_allocator();
+    mem::Allocator* allocator = VulkanDriver::get_allocator();
 
-    Slice<VkExtensionProperties> instance_extensions = allocator.array<VkExtensionProperties>(extension_count);
+    Slice<VkExtensionProperties> instance_extensions = allocator->array<VkExtensionProperties>(extension_count);
     vk.vkEnumerateInstanceExtensionProperties(
         nullptr, &extension_count, instance_extensions.ptr()
     );
@@ -607,6 +607,6 @@ void Vulkan::_check_instance_extensions()
         );
     }
 
-    allocator.free(mem::to_bytes(instance_extensions));
+    allocator->free(mem::to_bytes(instance_extensions));
 }
 

@@ -8,11 +8,11 @@ namespace Graphics
 
 struct Queue
 {
-    mem::Allocator allocator;
+    mem::Allocator* allocator;
 
     GPU::QueueID gpu_queue;
 
-    void init(const mem::Allocator& _allocator, const GPU::QueueCreateInfo& info);
+    void init(mem::Allocator* _allocator, const GPU::QueueCreateInfo& info);
     void destroy();
 
     void wait_idle();

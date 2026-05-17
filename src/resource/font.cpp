@@ -9,11 +9,11 @@
 #include <external/stb_truetype.h>
 
 
-void flip_atlas_vertical(const mem::Allocator& allocator, Slice<u8> pixels, i32 width, i32 height)
+void flip_atlas_vertical(mem::Allocator* allocator, Slice<u8> pixels, i32 width, i32 height)
 {
     const i32 row_size = width; // R8
 
-    Slice<u8> tmp = allocator.alloc(row_size, 16);
+    Slice<u8> tmp = allocator->alloc(row_size, 16);
 
     for (i32 y = 0; y < height / 2; ++y)
     {
@@ -25,11 +25,11 @@ void flip_atlas_vertical(const mem::Allocator& allocator, Slice<u8> pixels, i32 
         mem::copy(row_bottom, tmp.slice(row_size));
     }
 
-    allocator.free(tmp);
+    allocator->free(tmp);
 }
 
 
-static void _load_theme(const mem::Allocator& allocator, const Slice<u8>& font_file_content, stbtt_fontinfo* font, Font::FontTheme& theme)
+static void _load_theme(mem::Allocator* allocator, const Slice<u8>& font_file_content, stbtt_fontinfo* font, Font::FontTheme& theme)
 {
     stbtt_pack_context pack_context;
     stbtt_packedchar ranges[Font::MinimumGlyphCount] = {};
@@ -38,7 +38,7 @@ static void _load_theme(const mem::Allocator& allocator, const Slice<u8>& font_f
     i32 width = 512;
     while(success)
     {
-        Slice<u8> pixels = allocator.alloc(i64(width * width), 16);
+        Slice<u8> pixels = allocator->alloc(i64(width * width), 16);
 
         stbtt_PackBegin(&pack_context, pixels.ptr(), width, width, width, 0, 0);
 
@@ -51,7 +51,7 @@ static void _load_theme(const mem::Allocator& allocator, const Slice<u8>& font_f
         {
             width *= 2;
             stbtt_PackEnd(&pack_context);
-            allocator.free(pixels);
+            allocator->free(pixels);
             continue;
         }
 
@@ -101,7 +101,7 @@ static void _load_theme(const mem::Allocator& allocator, const Slice<u8>& font_f
         );
 
         stbtt_PackEnd(&pack_context);
-        allocator.free(pixels);
+        allocator->free(pixels);
     }
 }
 
@@ -155,7 +155,7 @@ Error Font::load(StringView file_path)
     default_theme.glyphs.resize(MinimumGlyphCount);
     _load_theme(allocator, content, &font, default_theme);
     
-    allocator.free(content);
+    allocator->free(content);
 
     return ErrorCode::Ok;
 }
@@ -185,7 +185,7 @@ const Font::FontTheme& Font::_theme_with_size(i32 font_size)
     new_theme.glyphs.resize(MinimumGlyphCount);
     _load_theme(allocator, content, &font, new_theme);
 
-    allocator.free(content);
+    allocator->free(content);
 
     return new_theme;
 }

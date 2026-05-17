@@ -4,7 +4,7 @@
 namespace Graphics
 {
 
-void Buffer::init(const mem::Allocator& _allocator, Device* _parent, const BufferInfo& info)
+void Buffer::init(mem::Allocator* _allocator, Device* _parent, const BufferInfo& info)
 {
     DeviceObject::init(_allocator, _parent);
     gpu_buffer = GPU::buffer_create(

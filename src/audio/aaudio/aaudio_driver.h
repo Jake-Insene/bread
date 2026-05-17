@@ -7,13 +7,13 @@ struct AAudioDriver
 {
     struct InternalData
     {
-        mem::Allocator allocator;
+        mem::Allocator* allocator;
     };
 
     static inline InternalData data = {};
 
     static InternalAudio::AudioAdapter get_vtable();
 
-    static void initialize(const mem::Allocator& allocator);
+    static void initialize(mem::Allocator* allocator);
     static void shutdown();
 };

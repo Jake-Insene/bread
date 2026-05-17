@@ -3,7 +3,7 @@
 #include "collections/reverse_iterator.h"
 
 
-void SystemManager::initialize(const mem::Allocator& _allocator)
+void SystemManager::initialize(mem::Allocator* _allocator)
 {
     allocator = _allocator;
 
@@ -21,7 +21,7 @@ void SystemManager::allocate_systems(const Slice<SystemInfo>& requested_systems)
 {
     for(const SystemInfo& system_info : requested_systems)
     {
-        Slice<u8> instance_bytes = allocator.alloc(system_info.size_in_bytes, 16);
+        Slice<u8> instance_bytes = allocator->alloc(system_info.size_in_bytes, 16);
 
         SystemInstance instance =
         {
@@ -44,7 +44,7 @@ void SystemManager::deallocate_systems()
     
     for(SystemInstance& instance : systems.iter())
     {
-        allocator.free(mem::to_bytes(Slice(instance.instance, 1)));
+        allocator->free(mem::to_bytes(Slice(instance.instance, 1)));
     }
 
     systems.clear();

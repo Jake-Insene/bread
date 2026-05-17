@@ -16,7 +16,7 @@ struct DescriptorSet;
 
 struct CommandEncoder
 {
-    mem::Allocator allocator;
+    mem::Allocator* allocator;
     GPU::CommandBufferID command_buffer;
 
     void begin();

@@ -15,13 +15,13 @@ struct [[nodiscard]] JobQueue
 		Opaque* arg;
 	};
 
-	mem::Allocator allocator;
+	mem::Allocator* allocator;
 	Stack<JobInfo> job_stack;
 	Mutex mutex;
 
-	static JobQueue with_allocator(const mem::Allocator& allocator);
+	static JobQueue with_allocator(mem::Allocator* allocator);
 
-	static JobQueue with_size(const mem::Allocator& allocator, usize initial_size);
+	static JobQueue with_size(mem::Allocator* allocator, usize initial_size);
 
 	void destroy();
 
@@ -29,7 +29,7 @@ struct [[nodiscard]] JobQueue
 	void add_job(Fn _job)
 	{
 		Fn* fn_mem = reinterpret_cast<Fn*>(
-			allocator.alloc(sizeof(Fn), alignof(usize)).ptr()
+			allocator->alloc(sizeof(Fn), alignof(usize)).ptr()
 		);
 		ConstructObject(*fn_mem, _job);
 

@@ -10,7 +10,7 @@
 
 static inline InternalGPU::GPUAdapter current_adapter;
 
-void GPU::initialize(const mem::Allocator& allocator)
+void GPU::initialize(mem::Allocator* allocator)
 {
 	current_adapter = VulkanDriver::get_adapter();
 

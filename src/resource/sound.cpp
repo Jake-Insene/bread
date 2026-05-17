@@ -7,23 +7,23 @@
 
 static inline void* _dr_alloc(size_t size, void*)
 {
-    mem::Allocator allocator = Engine::get_resource_manager()->get_allocator();
-    return allocator.alloc(size, 16).items;
+    mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
+    return allocator->alloc(size, 16).items;
 }
 
 static inline void* _dr_realloc(void* mem, size_t new_size, void*)
 {
     Slice<u8> old_mem = Slice(reinterpret_cast<u8*>(mem), 1);
-    mem::Allocator allocator = Engine::get_resource_manager()->get_allocator();
-    if (allocator.realloc(old_mem, new_size, 16))
+    mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
+    if (allocator->realloc(old_mem, new_size, 16))
     {
         return mem;
     }
 
-    Slice<u8> new_mem = allocator.alloc(new_size, 16);
+    Slice<u8> new_mem = allocator->alloc(new_size, 16);
     if (mem != nullptr)
     {
-        allocator.free(old_mem);
+        allocator->free(old_mem);
     }
 
     return new_mem.items;
@@ -31,8 +31,8 @@ static inline void* _dr_realloc(void* mem, size_t new_size, void*)
 
 static inline void _dr_free(void* mem, void*)
 {
-    mem::Allocator allocator = Engine::get_resource_manager()->get_allocator();
-    allocator.free(
+    mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
+    allocator->free(
         Slice(reinterpret_cast<u8*>(mem), 1)
     );
 }
@@ -57,7 +57,7 @@ void Sound::destroy()
 {
     if(!data.samples.null())
     {
-        allocator.free(mem::to_bytes(data.samples));
+        allocator->free(mem::to_bytes(data.samples));
     }
 
     Resource::destroy();
@@ -87,13 +87,13 @@ Error Sound::load(StringView file_path)
 
     const usize total_samples = static_cast<usize>(wav.totalPCMFrameCount * wav.channels);
     data.mono = wav.channels == 1;
-    data.samples = allocator.array<i16>(total_samples);
+    data.samples = allocator->array<i16>(total_samples);
 
     // Always convert 
     (void)drwav_read_pcm_frames_s16(&wav, wav.totalPCMFrameCount, reinterpret_cast<drwav_int16*>(data.samples.ptr()));
 
     drwav_uninit(&wav);
-    allocator.free(content);
+    allocator->free(content);
 
     return ErrorCode::Ok;
 }

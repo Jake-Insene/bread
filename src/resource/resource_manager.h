@@ -14,7 +14,7 @@ struct Texture;
 
 struct ResourceManagerCreateInfo
 {
-    mem::Allocator allocator;
+    mem::Allocator* allocator;
 };
 
 struct ResourceManager
@@ -33,11 +33,11 @@ struct ResourceManager
         Resource* resource;
     };
 
-    mem::Allocator allocator;
+    mem::Allocator* allocator;
     StringMap<ResourceAllocation> resources;
     HashMap<Image*, Texture*> cached_images;
 
-    [[nodiscard]] mem::Allocator& get_allocator() { return allocator; }
+    [[nodiscard]] mem::Allocator* get_allocator() { return allocator; }
 
     void initialize(const ResourceManagerCreateInfo& info);
     void shutdown();
@@ -55,7 +55,7 @@ struct ResourceManager
     requires(!IsSame<Resource, T>)
     [[nodiscard]] T* _create_resource()
     {
-        T* resource = get_allocator().object<T>();
+        T* resource = get_allocator()->object<T>();
         resource->init(
             {
                 .allocator = get_allocator(),

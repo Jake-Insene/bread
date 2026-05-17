@@ -8,7 +8,7 @@
 #include "physics/physics_2d.h"
 
 
-void SceneManager::initialize(const mem::Allocator& _allocator)
+void SceneManager::initialize(mem::Allocator* _allocator)
 {
     allocator = _allocator;
 
@@ -32,7 +32,7 @@ void SceneManager::shutdown()
     {
 		SceneCallRef(current_scene, on_exit);
 		SceneCallRef(current_scene, on_destroy);
-        allocator.free(mem::to_bytes(Slice<Scene>(current_scene, 1)));
+        allocator->free(mem::to_bytes(Slice<Scene>(current_scene, 1)));
     }
 }
 
@@ -220,7 +220,7 @@ void SceneManager::_handle_change_scene()
     change_scene_info.requested = false;
     SceneCallRef(current_scene, on_exit);
     SceneCallRef(current_scene, on_destroy);
-    allocator.free(mem::to_bytes(Slice<Scene>(current_scene, 1)));
+    allocator->free(mem::to_bytes(Slice<Scene>(current_scene, 1)));
 
     current_scene = change_scene_info.new_scene;
     change_scene_info.new_scene = nullptr;

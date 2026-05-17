@@ -3,7 +3,7 @@
 
 
 
-void P2DArea::init(const mem::Allocator& allocator, Physics2D::AreaID id, Opaque* ud)
+void P2DArea::init(mem::Allocator* allocator, Physics2D::AreaID id, Opaque* ud)
 {
 	self = id;
 	user_data = ud;

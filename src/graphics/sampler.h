@@ -27,7 +27,7 @@ struct Sampler : DeviceObject
 {
     GPU::SamplerID gpu_sampler;
 
-    void init(const mem::Allocator& _allocator, Device* _parent, GPU::DeviceID gpu_device, const SamplerInfo& info);
+    void init(mem::Allocator* _allocator, Device* _parent, GPU::DeviceID gpu_device, const SamplerInfo& info);
     void destroy();
 };
 

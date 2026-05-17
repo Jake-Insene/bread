@@ -14,15 +14,15 @@ struct Writer;
 
 struct [[nodiscard]] String
 {
-    mem::Allocator allocator;
+    mem::Allocator* allocator;
     Slice<char> chars;
     usize count;
     
-    static String with_allocator(const mem::Allocator& allocator);
+    static String with_allocator(mem::Allocator* allocator);
     
-    static String with_size(const mem::Allocator& allocator, usize size);
+    static String with_size(mem::Allocator* allocator, usize size);
     
-    static String from_chars(const mem::Allocator& allocator, StringView chars);
+    static String from_chars(mem::Allocator* allocator, StringView chars);
     
     void destroy();
     

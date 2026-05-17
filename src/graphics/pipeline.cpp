@@ -7,7 +7,7 @@
 namespace Graphics
 {
 
-void Pipeline::init(const mem::Allocator& _allocator, Device* _parent, GPU::DeviceID gpu_device, const PipelineInfo& info)
+void Pipeline::init(mem::Allocator* _allocator, Device* _parent, GPU::DeviceID gpu_device, const PipelineInfo& info)
 {
     DeviceObject::init(_allocator, _parent);
 

@@ -12,7 +12,7 @@
 
 struct GPUMemoryAllocatorCreateInfo
 {
-    mem::Allocator allocator;
+    mem::Allocator* allocator;
     Graphics::Device* graphics_device;
 };
 
@@ -55,7 +55,7 @@ struct GPUMemoryAllocator
         GPUMemoryAllocationID first_allocation;
     };
 
-    mem::Allocator allocator;
+    mem::Allocator* allocator;
     Graphics::Device* graphics_device;
     Array<Heap> heaps;
     FreeList<Allocation, GPUMemoryAllocationID> allocations;

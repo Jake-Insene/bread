@@ -5,7 +5,7 @@
 #include "platform/platform_header.h"
 
 
-void AndroidOS::initialize(const mem::Allocator& allocator)
+void AndroidOS::initialize(mem::Allocator* allocator)
 {
     data.allocator = allocator;
 }
@@ -33,11 +33,11 @@ usize AndroidOS::get_page_size()
 
 OS::Handle AndroidOS::load_library(StringView lib_path)
 {
-    Slice<char> path = get_allocator().array<char>(lib_path.len + 1);
+    Slice<char> path = get_allocator()->array<char>(lib_path.len + 1);
     mem::copy(path, lib_path);
     
     OS::Handle library = reinterpret_cast<OS::Handle>(dlopen(path.ptr(), RTLD_NOW | RTLD_NOW));
-    get_allocator().free(mem::to_bytes(path));
+    get_allocator()->free(mem::to_bytes(path));
 
     return library;
 }
@@ -49,14 +49,14 @@ void AndroidOS::unload_library(OS::Handle library)
 
 OS::VoidFunction AndroidOS::get_proc_address(OS::Handle library, StringView symbol_name)
 {
-    Slice<char> symbol = get_allocator().array<char>(symbol_name.len + 1);
+    Slice<char> symbol = get_allocator()->array<char>(symbol_name.len + 1);
     mem::copy(symbol, symbol_name);
 
     OS::VoidFunction func = reinterpret_cast<OS::VoidFunction>(
         dlsym(reinterpret_cast<void*>(library), symbol.ptr())
     );
 
-    get_allocator().free(mem::to_bytes(symbol));
+    get_allocator()->free(mem::to_bytes(symbol));
     return func;
 }
 

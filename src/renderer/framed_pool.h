@@ -5,7 +5,7 @@
 
 struct FramedPoolCreateInfo
 {
-    mem::Allocator allocator;
+    mem::Allocator* allocator;
     Graphics::Device* graphics_device;
 
     Slice<GPU::DescriptorPoolSize> sizes;
@@ -15,7 +15,7 @@ struct FramedPoolCreateInfo
 
 struct FramedPool
 {
-    mem::Allocator allocator;
+    mem::Allocator* allocator;
     Graphics::Device* graphics_device;
 
     Array<Graphics::DescriptorPool*> pools;

@@ -34,7 +34,7 @@ struct [[nodiscard]] P2DArea
     Array<PhysicsTileCoord> tiles_on;
     i64 check_counter;
 
-    void init(const mem::Allocator& allocator, Physics2D::AreaID id, Opaque* ud);
+    void init(mem::Allocator* allocator, Physics2D::AreaID id, Opaque* ud);
     void destroy();
 
     void set_shape_from_2d(const Shape2D& new_shape);

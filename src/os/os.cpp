@@ -12,7 +12,7 @@ using PlatformOS = AndroidOS;
 #endif
 
 
-void OS::initialize(const mem::Allocator& allocator)
+void OS::initialize(mem::Allocator* allocator)
 {
 	PlatformOS::initialize(allocator);
 }

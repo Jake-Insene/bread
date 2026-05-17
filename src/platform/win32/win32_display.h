@@ -19,7 +19,7 @@ struct Win32Display
 
     struct InternalData
     {
-        mem::Allocator allocator;
+        mem::Allocator* allocator;
 
         FreeList<WindowData, Display::WindowID> windows;
         RECT fullscreen_rect;

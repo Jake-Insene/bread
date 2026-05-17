@@ -11,7 +11,7 @@
 
 struct RendererBatch2DCreateInfo
 {
-    mem::Allocator allocator;
+    mem::Allocator* allocator;
     Graphics::Device* graphics_device;
     GPUMemoryAllocator* gpu_memory_allocator;
     u32 max_frames_in_flight;
@@ -115,7 +115,7 @@ struct RendererBatch2D
     static constexpr usize MaxInstancePerBatch = 128;
     static constexpr usize MaxBatchesPerFrame = 64;
 
-    mem::Allocator allocator;
+    mem::Allocator* allocator;
     Graphics::Device* graphics_device;
 
     Graphics::PipelineLayout* batch_pipeline_layout;

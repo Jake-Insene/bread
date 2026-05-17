@@ -8,12 +8,12 @@
 
 struct RenderDeviceCreateInfo
 {
-    mem::Allocator allocator;
+    mem::Allocator* allocator;
 };
 
 struct RenderDevice
 {
-    mem::Allocator allocator;
+    mem::Allocator* allocator;
 
     Graphics::Device device;
 

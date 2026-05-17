@@ -19,7 +19,7 @@ void Image::destroy()
 {
     if(!data.pixels.null())
     {
-        allocator.free(data.pixels);
+        allocator->free(data.pixels);
     }
 
     Resource::destroy();
@@ -59,7 +59,7 @@ Error Image::load(StringView file_path)
     }
     
     data.pixels.len = data.size.width * data.size.height * channels;
-    allocator.free(buffer);
+    allocator->free(buffer);
     
     return ErrorCode::Ok;
 }
@@ -68,7 +68,7 @@ void Image::unload()
 {
     if (!data.pixels.null())
     {
-        allocator.free(data.pixels);
+        allocator->free(data.pixels);
         data.pixels = {};
         data.size = {};
         data.format = {};

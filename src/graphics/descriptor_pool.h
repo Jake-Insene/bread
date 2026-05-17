@@ -22,7 +22,7 @@ struct DescriptorPool : DeviceObject
     // Allocated sets that require destruction.
     Array<DescriptorSetRef> allocated_sets;
 
-    void init(const mem::Allocator& _allocator, Device* _parent, const GPU::DescriptorPoolCreateInfo& info);
+    void init(mem::Allocator* _allocator, Device* _parent, const GPU::DescriptorPoolCreateInfo& info);
     void destroy();
 
     DescriptorSetRef allocate(GPU::DescriptorSetLayoutID set_layout);

@@ -48,7 +48,7 @@ void GenericAllocator::destroy()
         internal_allocator.free(page.bytes);
     }
     
-    if(allocated_pages.ptr())
+    if(!allocated_pages.null())
     {
         internal_allocator.free(mem::to_bytes(allocated_pages));
     }
@@ -86,7 +86,7 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
     const usize aligned_size = mem::align_up(size, alignment);
 
     Header* allocated_mem = _search_for_available_space(aligned_size, alignment);
-    if(allocated_mem)
+    if(allocated_mem != nullptr)
     {
         // allocated_mem = aligned_base - sizeof(Header)
         u8* base = reinterpret_cast<u8*>(usize(allocated_mem) + sizeof(Header));
@@ -205,23 +205,6 @@ usize GenericAllocator::get_size_of(const Slice<u8>& ptr) const
     return header->len;
 }
     
-static inline Allocator::VTable ga_vtable = 
-{
-    .alloc = reinterpret_cast<decltype(Allocator::VTable::alloc)>(&GenericAllocator::alloc),
-    .realloc = reinterpret_cast<decltype(Allocator::VTable::realloc)>(&GenericAllocator::realloc),
-    .free = reinterpret_cast<decltype(Allocator::VTable::free)>(&GenericAllocator::free),
-    .get_size_of = reinterpret_cast<decltype(Allocator::VTable::get_size_of)>(&GenericAllocator::get_size_of),
-};
-
-Allocator GenericAllocator::allocator()
-{
-    return Allocator
-    {
-        .vtable = &ga_vtable,
-        .self = reinterpret_cast<Allocator*>(this),
-    };
-}
-
 GenericAllocator::Header* GenericAllocator::_search_for_available_space(usize aligned_size, usize alignment)
 {
     for(usize i = 0; i < page_count; i++)

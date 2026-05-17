@@ -21,7 +21,7 @@ Slice<u8> StackAllocator::alloc(usize size, usize alignment)
     const usize aligned_sp = mem::align_up(offset, alignment);
     const usize aligned_offset = aligned_sp - offset;
 
-    if(offset + aligned_size + aligned_offset == sp.len)
+    if(offset + aligned_size + aligned_offset >= sp.len)
     {
         return {};
     }
@@ -50,22 +50,6 @@ usize StackAllocator::get_size_of(const Slice<u8>& ptr) const
 {
     Unused(ptr);
     return MaxValue<usize>;
-}
-
-static inline Allocator::VTable sa_vtable = 
-{
-    .alloc = reinterpret_cast<decltype(Allocator::VTable::alloc)>(&StackAllocator::alloc),
-    .realloc = reinterpret_cast<decltype(Allocator::VTable::realloc)>(&StackAllocator::realloc),
-    .free = reinterpret_cast<decltype(Allocator::VTable::free)>(&StackAllocator::free),
-    .get_size_of = reinterpret_cast<decltype(Allocator::VTable::get_size_of)>(&StackAllocator::get_size_of),
-};
-Allocator StackAllocator::allocator()
-{
-    return Allocator
-    {
-        .vtable = &sa_vtable,
-        .self = reinterpret_cast<Allocator*>(this),
-    };
 }
 
 }

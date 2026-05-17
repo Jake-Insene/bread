@@ -5,25 +5,25 @@
 
 static void* _alloc(usize size)
 {
-    mem::Allocator allocator = Engine::get_resource_manager()->get_allocator();
-    return allocator.alloc(size, alignof(usize)).items;
+    mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
+    return allocator->alloc(size, alignof(usize)).items;
 }
 
 static void* _realloc(void* ptr, usize old_size, usize new_size)
 {
-    mem::Allocator allocator = Engine::get_resource_manager()->get_allocator();
+    mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
 
     Slice<u8> old_mem = Slice<u8>(reinterpret_cast<u8*>(ptr), old_size);
-    if(ptr && allocator.realloc(old_mem, new_size, alignof(usize)))
+    if(ptr && allocator->realloc(old_mem, new_size, alignof(usize)))
     {
         return ptr;
     }
     
-    Slice<u8> new_mem = allocator.alloc(new_size, alignof(usize));
+    Slice<u8> new_mem = allocator->alloc(new_size, alignof(usize));
     if (new_mem.ptr() && ptr != nullptr && old_size != 0)
     {
         mem::copy(new_mem, old_mem);
-        allocator.free(old_mem);
+        allocator->free(old_mem);
     }
     
     return new_mem.ptr();
@@ -31,11 +31,11 @@ static void* _realloc(void* ptr, usize old_size, usize new_size)
 
 static void _free(void* ptr)
 {
-    mem::Allocator allocator = Engine::get_resource_manager()->get_allocator();
+    mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
     
     if(ptr)
     {
-        allocator.free(
+        allocator->free(
             Slice<u8>(reinterpret_cast<u8*>(ptr), 1)
         );
     }

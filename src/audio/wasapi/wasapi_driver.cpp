@@ -18,7 +18,7 @@ InternalAudio::AudioAdapter WASAPIDriver::get_vtable()
     };
 }
 
-void WASAPIDriver::initialize(const mem::Allocator& allocator)
+void WASAPIDriver::initialize(mem::Allocator* allocator)
 {
     data.allocator = allocator;
     WASAPIDebugInfo("Initializing WASAPI Driver...");

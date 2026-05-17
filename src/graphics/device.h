@@ -22,7 +22,7 @@ namespace Graphics
 
 struct Device
 {
-    mem::Allocator allocator;
+    mem::Allocator* allocator;
     Mutex mutex;
 
     GPU::PhysicalDeviceID gpu_physical_device;
@@ -40,7 +40,7 @@ struct Device
     Queue* get_copy_queue() { return &copy_queue; }
     Queue* get_present_queue() { return &present_queue; }
 
-    void init(const mem::Allocator& _allocator, GPU::PhysicalDeviceID _gpu_physical_device);
+    void init(mem::Allocator* _allocator, GPU::PhysicalDeviceID _gpu_physical_device);
     void destroy();
 
     SwapChain* create_swap_chain(Window window, GPU::TextureFormat surface_format);
@@ -63,7 +63,7 @@ struct Device
     requires(IsBaseOf<DeviceObject, T>)
     T* _allocate_object()
     {
-        T* object = allocator.object<T>();
+        T* object = allocator->object<T>();
         _log_child_alloc(static_cast<DeviceObject*>(object));
         (void)allocated_objects.add(
             static_cast<DeviceObject*>(object)

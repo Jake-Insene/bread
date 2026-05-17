@@ -50,20 +50,4 @@ usize PageAllocator::get_size_of(const Slice<u8>& ptr) const
     return OS::query_memory(ptr).region_size;
 }
 
-static inline Allocator::VTable page_vtable =
-{
-    .alloc = reinterpret_cast<decltype(Allocator::VTable::alloc)>(&PageAllocator::alloc),
-    .realloc = reinterpret_cast<decltype(Allocator::VTable::realloc)>(&PageAllocator::realloc),
-    .free = reinterpret_cast<decltype(Allocator::VTable::free)>(&PageAllocator::free),
-    .get_size_of = reinterpret_cast<decltype(Allocator::VTable::get_size_of)>(&PageAllocator::get_size_of),
-};
-
-Allocator PageAllocator::allocator()
-{
-    return Allocator
-    {
-        .vtable = &page_vtable,
-        .self = reinterpret_cast<Allocator*>(this),
-    };
-}
 }

@@ -3,7 +3,7 @@
 #include "platform/android/android_engine.h"
 
 
-void Display::initialize(const mem::Allocator &allocator)
+void Display::initialize(mem::Allocator* allocator)
 {
     Display::data.allocator = allocator;
 

@@ -10,7 +10,7 @@ struct Semaphore : DeviceObject
 {
     GPU::SemaphoreID gpu_semaphore;
 
-    void init(const mem::Allocator& _allocator, Device* _parent, GPU::DeviceID gpu_device);
+    void init(mem::Allocator* _allocator, Device* _parent, GPU::DeviceID gpu_device);
     void destroy();
 };
 

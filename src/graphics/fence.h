@@ -10,7 +10,7 @@ struct Fence : DeviceObject
 {
     GPU::FenceID gpu_fence;
     
-    void init(const mem::Allocator& _allocator, Device* _parent, GPU::DeviceID gpu_device, bool signaled);
+    void init(mem::Allocator* _allocator, Device* _parent, GPU::DeviceID gpu_device, bool signaled);
     void destroy();
 
     void reset();

@@ -65,7 +65,7 @@ struct GPU
 	using CommandPoolID = ID<IntegralIDType, struct _CommandPoolID>;
 	using CommandBufferID = ID<IntegralIDType, struct _CommandBufferTag>;
 
-    static void initialize(const mem::Allocator& allocator);
+    static void initialize(mem::Allocator* allocator);
     static void initialize_from_adapter(const InternalGPU::GPUAdapter* adapter);
     static void shutdown();
 

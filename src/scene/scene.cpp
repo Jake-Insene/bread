@@ -32,7 +32,7 @@ Scene::SceneClass* Scene::get_class()
 
 Scene* Scene::_allocate_scene(const SceneClass* klass, const CreateInfo& info)
 {
-    Scene* scene = reinterpret_cast<Scene*>(info.allocator.alloc(klass->scene_size, alignof(Scene)).ptr());
+    Scene* scene = reinterpret_cast<Scene*>(info.allocator->alloc(klass->scene_size, alignof(Scene)).ptr());
     scene->klass = klass;
     SceneCallRef(scene, on_create, info);
     return scene;

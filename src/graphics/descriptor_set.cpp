@@ -5,7 +5,7 @@
 namespace Graphics
 {
 
-void DescriptorSet::init(const mem::Allocator& _allocator, const DescriptorSetInfo& info)
+void DescriptorSet::init(mem::Allocator* _allocator, const DescriptorSetInfo& info)
 {
     allocator = _allocator;
     
@@ -117,7 +117,7 @@ void DescriptorSet::set_combined_texture_sampler_array(u32 binding, Slice<GPU::T
 {
     if(use_deferred)
     {
-        Slice<GPU::DescriptorTextureInfo> write_textures = allocator.array<GPU::DescriptorTextureInfo>(textures.len);
+        Slice<GPU::DescriptorTextureInfo> write_textures = allocator->array<GPU::DescriptorTextureInfo>(textures.len);
         for(usize i = 0; i < textures.len; i++)
         {
             write_textures[i].texture = textures[i];
@@ -141,7 +141,7 @@ void DescriptorSet::set_combined_texture_sampler_array(u32 binding, Slice<GPU::T
     }
     else
     {
-        GPU::DescriptorTextureInfo* texture_infos = allocator.array<GPU::DescriptorTextureInfo>(textures.len).ptr();
+        GPU::DescriptorTextureInfo* texture_infos = allocator->array<GPU::DescriptorTextureInfo>(textures.len).ptr();
         for(usize i = 0; i < textures.len; i++)
         {
             texture_infos[i] = { .texture = textures[i], .layout = layout, .sampler = samplers[i]->gpu_sampler };
@@ -158,7 +158,7 @@ void DescriptorSet::set_combined_texture_sampler_array(u32 binding, Slice<GPU::T
             }
         );
         
-        allocator.free(mem::to_bytes(Slice(texture_infos, textures.len)));
+        allocator->free(mem::to_bytes(Slice(texture_infos, textures.len)));
     }
 }
 
@@ -166,9 +166,9 @@ void DescriptorSet::sync_writes()
 {
     if(use_deferred && deferred_writes.count != 0)
     {
-        Slice<GPU::WriteDescriptorInfo> writes = allocator.array<GPU::WriteDescriptorInfo>(deferred_writes.count);
-        Slice<GPU::DescriptorBufferInfo> buffers = allocator.array<GPU::DescriptorBufferInfo>(deferred_buffers);
-        Slice<GPU::DescriptorTextureInfo> textures = allocator.array<GPU::DescriptorTextureInfo>(deferred_textures);
+        Slice<GPU::WriteDescriptorInfo> writes = allocator->array<GPU::WriteDescriptorInfo>(deferred_writes.count);
+        Slice<GPU::DescriptorBufferInfo> buffers = allocator->array<GPU::DescriptorBufferInfo>(deferred_buffers);
+        Slice<GPU::DescriptorTextureInfo> textures = allocator->array<GPU::DescriptorTextureInfo>(deferred_textures);
 
         usize buffer_index = 0;
         usize texture_index = 0;
@@ -216,19 +216,19 @@ void DescriptorSet::sync_writes()
                 .write_infos = writes,
             }
         );
-        allocator.free(mem::to_bytes(writes));
-        allocator.free(mem::to_bytes(buffers));
-        allocator.free(mem::to_bytes(textures));
+        allocator->free(mem::to_bytes(writes));
+        allocator->free(mem::to_bytes(buffers));
+        allocator->free(mem::to_bytes(textures));
 
         for(const DeferredWrite& deferred_write : deferred_writes.iter())
         {
             if(deferred_write.write_array.buffers.len != 0)
             {
-                allocator.free(mem::to_bytes(deferred_write.write_array.buffers));
+                allocator->free(mem::to_bytes(deferred_write.write_array.buffers));
             }
             else if(deferred_write.write_array.textures.len != 0)
             {
-                allocator.free(mem::to_bytes(deferred_write.write_array.textures));
+                allocator->free(mem::to_bytes(deferred_write.write_array.textures));
             }
         }
         deferred_writes.clear();

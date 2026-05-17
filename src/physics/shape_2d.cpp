@@ -2,7 +2,7 @@
 
 
 
-Shape2D Shape2D::make_box(const mem::Allocator& allocator, const Vector2& size)
+Shape2D Shape2D::make_box(mem::Allocator* allocator, const Vector2& size)
 {
     Shape2D box = 
     {

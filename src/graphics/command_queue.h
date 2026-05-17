@@ -58,7 +58,7 @@ struct CommandQueue : DeviceObject
     Stack<Fence*> gpu_free_fences;
     Stack<CommandEncoder> free_encoders;
 
-    void init(const mem::Allocator& _allocator, Device* _parent, const CommandQueueInfo& info);
+    void init(mem::Allocator* _allocator, Device* _parent, const CommandQueueInfo& info);
     void destroy();
 
     CommandEncoder acquire_encoder();

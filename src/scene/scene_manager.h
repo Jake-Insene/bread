@@ -14,7 +14,7 @@ struct SceneManager
         Scene* child;
     };
 
-    mem::Allocator allocator;
+    mem::Allocator* allocator;
 
     bool keep_viewport;
     
@@ -48,7 +48,7 @@ struct SceneManager
     
     f32 get_delta_time() { return delta_time; }
 
-    void initialize(const mem::Allocator& _allocator);
+    void initialize(mem::Allocator* _allocator);
     void shutdown();
     
     void change_scene(Scene* new_scene);

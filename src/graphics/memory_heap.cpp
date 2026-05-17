@@ -4,7 +4,7 @@
 namespace Graphics
 {
 
-void MemoryHeap::init(const mem::Allocator& _allocator, Device* _parent, const GPU::MemoryHeapCreateInfo& info)
+void MemoryHeap::init(mem::Allocator* _allocator, Device* _parent, const GPU::MemoryHeapCreateInfo& info)
 {
     DeviceObject::init(_allocator, _parent);
     heap_size = info.heap_size;

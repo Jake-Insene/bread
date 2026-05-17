@@ -8,7 +8,7 @@ struct Ptr;
 
 
 template<typename T>
-concept CanBeCreatedWithAllocator = requires(const mem::Allocator& allocator)
+concept CanBeCreatedWithAllocator = requires(mem::Allocator* allocator)
 {
 	T::with_allocator(allocator);
 };
@@ -62,7 +62,7 @@ struct [[nodiscard]] Scoped : T
 	requires(CanBeCreated<T, TArgs...>)
 	: T(T::create(Forward<TArgs>(args)...)), data(Forward<TArgs>(args)...) {}
 
-	Scoped(const mem::Allocator& allocator)
+	Scoped(mem::Allocator* allocator)
 	requires(CanBeCreatedWithAllocator<T>)
 	: T(T::with_allocator(allocator)), data(allocator) {}
 
