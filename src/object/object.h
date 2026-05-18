@@ -42,7 +42,7 @@ struct Object
     };
 
     template<typename T>
-        requires(IsBaseOf<Object, T>)
+    requires(IsBaseOf<Object, T>)
     static T* create(mem::Allocator* allocator, const T::CreateInfo& t_info)
     {
         T* obj = allocator->object<T>();

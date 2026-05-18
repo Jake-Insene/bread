@@ -11,7 +11,7 @@ namespace mem
 struct Allocator
 {
     static constexpr usize DefaultAlignment = sizeof(MemoryAddress) * 2;
-        
+    
     /*
     * Allocator API
     */

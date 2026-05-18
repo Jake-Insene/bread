@@ -347,7 +347,7 @@ struct VulkanDriver
     struct InternalData
     {
         mem::Allocator* allocator;
-		mem::StackAllocator* tmp_allocator;
+		mem::StackAllocator tmp_allocator;
 
 		Slice<PhysicalDevice> physical_devices;
 		Slice<GPU::PhysicalDeviceID> physical_device_ids;
@@ -384,10 +384,10 @@ struct VulkanDriver
     static inline InternalData data;
 
     [[nodiscard]] static mem::Allocator* get_allocator() { return data.allocator; }
-	[[nodiscard]] static mem::Allocator* acquire_tmp_allocator()
+	[[nodiscard]] static mem::StackAllocator* acquire_tmp_allocator()
 	{
-		data.tmp_allocator->reset();
-		return data.tmp_allocator;
+		data.tmp_allocator.reset();
+		return &data.tmp_allocator;
 	}
 
     static InternalGPU::GPUAdapter get_adapter();

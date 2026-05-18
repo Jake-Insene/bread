@@ -130,9 +130,9 @@ void VulkanDriver::initialize(mem::Allocator* allocator)
     VKDebugInfo("Initializing Vulkan Driver...");
     data.allocator = allocator;
 
-    data.tmp_allocator = get_allocator()->object<mem::StackAllocator>();
-    data.tmp_allocator->init(OS::map_memory(1024*1024, OS::MapReadWrite));
-    
+    ConstructObject(data.tmp_allocator);
+    data.tmp_allocator.init(OS::map_memory(1024*1024, OS::MapReadWrite));
+
     data.surfaces = FreeList<Surface, GPU::SurfaceID>::with_allocator(get_allocator());
     data.devices = FreeList<LogicalDevice, GPU::DeviceID>::with_allocator(get_allocator());
     data.swap_chains = FreeList<SwapChain, GPU::SwapChainID>::with_allocator(get_allocator());
@@ -242,8 +242,7 @@ void VulkanDriver::shutdown()
 
     OS::unload_library(data.vk_lib);
 
-    OS::unmap_memory(data.tmp_allocator->sp);
-    get_allocator()->free(mem::to_bytes(Slice(data.tmp_allocator, 1)));
+    OS::unmap_memory(data.tmp_allocator.sp);
 }
 
 Slice<GPU::PhysicalDeviceID> VulkanDriver::physical_devices_enumerate()
