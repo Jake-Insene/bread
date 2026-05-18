@@ -8,6 +8,9 @@ static inline InternalPhysics2D::Adapter physics2d_current_adapter;
 
 void Physics2D::initialize(mem::Allocator* allocator, Physics2D::DriverType)
 {
+    // Ensures constructors are call.
+    ConstructObject(data);
+    
     data.allocator = allocator;
 
     // The implementation could need this in initialization

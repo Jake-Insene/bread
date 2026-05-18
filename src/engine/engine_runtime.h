@@ -2,6 +2,7 @@
 #include "audio/audio_service.h"
 #include "concurrency/job_queue.h"
 #include "display/window.h"
+#include "engine/application.h"
 #include "engine/configuration.h"
 #include "mem/generic_allocator.h"
 #include "render_device/render_device.h"
@@ -10,7 +11,6 @@
 #include "resource/sprite_animation.h"
 #include "resource/tile_set.h"
 #include "resource/material.h"
-#include "scene/scene_manager.h"
 #include "systems/system_manager.h"
 
 
@@ -61,19 +61,28 @@
 #define TileSetTileData(texture_position, ...) TileSet::TileData(texture_position),
 
 struct InputEvent;
-struct EngineConfiguration;
 
-extern EngineConfiguration __configuration__;
+extern ApplicationInfo __get_application_info__();
 extern void __preload__();
 extern Slice<SystemInfo> __get_requested_systems__();
 
 struct EngineRuntime
 {
     static constexpr usize DefaultMainQueueSize = 16;
+
+    enum class ApplicationState
+    {
+        Unknown = 0,
+        Initialized,
+        Destroyed,
+    };
     
     mem::GenericAllocator allocator;
+    Version engine_version;
+    ApplicationInfo application_info;
+    Application* application;
+    ApplicationState application_state;
 
-    SceneManager scene_manager;
     AudioService audio_service;
     RenderDevice render_device;
     ResourceManager resource_manager;
@@ -88,7 +97,24 @@ struct EngineRuntime
 
     Texture* white_texture;
 
+    struct
+    {
+        f64 internal_update_time;
+        f64 update_time;
+        f64 physics_2d_time;
+        f64 render_time;
+        f64 render_scene_time;
+        f64 present_scene_time;
+    } debug_time;
+
+    f32 last_time;
+    f32 time_accum;
+
     i32 fps;
+    i32 fps_counter;
+    i32 fps_accum;
+    f32 delta_time;
+
     bool vsync_cache;
     bool can_tick;
 
@@ -111,7 +137,7 @@ struct EngineRuntime
 
     i32 get_fps() const { return fps; }
 
-	EngineConfiguration& get_configuration() { return __configuration__; }
+	ApplicationInfo& get_application_info() { return application_info; }
 
     Window get_main_window() { return main_window; }
 

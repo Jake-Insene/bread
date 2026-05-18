@@ -1,7 +1,5 @@
 #include "object/2d/camera.h"
 
-#include "scene/scene_manager.h"
-
 
 void Camera::init(const CreateInfo& info)
 {

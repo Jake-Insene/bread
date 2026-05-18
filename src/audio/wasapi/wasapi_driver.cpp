@@ -167,6 +167,7 @@ u32 WASAPIDriver::output_get_frame_count()
 
 void WASAPIDriver::output_send_frames(const Slice<Audio::Frame>& frames)
 {
+    // lattency could make it require more frames that the ones being send
     u32 frame_count = math::min(output_get_frame_count(), frames.len);
 
     u8* buffer_out = nullptr;

@@ -152,7 +152,7 @@ Win32Engine engine = {};
 void engine_loop()
 {
 	// TODO: Accessing engine before initialization!
-	bool enable_console = engine.get_configuration().enable_debug_console;
+	bool enable_console = __get_application_info__().enable_debug_console;
 
 	if (enable_console)
 	{

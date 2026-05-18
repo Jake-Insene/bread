@@ -1,8 +1,9 @@
 #pragma once
+#include "engine/application.h"
 #include "concurrency/job_queue.h"
 #include "display/window.h"
-#include "engine/engine_runtime.h"
 #include "engine/configuration.h"
+#include "engine/engine_runtime.h"
 
 
 struct AudioService;
@@ -12,6 +13,8 @@ struct SystemManager;
 
 struct Scene;
 struct InputEvent;
+
+inline constexpr Version EngineVersion = Version::make_variant(0, 1, 0, 0);
 
 struct Engine
 {
@@ -54,9 +57,9 @@ struct Engine
         return local_data.engine_runtime->get_fps();
     }
 
-	static EngineConfiguration& get_configuration()
+	static ApplicationInfo& get_configuration()
     {
-        return local_data.engine_runtime->get_configuration();
+        return local_data.engine_runtime->get_application_info();
     }
 
     static Window get_main_window()

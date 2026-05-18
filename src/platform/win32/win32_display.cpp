@@ -2,7 +2,6 @@
 
 #include "engine/engine.h"
 #include "input/input.h"
-#include "scene/scene_manager.h"
 
 
 static inline Win32Display::WindowData& _get_window_data(Display::WindowID id)
@@ -176,7 +175,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 			f32(GET_X_LPARAM(lparam)),
 			-f32(GET_Y_LPARAM(lparam))
 		);
-		Input::data.mouse_position = Engine::local_data.engine_runtime->scene_manager._screen_make_local_to_canvas(screen_space_position);
+		Input::data.mouse_position = screen_space_position;
 		return 0;
 	}
 	break;

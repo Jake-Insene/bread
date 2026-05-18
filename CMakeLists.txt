@@ -34,6 +34,7 @@ file(GLOB ENGINE_SRC
     src/display/display.cpp
     src/display/window.cpp
     
+    src/engine/application.cpp
     src/engine/engine_runtime.cpp
 
     src/gpu/gpu.cpp
@@ -121,9 +122,6 @@ file(GLOB ENGINE_SRC
     src/resource/sprite_animation.cpp
     src/resource/texture.cpp
     src/resource/tile_set.cpp
-
-    src/scene/scene_manager.cpp
-    src/scene/scene.cpp
 
     src/systems/system_manager.cpp
 )
