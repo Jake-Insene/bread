@@ -75,6 +75,9 @@ InternalPhysics2D::Adapter P2DDriver::get_vtable()
 
 void P2DDriver::initialize(mem::Allocator* allocator)
 {
+    // Ensures constructors are call.
+    ConstructObject(data);
+
     data.allocator = allocator;
 
     data.gravity = Physics2D::get_property("/gravity").get<Vector2>();

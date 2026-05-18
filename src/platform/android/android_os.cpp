@@ -7,6 +7,9 @@
 
 void AndroidOS::initialize(mem::Allocator* allocator)
 {
+    // Ensures constructors are call.
+    ConstructObject(AndroidOS::data);
+
     data.allocator = allocator;
 }
 

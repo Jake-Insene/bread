@@ -27,15 +27,7 @@ struct Display
         VTFunc(Opaque, window_get_native_handle, WindowID);
     };
 
-    struct InternalData
-    {
-        mem::Allocator* allocator;
-    };
-
     static inline VTable vtable;
-    static inline InternalData data;
-
-    static mem::Allocator* get_allocator() { return data.allocator; }
 
     static void initialize(mem::Allocator* allocator);
     static void shutdown();

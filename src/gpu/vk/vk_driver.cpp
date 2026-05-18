@@ -128,9 +128,11 @@ InternalGPU::GPUAdapter VulkanDriver::get_adapter()
 void VulkanDriver::initialize(mem::Allocator* allocator)
 {
     VKDebugInfo("Initializing Vulkan Driver...");
+    
+    // Ensures constructors are call.
+    ConstructObject(data);
     data.allocator = allocator;
 
-    ConstructObject(data.tmp_allocator);
     data.tmp_allocator.init(OS::map_memory(1024*1024, OS::MapReadWrite));
 
     data.surfaces = FreeList<Surface, GPU::SurfaceID>::with_allocator(get_allocator());

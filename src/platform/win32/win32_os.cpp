@@ -7,6 +7,9 @@
 
 void Win32OS::initialize(mem::Allocator* allocator)
 {
+    // Ensures constructors are call.
+    ConstructObject(data);
+    
     data.allocator = allocator;
     
     // For get_time()

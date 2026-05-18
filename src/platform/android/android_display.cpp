@@ -5,7 +5,10 @@
 
 void Display::initialize(mem::Allocator* allocator)
 {
-    Display::data.allocator = allocator;
+    // Ensures constructors are call.
+    ConstructObject(AndroidDisplay::data);
+
+    AndroidDisplay::data.allocator = allocator;
 
     AndroidDisplay::update_native_size(
             Vector2I(

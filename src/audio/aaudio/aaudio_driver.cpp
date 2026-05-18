@@ -12,6 +12,11 @@ InternalAudio::AudioAdapter AAudioDriver::get_vtable()
 
 void AAudioDriver::initialize(mem::Allocator* allocator)
 {
+    AAudioDebugInfo("Initializing WASAPI Driver...");
+
+    // Ensures constructors are call.
+    ConstructObject(data);
+
     data.allocator = allocator;
 }
 

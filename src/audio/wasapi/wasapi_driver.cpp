@@ -20,8 +20,12 @@ InternalAudio::AudioAdapter WASAPIDriver::get_vtable()
 
 void WASAPIDriver::initialize(mem::Allocator* allocator)
 {
-    data.allocator = allocator;
     WASAPIDebugInfo("Initializing WASAPI Driver...");
+
+    // Ensures constructors are call.
+    ConstructObject(data);
+
+    data.allocator = allocator;
 
     IMMDeviceEnumerator* enumerator = nullptr;
 
