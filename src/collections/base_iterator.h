@@ -1,15 +1,6 @@
 #pragma once
 #include "core/header.h"
-#include "core/templates.h"
 
-
-
-template<typename IteratorType>
-concept Iterable = requires(IteratorType& it)
-{
-	{ it.begin() };
-	{ it.end() };
-};
 
 
 /*

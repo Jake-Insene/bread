@@ -5,6 +5,10 @@
 #include <new>
 
 
+// Types
+template <typename... TArgs>
+using VoidT = void;
+
 // Type comparison
 template<typename A, typename B>
 inline constexpr bool IsSame = false;
@@ -33,6 +37,25 @@ struct TypeList {};
 
 
 // Type modification
+
+template <typename T, typename = void>
+struct AddReferenceT
+{
+    using LValue = T;
+    using RValue = T;
+};
+
+template <typename T>
+struct AddReferenceT<T, VoidT<T&>> { // (referenceable type)
+    using LValue = T&;
+    using RValue = T&&;
+};
+
+template <typename T>
+using AddLValueReference = AddReferenceT<T>::LValue;
+
+template <typename T>
+using AddRValueReference = AddReferenceT<T>::RValue;
 
 template<typename T>
 struct RemoveConstT
@@ -470,3 +493,13 @@ constexpr void ConstructArray(T* array_ref, usize len)
 {
     ::new(array_ref) T[len]{};
 }
+
+template<typename T>
+AddRValueReference<T> DeclVal() noexcept
+{
+    static_assert(false, "DeclVal not allowed in an evaluated context");
+}
+
+template<typename From, typename To>
+concept ConvertibleTo = requires { static_cast<To>(DeclVal<From>()); };
+

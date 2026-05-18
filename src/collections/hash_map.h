@@ -6,14 +6,6 @@
 #include "mem/utils.h"
 
 
-// Default hash
-template<typename T>
-struct HashOfType
-{
-    [[nodiscard]] static constexpr u64 hashfunc(const T& k) { return u64(k); }
-    [[nodiscard]] static constexpr bool compare(const T& k1, const T& k2) { return k1 == k2; }
-};
-
 // HashMapEntry
 template<typename K, typename V, typename HashType>
 struct HashMapEntry
@@ -31,10 +23,10 @@ struct HashMapEntry
 /*
 * A collection of items referenced as a key.
 */
-template<typename K, typename V>
+template<Hashable K, typename V>
 struct [[nodiscard]] HashMap
 {
-    using HashType = u64;
+    using HashType = HashCode;
     using MapEntry = HashMapEntry<K, V, HashType>;
     using KeyValue = Pair<K, V>;
     using Iterator = MapIterator<MapEntry>;
