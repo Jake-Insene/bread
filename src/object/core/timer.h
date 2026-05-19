@@ -22,7 +22,7 @@ struct Timer : Object
     /*
     * Timeout event, it's called when the timer reachs duration.
     */
-    Event<void(*)(Timer*)> timeout;
+    Function<void(*)(Timer*)> timeout;
 
     void init(const CreateInfo& info);
     void deinit();

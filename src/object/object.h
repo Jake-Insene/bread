@@ -1,7 +1,7 @@
 #pragma once
 #include "collections/array.h"
 #include "collections/bits.h"
-#include "collections/event.h"
+#include "collections/function.h"
 #include "collections/string.h"
 #include "collections/string_view.h"
 #include "object/object_id.h"
@@ -12,10 +12,6 @@ struct InputEvent;
 using GroupName = u64;
 using MarkName = u64;
 
-/*
-* The minimum entity that can be placed in a scene, can safely instanced in a scene.
-* A scene is just a object instanced without a parent.
-*/
 struct Object
 {
     /*
@@ -38,7 +34,7 @@ struct Object
 
     struct VTable
     {
-        Event<void(*)(Object*)> construct;
+        Function<void(*)(Object*)> construct;
     };
 
     template<typename T>

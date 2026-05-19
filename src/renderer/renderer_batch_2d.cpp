@@ -69,7 +69,7 @@ void RendererBatch2D::init(const RendererBatch2DCreateInfo& batch_info)
     constexpr usize PipelineVersionSizes[] = { sizeof(SpriteInstance), sizeof(QuadInstance), sizeof(LineInstance), sizeof(CircleInstance) };
     constexpr GPU::PrimitiveTopology PipelineTopologies[] = { GPU::PrimitiveTopology::TriangleList, GPU::PrimitiveTopology::TriangleList, GPU::PrimitiveTopology::LineList, GPU::PrimitiveTopology::TriangleList };
     Graphics::Pipeline* pipelines[] = {nullptr, nullptr, nullptr, nullptr};
-    for(usize i = 0; i < 4; i++)
+    for(usize i = 0; i < ArraySize(PipelineVersionSizes); i++)
     {
         GPU::VertexBinding bindings[] =
         {
@@ -229,6 +229,7 @@ void RendererBatch2D::build_batch(const FrameInfo& frame_info)
     // build batches
     u8* staging_ptr = instance_buffer.get_mapped_staging(frame_info.frame_index).ptr();
 
+    // Updating staging data
     SpriteInstance* sprite_buffer = reinterpret_cast<SpriteInstance*>(staging_ptr + sprite_offset_begin);
     mem::copy(Slice(sprite_buffer, sprites.count), Slice(sprites.items.items, sprites.count));
     sprite_count = sprites.count;
@@ -245,6 +246,7 @@ void RendererBatch2D::build_batch(const FrameInfo& frame_info)
     mem::copy(Slice(circle_buffer, circles.count), Slice(circles.items.items, circles.count));
     circle_count = circles.count;
 
+    // updating batch sets
     usize base_set_index = frame_info.frame_index * MaxBatchesPerFrame;
     usize set_offset = 0;
     FramedBuffer::BufferInfo buffer_info = uniform_buffer.get_buffer_info(frame_info.frame_index);

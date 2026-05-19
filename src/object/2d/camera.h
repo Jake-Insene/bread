@@ -3,8 +3,6 @@
 #include "math/transform_2d.h"
 
 
-struct SceneManager;
-
 struct Camera : Object
 {
     enum PositionMode

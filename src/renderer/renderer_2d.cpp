@@ -75,7 +75,7 @@ void Renderer2D::render(const FrameInfo& frame_info)
         return;
     }
 
-    Vector2I size = Engine::get_main_window().get_size();
+    Vector2I size = Engine::get_main_window()->get_size();
     Vector2I viewport_size = Engine::get_configuration().viewport_size;
     RenderFrame& frame = frames.get(frame_info.frame_index);
 

@@ -4,7 +4,6 @@
 #include "debug/fail.h"
 #include "engine/engine.h"
 #include "log/log.h"
-#include "scene/scene_manager.h"
 #include "platform/android/android_display.h"
 #include "platform/android/android_engine.h"
 #include "platform/android/android_mapped_keycodes.h"
@@ -38,7 +37,7 @@ static int32_t engine_handle_input(android_app*, AInputEvent* event)
                 InputEventTouch e = {};
 
                 // Y positive is up
-                e.type = InputEventType::Touch;
+                e.type = EventType::Touch;
                 e.position = Vector2
                         (
                                 AMotionEvent_getX(event, p),
@@ -60,6 +59,12 @@ static int32_t engine_handle_input(android_app*, AInputEvent* event)
     {
         i32 action = AKeyEvent_getAction(event);
         i32 keycode = AKeyEvent_getKeyCode(event);
+
+		InputEventKey event = {};
+        event.type = EventType::KeyPress;
+		event.pressed = action == AKEY_EVENT_ACTION_DOWN;
+		event.key = MappedKeycodes[keycode];
+
         if(action == AKEY_EVENT_ACTION_DOWN)
         {
             Input::data.keys[i32(MappedKeycodes[keycode])] = KeyState::Pressed;
@@ -80,7 +85,6 @@ static void engine_handle_cmd(android_app*, int32_t cmd)
     switch (cmd) {
     case APP_CMD_SAVE_STATE:
         Log::info("Saving state...");
-        //save_state.last_scene = SceneManager::current_scene->klass;
         break;
     case APP_CMD_INIT_WINDOW:
         // The window is being shown, get it ready.

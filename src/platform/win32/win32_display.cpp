@@ -23,7 +23,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 	case WM_CLOSE:
 	{
 		InputEventWindowClose event = {};
-		event.type = InputEventType::WindowClose;
+		event.type = EventType::WindowClose;
 		event.window = window_id;
 		Engine::local_data.engine_runtime->handle_event(event);
 	}
@@ -52,7 +52,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 			Input::data.mouse_buttons[i32(btn)] = false;
 
 			InputEventMouseButton event = {};
-			event.type = InputEventType::MouseButton;
+			event.type = EventType::MouseButton;
 			event.position = Input::data.mouse_position;
 			event.pressed = false;
 			event.button = btn;
@@ -107,7 +107,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		);
 
 		InputEventMouseButton event = {};
-		event.type = InputEventType::MouseButton;
+		event.type = EventType::MouseButton;
 		event.position = pos;
 		event.pressed = Input::data.mouse_buttons[i32(button)];
 		event.button = button;
@@ -143,7 +143,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		Input::data.keys[wparam] = new_key_state;
 
 		InputEventKey event = {};
-		event.type = InputEventType::KeyPress;
+		event.type = EventType::KeyPress;
 		event.pressed = Input::data.keys[wparam] == KeyState::Pressed;
 		event.key = static_cast<Key>(wparam);
 
@@ -157,7 +157,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		GetWindowRect(handle, &window_data.window_rect);
 
 		InputEventWindowResize event = {};
-		event.type = InputEventType::WindowResize;
+		event.type = EventType::WindowResize;
 		event.window = window_id;
 		event.size = Vector2I(
 			window_data.window_rect.right - window_data.window_rect.left,

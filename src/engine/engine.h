@@ -11,9 +11,6 @@ struct RenderDevice;
 struct ResourceManager;
 struct SystemManager;
 
-struct Scene;
-struct InputEvent;
-
 inline constexpr Version EngineVersion = Version::make_variant(0, 1, 0, 0);
 
 struct Engine
@@ -62,7 +59,7 @@ struct Engine
         return local_data.engine_runtime->get_application_info();
     }
 
-    static Window get_main_window()
+    static Window* get_main_window()
     {
         return local_data.engine_runtime->get_main_window();
     }

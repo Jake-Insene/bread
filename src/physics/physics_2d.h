@@ -1,6 +1,6 @@
 #pragma once
 #include "core/header.h"
-#include "collections/event.h"
+#include "collections/function.h"
 #include "collections/property.h"
 #include "collections/string_map.h"
 #include "mem/allocator.h"
@@ -64,9 +64,9 @@ struct Physics2D
     };
 
     using CollisionMask = u32;
-    using EventOnCollide = Event<void(*)(BodyID, BodyID)>;
-    using EventOnBodyEnter = Event<void(*)(AreaID, BodyID)>;
-    using EventOnBodyExit = Event<void(*)(AreaID, BodyID)>;
+    using EventOnCollide = Function<void(*)(BodyID, BodyID)>;
+    using EventOnBodyEnter = Function<void(*)(AreaID, BodyID)>;
+    using EventOnBodyExit = Function<void(*)(AreaID, BodyID)>;
 
     struct InternalData
     {

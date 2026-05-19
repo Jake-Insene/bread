@@ -1,5 +1,6 @@
 #pragma once
 #include "math/mat4.h"
+#include "math/mat4.h"
 #include "math/vec2.h"
 #include "math/color.h"
 #include "math/rect_2d.h"
@@ -16,13 +17,13 @@ struct RendererCreateInfo
     Graphics::Device* graphics_device;
     GPUMemoryAllocator* gpu_memory_allocator;
     u32 max_frames_in_flight;
-    Window target_window;
+    Window* target_window;
     GPU::TextureFormat surface_format;
 };
 
 struct Renderer
 {
-    static constexpr usize MaxFramesInFlight = 3;
+    static constexpr u32 DefaultFramesInFlight = 3;
 
     enum class FrameFlags
     {

@@ -1,4 +1,5 @@
 #pragma once
+#include "display/window.h"
 #include "mem/allocator.h"
 #include "os/mutex.h"
 #include "gpu/gpu.h"
@@ -43,7 +44,7 @@ struct Device
     void init(mem::Allocator* _allocator, GPU::PhysicalDeviceID _gpu_physical_device);
     void destroy();
 
-    SwapChain* create_swap_chain(Window window, GPU::TextureFormat surface_format);
+    SwapChain* create_swap_chain(Window* window, GPU::TextureFormat surface_format);
     Fence* create_fence(bool signaled);
     Semaphore* create_semaphore();
     MemoryHeap* create_memory_heap(GPU::HeapUsage usage, usize size);

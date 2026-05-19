@@ -84,7 +84,7 @@ void Device::destroy()
     GPU::device_destroy(gpu_device);
 }
 
-SwapChain* Device::create_swap_chain(Window window, GPU::TextureFormat surface_format)
+SwapChain* Device::create_swap_chain(Window* window, GPU::TextureFormat surface_format)
 {
     mutex.lock();
     SwapChain* sc = _allocate_object<SwapChain>();
@@ -92,7 +92,7 @@ SwapChain* Device::create_swap_chain(Window window, GPU::TextureFormat surface_f
         {
             .gpu_device = gpu_device,
             .present_queue = &present_queue,
-            .window = window,
+            .window = window->window_id,
             .surface_format = surface_format,
         }
     );

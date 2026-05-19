@@ -9,7 +9,6 @@ struct EventStorage
 	Fn func;
 };
 
-
 template<typename RT, typename T, typename... TArgs>
 struct EventStorage<RT(T::*)(TArgs...), true>
 {
@@ -38,7 +37,7 @@ struct EventStorage<RT(T::*)(TArgs...) const, false>
 
 
 template<typename Fn, bool UseInstance = true>
-struct [[nodiscard]] Event
+struct [[nodiscard]] Function
 {
 	using Decomposed = FunctionDecomposed<Fn>;
 	using ReturnType = Decomposed::ReturnType;

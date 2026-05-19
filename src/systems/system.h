@@ -1,7 +1,7 @@
 #pragma once
 #include "core/header.h"
+#include "collections/function.h"
 #include "collections/string_view.h"
-#include "collections/event.h"
 #include "input/input.h"
 #include "mem/allocator.h"
 
@@ -14,8 +14,8 @@ struct SystemInitializeInfo
 
 struct SystemRuntime
 {
-    Event<void(*)(Opaque*, const SystemInitializeInfo& init_info)> initialize;
-    Event<void(*)(Opaque*)> shutdown;
+    Function<void(*)(Opaque*, const SystemInitializeInfo& init_info)> initialize;
+    Function<void(*)(Opaque*)> shutdown;
 };
 
 struct SystemDependency

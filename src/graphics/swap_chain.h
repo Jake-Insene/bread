@@ -1,7 +1,7 @@
 #pragma once
 #include "collections/array.h"
 #include "collections/ptr.h"
-#include "display/window.h"
+#include "display/display.h"
 #include "gpu/gpu.h"
 #include "graphics/device_object.h"
 #include "graphics/queue.h"
@@ -16,7 +16,7 @@ struct SwapChainInfo
 {
     GPU::DeviceID gpu_device;
     Queue* present_queue;
-    Window window;
+    Display::WindowID window;
     GPU::TextureFormat surface_format;
 };
 
@@ -32,7 +32,7 @@ struct SwapChain : DeviceObject
     
     GPU::DeviceID gpu_device;
     Queue* present_queue;
-    Window window;
+    Display::WindowID window;
     GPU::TextureFormat surface_format;
     
     GPU::SwapChainID swap_chain;

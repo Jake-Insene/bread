@@ -131,7 +131,7 @@ void SwapChain::_rebuild()
         swap_chain = GPU::SwapChainID::invalid();
     }
 
-    Vector2I window_size = window.get_size();
+    Vector2I window_size = Display::window_get_size(window);
     if(window_size.x == 0 || window_size.y == 0
         || window_size.x < 0 || window_size.y < 0)
     {
@@ -141,11 +141,11 @@ void SwapChain::_rebuild()
     swap_chain = GPU::swap_chain_create(
         {
             .device = gpu_device,
-            .surface = window.get_surface(),
+            .surface = Display::window_get_surface(window),
             .present_mode = GPU::PresentMode::Immediate,
             .format = surface_format,
             .min_image_count = DefaultMinImageCount,
-            .size = Vector2U(window.get_size()),
+            .size = Vector2U(window_size),
         }
     );
     is_valid_swap_chain = true;

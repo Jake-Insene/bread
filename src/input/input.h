@@ -3,7 +3,7 @@
 #include "display/display.h"
 
 
-enum class InputEventType
+enum class EventType
 {
     None = 0,
 
@@ -92,10 +92,9 @@ enum class MouseButton
     Right,
 };
 
-
-struct InputEvent
+struct Event
 {
-    InputEventType type;
+    EventType type;
 
     template<typename T>
     const T& get() const
@@ -104,39 +103,38 @@ struct InputEvent
     }
 };
 
-struct InputEventKey : InputEvent
+struct InputEventKey : Event
 {
     bool pressed;
     Key key;
 };
 
-struct InputEventTouch : InputEvent
+struct InputEventTouch : Event
 {
     i32 pointer;
     bool pressed;
     Vector2 position;
 };
 
-struct InputEventMouseMove : InputEvent
+struct InputEventMouseMove : Event
 {
     Vector2 position;
 };
 
-
-struct InputEventMouseButton : InputEvent
+struct InputEventMouseButton : Event
 {
     Vector2 position;
     MouseButton button;
     bool pressed;
 };
 
-struct InputEventWindowResize : InputEvent
+struct InputEventWindowResize : Event
 {
     Display::WindowID window;
     Vector2I size;
 };
 
-struct InputEventWindowClose : InputEvent
+struct InputEventWindowClose : Event
 {
     Display::WindowID window;
 };

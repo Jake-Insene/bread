@@ -1,6 +1,6 @@
 #pragma once
 #include "core/header.h"
-#include "collections/event.h"
+#include "collections/function.h"
 #include "collections/string_view.h"
 #include "mem/allocator.h"
 #include "object/object_id.h"
@@ -78,8 +78,8 @@ struct [[nodiscard]] ObjectPool
     Opaque* _get_object(ObjectID object_id);
     void _register_object(const BlockMetadata& object_metadata);
 
-    [[nodiscard]] constexpr u32 _id_slot(ObjectID object_id) const { return object_id & SlotIndexMask; }
-    [[nodiscard]] constexpr u8 _id_block(ObjectID object_id) const { return (object_id & BlockIndexMask) >> BlockIndexBitOffset; }
+    [[nodiscard]] static constexpr u32 _id_slot(ObjectID object_id) { return object_id & SlotIndexMask; }
+    [[nodiscard]] static constexpr u8 _id_block(ObjectID object_id) { return (object_id & BlockIndexMask) >> BlockIndexBitOffset; }
 };
 
 

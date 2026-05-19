@@ -172,12 +172,11 @@ void EngineRuntime::step()
             "\tUpdate Time: {}\n"
             "\tPhysics 2D Time: {}\n"
             "\tRender Time: {}\n"
-            "\tRender Scene: {}\n"
-            "\tPresent Scene Time: {}",
+            "\tPresent Time: {}",
             fps_counter, delta_time, debug_time.internal_update_time,
             debug_time.update_time, debug_time.physics_2d_time, 
-            debug_time.render_time, debug_time.render_scene_time,
-            debug_time.present_scene_time
+            debug_time.render_time,
+            debug_time.present_time
         );
 
         fps_accum = 0;
@@ -209,21 +208,20 @@ void EngineRuntime::step()
     }
 
     system_manager.tick();
-    //scene_manager.step();
     main_queue.run();
 }
 
-void EngineRuntime::handle_event(const InputEvent& event)
+void EngineRuntime::handle_event(const Event& event)
 {
-    if(event.type == InputEventType::WindowResize)
+    if(event.type == EventType::WindowResize)
     {
         const InputEventWindowResize& resize_event = event.get<InputEventWindowResize>();
-        if(resize_event.window == get_main_window().window_id)
+        if(resize_event.window == get_main_window()->window_id)
         {
             request_recreate_window();
         }
     }
-    else if(event.type == InputEventType::WindowClose)
+    else if(event.type == EventType::WindowClose)
     {
         can_tick = false;
     }

@@ -31,7 +31,7 @@ void Application::render()
     
 }
 
-void Application::event(const InputEvent&)
+void Application::event(const Event&)
 {
 
 }

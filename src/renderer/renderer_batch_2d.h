@@ -3,9 +3,7 @@
 #include "math/vec2.h"
 #include "math/color.h"
 #include "math/rect_2d.h"
-#include "graphics/pipeline_2d.h"
 #include "renderer/framed_buffer.h"
-#include "renderer/framed_pool.h"
 #include "renderer/renderer.h"
 
 

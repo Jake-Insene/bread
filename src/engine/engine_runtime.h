@@ -60,7 +60,7 @@
 #define TileSetTile(position, data_index, has_shape, ...) TileSet::Tile(position, data_index, has_shape),
 #define TileSetTileData(texture_position, ...) TileSet::TileData(texture_position),
 
-struct InputEvent;
+struct Event;
 
 extern ApplicationInfo __get_application_info__();
 extern void __preload__();
@@ -103,8 +103,7 @@ struct EngineRuntime
         f64 update_time;
         f64 physics_2d_time;
         f64 render_time;
-        f64 render_scene_time;
-        f64 present_scene_time;
+        f64 present_time;
     } debug_time;
 
     f32 last_time;
@@ -122,7 +121,7 @@ struct EngineRuntime
     void shutdown();
     
     void step();
-    void handle_event(const InputEvent& event);
+    void handle_event(const Event& event);
 
     void request_recreate_window();
 
@@ -139,7 +138,7 @@ struct EngineRuntime
 
 	ApplicationInfo& get_application_info() { return application_info; }
 
-    Window get_main_window() { return main_window; }
+    Window* get_main_window() { return &main_window; }
 
     void set_vsync(bool vsync);
     bool get_vsync() const { return vsync_cache; }

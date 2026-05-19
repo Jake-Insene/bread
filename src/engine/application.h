@@ -4,7 +4,7 @@
 #include "math/vec2.h"
 
 
-struct InputEvent;
+struct Event;
 
 namespace mem
 {
@@ -33,5 +33,5 @@ struct Application
     virtual void update(f32 dt);
     virtual void render();
 
-    virtual void event(const InputEvent& e);
+    virtual void event(const Event& e);
 };
