@@ -21,6 +21,16 @@ void Application::shutdown()
     
 }
 
+void Application::load_resources()
+{
+    
+}
+
+void Application::unload_resources()
+{
+    
+}
+
 void Application::update(f32)
 {
 

@@ -25,10 +25,13 @@ struct ApplicationInfo
 struct Application
 {
     Application();
-    virtual ~Application() = 0;
+    virtual ~Application();
 
     virtual void initialize(mem::Allocator* allocator);
     virtual void shutdown();
+
+    virtual void load_resources();
+    virtual void unload_resources();
 
     virtual void update(f32 dt);
     virtual void render();

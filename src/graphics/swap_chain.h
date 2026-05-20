@@ -34,6 +34,7 @@ struct SwapChain : DeviceObject
     Queue* present_queue;
     Display::WindowID window;
     GPU::TextureFormat surface_format;
+    GPU::PresentMode present_mode;
     
     GPU::SwapChainID swap_chain;
     Array<ImageInfo> images;
@@ -48,6 +49,9 @@ struct SwapChain : DeviceObject
 
     bool acquire_image(u32* image_index, Semaphore* present_complete);
     bool present(Queue* present_queue, u32 image_index, const Slice<Semaphore*>& wait_semaphores);
+
+    void set_present_mode(GPU::PresentMode new_present_mode);
+    [[nodiscard]] GPU::PresentMode get_present_mode() { return present_mode; }
 
     usize get_image_count() const { return images.count; }
     ImageInfo& get_image(u32 image_index) { return images.get(image_index); }

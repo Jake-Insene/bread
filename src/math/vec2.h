@@ -5,8 +5,8 @@
 #include "platform/instrinsics.h"
 
 
-
 template <typename T>
+requires(IsArithmetic<T>)
 union [[nodiscard]] Vector2T
 {
     T comp[2];
@@ -34,9 +34,8 @@ union [[nodiscard]] Vector2T
 
     static constexpr T cross(const Vector2T& v1, const Vector2T& v2)
     {
-		return v1.x * v2.y - v1.y * v2.x;
+		return (v1.x * v2.y) - (v1.y * v2.x);
     }
-
 
     static constexpr Vector2T rotate_around_point(const Vector2T& vertice, const Vector2T& point, const T rot)
     {
@@ -168,7 +167,7 @@ union [[nodiscard]] Vector2T
     
     constexpr T length() const
     {
-        return math::sqrt(x * x + y * y);
+        return math::sqrt(dot(*this));
     }
 
     constexpr Vector2T normalized() const
@@ -177,15 +176,14 @@ union [[nodiscard]] Vector2T
         {
             return Vector2T(0);
         }
-        else if(x == 0)
+        if(x == 0)
         {
             return Vector2T(0, y / math::abs(y));
         }
-        else if(y == 0)
+        if(y == 0)
         {
             return Vector2T(x / math::abs(x), 0);
         }
-
 
 #if BREAD_ENABLE_INTRISICS
         T x1 = x;
@@ -194,8 +192,8 @@ union [[nodiscard]] Vector2T
         return Vector2T(x1, y1);
 #else
         Vector2T v = *this;
-        const T len = (T)math::sqrt(x * x + y * y);
-        if (len)
+        const T len = length();
+        if(len)
         {
             v.x /= len;
             v.y /= len;
@@ -208,9 +206,13 @@ union [[nodiscard]] Vector2T
     constexpr void normalize()
     {
 #if BREAD_ENABLE_INTRISICS
+        if(x == 0 && y == 0)
+        {
+            return;
+        }
         PlatformIntricics::vecnormalize(x, y);
 #else
-        const T len = (T)math::sqrt(x * x + y * y);
+        const T len = length();
         if(len)
         {
             x /= len;
@@ -219,14 +221,9 @@ union [[nodiscard]] Vector2T
 #endif
     }
 
-    constexpr Vector2T abs() const
-    {
-        return Vector2T(math::abs(x), math::abs(y));
-    }
-    
     constexpr T dot(const Vector2T& v) const
     {
-        return x * v.x + y * v.y;
+        return (x * v.x) + (y * v.y);
     }
 
     constexpr Vector2T normal() const

@@ -93,8 +93,6 @@ void EngineRuntime::initialize()
     
     set_vsync(get_application_info().vsync);
     
-    __preload__();
-
     fps = 0;
     fps_counter = 0;
     fps_accum = 0;
@@ -117,10 +115,14 @@ void EngineRuntime::initialize()
 
     application->initialize(&allocator);
     application_state = ApplicationState::Initialized;
+
+    application->load_resources();
 }
 
 void EngineRuntime::shutdown()
 {
+    application->unload_resources();
+    
     application->shutdown();
     application_state = ApplicationState::Destroyed;
 

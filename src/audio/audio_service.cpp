@@ -5,7 +5,7 @@
 #include "resource/sound.h"
 
 
-void _audio_output_thread(Opaque* self)
+static inline void _audio_output_thread(Opaque* self)
 {
     AudioService* audio_service = self->cast<AudioService*>();
 
@@ -146,6 +146,12 @@ void AudioService::mixer_play(u32 mixer, Sound* sound, const PlayInfo& play_info
 
 void AudioService::_mixer_mix(Mixer* mixer, Audio::FrameF* frame)
 {
+    if(mixer->plays.count == 0)
+    {
+        return;
+    }
+
+    f32 normalize = 1 / f32(mixer->plays.count);
     for(usize play_i = 0; play_i < mixer->plays.count; play_i++)
     {
         AudioService::EnqueuePlay& enqueue_play = mixer->plays.get(play_i);
@@ -171,7 +177,7 @@ void AudioService::_mixer_mix(Mixer* mixer, Audio::FrameF* frame)
             sample.right
         );
 
-        sample_f.mul(mixer->volume * enqueue_play.play_info.volume);
+        sample_f.mul(mixer->volume * enqueue_play.play_info.volume * normalize);
         frame->add(sample_f);
 
         enqueue_play.frame_index += 1;

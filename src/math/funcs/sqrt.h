@@ -7,9 +7,8 @@
 namespace math
 {
 
-
 template<typename T>
-    requires(IsFloatingPoint<T>)
+requires(IsFloatingPoint<T>)
 [[nodiscard]] constexpr T sqrt(T n)
 {
     // TODO: Improve this
@@ -17,7 +16,9 @@ template<typename T>
     return PlatformIntricics::sqrt(n);
 #else
     if (n == T(0))
+    {
         return n;
+    }
 
     const T tolerance = T(1e-10);
     T x = n;
@@ -27,7 +28,9 @@ template<typename T>
         const T root = T(0.5) * (x + (n / x));
 
         if (math::abs(root - x) < tolerance)
+        {
             return root;
+        }
 
         x = root;
     }

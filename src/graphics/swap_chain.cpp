@@ -11,6 +11,7 @@ void SwapChain::init(mem::Allocator* _allocator, Device* _parent, const SwapChai
     present_queue = info.present_queue;
     window = info.window;
     surface_format = info.surface_format;
+    present_mode = GPU::PresentMode::VSync;
 
     swap_chain = GPU::SwapChainID::invalid();
     images = Array<ImageInfo>::with_size(allocator, 3);
@@ -100,6 +101,15 @@ bool SwapChain::present(Queue* present_queue, u32 image_index, const Slice<Semap
     return true;
 }
 
+void SwapChain::set_present_mode(GPU::PresentMode new_present_mode)
+{
+    if(present_mode != new_present_mode)
+    {
+        present_mode = new_present_mode;
+        pending_rebuild = true;
+    }
+}
+
 void SwapChain::_init_images()
 {
     images.resize(GPU::swap_chain_get_image_count(swap_chain));
@@ -142,7 +152,7 @@ void SwapChain::_rebuild()
         {
             .device = gpu_device,
             .surface = Display::window_get_surface(window),
-            .present_mode = GPU::PresentMode::Immediate,
+            .present_mode = present_mode,
             .format = surface_format,
             .min_image_count = DefaultMinImageCount,
             .size = Vector2U(window_size),

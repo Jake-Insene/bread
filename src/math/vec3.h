@@ -4,10 +4,13 @@
 #include "debug/assertion.h"
 #include "math/funcs.h"
 
+
 template <typename T>
+requires(IsArithmetic<T>)
 union [[nodiscard]] Vector3T
 {
     T comp[3];
+
     struct
     {
         T x;
@@ -139,12 +142,12 @@ union [[nodiscard]] Vector3T
     
     constexpr T length() const
     {
-        return math::sqrt(x * x + y * y + z * z);
+        return math::sqrt(dot(*this));
     }
 
     constexpr void normalize()
     {
-        const T len = T(math::sqrt(x * x + y * y + z * z));
+        const T len = length();
         if(len)
         {
             x /= len;
@@ -155,7 +158,7 @@ union [[nodiscard]] Vector3T
     
     constexpr T dot(const Vector3T& v) const
     {
-        return x * v.x + y * v.y + z * v.z;
+        return (x * v.x) + (y * v.y) + (z * v.z);
     }
 };
 

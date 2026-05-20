@@ -4,10 +4,13 @@
 #include "math/funcs.h"
 #include "math/vec2.h"
 
+
 template <typename T>
+requires(IsArithmetic<T>)
 union [[nodiscard]] Vector4T
 {
     T comp[4];
+
     struct
     {
         T x;
@@ -130,12 +133,12 @@ union [[nodiscard]] Vector4T
     
     constexpr T length() const
     {
-        return math::sqrt(x * x + y * y + z * z + w * w);
+        return math::sqrt(dot(*this));
     }
 
     constexpr void normalize()
     {
-        const T len = T(math::sqrt(x * x + y * y + z * z + w * w));
+        const T len = length();
         if(len)
         {
             x /= len;
@@ -147,7 +150,7 @@ union [[nodiscard]] Vector4T
     
     constexpr T dot(const Vector4T& v) const
     {
-        return x * v.x + y * v.y + z * v.z + w * v.w;
+        return (x * v.x) + (y * v.y) + (z * v.z) + (w * v.w);
     }
 };
 
