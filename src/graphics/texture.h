@@ -27,7 +27,7 @@ struct Texture : DeviceObject
 {
     GPU::TextureID gpu_texture;
     
-    void init(mem::Allocator* _allocator, Device* _parent, GPU::DeviceID gpu_device, const TextureInfo& info);
+    void init(Mem::Allocator* _allocator, Device* _parent, GPU::DeviceID gpu_device, const TextureInfo& info);
     void destroy();
 
 	GPU::MemoryRequirements get_requirements() const;

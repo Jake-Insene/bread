@@ -4,7 +4,7 @@
 namespace Graphics
 {
 
-void Queue::init(mem::Allocator* _allocator, const GPU::QueueCreateInfo& info)
+void Queue::init(Mem::Allocator* _allocator, const GPU::QueueCreateInfo& info)
 {
     allocator = _allocator;
 

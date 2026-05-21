@@ -4,7 +4,7 @@
 
 
 
-namespace mem
+namespace Mem
 {
 
 void _copy(Slice<u8> dest, Slice<const u8> src)

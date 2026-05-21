@@ -6,7 +6,7 @@
 #include "mem/utils.h"
 
 
-String String::with_allocator(mem::Allocator* allocator)
+String String::with_allocator(Mem::Allocator* allocator)
 {
     return
     {
@@ -16,23 +16,23 @@ String String::with_allocator(mem::Allocator* allocator)
     };
 }
 
-String String::with_size(mem::Allocator* allocator, usize size)
+String String::with_size(Mem::Allocator* allocator, usize size)
 {
     return
     {
         .allocator = allocator,
-        .chars = mem::from_bytes<char>(allocator->alloc(size, alignof(usize))),
+        .chars = Mem::from_bytes<char>(allocator->alloc(size, alignof(usize))),
         .count = 0,
     };
  }
 
-String String::from_chars(mem::Allocator* allocator, StringView chars)
+String String::from_chars(Mem::Allocator* allocator, StringView chars)
 {
     String str = String::with_size(allocator, chars.len);
     
     if(chars.len != 0)
     {
-        mem::copy(str.chars, chars);
+        Mem::copy(str.chars, chars);
         str.count = chars.len;
     }
     
@@ -43,7 +43,7 @@ void String::destroy()
 {
     if(chars.ptr())
     {
-        allocator->free(mem::to_bytes(chars));
+        allocator->free(Mem::to_bytes(chars));
     }
 }
 
@@ -57,16 +57,16 @@ void String::resize(usize new_size)
 
     if (!chars.ptr())
     {
-        chars = mem::from_bytes<char>(allocator->alloc(new_size, alignof(usize)));
+        chars = Mem::from_bytes<char>(allocator->alloc(new_size, alignof(usize)));
         count = new_size;
         return;
     }
 
-    if (!allocator->realloc(mem::to_bytes(chars), new_size, alignof(usize)))
+    if (!allocator->realloc(Mem::to_bytes(chars), new_size, alignof(usize)))
     {
-        Slice<char> new_chars = mem::from_bytes<char>(allocator->alloc(new_size, alignof(usize)));
-        mem::copy(new_chars, chars);
-        allocator->free(mem::to_bytes(chars));
+        Slice<char> new_chars = Mem::from_bytes<char>(allocator->alloc(new_size, alignof(usize)));
+        Mem::copy(new_chars, chars);
+        allocator->free(Mem::to_bytes(chars));
         chars = new_chars;
     }
     else
@@ -94,9 +94,9 @@ StringView String::view()
     return StringView(chars.ptr(), count);
 }
 
-io::Writer String::writer()
+IO::Writer String::writer()
 {
-    io::Writer writer = {};
+    IO::Writer writer = {};
     writer.writable = reinterpret_cast<Opaque*>(this);
     writer.write_fn = [](Opaque* self, const Slice<const u8>& bytes) -> void
     {
@@ -109,7 +109,7 @@ io::Writer String::writer()
 void String::_set_str_view(StringView str)
 {
     resize(str.len);
-    mem::copy(chars, str);
+    Mem::copy(chars, str);
     count = str.len;
 }
 
@@ -140,7 +140,7 @@ void String::_add_str_view(StringView str)
 
     usize old_count = count;
     resize(count + str.len);
-    mem::copy(chars.add(old_count), str);
+    Mem::copy(chars.add(old_count), str);
 }
 
 void String::_add_from_signed(i64 integer)

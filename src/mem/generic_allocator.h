@@ -2,10 +2,10 @@
 #include "mem/page_allocator.h"
 
 
-namespace mem
+namespace Mem
 {
     
-struct GenericAllocator : mem::Allocator
+struct GenericAllocator : Mem::Allocator
 {
     static constexpr u16 MaxPageCount = MaxValue<u16>;
     static constexpr usize DefaultPageListSize = 128ULL;
@@ -29,7 +29,7 @@ struct GenericAllocator : mem::Allocator
     };
     static_assert(sizeof(Header) == 32, "invalid header alignment");
     
-    static constexpr usize MinimumValidRemain = mem::align_up(sizeof(Header) * 2, alignof(Header));
+    static constexpr usize MinimumValidRemain = Mem::align_up(sizeof(Header) * 2, alignof(Header));
     
     struct Page
     {
@@ -58,4 +58,4 @@ struct GenericAllocator : mem::Allocator
     
 }
 
-EnableBitOp(mem::GenericAllocator::HeaderTags)
+EnableBitOp(Mem::GenericAllocator::HeaderTags)

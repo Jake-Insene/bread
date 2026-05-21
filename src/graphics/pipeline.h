@@ -27,7 +27,7 @@ struct Pipeline : DeviceObject
 {
     GPU::PipelineID gpu_pipeline;
 
-    void init(mem::Allocator* _allocator, Device* _parent, GPU::DeviceID gpu_device, const PipelineInfo& info);
+    void init(Mem::Allocator* _allocator, Device* _parent, GPU::DeviceID gpu_device, const PipelineInfo& info);
     void destroy();
 };
 

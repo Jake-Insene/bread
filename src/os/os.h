@@ -26,7 +26,7 @@ struct OS
         usize region_size;
     };
 
-    static void initialize(mem::Allocator* allocator);
+    static void initialize(Mem::Allocator* allocator);
     static void shutdown();
 
     static f64 get_time();

@@ -3,7 +3,7 @@
 #include "math/funcs/abs.h"
 
 
-namespace math::impl
+namespace Math::impl
 {
 
 // TODO:
@@ -24,7 +24,7 @@ constexpr T atan2_approx(T y, T x)
     T atan;
     T z = y / x;
 
-    if (math::abs(z) < T(1.0))
+    if (Math::abs(z) < T(1.0))
     {
         atan = z / (T(1.0) + T(0.28) * z * z);
         if (x < T(0.0))

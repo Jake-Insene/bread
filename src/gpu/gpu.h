@@ -13,7 +13,7 @@ namespace InternalGPU
 struct GPUAdapter;
 }
 
-struct GPU
+namespace GPU
 {
 	/*
 	* GPU API
@@ -65,11 +65,11 @@ struct GPU
 	using CommandPoolID = ID<IntegralIDType, struct _CommandPoolID>;
 	using CommandBufferID = ID<IntegralIDType, struct _CommandBufferTag>;
 
-    static void initialize(mem::Allocator* allocator);
-    static void initialize_from_adapter(const InternalGPU::GPUAdapter* adapter);
-    static void shutdown();
+    void initialize(Mem::Allocator* allocator);
+    void initialize_from_adapter(const InternalGPU::GPUAdapter* adapter);
+    void shutdown();
 
-	static InternalGPU::GPUAdapter* get_adapter();
+	InternalGPU::GPUAdapter* get_adapter();
 
 	// ====== Enums ======
 
@@ -174,13 +174,13 @@ struct GPU
 	/**
 	* Returns the gpu physical devices installed on this device.
 	*/
-	static Slice<PhysicalDeviceID> physical_devices_enumerate();
+	Slice<PhysicalDeviceID> physical_devices_enumerate();
 
 	/**
 	* Return the physical device information/capabilities of the given physical device.
 	* @param physical_device The target physical device
 	*/
-	static PhysicalDeviceInfo physical_device_get_info(PhysicalDeviceID physical_device);
+	PhysicalDeviceInfo physical_device_get_info(PhysicalDeviceID physical_device);
 
 	/**
 	* Surface API
@@ -197,13 +197,13 @@ struct GPU
 	* Creates a surface for the given window. Use this to create a SwapChain.
 	* @param ci Surface creation parameters.
 	*/
-	static SurfaceID surface_create(const SurfaceCreateInfo& ci);
+	SurfaceID surface_create(const SurfaceCreateInfo& ci);
 
 	/**
 	* Destroy the given surface.
 	* @warning SwapChains created with this surface will be in an invalid state, they must be destroyed.
 	*/
-	static void surface_destroy(SurfaceID surface);
+	void surface_destroy(SurfaceID surface);
 
 	/*
 	* Device API
@@ -220,14 +220,14 @@ struct GPU
 	* Create a logical device that operates with the given device to commit work, allocate memory, etc...
 	* @param ci Device creation parameters.
 	*/
-	static DeviceID device_create(const DeviceCreateInfo& ci);
+	DeviceID device_create(const DeviceCreateInfo& ci);
 
 	/**
 	* Destroy the given logical device.
 	* @warning Any resource allocated from this device must be destroyed before calling this function
 	* ignore this will cause undefined behaviour.
 	*/
-	static void device_destroy(DeviceID device);
+	void device_destroy(DeviceID device);
 
 	/*
 	* SwapChain API
@@ -288,15 +288,15 @@ struct GPU
 	/*
 	* Create a swap chain to present content on a surface.
 	*/
-	static SwapChainID swap_chain_create(const SwapChainCreateInfo& ci);
+	SwapChainID swap_chain_create(const SwapChainCreateInfo& ci);
 
 	/*
 	* 
 	*/
-	static void swap_chain_destroy(SwapChainID swap_chain);
-	static u32 swap_chain_get_image_count(SwapChainID swap_chain);
-	static TextureID swap_chain_get_image(SwapChainID swap_chain, u32 image_index);
-	static AcquireResult swap_chain_acquire_next_image(SwapChainID swap_chain, const AcquireInfo& acquire_info, u32* image_index);
+	void swap_chain_destroy(SwapChainID swap_chain);
+	u32 swap_chain_get_image_count(SwapChainID swap_chain);
+	TextureID swap_chain_get_image(SwapChainID swap_chain, u32 image_index);
+	AcquireResult swap_chain_acquire_next_image(SwapChainID swap_chain, const AcquireInfo& acquire_info, u32* image_index);
 
 	/*
 	* Fence
@@ -307,11 +307,11 @@ struct GPU
 		bool signaled;
 	};
 
-	static FenceID fence_create(const FenceCreateInfo& ci);
-	static void fence_destroy(FenceID fence);
-	static bool fence_get_state(FenceID fence);
-	static void fence_reset(Slice<FenceID> fences);
-	static void fence_wait_for(Slice<FenceID> fences, bool wait_for_all, u64 timeout);
+	FenceID fence_create(const FenceCreateInfo& ci);
+	void fence_destroy(FenceID fence);
+	bool fence_get_state(FenceID fence);
+	void fence_reset(Slice<FenceID> fences);
+	void fence_wait_for(Slice<FenceID> fences, bool wait_for_all, u64 timeout);
 
 	/*
 	* Semaphore
@@ -321,8 +321,8 @@ struct GPU
 		DeviceID device;
 	};
 
-	static SemaphoreID semaphore_create(const SemaphoreCreateInfo& ci);
-	static void semaphore_destroy(SemaphoreID semaphore);
+	SemaphoreID semaphore_create(const SemaphoreCreateInfo& ci);
+	void semaphore_destroy(SemaphoreID semaphore);
 
 	/*
 	* Queue API
@@ -358,11 +358,11 @@ struct GPU
 		Slice<u32> image_indices;
 	};
 
-	static QueueID queue_create(const QueueCreateInfo& ci);
-	static void queue_destroy(QueueID queue);
-	static void queue_execute_command_buffer(QueueID queue, const QueueExecuteInfo& execute_info);
-	static AcquireResult queue_present(QueueID queue, const QueuePresentInfo& present_info);
-	static void queue_wait_idle(QueueID queue);
+	QueueID queue_create(const QueueCreateInfo& ci);
+	void queue_destroy(QueueID queue);
+	void queue_execute_command_buffer(QueueID queue, const QueueExecuteInfo& execute_info);
+	AcquireResult queue_present(QueueID queue, const QueuePresentInfo& present_info);
+	void queue_wait_idle(QueueID queue);
 
 	// ====== Resources ======
 
@@ -404,11 +404,11 @@ struct GPU
 		usize heap_offset;
 	};
 
-	static MemoryHeapID memory_heap_create(const MemoryHeapCreateInfo& ci);
-	static void memory_heap_destroy(MemoryHeapID memory_heap);
+	MemoryHeapID memory_heap_create(const MemoryHeapCreateInfo& ci);
+	void memory_heap_destroy(MemoryHeapID memory_heap);
 
-	static Slice<u8> memory_heap_map(MemoryHeapID memory_heap, usize offset, usize len);
-	static void memory_heap_unmap(MemoryHeapID memory_heap, const Slice<u8>& memory);
+	Slice<u8> memory_heap_map(MemoryHeapID memory_heap, usize offset, usize len);
+	void memory_heap_unmap(MemoryHeapID memory_heap, const Slice<u8>& memory);
 
 	/*
 	* Buffer API
@@ -429,11 +429,11 @@ struct GPU
 		usize size;
 	};
 
-	static BufferID buffer_create(const BufferCreateInfo& ci);
-	static void buffer_destroy(BufferID buffer);
+	BufferID buffer_create(const BufferCreateInfo& ci);
+	void buffer_destroy(BufferID buffer);
 
-	static MemoryRequirements buffer_get_memory_requirements(BufferID buffer);
-	static void buffer_bind_memory_heap(BufferID buffer, const BindMemoryInfo& bind_info);
+	MemoryRequirements buffer_get_memory_requirements(BufferID buffer);
+	void buffer_bind_memory_heap(BufferID buffer, const BindMemoryInfo& bind_info);
 
 	/*
 	* Sampler API
@@ -480,8 +480,8 @@ struct GPU
 		f32 max_lod;
 	};
 
-	static SamplerID sampler_create(const SamplerCreateInfo& ci);
-	static void sampler_destroy(SamplerID sampler);
+	SamplerID sampler_create(const SamplerCreateInfo& ci);
+	void sampler_destroy(SamplerID sampler);
 	
 
 	/*
@@ -570,11 +570,11 @@ struct GPU
 		TextureSubresourceRanges subresource_range;
 	};
 
-	static TextureID texture_create(const TextureCreateInfo& ci);
-	static void texture_destroy(TextureID texture);
+	TextureID texture_create(const TextureCreateInfo& ci);
+	void texture_destroy(TextureID texture);
 
-	static MemoryRequirements texture_get_memory_requirements(TextureID texture);
-	static void texture_bind_memory_heap(TextureID texture, const BindMemoryInfo& bind_info);
+	MemoryRequirements texture_get_memory_requirements(TextureID texture);
+	void texture_bind_memory_heap(TextureID texture, const BindMemoryInfo& bind_info);
 
 	/*
 	* Descriptor Set
@@ -593,8 +593,8 @@ struct GPU
 		Slice<const DescriptorBinding> bindings;
 	};
 
-	static DescriptorSetLayoutID descriptor_set_layout_create(const DescriptorSetLayoutCreateInfo& ci);
-	static void descriptor_set_layout_destroy(DescriptorSetLayoutID descriptor_set_layout);
+	DescriptorSetLayoutID descriptor_set_layout_create(const DescriptorSetLayoutCreateInfo& ci);
+	void descriptor_set_layout_destroy(DescriptorSetLayoutID descriptor_set_layout);
 
 	/*
 	* Descriptor Pool
@@ -613,8 +613,8 @@ struct GPU
 		Slice<const DescriptorPoolSize> sizes;
 	};
 
-	static DescriptorPoolID descriptor_pool_create(const DescriptorPoolCreateInfo& ci);
-	static void descriptor_pool_destroy(DescriptorPoolID descriptor_pool);
+	DescriptorPoolID descriptor_pool_create(const DescriptorPoolCreateInfo& ci);
+	void descriptor_pool_destroy(DescriptorPoolID descriptor_pool);
 
 
 	/*
@@ -657,9 +657,9 @@ struct GPU
 		Slice<WriteDescriptorInfo> write_infos;
 	};
 
-	static DescriptorSetID descriptor_set_allocate(const DescriptorSetAllocateInfo& ci);
-	static void descriptor_set_free(DescriptorSetID descriptor_set);
-	static void descriptor_set_update_descriptors(DescriptorSetID descriptor_set, const UpdateDescriptorInfo& update_info);
+	DescriptorSetID descriptor_set_allocate(const DescriptorSetAllocateInfo& ci);
+	void descriptor_set_free(DescriptorSetID descriptor_set);
+	void descriptor_set_update_descriptors(DescriptorSetID descriptor_set, const UpdateDescriptorInfo& update_info);
 
 	/*
 	* Pipeline Layout API
@@ -678,8 +678,8 @@ struct GPU
 		Slice<const DescriptorSetLayoutID> set_layouts;
 	};
 
-	static PipelineLayoutID pipeline_layout_create(const PipelineLayoutCreateInfo& ci);
-	static void pipeline_layout_destroy(PipelineLayoutID pipeline_layout);
+	PipelineLayoutID pipeline_layout_create(const PipelineLayoutCreateInfo& ci);
+	void pipeline_layout_destroy(PipelineLayoutID pipeline_layout);
 
 	/*
 	* Pipeline API
@@ -822,8 +822,8 @@ struct GPU
 		RenderingInfo rendering_info;
 	};
 
-	static PipelineID pipeline_create(const PipelineCreateInfo& ci);
-	static void pipeline_destroy(PipelineID pipeline);
+	PipelineID pipeline_create(const PipelineCreateInfo& ci);
+	void pipeline_destroy(PipelineID pipeline);
 
 	/*
 	* CommandPool
@@ -834,8 +834,8 @@ struct GPU
 		QueueID queue;
 	};
 
-	static CommandPoolID command_pool_create(const CommandPoolCreateInfo& ci);
-	static void command_pool_destroy(CommandPoolID command_pool);
+	CommandPoolID command_pool_create(const CommandPoolCreateInfo& ci);
+	void command_pool_destroy(CommandPoolID command_pool);
 
 	/*
 	* CommandBuffer API
@@ -983,31 +983,31 @@ struct GPU
 		u32 height;
 	};
 
-	static CommandBufferID command_buffer_allocate(const CommandBufferAllocateInfo& ci);
-	static void command_buffer_free(CommandBufferID command_buffer);
+	CommandBufferID command_buffer_allocate(const CommandBufferAllocateInfo& ci);
+	void command_buffer_free(CommandBufferID command_buffer);
 
-	static void command_buffer_begin(CommandBufferID command_buffer);
-	static void command_buffer_end(CommandBufferID command_buffer);
+	void command_buffer_begin(CommandBufferID command_buffer);
+	void command_buffer_end(CommandBufferID command_buffer);
 
-	static void command_buffer_begin_renderpass(CommandBufferID command_buffer, const RenderPassBeginInfo& begin_info);
-	static void command_buffer_end_renderpass(CommandBufferID command_buffer, const RenderPassEndInfo& end_info);
+	void command_buffer_begin_renderpass(CommandBufferID command_buffer, const RenderPassBeginInfo& begin_info);
+	void command_buffer_end_renderpass(CommandBufferID command_buffer, const RenderPassEndInfo& end_info);
 
-	static void command_buffer_memory_barrier(CommandBufferID command_buffer, const PipelineMemoryBarrier& memory_barrier);
-	static void command_buffer_buffer_barrier(CommandBufferID command_buffer, const PipelineBufferBarrier& buffer_barrier);
-	static void command_buffer_texture_barrier(CommandBufferID command_buffer, const PipelineTextureBarrier& texture_barrier);
+	void command_buffer_memory_barrier(CommandBufferID command_buffer, const PipelineMemoryBarrier& memory_barrier);
+	void command_buffer_buffer_barrier(CommandBufferID command_buffer, const PipelineBufferBarrier& buffer_barrier);
+	void command_buffer_texture_barrier(CommandBufferID command_buffer, const PipelineTextureBarrier& texture_barrier);
 
-	static void command_buffer_copy_buffer_to_texture(CommandBufferID command_buffer, const CopyBufferToTextureInfo& copy_info);
-	static void command_buffer_copy_buffer(CommandBufferID command_buffer, const BufferCopyInfo& copy_info);
+	void command_buffer_copy_buffer_to_texture(CommandBufferID command_buffer, const CopyBufferToTextureInfo& copy_info);
+	void command_buffer_copy_buffer(CommandBufferID command_buffer, const BufferCopyInfo& copy_info);
 
-	static void command_buffer_bind_pipeline(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineID pipeline);
-	static void command_buffer_bind_descriptor_sets(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineLayoutID pipeline_layout, u32 base_set, const Slice<DescriptorSetID>& descriptor_sets);
-	static void command_buffer_bind_vertex_buffers(CommandBufferID command_buffer, u32 base_binding, const Slice<BufferID>& buffers, const Slice<usize>& offsets);
-	static void command_buffer_constant_block(CommandBufferID command_buffer, PipelineLayoutID pipeline_layout, ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address);
+	void command_buffer_bind_pipeline(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineID pipeline);
+	void command_buffer_bind_descriptor_sets(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineLayoutID pipeline_layout, u32 base_set, const Slice<DescriptorSetID>& descriptor_sets);
+	void command_buffer_bind_vertex_buffers(CommandBufferID command_buffer, u32 base_binding, const Slice<BufferID>& buffers, const Slice<usize>& offsets);
+	void command_buffer_constant_block(CommandBufferID command_buffer, PipelineLayoutID pipeline_layout, ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address);
 
-	static void command_buffer_set_viewports(CommandBufferID command_buffer, u32 base_viewport, const Slice<Viewport>& viewports);
-	static void command_buffer_set_scissors(CommandBufferID command_buffer, u32 base_scissor, const Slice<Scissor>& scissors);
+	void command_buffer_set_viewports(CommandBufferID command_buffer, u32 base_viewport, const Slice<Viewport>& viewports);
+	void command_buffer_set_scissors(CommandBufferID command_buffer, u32 base_scissor, const Slice<Scissor>& scissors);
 
-	static void command_buffer_draw(CommandBufferID command_buffer, u32 vertex_count, u32 instance_count, u32 base_vertex, u32 base_instance);
+	void command_buffer_draw(CommandBufferID command_buffer, u32 vertex_count, u32 instance_count, u32 base_vertex, u32 base_instance);
 };
 
 

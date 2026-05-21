@@ -1,7 +1,7 @@
 #include "concurrency/job_queue.h"
 
 
-JobQueue JobQueue::with_allocator(mem::Allocator* allocator)
+JobQueue JobQueue::with_allocator(Mem::Allocator* allocator)
 {
 	return JobQueue
 	{
@@ -11,7 +11,7 @@ JobQueue JobQueue::with_allocator(mem::Allocator* allocator)
 	};
 }
 
-JobQueue JobQueue::with_size(mem::Allocator* allocator, usize initial_size)
+JobQueue JobQueue::with_size(Mem::Allocator* allocator, usize initial_size)
 {
 	return JobQueue
 	{

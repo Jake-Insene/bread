@@ -10,7 +10,7 @@
 
 static inline InternalGPU::GPUAdapter current_adapter;
 
-void GPU::initialize(mem::Allocator* allocator)
+void GPU::initialize(Mem::Allocator* allocator)
 {
 	current_adapter = VulkanDriver::get_adapter();
 
@@ -381,7 +381,7 @@ GPU::PipelineLayoutID GPU::pipeline_layout_create(const PipelineLayoutCreateInfo
 	{
 		GPUFailOn(cb.size > GPU::MaxConstantBlockSize, "a constant block size must be less than or equal to 128 bytes");
     	GPUFailOn(
-    	    mem::align_up(cb.size, GPU::ConstantBlockAlignment) != cb.size,
+    	    Mem::align_up(cb.size, GPU::ConstantBlockAlignment) != cb.size,
     	    "a constant block size must be GPU::ConstantBlockAlignment bytes aligned"
     	);
 	}

@@ -5,24 +5,24 @@
 
 static void* _alloc(usize size)
 {
-    mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
+    Mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
     return allocator->alloc(size, alignof(usize)).items;
 }
 
 static void* _realloc(void* ptr, usize old_size, usize new_size)
 {
-    mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
+    Mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
 
     Slice<u8> old_mem = Slice<u8>(reinterpret_cast<u8*>(ptr), old_size);
-    if(ptr && allocator->realloc(old_mem, new_size, alignof(usize)))
+    if(ptr != nullptr && allocator->realloc(old_mem, new_size, alignof(usize)))
     {
         return ptr;
     }
     
     Slice<u8> new_mem = allocator->alloc(new_size, alignof(usize));
-    if (new_mem.ptr() && ptr != nullptr && old_size != 0)
+    if (!new_mem.null() && ptr != nullptr && old_size != 0)
     {
-        mem::copy(new_mem, old_mem);
+        Mem::copy(new_mem, old_mem);
         allocator->free(old_mem);
     }
     
@@ -31,9 +31,9 @@ static void* _realloc(void* ptr, usize old_size, usize new_size)
 
 static void _free(void* ptr)
 {
-    mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
+    Mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
     
-    if(ptr)
+    if(ptr != nullptr)
     {
         allocator->free(
             Slice<u8>(reinterpret_cast<u8*>(ptr), 1)
@@ -45,14 +45,14 @@ static void* __bread_memcpy(void* dest, const void* src, size_t len)
 {
     Slice<u8> dest_items = Slice(reinterpret_cast<u8*>(dest), len);
     Slice<const u8> src_items = Slice(reinterpret_cast<const u8*>(src), len);
-    mem::copy(dest_items, src_items);
+    Mem::copy(dest_items, src_items);
     return dest;
 }
 
 static void* __bread_memset(void* dest, int value, size_t len)
 {
     Slice<u8> dest_items = Slice(reinterpret_cast<u8*>(dest), len);
-    mem::set(dest_items, u8(value));
+    Mem::set(dest_items, u8(value));
     return dest;
 }
 
@@ -91,7 +91,7 @@ static u32 _lrotl(u32 x, int y)
 #define STBI_NO_HDR
 #define STBI_ASSERT(x) DebugAssert(x, "stb_image assertion fail")
 
-#define abs(x) math::abs(x)
+#define abs(x) Math::abs(x)
 #define fabs(x) abs(x)
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -100,14 +100,14 @@ static u32 _lrotl(u32 x, int y)
 #undef abs
 #undef fabs
 
-#define STBTT_ifloor(x) i32(math::floor<f32>(x))
-#define STBTT_iceil(x) i32(math::ceil<f32>(x))
-#define STBTT_sqrt(x) math::sqrt(x)
-#define STBTT_pow(x, y) math::pow(x, y)
-#define STBTT_fmod(x, y) math::mod(x, y)
-#define STBTT_cos(x) math::cos(x)
-#define STBTT_acos(x) math::acos(x)
-#define STBTT_fabs(x) math::abs(x)
+#define STBTT_ifloor(x) i32(Math::floor<f32>(x))
+#define STBTT_iceil(x) i32(Math::ceil<f32>(x))
+#define STBTT_sqrt(x) Math::sqrt(x)
+#define STBTT_pow(x, y) Math::pow(x, y)
+#define STBTT_fmod(x, y) Math::mod(x, y)
+#define STBTT_cos(x) Math::cos(x)
+#define STBTT_acos(x) Math::acos(x)
+#define STBTT_fabs(x) Math::abs(x)
 
 #define STBTT_malloc(size, u) ((void)u, _alloc(size))
 #define STBTT_free(ptr, u) ((void)u, _free(ptr))

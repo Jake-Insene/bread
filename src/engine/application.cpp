@@ -11,7 +11,7 @@ Application::~Application()
 
 }
 
-void Application::initialize(mem::Allocator*)
+void Application::initialize(Mem::Allocator*)
 {
 
 }

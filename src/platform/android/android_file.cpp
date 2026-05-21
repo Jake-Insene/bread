@@ -14,19 +14,19 @@ thread_local u8 StdoutBuffer[4096] = {};
 thread_local usize StdoutBufferCounter = 0;
 
 
-Slice<u8> File::read_all(mem::Allocator* allocator, StringView path)
+Slice<u8> File::read_all(Mem::Allocator* allocator, StringView path)
 {
     Slice<char> tmp = allocator->array<char>(path.len + 1);
-    mem::copy(tmp, path);
+    Mem::copy(tmp, path);
     
     AAsset* asset = AAssetManager_open(AndroidEngine::data.asset_manager, tmp.ptr(), AASSET_MODE_UNKNOWN);
     const void* buffer = AAsset_getBuffer(asset);
     usize length = AAsset_getLength64(asset);
 
-    allocator->free(mem::to_bytes(tmp));
+    allocator->free(Mem::to_bytes(tmp));
     
     Slice<u8> bytes = allocator->alloc(length, alignof(usize));
-    mem::copy(bytes, Slice(reinterpret_cast<const u8*>(buffer), length));
+    Mem::copy(bytes, Slice(reinterpret_cast<const u8*>(buffer), length));
     
     AAsset_close(asset);
     
@@ -48,24 +48,24 @@ File File::get_stdin()
     return File{ .handle = 0 };
 }
 
-File File::open(mem::Allocator* allocator, StringView path, OpenMode)
+File File::open(Mem::Allocator* allocator, StringView path, OpenMode)
 {
     Slice<char> tmp = allocator->array<char>(path.len + 1);
-    mem::copy(tmp, path);
+    Mem::copy(tmp, path);
 
-    allocator->free(mem::to_bytes(tmp));
+    allocator->free(Mem::to_bytes(tmp));
 
     return File{ .handle = 0 };
 }
 
-bool File::exists(mem::Allocator* allocator, StringView path)
+bool File::exists(Mem::Allocator* allocator, StringView path)
 {
     Slice<char> tmp = allocator->array<char>(path.len + 1);
-    mem::copy(tmp, path);
+    Mem::copy(tmp, path);
 
     AAsset* asset = AAssetManager_open(AndroidEngine::data.asset_manager, tmp.ptr(), AASSET_MODE_UNKNOWN);
 
-    allocator->free(mem::to_bytes(tmp));
+    allocator->free(Mem::to_bytes(tmp));
 
     if(asset)
     {
@@ -92,14 +92,14 @@ void File::write(const Slice<const u8> bytes)
     {
         Slice<u8> buffer = Slice(StderrBuffer);
         buffer = buffer.add(StderrBufferCounter);
-        mem::copy(buffer, bytes);
+        Mem::copy(buffer, bytes);
         StderrBufferCounter += bytes.len;
     }
     else if(handle == StdoutHandle)
     {
         Slice<u8> buffer = Slice(StdoutBuffer);
         buffer = buffer.add(StdoutBufferCounter);
-        mem::copy(buffer, bytes);
+        Mem::copy(buffer, bytes);
         StdoutBufferCounter += bytes.len;
     }
 
@@ -123,14 +123,14 @@ void File::flush()
         __android_log_print(ANDROID_LOG_ERROR, "Bread", "%.*s", (int)StderrBufferCounter, reinterpret_cast<char*>(StderrBuffer));
         StderrBufferCounter = 0;
         Slice<u8> buffer = Slice(StderrBuffer);
-        mem::set<u8>(buffer, 0);
+        Mem::set<u8>(buffer, 0);
     }
     else if(handle == StdoutHandle)
     {
         __android_log_print(ANDROID_LOG_INFO, "Bread", "%.*s", (int)StdoutBufferCounter, reinterpret_cast<char*>(StdoutBuffer));
         StdoutBufferCounter = 0;
         Slice<u8> buffer = Slice(StdoutBuffer);
-        mem::set<u8>(buffer, 0);
+        Mem::set<u8>(buffer, 0);
     }
 }
 

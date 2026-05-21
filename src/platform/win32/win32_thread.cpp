@@ -54,7 +54,7 @@ void Thread::destroy() const
     WaitForSingleObjectEx(data->thread, INFINITE, FALSE);
     CloseHandle(data->thread);
 
-    Win32OS::get_allocator()->free(mem::to_bytes(Slice(data, 1)));
+    Win32OS::get_allocator()->free(Mem::to_bytes(Slice(data, 1)));
 }
 
 bool Thread::join() const

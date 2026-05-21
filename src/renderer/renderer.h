@@ -13,7 +13,7 @@ struct GPUMemoryAllocator;
 
 struct RendererCreateInfo
 {
-    mem::Allocator* allocator;
+    Mem::Allocator* allocator;
     Graphics::Device* graphics_device;
     GPUMemoryAllocator* gpu_memory_allocator;
     u32 max_frames_in_flight;
@@ -44,7 +44,7 @@ struct Renderer
         Graphics::Fence* in_flight_fence;
     };
 
-    mem::Allocator* allocator;
+    Mem::Allocator* allocator;
     Graphics::Device* graphics_device;
     Graphics::CommandQueue* command_queue;
     Graphics::SwapChain* swap_chain;

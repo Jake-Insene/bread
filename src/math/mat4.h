@@ -63,8 +63,8 @@ struct [[nodiscard]] Mat4
 
     static constexpr Mat4 rotation_z(const f32 radians)
     {
-        const f32 c = math::cos(radians);
-        const f32 s = math::sin(radians);
+        const f32 c = Math::cos(radians);
+        const f32 s = Math::sin(radians);
 
         return Mat4
         {
@@ -77,8 +77,8 @@ struct [[nodiscard]] Mat4
 
     static constexpr Mat4 rotation_y(const f32 radians)
     {
-        const f32 c = math::cos(radians);
-        const f32 s = math::sin(radians);
+        const f32 c = Math::cos(radians);
+        const f32 s = Math::sin(radians);
 
         return Mat4
         {

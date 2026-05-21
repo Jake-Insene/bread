@@ -8,7 +8,7 @@
 namespace Graphics
 {
 
-void CommandQueue::init(mem::Allocator* _allocator, Device* _parent, const CommandQueueInfo& info)
+void CommandQueue::init(Mem::Allocator* _allocator, Device* _parent, const CommandQueueInfo& info)
 {
     DeviceObject::init(_allocator, _parent);
     gpu_device = info.gpu_device;
@@ -109,8 +109,8 @@ Fence* CommandQueue::execute(const CommandQueueExecuteInfo& info)
             .fence = fence->gpu_fence,
         }
     );
-    allocator->free(mem::to_bytes(gpu_wait_semaphores));
-    allocator->free(mem::to_bytes(gpu_signal_semaphores));
+    allocator->free(Mem::to_bytes(gpu_wait_semaphores));
+    allocator->free(Mem::to_bytes(gpu_signal_semaphores));
 
     (void)work_submited.add(
         WorkSubmit
@@ -159,8 +159,8 @@ Fence* CommandQueue::execute_empty(const CommandQueueExecuteEmptyInfo& info)
             .fence = fence->gpu_fence,
         }
     );
-    allocator->free(mem::to_bytes(gpu_wait_semaphores));
-    allocator->free(mem::to_bytes(gpu_signal_semaphores));
+    allocator->free(Mem::to_bytes(gpu_wait_semaphores));
+    allocator->free(Mem::to_bytes(gpu_signal_semaphores));
     
     (void)work_submited.add(
         WorkSubmit
@@ -181,7 +181,7 @@ void CommandQueue::wait_for_all()
         return;
     }
 
-    mem::Allocator* allocator = &tmp_allocator;
+    Mem::Allocator* allocator = &tmp_allocator;
 
     Slice<GPU::FenceID> fences = allocator->array<GPU::FenceID>(work_submited.count);
     for(usize i = 0; i < work_submited.count; i++)

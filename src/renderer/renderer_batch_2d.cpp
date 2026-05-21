@@ -231,19 +231,19 @@ void RendererBatch2D::build_batch(const FrameInfo& frame_info)
 
     // Updating staging data
     SpriteInstance* sprite_buffer = reinterpret_cast<SpriteInstance*>(staging_ptr + sprite_offset_begin);
-    mem::copy(Slice(sprite_buffer, sprites.count), Slice(sprites.items.items, sprites.count));
+    Mem::copy(Slice(sprite_buffer, sprites.count), Slice(sprites.items.items, sprites.count));
     sprite_count = sprites.count;
 
     QuadInstance* quad_buffer = reinterpret_cast<QuadInstance*>(staging_ptr + quad_offset_begin);
-    mem::copy(Slice(quad_buffer, quads.count), Slice(quads.items.items, quads.count));
+    Mem::copy(Slice(quad_buffer, quads.count), Slice(quads.items.items, quads.count));
     quad_count = quads.count;
 
     LineInstance* line_buffer = reinterpret_cast<LineInstance*>(staging_ptr + line_offset_begin);
-    mem::copy(Slice(line_buffer, lines.count), Slice(lines.items.items, lines.count));
+    Mem::copy(Slice(line_buffer, lines.count), Slice(lines.items.items, lines.count));
     line_count = lines.count;
 
     CircleInstance* circle_buffer = reinterpret_cast<CircleInstance*>(staging_ptr + circle_offset_begin);
-    mem::copy(Slice(circle_buffer, circles.count), Slice(circles.items.items, circles.count));
+    Mem::copy(Slice(circle_buffer, circles.count), Slice(circles.items.items, circles.count));
     circle_count = circles.count;
 
     // updating batch sets

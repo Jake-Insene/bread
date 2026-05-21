@@ -22,7 +22,7 @@ struct Buffer : DeviceObject
     MemoryHeap* heap;
     usize heap_offset;
     
-    void init(mem::Allocator* _allocator, Device* _parent, const BufferInfo& info);
+    void init(Mem::Allocator* _allocator, Device* _parent, const BufferInfo& info);
     void destroy();
 
     GPU::MemoryRequirements get_requirements() const;

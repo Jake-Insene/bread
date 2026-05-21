@@ -184,7 +184,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 	return DefWindowProcA(handle, msg, wparam, lparam);
 }
 
-void Display::initialize(mem::Allocator* allocator)
+void Display::initialize(Mem::Allocator* allocator)
 {
 	// Ensures constructors are call.
     ConstructObject(Win32Display::data);

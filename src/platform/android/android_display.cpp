@@ -3,7 +3,7 @@
 #include "platform/android/android_engine.h"
 
 
-void Display::initialize(mem::Allocator* allocator)
+void Display::initialize(Mem::Allocator* allocator)
 {
     // Ensures constructors are call.
     ConstructObject(AndroidDisplay::data);

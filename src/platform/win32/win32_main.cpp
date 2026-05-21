@@ -33,7 +33,7 @@ extern "C"
 		}
 		else
 		{
-			mem::set(
+			Mem::set(
 				Slice<u8>(reinterpret_cast<u8*>(dest), count), u8(c)
 			);
 		}
@@ -43,7 +43,7 @@ extern "C"
 	#pragma function(memcpy)
 	void* __cdecl memcpy(void* dest, const void* src, size_t count)
 	{
-		mem::copy(
+		Mem::copy(
 			Slice<u8>(reinterpret_cast<u8*>(dest), count),
 			Slice<const u8>(reinterpret_cast<const u8*>(src), count)
 		);
@@ -188,7 +188,7 @@ void engine_loop()
 	if(enable_console)
 	{
 		u8 bytes[2] = {};
-		fmt::format<false>(File::get_stdout().writer(), "Press enter to close the console...");
+		Format::format<false>(File::get_stdout().writer(), "Press enter to close the console...");
 		File::get_stdin().read(bytes);
 	}
 

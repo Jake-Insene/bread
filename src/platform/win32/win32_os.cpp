@@ -5,7 +5,7 @@
 
 
 
-void Win32OS::initialize(mem::Allocator* allocator)
+void Win32OS::initialize(Mem::Allocator* allocator)
 {
     // Ensures constructors are call.
     ConstructObject(data);
@@ -48,10 +48,10 @@ usize Win32OS::get_page_size()
 OS::Handle Win32OS::load_library(StringView lib_path)
 {
     Slice<char> path = get_allocator()->array<char>(lib_path.len + 1);
-    mem::copy(path, lib_path);
+    Mem::copy(path, lib_path);
 
     OS::Handle library = reinterpret_cast<OS::Handle>(LoadLibraryA(path.ptr()));
-    get_allocator()->free(mem::to_bytes(path));
+    get_allocator()->free(Mem::to_bytes(path));
 
     return library;
 }
@@ -64,19 +64,19 @@ void Win32OS::unload_library(OS::Handle library)
 OS::VoidFunction Win32OS::get_proc_address(OS::Handle library, StringView symbol_name)
 {
     Slice<char> symbol = get_allocator()->array<char>(symbol_name.len + 1);
-    mem::copy(symbol, symbol_name);
+    Mem::copy(symbol, symbol_name);
     
     OS::VoidFunction func = reinterpret_cast<OS::VoidFunction>(
         GetProcAddress(reinterpret_cast<HMODULE>(library), symbol.ptr())
     );
     
-    get_allocator()->free(mem::to_bytes(symbol));
+    get_allocator()->free(Mem::to_bytes(symbol));
     return func;
 }
 
 Slice<u8> Win32OS::map_memory(usize memory_size, OS::MapAccess access)
 {
-    const usize aligned_size = mem::align_up(memory_size, get_page_size());
+    const usize aligned_size = Mem::align_up(memory_size, get_page_size());
     Slice<u8> ptr{};
 
     switch (access)
@@ -132,9 +132,9 @@ OS::QueryMemory Win32OS::query_memory(const Slice<u8>& memory)
 bool Win32OS::set_current_directory(StringView dir)
 {
     Slice<char> path = get_allocator()->array<char>(dir.len + 1);
-    mem::copy(path, dir);
+    Mem::copy(path, dir);
     bool result = SetCurrentDirectoryA(path.ptr()) == TRUE;
-    get_allocator()->free(mem::to_bytes(path));
+    get_allocator()->free(Mem::to_bytes(path));
 
     return result;
 }

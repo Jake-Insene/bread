@@ -3,7 +3,7 @@
 
 
 
-void P2DShape::init(mem::Allocator* allocator)
+void P2DShape::init(Mem::Allocator* allocator)
 {
     vertices = Array<Vector2>::with_size(allocator, 4);
     normals = Array<Vector2>::with_size(allocator, 4);
@@ -166,11 +166,11 @@ void P2DShape::_calc_aabb()
 
     for(const Vector2& v : vertices.iter())
     {
-        aabb.min.x = math::min(aabb.min.x, v.x);
-        aabb.min.y = math::min(aabb.min.y, v.y);
+        aabb.min.x = Math::min(aabb.min.x, v.x);
+        aabb.min.y = Math::min(aabb.min.y, v.y);
 
-        aabb.max.x = math::max(aabb.max.x, v.x);
-        aabb.max.y = math::max(aabb.max.y, v.y);
+        aabb.max.x = Math::max(aabb.max.x, v.x);
+        aabb.max.y = Math::max(aabb.max.y, v.y);
     }
 }
 

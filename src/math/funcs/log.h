@@ -2,7 +2,7 @@
 #include "math/funcs/floor.h"
 
 
-namespace math
+namespace Math
 {
 
 template<typename T>
@@ -22,7 +22,7 @@ template<typename T>
     {
         // type is floating point;
         T result = 0;
-        i64 n_convert = i64(math::floor(n));
+        i64 n_convert = i64(Math::floor(n));
         while (n_convert >>= 1)
         {
             result++;

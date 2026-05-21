@@ -4,7 +4,7 @@
 namespace Graphics
 {
 
-void Texture::init(mem::Allocator* _allocator, Device* _parent, GPU::DeviceID gpu_device, const TextureInfo& info)
+void Texture::init(Mem::Allocator* _allocator, Device* _parent, GPU::DeviceID gpu_device, const TextureInfo& info)
 {
     DeviceObject::init(_allocator, _parent);
     gpu_texture = GPU::texture_create(

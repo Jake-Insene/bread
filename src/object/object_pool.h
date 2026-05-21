@@ -53,11 +53,11 @@ struct [[nodiscard]] ObjectPool
         usize slot_index;
     };
 
-    mem::Allocator* allocator;
+    Mem::Allocator* allocator;
     Slice<Block> blocks;
     usize block_count;
 
-    static ObjectPool create(mem::Allocator* allocator);
+    static ObjectPool create(Mem::Allocator* allocator);
 
     void destroy();
 

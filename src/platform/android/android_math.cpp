@@ -3,7 +3,7 @@
 #include "math/random.h"
 
 
-namespace math
+namespace Math
 {
 
 static inline u64 __seed = 0;

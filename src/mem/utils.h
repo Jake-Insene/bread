@@ -6,7 +6,7 @@
 template<typename T>
 struct Slice;
 
-namespace mem
+namespace Mem
 {
 template<typename T>
 inline Slice<u8> to_bytes(const Slice<T>& items);
@@ -67,7 +67,7 @@ constexpr void swap(T& a, T& b)
 #include "collections/slice.h"
 #include "debug/debug.h"
 
-namespace mem
+namespace Mem
 {
 
 template<typename T>

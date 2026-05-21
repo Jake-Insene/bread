@@ -23,7 +23,7 @@ namespace Graphics
 
 struct Device
 {
-    mem::Allocator* allocator;
+    Mem::Allocator* allocator;
     Mutex mutex;
 
     GPU::PhysicalDeviceID gpu_physical_device;
@@ -41,7 +41,7 @@ struct Device
     Queue* get_copy_queue() { return &copy_queue; }
     Queue* get_present_queue() { return &present_queue; }
 
-    void init(mem::Allocator* _allocator, GPU::PhysicalDeviceID _gpu_physical_device);
+    void init(Mem::Allocator* _allocator, GPU::PhysicalDeviceID _gpu_physical_device);
     void destroy();
 
     SwapChain* create_swap_chain(Window* window, GPU::TextureFormat surface_format);

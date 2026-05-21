@@ -30,7 +30,7 @@ struct EngineRuntime
         Destroyed,
     };
     
-    mem::GenericAllocator allocator;
+    Mem::GenericAllocator allocator;
     Version engine_version;
     ApplicationInfo application_info;
     Application* application;

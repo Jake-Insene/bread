@@ -1,7 +1,7 @@
 #include "mem/stack_allocator.h"
 
 
-namespace mem
+namespace Mem
 {
 
 void StackAllocator::init(const Slice<u8>& new_sp)
@@ -17,8 +17,8 @@ void StackAllocator::reset()
 
 Slice<u8> StackAllocator::alloc(usize size, usize alignment)
 {
-    const usize aligned_size = mem::align_up(size, alignment);
-    const usize aligned_sp = mem::align_up(offset, alignment);
+    const usize aligned_size = Mem::align_up(size, alignment);
+    const usize aligned_sp = Mem::align_up(offset, alignment);
     const usize aligned_offset = aligned_sp - offset;
 
     if(offset + aligned_size + aligned_offset >= sp.len)

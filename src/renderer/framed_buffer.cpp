@@ -9,7 +9,7 @@ void FramedBuffer::init(const FramedBufferCreateInfo& info)
     graphics_device = info.graphics_device;
     gpu_memory_allocator = info.gpu_memory_allocator;
 
-    buffer_size = mem::align_up(info.buffer_size, GPU::MinHeapResourceAlignment);
+    buffer_size = Mem::align_up(info.buffer_size, GPU::MinHeapResourceAlignment);
     buffers_info = Array<BufferInfo>::with_size(allocator, info.frame_count);
 }
 

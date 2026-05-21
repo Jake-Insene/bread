@@ -8,7 +8,7 @@ struct GPUMemoryAllocator;
 
 struct FramedBufferCreateInfo
 {
-    mem::Allocator* allocator;
+    Mem::Allocator* allocator;
     Graphics::Device* graphics_device;
     GPUMemoryAllocator* gpu_memory_allocator;
     usize buffer_size;
@@ -23,7 +23,7 @@ struct FramedBuffer
         usize offset;
     };
 
-    mem::Allocator* allocator;
+    Mem::Allocator* allocator;
     Graphics::Device* graphics_device;
     GPUMemoryAllocator* gpu_memory_allocator;
 

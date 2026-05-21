@@ -34,8 +34,8 @@ Transform2D Camera::get_camera_transform(const Vector2& viewport_size, f32 dt, b
 
         if (smooth_position)
         {
-            data.old_pos.x = math::lerp(data.old_pos.x, camera_position.x, camera_speed.x * dt);
-            data.old_pos.y = math::lerp(data.old_pos.y, camera_position.y, camera_speed.y * dt);
+            data.old_pos.x = Math::lerp(data.old_pos.x, camera_position.x, camera_speed.x * dt);
+            data.old_pos.y = Math::lerp(data.old_pos.y, camera_position.y, camera_speed.y * dt);
         }
         else
         {
@@ -56,8 +56,8 @@ Transform2D Camera::get_camera_transform(const Vector2& viewport_size, f32 dt, b
 
         if (smooth_position)
         {
-            data.old_pos.x = math::lerp(data.old_pos.x, centered_pos.x, camera_speed.x * dt);
-            data.old_pos.y = math::lerp(data.old_pos.y, centered_pos.y, camera_speed.y * dt);
+            data.old_pos.x = Math::lerp(data.old_pos.x, centered_pos.x, camera_speed.x * dt);
+            data.old_pos.y = Math::lerp(data.old_pos.y, centered_pos.y, camera_speed.y * dt);
         }
         else
         {

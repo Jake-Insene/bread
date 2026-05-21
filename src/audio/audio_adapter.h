@@ -7,7 +7,7 @@ namespace InternalAudio
 
 struct AudioAdapter
 {
-    VTFunc(void, initialize, mem::Allocator*);
+    VTFunc(void, initialize, Mem::Allocator*);
     VTFunc(void, shutdown);
     
     VTFunc(u32, output_get_samples_per_sec);

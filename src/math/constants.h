@@ -2,7 +2,7 @@
 #include "core/macros.h"
 #include "core/templates.h"
 
-namespace math
+namespace Math
 {
 
 template<typename T>

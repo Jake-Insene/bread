@@ -29,7 +29,7 @@ struct P2DDriver
 
     struct InternalData
     {
-        mem::Allocator* allocator;
+        Mem::Allocator* allocator;
 
         Vector2 gravity;
 
@@ -54,7 +54,7 @@ struct P2DDriver
 
     static InternalPhysics2D::Adapter get_vtable();
 
-    [[nodiscard]] static mem::Allocator* get_allocator()
+    [[nodiscard]] static Mem::Allocator* get_allocator()
     {
         return data.allocator;
     }
@@ -71,7 +71,7 @@ struct P2DDriver
 
     [[nodiscard]] static i32 _get_tile_size() { return data.tile_size; }
 
-    static void initialize(mem::Allocator* allocator);
+    static void initialize(Mem::Allocator* allocator);
     static void shutdown();
 
     static void step(f32 dt);

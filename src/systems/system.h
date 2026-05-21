@@ -9,7 +9,7 @@
 
 struct SystemInitializeInfo
 {
-    mem::Allocator* allocator;
+    Mem::Allocator* allocator;
 };
 
 struct SystemRuntime

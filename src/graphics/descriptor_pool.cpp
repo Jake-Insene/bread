@@ -5,7 +5,7 @@
 namespace Graphics
 {
 
-void DescriptorPool::init(mem::Allocator* _allocator, Device* _parent, const GPU::DescriptorPoolCreateInfo& info)
+void DescriptorPool::init(Mem::Allocator* _allocator, Device* _parent, const GPU::DescriptorPoolCreateInfo& info)
 {
     DeviceObject::init(_allocator, _parent);
     gpu_device = info.device;

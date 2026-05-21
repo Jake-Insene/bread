@@ -6,7 +6,7 @@
 
 struct StringView;
 
-namespace io
+namespace IO
 {
 struct Writer;
 }
@@ -14,15 +14,15 @@ struct Writer;
 
 struct [[nodiscard]] String
 {
-    mem::Allocator* allocator;
+    Mem::Allocator* allocator;
     Slice<char> chars;
     usize count;
     
-    static String with_allocator(mem::Allocator* allocator);
+    static String with_allocator(Mem::Allocator* allocator);
     
-    static String with_size(mem::Allocator* allocator, usize size);
+    static String with_size(Mem::Allocator* allocator, usize size);
     
-    static String from_chars(mem::Allocator* allocator, StringView chars);
+    static String from_chars(Mem::Allocator* allocator, StringView chars);
     
     void destroy();
     
@@ -95,7 +95,7 @@ struct [[nodiscard]] String
     
     StringView view();
 
-    io::Writer writer();
+    IO::Writer writer();
 
     void _set_str_view(StringView str);
     void _set_from_signed(i64 integer);

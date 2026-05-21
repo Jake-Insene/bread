@@ -4,9 +4,9 @@
 #include "io/writer.h"
 
 
-io::Writer File::writer()
+IO::Writer File::writer()
 {
-    io::Writer writer = {};
+    IO::Writer writer = {};
     writer.writable = reinterpret_cast<Opaque*>(this);
     writer.write_fn = [](Opaque* self, const Slice<const u8>& bytes) -> void
     {

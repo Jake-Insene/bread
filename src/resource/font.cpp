@@ -9,7 +9,7 @@
 #include <external/stb_truetype.h>
 
 
-void flip_atlas_vertical(mem::Allocator* allocator, Slice<u8> pixels, i32 width, i32 height)
+void flip_atlas_vertical(Mem::Allocator* allocator, Slice<u8> pixels, i32 width, i32 height)
 {
     const i32 row_size = width; // R8
 
@@ -20,16 +20,16 @@ void flip_atlas_vertical(mem::Allocator* allocator, Slice<u8> pixels, i32 width,
         Slice<u8> row_top    = pixels.add(y * row_size);
         Slice<u8> row_bottom = pixels.add((height - 1 - y) * row_size);
 
-        mem::copy(tmp,       row_top.slice(row_size));
-        mem::copy(row_top,    row_bottom.slice(row_size));
-        mem::copy(row_bottom, tmp.slice(row_size));
+        Mem::copy(tmp,       row_top.slice(row_size));
+        Mem::copy(row_top,    row_bottom.slice(row_size));
+        Mem::copy(row_bottom, tmp.slice(row_size));
     }
 
     allocator->free(tmp);
 }
 
 
-static void _load_theme(mem::Allocator* allocator, const Slice<u8>& font_file_content, stbtt_fontinfo* font, Font::FontTheme& theme)
+static void _load_theme(Mem::Allocator* allocator, const Slice<u8>& font_file_content, stbtt_fontinfo* font, Font::FontTheme& theme)
 {
     stbtt_pack_context pack_context;
     stbtt_packedchar ranges[Font::MinimumGlyphCount] = {};

@@ -6,7 +6,7 @@
 #include "os/os.h"
 
 
-namespace mem
+namespace Mem
 {
     
 static inline GenericAllocator::Header* get_header(Slice<u8> ptr)
@@ -50,7 +50,7 @@ void GenericAllocator::destroy()
     
     if(!allocated_pages.null())
     {
-        internal_allocator.free(mem::to_bytes(allocated_pages));
+        internal_allocator.free(Mem::to_bytes(allocated_pages));
     }
 
     page_count = 0;
@@ -58,32 +58,32 @@ void GenericAllocator::destroy()
     
 Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
 {
-    DebugAssert(alignment == 1 || alignment == mem::align_up<usize>(alignment, 2), "alignment must be a power of 2 or 1");
+    DebugAssert(alignment == 1 || alignment == Mem::align_up<usize>(alignment, 2), "alignment must be a power of 2 or 1");
 
     if(allocated_pages.null())
     {
         page_count = 0;
-        allocated_pages = mem::from_bytes<Page>(internal_allocator.alloc(sizeof(Page) * DefaultPageListSize, alignof(Page)));
+        allocated_pages = Mem::from_bytes<Page>(internal_allocator.alloc(sizeof(Page) * DefaultPageListSize, alignof(Page)));
     }
     else if(page_count >= allocated_pages.len)
     {
         FailOn(allocated_pages.len >= MaxPageCount, "allocator reaches its limit!");
         
         usize new_size = allocated_pages.len + (allocated_pages.len / 2);
-        if(internal_allocator.realloc(mem::to_bytes(allocated_pages), sizeof(Page) * new_size, alignof(Page)))
+        if(internal_allocator.realloc(Mem::to_bytes(allocated_pages), sizeof(Page) * new_size, alignof(Page)))
         {
             allocated_pages.len = new_size;
         }
         else
         {
-            Slice<Page> new_pages = mem::from_bytes<Page>(internal_allocator.alloc(sizeof(Page) * new_size, alignof(Page)));
-            mem::copy(new_pages, allocated_pages);
-            internal_allocator.free(mem::to_bytes(allocated_pages));
+            Slice<Page> new_pages = Mem::from_bytes<Page>(internal_allocator.alloc(sizeof(Page) * new_size, alignof(Page)));
+            Mem::copy(new_pages, allocated_pages);
+            internal_allocator.free(Mem::to_bytes(allocated_pages));
             allocated_pages = new_pages;
         }
     }
 
-    const usize aligned_size = mem::align_up(size, alignment);
+    const usize aligned_size = Mem::align_up(size, alignment);
 
     Header* allocated_mem = _search_for_available_space(aligned_size, alignment);
     if(allocated_mem != nullptr)
@@ -107,7 +107,7 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
     next_page_size += DefaultNextPageSize;
 
     u8* base = new_page.bytes.ptr();
-    u8* aligned_mem = reinterpret_cast<u8*>(mem::align_up<usize>(usize(base) + sizeof(Header), alignment));
+    u8* aligned_mem = reinterpret_cast<u8*>(Mem::align_up<usize>(usize(base) + sizeof(Header), alignment));
 
     Header* allocation_header = reinterpret_cast<Header*>(aligned_mem - sizeof(Header));
     allocation_header->len = new_page.bytes.len - sizeof(Header);
@@ -151,7 +151,7 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
         
 bool GenericAllocator::realloc(const Slice<u8>& ptr, usize new_size, usize alignment)
 {
-    DebugAssert(alignment == mem::align_up<usize>(alignment, 2), "alignment must be a power of 2");
+    DebugAssert(alignment == Mem::align_up<usize>(alignment, 2), "alignment must be a power of 2");
     DebugAssert(ptr.ptr(), "invalid pointer");
 
     Header* header = get_header(ptr);
@@ -159,7 +159,7 @@ bool GenericAllocator::realloc(const Slice<u8>& ptr, usize new_size, usize align
     
     _check_integrity();
     
-    return mem::align_up(new_size, alignment) <= header->len;
+    return Mem::align_up(new_size, alignment) <= header->len;
 }
         
 void GenericAllocator::free(const Slice<u8>& ptr)
@@ -231,7 +231,7 @@ GenericAllocator::Header* GenericAllocator::_search_for_available_space(usize al
             }
 
             u8* aligned_base = reinterpret_cast<u8*>(
-                mem::align_up(usize(allocated_mem) + sizeof(Header), alignment)
+                Mem::align_up(usize(allocated_mem) + sizeof(Header), alignment)
             );
             isize offset = aligned_base - (reinterpret_cast<u8*>(allocated_mem) + sizeof(Header));
 
@@ -278,7 +278,7 @@ GenericAllocator::Header* GenericAllocator::_search_for_available_space(usize al
             {
                 u8* remain_base = reinterpret_cast<u8*>(aligned_base + aligned_size);
                 u8* aligned_remain_base = reinterpret_cast<u8*>(
-                    mem::align_up(usize(remain_base), usize(DefaultAlignmentForRemain))
+                    Mem::align_up(usize(remain_base), usize(DefaultAlignmentForRemain))
                 );
 
                 const usize offset = aligned_remain_base - remain_base;

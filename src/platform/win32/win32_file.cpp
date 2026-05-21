@@ -5,16 +5,16 @@
 #include "platform/platform_header.h"
 
 
-Slice<u8> File::read_all(mem::Allocator* allocator, StringView path)
+Slice<u8> File::read_all(Mem::Allocator* allocator, StringView path)
 {
 	Slice<char> tmp = allocator->array<char>(path.len + 1);
-	mem::copy(tmp, path);
+	Mem::copy(tmp, path);
 
 	HANDLE file = CreateFileA(tmp.ptr(), GENERIC_READ, FILE_SHARE_READ, 
         nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr
     );
 
-	allocator->free(mem::to_bytes(tmp));
+	allocator->free(Mem::to_bytes(tmp));
 
 	if (file == INVALID_HANDLE_VALUE)
 	{
@@ -57,10 +57,10 @@ File File::get_stdin()
 	};
 }
 
-File File::open(mem::Allocator* allocator, StringView path, OpenMode mode)
+File File::open(Mem::Allocator* allocator, StringView path, OpenMode mode)
 {
 	Slice<char> tmp = allocator->array<char>(path.len + 1);
-	mem::copy(tmp, path);
+	Mem::copy(tmp, path);
 	UINT access = 0;
 
 	if (HasValue(mode & File::Read))
@@ -86,7 +86,7 @@ File File::open(mem::Allocator* allocator, StringView path, OpenMode mode)
 		nullptr, open_or_create, FILE_ATTRIBUTE_NORMAL, nullptr
 	);
 
-	allocator->free(mem::to_bytes(tmp));
+	allocator->free(Mem::to_bytes(tmp));
 
 	return File
 	{
@@ -94,16 +94,16 @@ File File::open(mem::Allocator* allocator, StringView path, OpenMode mode)
 	};
 }
 
-bool File::exists(mem::Allocator* allocator, StringView path)
+bool File::exists(Mem::Allocator* allocator, StringView path)
 {
 	Slice<char> tmp = allocator->array<char>(path.len + 1);
-	mem::copy(tmp, path);
+	Mem::copy(tmp, path);
 
 	HANDLE file = CreateFileA(tmp.ptr(), 0, 0, nullptr, 
 		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr
 	);
 
-	allocator->free(mem::to_bytes(tmp));
+	allocator->free(Mem::to_bytes(tmp));
 
 	bool finded = file != INVALID_HANDLE_VALUE;
 	CloseHandle(file);

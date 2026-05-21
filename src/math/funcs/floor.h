@@ -3,7 +3,7 @@
 #include "core/templates.h"
 
 
-namespace math
+namespace Math
 {
 
 template<typename T, typename Integer = Conditional<IsSame<T, f32>, i32, i64>>

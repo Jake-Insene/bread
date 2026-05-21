@@ -14,7 +14,7 @@ struct [[nodiscard]] P2DShape
 	Vector2 centroid;
 	AABB aabb;
 
-	void init(mem::Allocator* allocator);
+	void init(Mem::Allocator* allocator);
 	void destroy();
 
 	P2DShape copy() const;

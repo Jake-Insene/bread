@@ -5,7 +5,7 @@
 template<typename T>
 struct Slice;
 
-namespace io
+namespace IO
 {
 
 /*

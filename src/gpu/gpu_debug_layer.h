@@ -23,7 +23,7 @@ struct ResourceAllocator
 	Array<u32> allocated;
 	ResourceInfo info;
 
-	void init(mem::Allocator* allocator, const ResourceInfo& _info)
+	void init(Mem::Allocator* allocator, const ResourceInfo& _info)
 	{
 		allocated = Array<u32>::with_size(allocator, 4);
 		info = _info;
@@ -224,7 +224,7 @@ struct GPUDebugLayer
 		}
 	}
 
-	void init(mem::Allocator* allocator)
+	void init(Mem::Allocator* allocator)
 	{
 		resource_allocators = Array<ResourceAllocator>::with_size(allocator, usize(GPU::ObjectType::ObjectCount) + 1);
 

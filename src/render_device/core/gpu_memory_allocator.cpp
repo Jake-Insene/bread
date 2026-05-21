@@ -41,7 +41,7 @@ void GPUMemoryAllocator::destroy()
 
 GPUMemoryAllocationID GPUMemoryAllocator::allocate(AllocationTag tag, const GPU::MemoryRequirements& requirements)
 {
-    usize aligned_size = mem::align_up(requirements.size, requirements.alignment);
+    usize aligned_size = Mem::align_up(requirements.size, requirements.alignment);
 
     GPUMemoryAllocationID allocation_id = GPUMemoryAllocationID::invalid();
     
@@ -148,7 +148,7 @@ GPUMemoryAllocator::Heap& GPUMemoryAllocator::_request_heap_for(AllocationTag ta
 
 GPUMemoryAllocator::Heap& GPUMemoryAllocator::_create_heap(AllocationTag tag, usize size, GPU::HeapUsage heap_usage)
 {
-    usize heap_size =  mem::align_up(size, GPU::HeapAlignment);
+    usize heap_size =  Mem::align_up(size, GPU::HeapAlignment);
 
     GPU::HeapUsage required_heap_usage = heap_usage;
     if(tag == AllocationTag::Staging && required_heap_usage == GPU::HeapUsage::GPUExclusive)

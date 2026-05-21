@@ -15,7 +15,7 @@ struct [[nodiscard]] Shape2D
     // 3 -> Bottom left
     Array<Vector2> vertices;
 
-    static Shape2D make_box(mem::Allocator* allocator, const Vector2& size);
+    static Shape2D make_box(Mem::Allocator* allocator, const Vector2& size);
 
     void destroy();
 

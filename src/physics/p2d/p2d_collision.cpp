@@ -205,7 +205,7 @@ void P2DCollision::resolve_collision(const CollisionManifold& manifold, P2DBody&
 	f32 frictional_impulse = -(1.F + e) * relative_velocity.dot(tangent) * friction;
 	frictional_impulse /= (inv_mass_sum + cross_sum_tangent);
 
-	frictional_impulse = math::min(frictional_impulse, j);
+	frictional_impulse = Math::min(frictional_impulse, j);
 
 	const Vector2 frictional_impulse_vector = tangent * frictional_impulse;
 	body_a.add_velocity(

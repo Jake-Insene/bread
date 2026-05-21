@@ -60,7 +60,7 @@ struct Audio
 #endif
     };
 
-    static void initialize(mem::Allocator* allocator, DriverType driver);
+    static void initialize(Mem::Allocator* allocator, DriverType driver);
     static void initialize_from_adapter(const InternalAudio::AudioAdapter* adapter);
     static void shutdown();
     

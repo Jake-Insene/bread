@@ -9,7 +9,7 @@
 
 struct RendererBatch2DCreateInfo
 {
-    mem::Allocator* allocator;
+    Mem::Allocator* allocator;
     Graphics::Device* graphics_device;
     GPUMemoryAllocator* gpu_memory_allocator;
     u32 max_frames_in_flight;
@@ -49,7 +49,7 @@ struct RendererBatch2D
         Rect2D uv_rect;
     };
     static_assert(sizeof(SpriteInstance) / sizeof(Vector4) <= GPU::MaxVertexInputAttributes, "Instance shouldn't use more than GPU::MaxVertexInputAttributes attributes");
-    static_assert(mem::align_up(sizeof(SpriteInstance), sizeof(Vector4)) == sizeof(SpriteInstance), "Invalid Instance alignment");
+    static_assert(Mem::align_up(sizeof(SpriteInstance), sizeof(Vector4)) == sizeof(SpriteInstance), "Invalid Instance alignment");
     
     struct alignas(sizeof(Vector4)) QuadInstance
     {
@@ -64,7 +64,7 @@ struct RendererBatch2D
         Rect2D rect;
     };
     static_assert(sizeof(QuadInstance) / sizeof(Vector4) <= GPU::MaxVertexInputAttributes, "Instance shouldn't use more than GPU::MaxVertexInputAttributes attributes");
-    static_assert(mem::align_up(sizeof(QuadInstance), sizeof(Vector4)) == sizeof(QuadInstance), "Invalid Instance alignment");
+    static_assert(Mem::align_up(sizeof(QuadInstance), sizeof(Vector4)) == sizeof(QuadInstance), "Invalid Instance alignment");
 
     struct alignas(sizeof(Vector4)) LineInstance
     {
@@ -80,7 +80,7 @@ struct RendererBatch2D
         Vector2 point2;
     };
     static_assert(sizeof(LineInstance) / sizeof(Vector4) <= GPU::MaxVertexInputAttributes, "Instance shouldn't use more than GPU::MaxVertexInputAttributes attributes");
-    static_assert(mem::align_up(sizeof(LineInstance), sizeof(Vector4)) == sizeof(LineInstance), "Invalid Instance alignment");
+    static_assert(Mem::align_up(sizeof(LineInstance), sizeof(Vector4)) == sizeof(LineInstance), "Invalid Instance alignment");
 
     struct alignas(sizeof(Vector4)) CircleInstance
     {
@@ -96,7 +96,7 @@ struct RendererBatch2D
         f32 radius;
     };
     static_assert(sizeof(CircleInstance) / sizeof(Vector4) <= GPU::MaxVertexInputAttributes, "Instance shouldn't use more than GPU::MaxVertexInputAttributes attributes");
-    static_assert(mem::align_up(sizeof(CircleInstance), sizeof(Vector4)) == sizeof(CircleInstance), "Invalid Instance alignment");
+    static_assert(Mem::align_up(sizeof(CircleInstance), sizeof(Vector4)) == sizeof(CircleInstance), "Invalid Instance alignment");
     
     struct Batch
     {
@@ -113,7 +113,7 @@ struct RendererBatch2D
     static constexpr usize MaxInstancePerBatch = 128;
     static constexpr usize MaxBatchesPerFrame = 64;
 
-    mem::Allocator* allocator;
+    Mem::Allocator* allocator;
     Graphics::Device* graphics_device;
 
     Graphics::PipelineLayout* batch_pipeline_layout;

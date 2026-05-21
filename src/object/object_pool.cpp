@@ -5,7 +5,7 @@
 
 
 
-ObjectPool ObjectPool::create(mem::Allocator* allocator)
+ObjectPool ObjectPool::create(Mem::Allocator* allocator)
 {
     return ObjectPool
     {
@@ -27,7 +27,7 @@ void ObjectPool::destroy()
         }
     }
 
-    allocator->free(mem::to_bytes(blocks));
+    allocator->free(Mem::to_bytes(blocks));
 }
 
 ObjectID ObjectPool::allocate_object(const StringView& name_tag)
@@ -53,7 +53,7 @@ ObjectID ObjectPool::allocate_object(const StringView& name_tag)
     if(block.slot_index >= block.slot_count)
     {
         Slice<u8> new_memory = allocator->alloc(ObjectPerBlock * block.metadata.object_size, block.metadata.alignment);
-        mem::copy(new_memory, block.memory);
+        Mem::copy(new_memory, block.memory);
         allocator->free(block.memory);
 
         block.memory = new_memory;
@@ -89,8 +89,8 @@ void ObjectPool::_register_object(const BlockMetadata& object_metadata)
     if(block_count == blocks.len)
     {
         Slice<Block> new_blocks = allocator->array<Block>(blocks.len * 2);
-        mem::copy(mem::to_bytes(new_blocks), mem::to_bytes(blocks));
-        allocator->free(mem::to_bytes(blocks));
+        Mem::copy(Mem::to_bytes(new_blocks), Mem::to_bytes(blocks));
+        allocator->free(Mem::to_bytes(blocks));
 
         blocks = new_blocks;
     }

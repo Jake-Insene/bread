@@ -6,7 +6,7 @@
 namespace Graphics
 {
 
-void Device::init(mem::Allocator* _allocator, GPU::PhysicalDeviceID _gpu_physical_device)
+void Device::init(Mem::Allocator* _allocator, GPU::PhysicalDeviceID _gpu_physical_device)
 {
     allocator = _allocator;
     mutex = Mutex::create();

@@ -29,7 +29,7 @@ struct Object
 
     struct CreateInfo
     {
-        mem::Allocator* allocator;
+        Mem::Allocator* allocator;
     };
 
     struct VTable
@@ -39,7 +39,7 @@ struct Object
 
     template<typename T>
     requires(IsBaseOf<Object, T>)
-    static T* create(mem::Allocator* allocator, const T::CreateInfo& t_info)
+    static T* create(Mem::Allocator* allocator, const T::CreateInfo& t_info)
     {
         T* obj = allocator->object<T>();
         typename T::CreateInfo info = t_info;
@@ -51,7 +51,7 @@ struct Object
     /*
     * The object memory allocator, Use it to allocate memory for the object.
     */
-    mem::Allocator* allocator;
+    Mem::Allocator* allocator;
     InternalData data;
 
     void handle_event(const InputEvent& event) Function(FunctionInternal);

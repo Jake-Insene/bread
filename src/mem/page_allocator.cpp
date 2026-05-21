@@ -4,14 +4,14 @@
 #include "os/os.h"
 
 
-namespace mem
+namespace Mem
 {
 
 Slice<u8> PageAllocator::alloc(usize size, usize)
 {
     Slice<u8> ptr = {};
 
-    const usize aligned_size = mem::align_up(size, OS::get_page_size());
+    const usize aligned_size = Mem::align_up(size, OS::get_page_size());
 
     ptr = OS::map_memory(aligned_size, OS::MapReadWrite);
     ptr.len = aligned_size;
@@ -21,9 +21,9 @@ Slice<u8> PageAllocator::alloc(usize size, usize)
 
 bool PageAllocator::realloc(const Slice<u8>& ptr, usize new_size, usize)
 {
-    const usize aligned_new_size = mem::align_up(new_size, OS::get_page_size());
+    const usize aligned_new_size = Mem::align_up(new_size, OS::get_page_size());
 
-    const usize aligned_ptr_size = mem::align_up(ptr.len, OS::get_page_size());
+    const usize aligned_ptr_size = Mem::align_up(ptr.len, OS::get_page_size());
     if (aligned_new_size == aligned_ptr_size)
     {
         return true;

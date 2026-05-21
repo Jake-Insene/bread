@@ -2,7 +2,7 @@
 #include "core/templates.h"
 
 
-namespace math::impl
+namespace Math::impl
 {
 
 // TODO:

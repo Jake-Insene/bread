@@ -4,7 +4,7 @@
 #include "platform/instrinsics.h"
 
 
-namespace math::impl
+namespace Math::impl
 {
 
 template<typename T>

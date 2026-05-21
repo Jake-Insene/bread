@@ -2,7 +2,7 @@
 #include "core/templates.h"
 #include "core/values.h"
 
-namespace math
+namespace Math
 {
 
 void random_seed(u64 seed);

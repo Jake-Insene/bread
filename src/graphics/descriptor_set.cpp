@@ -5,7 +5,7 @@
 namespace Graphics
 {
 
-void DescriptorSet::init(mem::Allocator* _allocator, const DescriptorSetInfo& info)
+void DescriptorSet::init(Mem::Allocator* _allocator, const DescriptorSetInfo& info)
 {
     allocator = _allocator;
     
@@ -158,7 +158,7 @@ void DescriptorSet::set_combined_texture_sampler_array(u32 binding, Slice<GPU::T
             }
         );
         
-        allocator->free(mem::to_bytes(Slice(texture_infos, textures.len)));
+        allocator->free(Mem::to_bytes(Slice(texture_infos, textures.len)));
     }
 }
 
@@ -216,19 +216,19 @@ void DescriptorSet::sync_writes()
                 .write_infos = writes,
             }
         );
-        allocator->free(mem::to_bytes(writes));
-        allocator->free(mem::to_bytes(buffers));
-        allocator->free(mem::to_bytes(textures));
+        allocator->free(Mem::to_bytes(writes));
+        allocator->free(Mem::to_bytes(buffers));
+        allocator->free(Mem::to_bytes(textures));
 
         for(const DeferredWrite& deferred_write : deferred_writes.iter())
         {
             if(deferred_write.write_array.buffers.len != 0)
             {
-                allocator->free(mem::to_bytes(deferred_write.write_array.buffers));
+                allocator->free(Mem::to_bytes(deferred_write.write_array.buffers));
             }
             else if(deferred_write.write_array.textures.len != 0)
             {
-                allocator->free(mem::to_bytes(deferred_write.write_array.textures));
+                allocator->free(Mem::to_bytes(deferred_write.write_array.textures));
             }
         }
         deferred_writes.clear();

@@ -43,8 +43,8 @@ union [[nodiscard]] Vector2T
 
         const Vector2T direction = vertice - point;
 
-		f32 s = math::sin(rot);
-		f32 c = math::cos(rot);
+		f32 s = Math::sin(rot);
+		f32 c = Math::cos(rot);
 
 		rotated.x = (direction.x * c) - (direction.y * s);
 		rotated.y = (direction.x * s) + (direction.y * c);
@@ -55,7 +55,7 @@ union [[nodiscard]] Vector2T
 
     static constexpr Vector2T lerp(const Vector2T& v0, const Vector2T& v1, const T& t)
     {
-        return math::lerp<Vector2T>(v0, v1, t);
+        return Math::lerp<Vector2T>(v0, v1, t);
     }
     
     constexpr Vector2T() : x(T(0)), y(T(0)) {};
@@ -167,7 +167,7 @@ union [[nodiscard]] Vector2T
     
     constexpr T length() const
     {
-        return math::sqrt(dot(*this));
+        return Math::sqrt(dot(*this));
     }
 
     constexpr Vector2T normalized() const
@@ -178,11 +178,11 @@ union [[nodiscard]] Vector2T
         }
         if(x == 0)
         {
-            return Vector2T(0, y / math::abs(y));
+            return Vector2T(0, y / Math::abs(y));
         }
         if(y == 0)
         {
-            return Vector2T(x / math::abs(x), 0);
+            return Vector2T(x / Math::abs(x), 0);
         }
 
 #if BREAD_ENABLE_INTRISICS
@@ -236,22 +236,22 @@ using Vector2 = Vector2T<f32>;
 using Vector2I = Vector2T<i32>;
 using Vector2U = Vector2T<u32>;
 
-namespace io
+namespace IO
 {
 struct Writer;
 }
 
-namespace fmt
+namespace Format
 {
 
 template<typename T>
-void format_custom(const io::Writer& writer, const T& v);
+void format_custom(const IO::Writer& writer, const T& v);
 
 template<>
-void format_custom<Vector2>(const io::Writer& writer, const Vector2& v);
+void format_custom<Vector2>(const IO::Writer& writer, const Vector2& v);
 
 template<>
-void format_custom<Vector2I>(const io::Writer& writer, const Vector2I& v);
+void format_custom<Vector2I>(const IO::Writer& writer, const Vector2I& v);
 
 }
 

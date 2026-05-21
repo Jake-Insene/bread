@@ -42,7 +42,7 @@ struct SwapChain : DeviceObject
     bool is_valid_swap_chain;
     bool pending_rebuild;
 
-    void init(mem::Allocator* _allocator, Device* _parent, const SwapChainInfo& info);
+    void init(Mem::Allocator* _allocator, Device* _parent, const SwapChainInfo& info);
     void destroy();
 
     void resize();

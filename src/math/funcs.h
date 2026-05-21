@@ -17,7 +17,7 @@
 
 #include <cmath>
 
-namespace math
+namespace Math
 {
 
 template<typename Result, typename T>
@@ -67,7 +67,7 @@ template<typename T>
 requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T dist(T a, T b)
 {
-    return ::math::abs(b - a);
+    return ::Math::abs(b - a);
 }
 
 template<typename T>

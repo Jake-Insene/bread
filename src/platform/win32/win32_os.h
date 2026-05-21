@@ -15,7 +15,7 @@ struct Win32OS
 
     struct InternalData
     {
-        mem::Allocator* allocator;
+        Mem::Allocator* allocator;
 
         i64 frequency;
         f64 program_start;
@@ -24,9 +24,9 @@ struct Win32OS
 
     static inline Win32OS::InternalData data;
 
-    [[nodiscard]] static mem::Allocator* get_allocator() { return data.allocator; }
+    [[nodiscard]] static Mem::Allocator* get_allocator() { return data.allocator; }
 
-    static void initialize(mem::Allocator* allocator);
+    static void initialize(Mem::Allocator* allocator);
     static void shutdown();
 
     static f64 get_time();

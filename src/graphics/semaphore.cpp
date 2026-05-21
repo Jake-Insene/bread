@@ -4,7 +4,7 @@
 namespace Graphics
 {
 
-void Semaphore::init(mem::Allocator* _allocator, Device* _parent, GPU::DeviceID gpu_device)
+void Semaphore::init(Mem::Allocator* _allocator, Device* _parent, GPU::DeviceID gpu_device)
 {
     DeviceObject::init(_allocator, _parent);
     gpu_semaphore = GPU::semaphore_create(

@@ -73,7 +73,7 @@ InternalPhysics2D::Adapter P2DDriver::get_vtable()
     };
 }
 
-void P2DDriver::initialize(mem::Allocator* allocator)
+void P2DDriver::initialize(Mem::Allocator* allocator)
 {
     // Ensures constructors are call.
     ConstructObject(data);
@@ -800,8 +800,8 @@ PhysicsTileCoord P2DDriver::_convert_to_world_tile(const Vector2& point)
     const Vector2 normalized_point = point / f32(_get_tile_size());
     PhysicsTileCoord tile = {};
 
-    tile.x = math::floor(normalized_point.x);
-    tile.y = math::floor(normalized_point.y);
+    tile.x = Math::floor(normalized_point.x);
+    tile.y = Math::floor(normalized_point.y);
 
     return tile;
 }

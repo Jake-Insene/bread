@@ -2,7 +2,7 @@
 #include "math/constants.h"
 
 
-namespace math::impl
+namespace Math::impl
 {
 
 /*

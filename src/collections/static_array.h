@@ -78,7 +78,7 @@ struct [[nodiscard]] StaticArray
         };
 
         Slice<Type> dest = Slice(array.items, N);
-        mem::copy(dest, items);
+        Mem::copy(dest, items);
         return array;
     }
 
@@ -95,7 +95,7 @@ struct [[nodiscard]] StaticArray
 
         const Type list_array[] = { list... };
         Slice<Type> dest = Slice(array.items, N);
-        mem::copy(dest, Slice(list_array, ListLen));
+        Mem::copy(dest, Slice(list_array, ListLen));
 
         return array;
     }
@@ -131,7 +131,7 @@ struct [[nodiscard]] StaticArray
 		DebugAssert(count + new_items.len <= N, "StaticArray is full, cannot add more items");
         usize _count = count;
         Slice<Type> dest = items.add(_count);
-        mem::copy(dest, new_items);
+        Mem::copy(dest, new_items);
         count += new_items.len;
     }
 
@@ -139,7 +139,7 @@ struct [[nodiscard]] StaticArray
     {
 		DebugAssert(new_items.len <= N, "StaticArray is too small for the provided items");
         Slice<Type> dest = Slice(items, N);
-        mem::copy(dest, new_items);
+        Mem::copy(dest, new_items);
     }
 
     constexpr void remove_at(usize index)
@@ -156,7 +156,7 @@ struct [[nodiscard]] StaticArray
         count--;
         Slice<Type> dest = Slice(items, N);
         Slice<Type> src = Slice(items, N);
-        mem::copy(dest.add(index), src.add(index + 1));
+        Mem::copy(dest.add(index), src.add(index + 1));
     }
 
     constexpr void remove(const T& item)

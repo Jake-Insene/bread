@@ -12,7 +12,7 @@ struct Sound;
 
 struct AudioServiceCreateInfo
 {
-    mem::Allocator* allocator;
+    Mem::Allocator* allocator;
 };
 
 struct AudioService
@@ -41,7 +41,7 @@ struct AudioService
 
     struct InternalData
     {
-        mem::Allocator* allocator;
+        Mem::Allocator* allocator;
         
         Mutex enqueue_mutex;
         Array<Mixer> mixers;

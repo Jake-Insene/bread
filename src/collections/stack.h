@@ -11,11 +11,11 @@ struct [[nodiscard]] Stack
 
 	static constexpr usize DefaultCapacity = 4;
 
-	mem::Allocator* allocator;
+	Mem::Allocator* allocator;
 	Slice<Type> items;
 	usize sp;
 
-	static Stack with_allocator(mem::Allocator* allocator)
+	static Stack with_allocator(Mem::Allocator* allocator)
 	{
 		return Stack
 		{
@@ -25,7 +25,7 @@ struct [[nodiscard]] Stack
 		};
 	}
 
-	static Stack with_size(mem::Allocator* allocator, usize size)
+	static Stack with_size(Mem::Allocator* allocator, usize size)
 	{
 		return Stack
 		{
@@ -40,7 +40,7 @@ struct [[nodiscard]] Stack
 	{
 		if (items.ptr())
 		{
-			allocator->free(mem::to_bytes(items));
+			allocator->free(Mem::to_bytes(items));
 		}
 	}
 
@@ -61,13 +61,13 @@ struct [[nodiscard]] Stack
 			new_cap = required_capacity;
 		}
 
-		if (!allocator->realloc(mem::to_bytes(items), sizeof(Type) * new_cap, alignof(Type)))
+		if (!allocator->realloc(Mem::to_bytes(items), sizeof(Type) * new_cap, alignof(Type)))
 		{
 			Slice<Type> new_items = allocator->array<Type>(new_cap);
 			if (items.ptr())
 			{
-				mem::copy(new_items, items);
-				allocator->free(mem::to_bytes(items));
+				Mem::copy(new_items, items);
+				allocator->free(Mem::to_bytes(items));
 			}
 
 			items = new_items;

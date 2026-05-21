@@ -4,7 +4,7 @@
 
 
 
-namespace math
+namespace Math
 {
 
 template<typename T>
@@ -27,7 +27,7 @@ requires(IsFloatingPoint<T>)
     {
         const T root = T(0.5) * (x + (n / x));
 
-        if (math::abs(root - x) < tolerance)
+        if (Math::abs(root - x) < tolerance)
         {
             return root;
         }

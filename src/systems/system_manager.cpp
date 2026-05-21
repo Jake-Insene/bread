@@ -3,7 +3,7 @@
 #include "collections/reverse_iterator.h"
 
 
-void SystemManager::initialize(mem::Allocator* _allocator)
+void SystemManager::initialize(Mem::Allocator* _allocator)
 {
     allocator = _allocator;
 
@@ -44,7 +44,7 @@ void SystemManager::deallocate_systems()
     
     for(SystemInstance& instance : systems.iter())
     {
-        allocator->free(mem::to_bytes(Slice(instance.instance, 1)));
+        allocator->free(Mem::to_bytes(Slice(instance.instance, 1)));
     }
 
     systems.clear();

@@ -61,11 +61,11 @@ struct [[nodiscard]] Array
     using Type = T;
     using Iterator = ArrayIterator<Type>;
 
-    mem::Allocator* allocator = {};
+    Mem::Allocator* allocator = {};
     Slice<Type> items = {};
     usize count = 0;
 
-    static Array with_allocator(mem::Allocator* allocator)
+    static Array with_allocator(Mem::Allocator* allocator)
     {
         return
         {
@@ -75,7 +75,7 @@ struct [[nodiscard]] Array
         };
     }
 
-    static Array with_size(mem::Allocator* allocator, const usize size)
+    static Array with_size(Mem::Allocator* allocator, const usize size)
     {
         return
         {
@@ -85,7 +85,7 @@ struct [[nodiscard]] Array
         };
     }
 
-    static Array from_items(mem::Allocator* allocator, Slice<Type> items)
+    static Array from_items(Mem::Allocator* allocator, Slice<Type> items)
     {
         Array array =
         {
@@ -94,12 +94,12 @@ struct [[nodiscard]] Array
             .count = items.len,
         };
 
-        mem::copy(array.items, items);
+        Mem::copy(array.items, items);
         return array;
     }
 
     template<typename... TList>
-    static constexpr Array from_list(mem::Allocator* allocator, const TList... list)
+    static constexpr Array from_list(Mem::Allocator* allocator, const TList... list)
     {
         static constexpr usize ListLen = sizeof...(list);
         Array array =
@@ -110,7 +110,7 @@ struct [[nodiscard]] Array
         };
 
         const Type list_array[] = { list... };
-        mem::copy(array.items, Slice(list_array, ListLen));
+        Mem::copy(array.items, Slice(list_array, ListLen));
 
         return array;
     }
@@ -119,7 +119,7 @@ struct [[nodiscard]] Array
     {
         if (items.ptr())
         {
-            allocator->free(mem::to_bytes(items));
+            allocator->free(Mem::to_bytes(items));
         }
     }
 
@@ -143,15 +143,15 @@ struct [[nodiscard]] Array
         }
         
         usize new_cap = items.len + (items.len / 2);
-        new_cap = math::max(new_cap, required_capacity);
+        new_cap = Math::max(new_cap, required_capacity);
         
-        if(!allocator->realloc(mem::to_bytes(items), sizeof(Type) * new_cap, alignof(Type)))
+        if(!allocator->realloc(Mem::to_bytes(items), sizeof(Type) * new_cap, alignof(Type)))
         {
             Slice<Type> new_items = allocator->array<Type>(new_cap);
             if(items.ptr())
             {
-                mem::copy(new_items, items);
-                allocator->free(mem::to_bytes(items));
+                Mem::copy(new_items, items);
+                allocator->free(Mem::to_bytes(items));
             }
                 
             items = new_items;
@@ -197,13 +197,13 @@ struct [[nodiscard]] Array
         usize _count = count;
         resize(count + new_items.len);
         Slice<Type> dest = items.add(_count);
-        mem::copy(dest, new_items);
+        Mem::copy(dest, new_items);
     }
 
     void replace(Slice<Type> new_items)
     {
         resize(new_items.len);
-        mem::copy(items, new_items);
+        Mem::copy(items, new_items);
     }
 
     void remove_at(usize index)
@@ -218,7 +218,7 @@ struct [[nodiscard]] Array
         }
 
         count--;
-        mem::copy(items.add(index), items.add(index + 1));
+        Mem::copy(items.add(index), items.add(index + 1));
     }
 
     void remove(const Type& item)
@@ -246,7 +246,7 @@ struct [[nodiscard]] Array
     template<typename Self>
     Slice<Type> slice(this Self& self) { return self.items.slice(self.count); }
 
-    Array copy(mem::Allocator* copy_allocator) const
+    Array copy(Mem::Allocator* copy_allocator) const
     {
         return Array::from_items(copy_allocator, slice());
     }

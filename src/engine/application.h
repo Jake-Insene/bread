@@ -6,7 +6,7 @@
 
 struct Event;
 
-namespace mem
+namespace Mem
 {
 struct Allocator;
 }
@@ -27,7 +27,7 @@ struct Application
     Application();
     virtual ~Application();
 
-    virtual void initialize(mem::Allocator* allocator);
+    virtual void initialize(Mem::Allocator* allocator);
     virtual void shutdown();
 
     virtual void load_resources();

@@ -1,7 +1,7 @@
 #include "physics/p2d/p2d_body.h"
 
 
-void P2DBody::init(mem::Allocator* allocator, Physics2D::BodyID id, Opaque* ud)
+void P2DBody::init(Mem::Allocator* allocator, Physics2D::BodyID id, Opaque* ud)
 {
 	self = id;
 	user_data = ud;
@@ -152,7 +152,7 @@ void P2DBody::step(f32 dt)
 	{
 		data.velocity = Vector2();
 	}
-	if (math::abs(data.angular_velocity) < rest_threshold)
+	if (Math::abs(data.angular_velocity) < rest_threshold)
 	{
 		data.angular_velocity = 0.F;
 	}

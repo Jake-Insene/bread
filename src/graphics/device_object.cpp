@@ -7,7 +7,7 @@
 namespace Graphics
 {
     
-void DeviceObject::init(mem::Allocator* _allocator, Device* _parent)
+void DeviceObject::init(Mem::Allocator* _allocator, Device* _parent)
 {
     parent = _parent;
     allocator = _allocator;

@@ -10,9 +10,9 @@ struct Device;
 struct DeviceObject
 {
     Device* parent;
-    mem::Allocator* allocator;
+    Mem::Allocator* allocator;
 
-    void init(mem::Allocator* _allocator, Device* _parent);
+    void init(Mem::Allocator* _allocator, Device* _parent);
     void destroy();
 };
 

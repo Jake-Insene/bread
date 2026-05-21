@@ -14,7 +14,7 @@ struct MemoryHeap : DeviceObject
     u32 map_count = 0;
     Slice<u8> mapped_memory;
 
-    void init(mem::Allocator* _allocator, Device* _parent, const GPU::MemoryHeapCreateInfo& info);
+    void init(Mem::Allocator* _allocator, Device* _parent, const GPU::MemoryHeapCreateInfo& info);
     void destroy();
 
     Slice<u8> map(usize offset, usize len);

@@ -15,13 +15,13 @@ struct [[nodiscard]] JobQueue
 		Opaque* arg;
 	};
 
-	mem::Allocator* allocator;
+	Mem::Allocator* allocator;
 	Stack<JobInfo> job_stack;
 	Mutex mutex;
 
-	static JobQueue with_allocator(mem::Allocator* allocator);
+	static JobQueue with_allocator(Mem::Allocator* allocator);
 
-	static JobQueue with_size(mem::Allocator* allocator, usize initial_size);
+	static JobQueue with_size(Mem::Allocator* allocator, usize initial_size);
 
 	void destroy();
 

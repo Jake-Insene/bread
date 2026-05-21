@@ -6,12 +6,12 @@ struct StringView;
 template<typename T>
 struct Slice;
 
-namespace mem
+namespace Mem
 {
 struct Allocator;
 }
 
-namespace io
+namespace IO
 {
 struct Writer;
 }
@@ -27,14 +27,14 @@ struct File
 
     usize handle;
 
-    static Slice<u8> read_all(mem::Allocator* allocator, StringView path);
+    static Slice<u8> read_all(Mem::Allocator* allocator, StringView path);
 
     static File get_stderr();
     static File get_stdout();
     static File get_stdin();
 
-    static File open(mem::Allocator* allocator, StringView path, OpenMode mode);
-    static bool exists(mem::Allocator* allocator, StringView path);
+    static File open(Mem::Allocator* allocator, StringView path, OpenMode mode);
+    static bool exists(Mem::Allocator* allocator, StringView path);
 
     void destroy();
 
@@ -44,7 +44,7 @@ struct File
 
     void flush();
 
-    io::Writer writer();
+    IO::Writer writer();
 };
 
 

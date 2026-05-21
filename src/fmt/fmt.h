@@ -3,13 +3,13 @@
 
 struct StringView;
 
-namespace io
+namespace IO
 {
 struct Writer;
 }
 
 
-namespace fmt
+namespace Format
 {
 
 void __undef_function(...);
@@ -66,7 +66,7 @@ struct FormatString
 		{
 			if (chars[i] == '{')
 			{
-				fmt::__fail_compile_time_on(
+				Format::__fail_compile_time_on(
 					i + 1 == len || type_index >= ArgumentCount || chars[i + 1] != '}',
 					"invalid string format"
 				);
@@ -80,7 +80,7 @@ struct FormatString
 			}
 		}
 
-		fmt::__fail_compile_time_on(type_index != ArgumentCount, "too much/few arguments");
+		Format::__fail_compile_time_on(type_index != ArgumentCount, "too much/few arguments");
 	}
 
 	consteval FIntervalType get_intervals()
@@ -119,7 +119,7 @@ struct FormatString
 };
 
 template<bool NewLine, typename... TArgs>
-void format(const io::Writer& writer, const FormatString<TypeIdentity<TArgs>&&...>& fmt, TArgs&&... args);
+void format(const IO::Writer& writer, const FormatString<TypeIdentity<TArgs>&&...>& fmt, TArgs&&... args);
 
 }
 
@@ -129,7 +129,7 @@ void format(const io::Writer& writer, const FormatString<TypeIdentity<TArgs>&&..
 #include "mem/utils.h"
 #include "io/writer.h"
 
-namespace fmt
+namespace Format
 {
 
 template<typename... TArgs>
@@ -143,75 +143,75 @@ inline constexpr bool IsValidBase = IsAnyOfValue<usize, Base, 2, 10, 16>;
 
 template<usize Base, typename T>
 	requires(IsValidBase<Base>)
-inline void __format_integer(const io::Writer& writer, T arg)
+inline void __format_integer(const IO::Writer& writer, T arg)
 {
 	StringResult result = StringUtility::integer_to_string<T>(arg, Base);
-	writer.write(mem::to_const_bytes(Slice(result.result + result.begin, result.len)));
+	writer.write(Mem::to_const_bytes(Slice(result.result + result.begin, result.len)));
 }
 
 template<typename T>
-inline void __format_floating_point(const io::Writer& writer, T arg, i32 decimals)
+inline void __format_floating_point(const IO::Writer& writer, T arg, i32 decimals)
 {
 	StringResult result = StringUtility::fp_to_string<T>(arg, decimals);
-	writer.write(mem::to_const_bytes(Slice(result.result, result.len)));
+	writer.write(Mem::to_const_bytes(Slice(result.result, result.len)));
 }
 
 template<typename T>
-void format_custom(const io::Writer& writer, const T& arg);
+void format_custom(const IO::Writer& writer, const T& arg);
 
 template<typename T>
-void __format_single_argument(const io::Writer& writer, T&& arg)
+void __format_single_argument(const IO::Writer& writer, T&& arg)
 {
-	static constexpr fmt::FormatType type = fmt::__GetFormatType<T>();
-	if constexpr (type == fmt::FormatType::Bool)
+	static constexpr Format::FormatType type = Format::__GetFormatType<T>();
+	if constexpr (type == Format::FormatType::Bool)
 	{
 		static constexpr StringView true_str = "true";
 		static constexpr StringView false_str = "false";
-		Slice<const u8> str = mem::to_const_bytes(arg ? true_str : false_str);
+		Slice<const u8> str = Mem::to_const_bytes(arg ? true_str : false_str);
 		writer.write(str);
 	}
-	else if constexpr (type == fmt::FormatType::Signed || type == fmt::FormatType::Unsigned)
+	else if constexpr (type == Format::FormatType::Signed || type == Format::FormatType::Unsigned)
 	{
 		__format_integer<10, T>(writer, arg);
 	}
-	else if constexpr (type == fmt::FormatType::Float32)
+	else if constexpr (type == Format::FormatType::Float32)
 	{
 		__format_floating_point<f32>(writer, arg, 6);
 	}
-	else if constexpr (type == fmt::FormatType::Float64)
+	else if constexpr (type == Format::FormatType::Float64)
 	{
 		__format_floating_point<f64>(writer, arg, 6);
 	}
-	else if constexpr (type == fmt::FormatType::Pointer)
+	else if constexpr (type == Format::FormatType::Pointer)
 	{
 		__format_integer<16, usize>(writer, usize(arg));
 	}
-	else if constexpr (type == fmt::FormatType::String)
+	else if constexpr (type == Format::FormatType::String)
 	{
-		writer.write(mem::to_const_bytes(arg.view()));
+		writer.write(Mem::to_const_bytes(arg.view()));
 	}
-	else if constexpr (type == fmt::FormatType::StringView)
+	else if constexpr (type == Format::FormatType::StringView)
 	{
-		writer.write(mem::to_const_bytes(arg));
+		writer.write(Mem::to_const_bytes(arg));
 	}
-	else if constexpr (type == fmt::FormatType::CString)
+	else if constexpr (type == Format::FormatType::CString)
 	{
 		// A CString always contains an extra byte for '\0'
 		static constexpr usize len = Extent<T> - 1;
-		writer.write(mem::to_const_bytes(Slice(arg, len)));
+		writer.write(Mem::to_const_bytes(Slice(arg, len)));
 	}
-	else if constexpr (type == fmt::FormatType::Slice)
+	else if constexpr (type == Format::FormatType::Slice)
 	{
-		writer.write(mem::to_const_bytes(StringView("[")));
+		writer.write(Mem::to_const_bytes(StringView("[")));
 		for (usize i = 0; i < arg.len; i++)
 		{
 			if(i != 0)
 			{
-				writer.write(mem::to_const_bytes(StringView(", ")));
+				writer.write(Mem::to_const_bytes(StringView(", ")));
 			}
 			__format_single_argument<typename RemoveReference<decltype(arg)>::Type>(writer, Move(arg[i]));
 		}
-		writer.write(mem::to_const_bytes(StringView("]")));
+		writer.write(Mem::to_const_bytes(StringView("]")));
 	}
 	else
 	{
@@ -220,22 +220,22 @@ void __format_single_argument(const io::Writer& writer, T&& arg)
 }
 
 template<usize IntervalRemain, typename... TArgs>
-void __format_argument(const io::Writer& writer, const StringView view, const fmt::FormatString<TypeIdentity<TArgs>&&...>& fmtstring, TArgs&&... args)
+void __format_argument(const IO::Writer& writer, const StringView view, const Format::FormatString<TypeIdentity<TArgs>&&...>& fmtstring, TArgs&&... args)
 {
-	using FString = fmt::FormatString<TypeIdentity<TArgs>...>;
+	using FString = Format::FormatString<TypeIdentity<TArgs>...>;
 
 	if constexpr (IntervalRemain == 1)
 	{
 		Unused(args...);
 		const auto interval_range = fmtstring.intervals[FString::WriteIntervalCount - 1];
 		const StringView interval = StringView(view.ptr() + interval_range.start, interval_range.len);
-		writer.write(mem::to_const_bytes(interval));
+		writer.write(Mem::to_const_bytes(interval));
 	}
 	else
 	{
 		const auto interval_range = fmtstring.intervals[FString::WriteIntervalCount - IntervalRemain];
 		const StringView interval = StringView(view.ptr() + interval_range.start, interval_range.len);
-		writer.write(mem::to_const_bytes(interval));
+		writer.write(Mem::to_const_bytes(interval));
 
 		__format_single_argument(writer, Move(GetArgument<FString::WriteIntervalCount - IntervalRemain>(Forward<TArgs>(args)...)));
 		__format_argument<IntervalRemain - 1, TArgs...>(writer, view, fmtstring, Forward<TArgs>(args)...);
@@ -243,14 +243,14 @@ void __format_argument(const io::Writer& writer, const StringView view, const fm
 }
 
 template<bool NewLine, typename... TArgs>
-void format(const io::Writer& writer, const FormatString<TypeIdentity<TArgs>&&...>& fmtstring, TArgs&&... args)
+void format(const IO::Writer& writer, const FormatString<TypeIdentity<TArgs>&&...>& fmtstring, TArgs&&... args)
 {
 	using FString = FormatString<TypeIdentity<TArgs>...>;
 	StringView view = fmtstring.view();
 
 	if constexpr (FString::WriteIntervalCount == 1)
 	{
-		writer.write(mem::to_const_bytes(view));
+		writer.write(Mem::to_const_bytes(view));
 	}
 	else
 	{

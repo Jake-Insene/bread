@@ -42,7 +42,7 @@ struct [[nodiscard]] StringView : Slice<const char>
     {
         return false;
     }
-    return mem::compare(Slice(items, str.len), str);
+    return Mem::compare(Slice(items, str.len), str);
 }
     
 [[nodiscard]] constexpr bool StringView::ends_with(StringView str) const
@@ -52,7 +52,7 @@ struct [[nodiscard]] StringView : Slice<const char>
         return false;
     }
     
-    if(mem::compare(Slice<const char>(items + (len - str.len), str.len), str))
+    if(Mem::compare(Slice<const char>(items + (len - str.len), str.len), str))
     {
         return true;
     }

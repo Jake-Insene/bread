@@ -39,8 +39,8 @@ static inline void _audio_output_thread(Opaque* self)
             }
             
             Audio::Frame final_frame = Audio::Frame(
-                i16(math::clamp<f32>(frame_f.left, -32768.0F, 32767.0F)),
-                i16(math::clamp<f32>(frame_f.right, -32768.0F, 32767.0F))
+                i16(Math::clamp<f32>(frame_f.left, -32768.0F, 32767.0F)),
+                i16(Math::clamp<f32>(frame_f.right, -32768.0F, 32767.0F))
             );
 
             samples[frame_i] = final_frame;
@@ -70,7 +70,7 @@ void AudioService::shutdown()
 {
     data.request_destroy.increment();
     data.output_thread.destroy();
-    data.allocator->free(mem::to_bytes(data.output_buffer));
+    data.allocator->free(Mem::to_bytes(data.output_buffer));
     data.enqueue_mutex.destroy();
 
     (void)data.mixers.iter().for_each([](Mixer& mixer)

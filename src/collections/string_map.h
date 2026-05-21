@@ -36,13 +36,13 @@ struct [[nodiscard]] StringMap
     static constexpr usize InvalidPos = MaxValue<usize>;
     static constexpr usize DefaultCapacity = 16;
 
-    mem::Allocator* allocator;
+    Mem::Allocator* allocator;
     Slice<MapEntry*> entries;
     usize count;
     MapEntry* first;
     MapEntry* last;
     
-    static StringMap with_allocator(mem::Allocator* allocator)
+    static StringMap with_allocator(Mem::Allocator* allocator)
     {
         return
         {
@@ -54,7 +54,7 @@ struct [[nodiscard]] StringMap
         };
     }
     
-    static StringMap with_size(mem::Allocator* allocator, usize size)
+    static StringMap with_size(Mem::Allocator* allocator, usize size)
     {
         return
         {
@@ -77,10 +77,10 @@ struct [[nodiscard]] StringMap
         {
             if(entry != nullptr)
             {
-                allocator->free(mem::to_bytes(Slice<MapEntry>(entry, 1)));
+                allocator->free(Mem::to_bytes(Slice<MapEntry>(entry, 1)));
             }
         }
-        allocator->free(mem::to_bytes(entries));
+        allocator->free(Mem::to_bytes(entries));
         entries = {};
     }
 
@@ -115,7 +115,7 @@ struct [[nodiscard]] StringMap
 
         if (entries.ptr())
         {
-            allocator->free(mem::to_bytes(entries));
+            allocator->free(Mem::to_bytes(entries));
         }
 
         entries = new_entries;
@@ -270,7 +270,7 @@ struct [[nodiscard]] StringMap
         {
             if(entries[i] == nullptr)
             {
-                MapEntry* entry = mem::from_bytes<MapEntry>(
+                MapEntry* entry = Mem::from_bytes<MapEntry>(
                     allocator->alloc(sizeof(MapEntry), alignof(MapEntry))
                 ).ptr();
                 entry->kv = KeyValue(hash, value);

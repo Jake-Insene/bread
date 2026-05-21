@@ -7,7 +7,7 @@ namespace InternalGPU
 
 struct GPUAdapter
 {
-	VTFunc(void, initialize, mem::Allocator*);
+	VTFunc(void, initialize, Mem::Allocator*);
 	VTFunc(void, shutdown);
 
 	VTFunc(Slice<GPU::PhysicalDeviceID>, physical_devices_enumerate);

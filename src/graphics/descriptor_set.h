@@ -37,7 +37,7 @@ struct DeferredWrite
 
 struct DescriptorSet
 {
-    mem::Allocator* allocator;
+    Mem::Allocator* allocator;
 
     Array<DeferredWrite> deferred_writes;
     usize deferred_buffers;
@@ -46,7 +46,7 @@ struct DescriptorSet
     GPU::DescriptorSetID descriptor_set;
     GPU::DescriptorSetLayoutID set_layout;
 
-    void init(mem::Allocator* _allocator, const DescriptorSetInfo& info);
+    void init(Mem::Allocator* _allocator, const DescriptorSetInfo& info);
     void destroy();
 
     void set_deferred(bool _use_deferred) { use_deferred = _use_deferred; }

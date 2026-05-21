@@ -16,12 +16,12 @@ struct ShaderInfo
 
 struct Shader
 {
-    mem::Allocator* allocator;
+    Mem::Allocator* allocator;
 
     ShaderInfo shader_info;
     Slice<u8> shader_code;
 
-    void init(mem::Allocator* _allocator, const ShaderInfo& info);
+    void init(Mem::Allocator* _allocator, const ShaderInfo& info);
     void destroy();
 };
 

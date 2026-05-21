@@ -18,7 +18,7 @@ InternalAudio::AudioAdapter WASAPIDriver::get_vtable()
     };
 }
 
-void WASAPIDriver::initialize(mem::Allocator* allocator)
+void WASAPIDriver::initialize(Mem::Allocator* allocator)
 {
     WASAPIDebugInfo("Initializing WASAPI Driver...");
 
@@ -51,13 +51,13 @@ void WASAPIDriver::initialize(mem::Allocator* allocator)
     if(mix_format->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
     {
         // SubFormat == X causes a call to memcmp
-        if(mem::compare(mem::to_const_bytes(Slice(&extensible->SubFormat, 1)),
-            mem::to_const_bytes(Slice(&KSDATAFORMAT_SUBTYPE_PCM, 1))))
+        if(Mem::compare(Mem::to_const_bytes(Slice(&extensible->SubFormat, 1)),
+            Mem::to_const_bytes(Slice(&KSDATAFORMAT_SUBTYPE_PCM, 1))))
         {
             data.output_device.wave_format = WAVE_FORMAT_PCM;
         }
-        else if(mem::compare(mem::to_const_bytes(Slice(&extensible->SubFormat, 1)),
-            mem::to_const_bytes(Slice(&KSDATAFORMAT_SUBTYPE_IEEE_FLOAT, 1))))
+        else if(Mem::compare(Mem::to_const_bytes(Slice(&extensible->SubFormat, 1)),
+            Mem::to_const_bytes(Slice(&KSDATAFORMAT_SUBTYPE_IEEE_FLOAT, 1))))
         {
             data.output_device.wave_format = WAVE_FORMAT_IEEE_FLOAT;
         }
@@ -168,7 +168,7 @@ u32 WASAPIDriver::output_get_frame_count()
 void WASAPIDriver::output_send_frames(const Slice<Audio::Frame>& frames)
 {
     // lattency could make it require more frames that the ones being send
-    u32 frame_count = math::min(output_get_frame_count(), frames.len);
+    u32 frame_count = Math::min(output_get_frame_count(), frames.len);
 
     u8* buffer_out = nullptr;
     data.output_device.render_client->GetBuffer(frame_count, &buffer_out);

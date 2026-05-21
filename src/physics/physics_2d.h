@@ -70,14 +70,14 @@ struct Physics2D
 
     struct InternalData
     {
-        mem::Allocator* allocator;
+        Mem::Allocator* allocator;
 
         StringMap<PropertyValue> properties;
     };
 
     static inline InternalData data = {};
 
-    static void initialize(mem::Allocator* allocator, DriverType driver);
+    static void initialize(Mem::Allocator* allocator, DriverType driver);
     static void initialize_from_adapter(InternalPhysics2D::Adapter* adapter);
     static void shutdown();
     

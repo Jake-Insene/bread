@@ -6,7 +6,7 @@ struct StringView;
 struct String;
 
 
-namespace fmt
+namespace Format
 {
 
 enum class FormatType

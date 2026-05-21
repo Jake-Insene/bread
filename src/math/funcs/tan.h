@@ -1,7 +1,7 @@
 #pragma once
 #include "math/funcs/sin.h"
 
-namespace math::impl
+namespace Math::impl
 {
 
 // I don't know how this works.

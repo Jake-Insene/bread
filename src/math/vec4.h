@@ -133,7 +133,7 @@ union [[nodiscard]] Vector4T
     
     constexpr T length() const
     {
-        return math::sqrt(dot(*this));
+        return Math::sqrt(dot(*this));
     }
 
     constexpr void normalize()

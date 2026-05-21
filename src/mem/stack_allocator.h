@@ -2,10 +2,10 @@
 #include "mem/allocator.h"
 
 
-namespace mem
+namespace Mem
 {
 
-struct StackAllocator : mem::Allocator
+struct StackAllocator : Mem::Allocator
 {
     Slice<u8> sp;
     usize offset;
