@@ -39,10 +39,11 @@ struct GenericAllocator : Mem::Allocator
 
     PageAllocator internal_allocator;
     Slice<Page> allocated_pages;
-    usize page_count = 0;
-    usize next_page_size = DefaultNextPageSize;
-    u32 index = 0;
+    usize page_count;
+    usize next_page_size;
+    u32 index;
 
+    void init();
     void destroy();
 
     virtual Slice<u8> alloc(usize size, usize alignment) override;

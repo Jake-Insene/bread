@@ -13,6 +13,15 @@ static inline GenericAllocator::Header* get_header(Slice<u8> ptr)
 {
     return reinterpret_cast<GenericAllocator::Header*>(ptr.sub(sizeof(GenericAllocator::Header)).ptr());
 }
+
+void GenericAllocator::init()
+{
+    ConstructObject(internal_allocator);
+    allocated_pages = {};
+    page_count = 0;
+    next_page_size = DefaultNextPageSize;
+    index = 0;
+}
     
 void GenericAllocator::destroy()
 {
@@ -104,7 +113,7 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
     }
 
     Page& new_page = _allocate_new_page(next_page_size + aligned_size + sizeof(Header));
-    next_page_size += DefaultNextPageSize;
+    next_page_size *= 2;
 
     u8* base = new_page.bytes.ptr();
     u8* aligned_mem = reinterpret_cast<u8*>(Mem::align_up<usize>(usize(base) + sizeof(Header), alignment));
@@ -326,7 +335,7 @@ void GenericAllocator::_check_integrity()
         usize page_size_accumulator = 0;
         Page& page = allocated_pages[i];
         Header* header = page.first_header;
-        while (header)
+        while (header != nullptr)
         {
             page_size_accumulator += header->len + sizeof(Header);
             header = header->next;

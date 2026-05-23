@@ -1,213 +1,75 @@
 #pragma once
 #include "core/header.h"
-#include "collections/string_view.h"
+#include "collections/string.h"
 #include "collections/map_iterator.h"
+#include "collections/base_hash_map.h"
 #include "collections/pair.h"
 #include "debug/assertion.h"
 #include "mem/allocator.h"
 #include "mem/utils.h"
 
 
-
-template<typename V, typename HashType>
-struct StringMapEntry
+template<typename V>
+struct StringHashMapEntry
 {
-    using KeyValue = Pair<HashType, V>;
+    using KeyValue = Pair<StringView, V>;
     
+    HashCode hash;
     KeyValue kv;
+
+    StringHashMapEntry* prev;
+    StringHashMapEntry* next;
+
+    constexpr void init(Mem::Allocator* allocator, const KeyValue& new_kv, const HashCode& new_hash)
+    {
+        set_hash(new_hash);
+
+        Slice<char> new_chars = allocator->array<char>(new_kv.first.len);
+        Mem::copy(new_chars, new_kv.first);
+        kv.first = new_chars;
+        kv.second = new_kv.second;
+
+        prev = nullptr;
+        next = nullptr;
+    }
+
+    constexpr void destroy(Mem::Allocator* allocator)
+    {
+        hash = MaxValue<HashCode>;
+        allocator->free(Slice(reinterpret_cast<u8*>(const_cast<char*>(kv.first.items)), 1));
+        kv = {};
+    }
+
+    template<typename Self>
+    constexpr auto& keyvalue(this Self& self)
+    {
+        return self.kv;
+    }
     
-    StringMapEntry* prev;
-    StringMapEntry* next;
+    constexpr void set_value(const V& new_value)
+    {
+        kv.second = new_value;
+    }
+
+    constexpr HashCode hashvalue() const
+    {
+        return hash;
+    }
+
+    constexpr void set_hash(const HashCode& new_hash)
+    {
+        hash = new_hash;
+    }
 };
 
 
-/*
-* A collection of items referenced as a string.
-*/
-template<typename T>
-struct [[nodiscard]] StringMap
+template<>
+struct HashOfType<StringView>
 {
-    using HashType = u64;
-    using MapEntry = StringMapEntry<T, HashType>;
-    using KeyValue = Pair<HashType, T>;
-    using Iterator = MapIterator<MapEntry>;
-
-    static constexpr HashType InvalidHash = MaxValue<HashType>;
-    static constexpr usize InvalidPos = MaxValue<usize>;
-    static constexpr usize DefaultCapacity = 16;
-
-    Mem::Allocator* allocator;
-    Slice<MapEntry*> entries;
-    usize count;
-    MapEntry* first;
-    MapEntry* last;
-    
-    static StringMap with_allocator(Mem::Allocator* allocator)
+    [[nodiscard]] static constexpr HashCode hashfunc(const StringView& key)
     {
-        return
-        {
-            .allocator = allocator,
-            .entries = {},
-            .count = 0,
-            .first = nullptr,
-            .last = nullptr,
-        };
-    }
-    
-    static StringMap with_size(Mem::Allocator* allocator, usize size)
-    {
-        return
-        {
-            .allocator = allocator,
-            .entries = allocator->array<MapEntry*>(size),
-            .count = 0,
-            .first = nullptr,
-            .last = nullptr,
-        };
-    }
-    
-    void destroy()
-    {
-        if(entries.ptr() == nullptr)
-        {
-            return;
-        }
-
-        for(MapEntry* entry : entries)
-        {
-            if(entry != nullptr)
-            {
-                allocator->free(Mem::to_bytes(Slice<MapEntry>(entry, 1)));
-            }
-        }
-        allocator->free(Mem::to_bytes(entries));
-        entries = {};
-    }
-
-    Iterator iter() const { return Iterator{ .entry = first }; }
-
-    void resize(usize new_size)
-    {
-        if(entries.len == 0)
-        {
-            new_size = new_size > 0 ? new_size : DefaultCapacity;
-            entries = allocator->array<MapEntry*>(new_size);
-            return;
-        }
-
-        if(entries.len >= new_size)
-        {
-            return;
-        }
-        
-        Slice<MapEntry*> new_entries = allocator->array<MapEntry*>(new_size);
-
-        for (MapEntry* e = first; e != nullptr; e = e->next)
-        {
-            HashType hash = e->kv.first;
-            usize i = hash & (new_size - 1);
-            while (new_entries[i] != nullptr)
-            {
-                i = (i + 1) % new_size;
-            }
-            new_entries[i] = e;
-        }
-
-        if (entries.ptr())
-        {
-            allocator->free(Mem::to_bytes(entries));
-        }
-
-        entries = new_entries;
-    }
-    
-    [[nodiscard]] bool has(StringView str) const
-    {
-        HashType hash = hashfunc(str);
-        usize pos = InvalidPos;
-        return _find_entry(hash, pos);
-    }
-    
-    [[nodiscard]] T& get(StringView str)
-    {
-        HashType hash = hashfunc(str);
-        usize pos = InvalidPos;
-        (void)_find_entry(hash, pos);
-        DebugAssert(pos != InvalidPos, "the item don't exists!");
-        return entries[pos]->kv.second;
-    }
-    
-    [[nodiscard]] const T& get(StringView str) const
-    {
-        HashType hash = hashfunc(str);
-        usize pos = InvalidPos;
-        (void)_find_entry(hash, pos);
-        DebugAssert(pos != InvalidPos, "the item don't exists!");
-        return entries[pos]->kv.second;
-    }
-    
-    T& insert(StringView str, const T& value)
-    {
-        return _insert_or_replace(str, value)->kv.second;
-    }
-
-    void remove(StringView str)
-    {
-        HashType hash = hashfunc(str);
-        usize pos = InvalidPos;
-        if (_find_entry(hash, pos) == false)
-        {
-            DebugAssert(false, "the item don't exists!");
-        }
-
-        MapEntry* entry = entries[pos];
-        if (entry->prev)
-        {
-            entry->prev->next = entry->next;
-        }
-
-        if (entry->next)
-        {
-            entry->next->prev = entry->prev;
-        }
-
-        if (entry == first && entry == last)
-        {
-            first = nullptr;
-            last = nullptr;
-        }
-        else if (entry == first)
-        {
-            first = entry->next;
-        }
-        else if (entry == last)
-        {
-            last = entry->prev;
-        }
-
-        entry->kv.hash = InvalidHash;
-        count--;
-    }
-
-    void clear()
-    {
-        for (MapEntry* entry : entries)
-        {
-            if (entry)
-            {
-                entry->kv.first = InvalidHash;
-            }
-        }
-
-        count = 0;
-        first = last = nullptr;
-    }
-    
-    // FNV-1a
-    static HashType hashfunc(StringView key)
-    {
-        HashType hash = 0xcbf29ce484222325ULL;
-        HashType i = 0;
+        HashCode hash = 0xcbf29ce484222325ULL;
+        HashCode i = 0;
         while(key.len != i)
         {
             hash ^= key[i];
@@ -217,111 +79,21 @@ struct [[nodiscard]] StringMap
         
         return hash;
     }
+};
 
-    [[nodiscard]] bool _find_entry(const HashType hash, usize& pos) const
+template<>
+struct Comparator<StringView>
+{
+    [[nodiscard]] static constexpr bool compare(const StringView& value1, const StringView& value2)
     {
-        u64 i = hash & (entries.len - 1);
-        usize dist = 0;
-
-        while(true)
-        {
-            if(dist >= entries.len)
-            {
-                return false;
-            }
-
-            if(entries[i] != nullptr
-                && entries[i]->kv.first == hash)
-            {
-                pos = i;
-                return true;
-            }
-
-            dist++;
-            i++;
-            if (i == entries.len)
-            {
-                i = 0;
-            }
-        }
-    }
-
-    [[nodiscard]] MapEntry* _insert_or_replace(StringView str, const T& value)
-    {
-        if (count >= entries.len)
-        {
-            resize(entries.len << 1);
-        }
-        else if (entries.len == 0)
-        {
-            resize(DefaultCapacity);
-        }
-
-        HashType hash = hashfunc(str);
-        usize pos = InvalidPos;
-        if(_find_entry(hash, pos))
-        {
-            entries[pos]->kv.second = value;
-            return entries[pos];
-        }
-        
-        usize i = hash & (entries.len - 1);
-        while(true)
-        {
-            if(entries[i] == nullptr)
-            {
-                MapEntry* entry = Mem::from_bytes<MapEntry>(
-                    allocator->alloc(sizeof(MapEntry), alignof(MapEntry))
-                ).ptr();
-                entry->kv = KeyValue(hash, value);
-                entry->prev = nullptr;
-                entry->next = nullptr;
-
-                entries[i] = entry;
-                if(first == nullptr)
-                {
-                    first = entry;
-                    last = entry;
-                }
-                else
-                {
-                    last->next = entry;
-                    entry->prev = last;
-                    last = entry;
-                }
-
-                count++;
-                return entry;
-            }
-            
-            if(entries[i]->kv.first == InvalidHash)
-            {
-                MapEntry* entry = entries[i];
-                entry->kv = KeyValue(hash, value);
-                entry->prev = nullptr;
-                entry->next = nullptr;
-
-                if (first == nullptr)
-                {
-                    first = entry;
-                    last = entry;
-                }
-                else
-                {
-                    last->next = entry;
-                    entry->prev = last;
-                    last = entry;
-                }
-
-                count++;
-                return entry;
-            }
-            
-            i++;
-            if (i == entries.len)
-            {
-                i = 0;
-            }
-        }
+        return value1.equals(value2);
     }
 };
+
+/*
+* A collection of items referenced as a string.
+*/
+
+template<typename V>
+using StringMap = BaseHashMap<HashCode, StringHashMapEntry<V>, StringView, V>;
+

@@ -1,5 +1,6 @@
 #pragma once
 #include "math/mat4.h"
+#include "math/transform_2d.h"
 #include "math/vec2.h"
 #include "math/color.h"
 #include "math/rect_2d.h"
@@ -37,8 +38,8 @@ struct Renderer2D : Renderer
 
     virtual void render(const FrameInfo& frame_info) override;
 
-    void commit_sprite(const RendererBatch2D::SpriteInstance& sprite, GPU::TextureID texture);
-    void commit_quad(const RendererBatch2D::QuadInstance& quad);
-    void commit_line(const RendererBatch2D::LineInstance& line);
-    void commit_circle(const RendererBatch2D::CircleInstance& circle);
+    void draw_sprite(const Transform2D& transform, const Color& color, const Rect2D& rect, GPU::TextureID texture);
+    void draw_quad(const Transform2D& transform, const Color& color, const Rect2D& rect);
+    void draw_line(const Transform2D& transform, const Color& color, const Vector2& begin, const Vector2& end);
+    void draw_circle(const Transform2D& transform, const Color& color, const Vector2& point, f32 radius);
 };

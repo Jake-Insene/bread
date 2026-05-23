@@ -35,8 +35,9 @@ void operator delete[](void*)
 
 void EngineRuntime::initialize()
 {
-
     ConstructObject(allocator);
+    allocator.init();
+    
     engine_version = EngineVersion;
     application_info = __get_application_info__();
     application = nullptr;

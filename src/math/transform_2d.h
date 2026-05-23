@@ -38,8 +38,8 @@ struct [[nodiscard]] Transform2D
         return self.rows[index];
     }
 
-    [[nodiscard]] Transform2D operator*(const Transform2D& t) const;
-    [[nodiscard]] Vector2 operator*(const Vector2& t) const;
+    [[nodiscard]] Transform2D operator*(const Transform2D& transform) const;
+    [[nodiscard]] Vector2 operator*(const Vector2& position) const;
 
     void set_position(const Vector2& new_position);
     Vector2 get_position() const;

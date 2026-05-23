@@ -48,26 +48,6 @@ void Renderer2D::destroy()
     Renderer::destroy();
 }
 
-void Renderer2D::commit_sprite(const RendererBatch2D::SpriteInstance& sprite, GPU::TextureID texture)
-{
-    batcher.commit_sprite(sprite, texture, sampler);
-}
-
-void Renderer2D::commit_quad(const RendererBatch2D::QuadInstance& quad)
-{
-    batcher.commit_quad(quad);
-}
-
-void Renderer2D::commit_line(const RendererBatch2D::LineInstance& line)
-{
-    batcher.commit_line(line);
-}
-
-void Renderer2D::commit_circle(const RendererBatch2D::CircleInstance& circle)
-{
-    batcher.commit_circle(circle);
-}
-
 void Renderer2D::render(const FrameInfo& frame_info)
 {
     if(!HasValue(frame_info.flags & FrameFlags::Acquired))
@@ -210,3 +190,62 @@ void Renderer2D::render(const FrameInfo& frame_info)
     );
 }
 
+void Renderer2D::draw_sprite(const Transform2D& transform, const Color& color, const Rect2D& rect, GPU::TextureID texture)
+{
+    batcher.commit_sprite(
+        {
+            .xx = transform.get_column(0),
+            .yy = transform.get_column(1),
+            .zz = transform.get_position(),
+            .color = color,
+            .texture_index = 0,
+            .rect = rect,
+            .uv_rect = Rect2D(),
+        },
+        texture, sampler
+    );
+}
+
+void Renderer2D::draw_quad(const Transform2D& transform, const Color& color, const Rect2D& rect)
+{
+    batcher.commit_quad(
+        {
+            .xx = transform.get_column(0),
+            .yy = transform.get_column(1),
+            .zz = transform.get_position(),
+            .color = color,
+            .material_index = 0,
+            .rect = rect,
+        }
+    );
+}
+
+void Renderer2D::draw_line(const Transform2D& transform, const Color& color, const Vector2& begin, const Vector2& end)
+{
+    batcher.commit_line(
+        {
+            .xx = transform.get_column(0),
+            .yy = transform.get_column(1),
+            .zz = transform.get_position(),
+            .color = color,
+            .material_index = 0,
+            .point1 = begin,
+            .point2 = end,
+        }
+    );
+}
+
+void Renderer2D::draw_circle(const Transform2D& transform, const Color& color, const Vector2& point, f32 radius)
+{
+    batcher.commit_circle(
+        {
+            .xx = transform.get_column(0),
+            .yy = transform.get_column(1),
+            .zz = transform.get_position(),
+            .color = color,
+            .material_index = 0,
+            .point = point,
+            .radius = radius,
+        }
+    );
+}

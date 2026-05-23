@@ -37,7 +37,7 @@ struct ResourceManager
     StringMap<ResourceAllocation> resources;
     HashMap<Image*, Texture*> cached_images;
 
-    [[nodiscard]] Mem::Allocator* get_allocator() { return allocator; }
+    [[nodiscard]] Mem::Allocator* get_allocator() const { return allocator; }
 
     void initialize(const ResourceManagerCreateInfo& info);
     void shutdown();

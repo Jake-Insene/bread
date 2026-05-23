@@ -33,6 +33,7 @@ void ResourceManager::shutdown()
 {
     for(auto& it : resources.iter())
     {
+        RMDebugInfo("Destroying the resource '{}'", it.first);
         it.second.destroy(it.second.resource);
         allocator->free(
             Mem::to_bytes(Slice<Resource>(it.second.resource, 1))
@@ -41,7 +42,7 @@ void ResourceManager::shutdown()
     
     for(auto& [image, texture] : cached_images.iter())
     {
-        if(texture)
+        if(texture != nullptr)
         {
             texture->destroy();
             allocator->free(
@@ -103,7 +104,9 @@ Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
 bool ResourceManager::place_resource(StringView resource_name, DestroyResourceFn destroy, Resource* resource)
 {
     if (resources.has(resource_name))
+    {
         return false;
+    }
 
     resources.insert(
         resource_name,

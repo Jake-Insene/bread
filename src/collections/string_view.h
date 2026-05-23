@@ -29,14 +29,14 @@ struct [[nodiscard]] StringView : Slice<const char>
         return StringView(items - offset, len + offset);
     }
     
-    [[nodiscard]] constexpr bool equals(StringView str) const;
-    [[nodiscard]] constexpr bool ends_with(StringView str) const;
+    [[nodiscard]] constexpr bool equals(const StringView& str) const;
+    [[nodiscard]] constexpr bool ends_with(const StringView& str) const;
 };
 
 #include "mem/utils.h"
 
 
-[[nodiscard]] constexpr bool StringView::equals(StringView str) const
+[[nodiscard]] constexpr bool StringView::equals(const StringView& str) const
 {
     if (items == nullptr || len == 0)
     {
@@ -45,7 +45,7 @@ struct [[nodiscard]] StringView : Slice<const char>
     return Mem::compare(Slice(items, str.len), str);
 }
     
-[[nodiscard]] constexpr bool StringView::ends_with(StringView str) const
+[[nodiscard]] constexpr bool StringView::ends_with(const StringView& str) const
 {
     if(len < str.len)
     {

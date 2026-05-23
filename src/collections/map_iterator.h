@@ -1,15 +1,15 @@
 #pragma once
 
 
-template<typename EntryType>
+template<typename EntryType, typename KeyValue>
 struct [[nodiscard]] MapIterator
 {
     using IteratorEntry = EntryType;
 
     IteratorEntry* entry;
 
-    IteratorEntry::KeyValue& operator*() const { return entry->kv; }
-    IteratorEntry::KeyValue* operator->() const { return &entry->kv; }
+    KeyValue& operator*() const { return entry->keyvalue(); }
+    KeyValue* operator->() const { return &entry->keyvalue(); }
 
     MapIterator& operator++()
     {

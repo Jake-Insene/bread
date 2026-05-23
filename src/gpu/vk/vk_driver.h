@@ -75,11 +75,6 @@ struct VkDriverRenderPassKey
 template<>
 struct HashOfType<VkDriverRenderPassKey>
 {
-	[[nodiscard]] static constexpr bool compare_attachment(const VkDriverAttachment& attachment_a, const VkDriverAttachment& attachment_b)
-	{
-		return attachment_a.bits == attachment_b.bits;
-	}
-
 	[[nodiscard]] static constexpr u64 hashfunc(const VkDriverRenderPassKey& k)
     {
 		u64 hash = 0x9e3779b97f4a7c15ULL;
@@ -98,8 +93,17 @@ struct HashOfType<VkDriverRenderPassKey>
 
 		return hash;
     }
+};
 
-    [[nodiscard]] static constexpr bool compare(const VkDriverRenderPassKey& k1, const VkDriverRenderPassKey& k2)
+template<>
+struct Comparator<VkDriverRenderPassKey>
+{
+	[[nodiscard]] static constexpr bool compare_attachment(const VkDriverAttachment& attachment_a, const VkDriverAttachment& attachment_b)
+	{
+		return attachment_a.bits == attachment_b.bits;
+	}
+	
+	[[nodiscard]] static constexpr bool compare(const VkDriverRenderPassKey& k1, const VkDriverRenderPassKey& k2)
     {
         return compare_attachment(k1.attachment_0, k2.attachment_0)
 			&& compare_attachment(k1.attachment_1, k2.attachment_1)
