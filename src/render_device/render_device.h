@@ -18,12 +18,12 @@ struct RenderDevice
     Graphics::Device device;
 
     GPUMemoryAllocator gpu_memory_allocator;
-    GPUResourceManager resource_manager;
+    GPUResourceManager gpu_resource_manager;
 
     Graphics::Device* get_graphics_device() { return &device; }
 
     GPUMemoryAllocator* get_gpu_memory_allocator() { return &gpu_memory_allocator; }
-    GPUResourceManager* get_gpu_resource_manager() { return &resource_manager; }
+    GPUResourceManager* get_gpu_resource_manager() { return &gpu_resource_manager; }
 
     void initialize(const RenderDeviceCreateInfo& info);
     void shutdown();

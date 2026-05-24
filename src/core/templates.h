@@ -373,7 +373,7 @@ using EnumIntType = Conditional<sizeof(T) == 1, u8,
 // Generic Functions
 
 template<typename... TArgs>
-constexpr void Unused(TArgs...) {}
+constexpr void Unused(TArgs&&...) {}
 
 template<typename T>
 [[nodiscard]] constexpr T&& Forward(RemoveReference<T>& arg)
@@ -465,13 +465,13 @@ constexpr bool HasValue(T&& value)
 }
 
 template<typename T>
-constexpr bool IsEqual(T& src1, T src2)
+constexpr bool IsEqual(const T& src1, const T& src2)
 {
     return src1 == src2;
 }
 
 template<typename T, typename... Ts>
-constexpr bool IsAnyEqual(T first, Ts... args)
+constexpr bool IsAnyEqual(const T& first, const Ts&&... args)
 {
     return (IsEqual(first, args) || ...);
 }
@@ -503,3 +503,5 @@ AddRValueReference<T> DeclVal() noexcept
 template<typename From, typename To>
 concept ConvertibleTo = requires { static_cast<To>(DeclVal<From>()); };
 
+template<typename Type, typename Fn>
+concept Returns = IsSame<typename FunctionDecomposed<Fn>::ReturnType, Type>;

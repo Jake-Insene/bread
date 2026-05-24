@@ -11,6 +11,8 @@
 template<typename T>
 struct [[nodiscard]] BaseIterator
 {
+	using Type = T;
+
 	template<Iterable Self>
 	constexpr auto find(this Self const& self, const T& item_requested)
 	{
@@ -26,21 +28,21 @@ struct [[nodiscard]] BaseIterator
 	}
 
 	template<Iterable Self, typename Fn>
-	constexpr auto for_each(this Self&& self, Fn&& fn)
+	constexpr auto for_each(this Self&& self, Fn&& func)
 	{
-		using ItFnComplete1 = void(*)(T&, usize);
-		using ItFnComplete2 = void(*)(const T&, usize);
+		using ItFnComplete1 = void(*)(Type&, usize);
+		using ItFnComplete2 = void(*)(const Type&, usize);
 		
 		usize index = 0;
 		for (auto&& item : self)
 		{
 			if constexpr (IsAnyOf<Fn, ItFnComplete1, ItFnComplete2>)
 			{
-				Invoke(fn, item, index++);
+				Invoke(func, item, index++);
 			}
 			else
 			{
-				Invoke(fn, item);
+				Invoke(func, item);
 			}
 		}
 
@@ -48,24 +50,26 @@ struct [[nodiscard]] BaseIterator
 	}
 
 	template<Iterable Self, typename Fn>
-	constexpr auto transform(this Self&& self, Fn&& op)
+	requires(Returns<Type, Fn>)
+	constexpr auto transform(this Self&& self, Fn&& opt)
 	{
 		for (auto it = self.begin(); it != self.end(); ++it)
 		{
-			*it = op(*it);
+			*it = opt(*it);
 		}
 
 		return Forward<decltype(self)>(self);
 	}
 
-	template<Iterable Self, typename Fn>
-	constexpr auto filter(this Self&& self, Fn&& op, Fn&& fn)
+	template<Iterable Self, typename Opt, typename Fn>
+	requires(Returns<bool, Opt>)
+	constexpr auto filter(this Self&& self, Opt&& opt, Fn&& func)
 	{
 		for (auto it = self.begin(); it != self.end(); ++it)
 		{
-			if(op(*it))
+			if(opt(*it))
 			{
-				fn(*it);
+				func(*it);
 			}
 		}
 		

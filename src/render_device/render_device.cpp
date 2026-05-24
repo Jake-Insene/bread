@@ -16,7 +16,7 @@ void RenderDevice::initialize(const RenderDeviceCreateInfo& info)
             .graphics_device = get_graphics_device(),
         }
     );
-    resource_manager.init(
+    gpu_resource_manager.init(
         {
             .allocator = allocator,
             .graphics_device = get_graphics_device(),
@@ -32,7 +32,7 @@ void RenderDevice::shutdown()
     device.get_copy_queue()->wait_idle();
     device.get_present_queue()->wait_idle();
 
-    resource_manager.destroy();
+    gpu_resource_manager.destroy();
     gpu_memory_allocator.destroy();
 
     device.destroy();

@@ -48,7 +48,7 @@ void RendererBatch2D::init(const RendererBatch2DCreateInfo& batch_info)
     GPU::DescriptorBinding frame_bindings[] =
     {
         { .type = GPU::DescriptorType::UniformBuffer, .binding = 0, .count = 1, .stages = GPU::ShaderStage::Vertex, },
-        { .type = GPU::DescriptorType::CombinedTextureSampler, .binding = 1, .count = 16, .stages = GPU::ShaderStage::Fragment, },
+        { .type = GPU::DescriptorType::CombinedTextureSampler, .binding = 1, .count = MaxTexturesPerBatch, .stages = GPU::ShaderStage::Fragment, },
     };
 
     Graphics::DescriptorSetLayoutCreateInfo set_layouts[] =
@@ -157,7 +157,7 @@ void RendererBatch2D::init(const RendererBatch2DCreateInfo& batch_info)
     GPU::DescriptorPoolSize pool_sizes[] =
     {
         { .type = GPU::DescriptorType::UniformBuffer, .count = u32(1 * MaxBatchesPerFrame * batch_info.max_frames_in_flight), },
-        { .type = GPU::DescriptorType::CombinedTextureSampler, .count = u32(16 * MaxBatchesPerFrame * batch_info.max_frames_in_flight), },
+        { .type = GPU::DescriptorType::CombinedTextureSampler, .count = u32(MaxTexturesPerBatch * MaxBatchesPerFrame * batch_info.max_frames_in_flight), },
     };
 
     descriptor_pool = graphics_device->create_descriptor_pool(u32(MaxBatchesPerFrame * batch_info.max_frames_in_flight), pool_sizes);
@@ -395,7 +395,7 @@ void RendererBatch2D::commit_sprite(const SpriteInstance& sprite, GPU::TextureID
                 break;
             }
         }
-        if (!texture_found && last_batch.texture_count >= 16)
+        if (!texture_found && last_batch.texture_count >= MaxTexturesPerBatch)
         {
             need_new_batch = true;
         }

@@ -100,7 +100,13 @@ namespace GPU
 	
 	enum class ShaderStage
 	{
+		/*
+		* Vertex stage.
+		*/
 		Vertex = Bit(0),
+		/*
+		* Fragment stage.
+		*/
 		Fragment = Bit(1),
 	};
 
@@ -415,10 +421,22 @@ namespace GPU
 	*/
 	enum class BufferUsage
 	{
+		/*
+		* Can be used on command_buffer_bind_vertex_buffers.
+		*/
 		VertexBuffer = Bit(0),
 		IndexBuffer = Bit(1),
+		/*
+		* Can be used for a descriptor slot of type UniformBuffer.
+		*/
 		UniformBuffer = Bit(2),
+		/*
+		* Can be used as source of a copy operation.
+		*/
 		TransferSource = Bit(3),
+		/*
+		* Can be used as destination of a copy operation.
+		*/
 		TransferDestination = Bit(4),
 	};
 	

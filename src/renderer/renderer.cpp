@@ -16,7 +16,7 @@ void Renderer::init(const RendererCreateInfo& info)
 
     frames = Array<RenderFrame>::with_size(allocator, info.max_frames_in_flight);
     frames.resize(max_frames_in_flight);
-    (void)frames.iter().transform([&](...)
+    (void)frames.iter().transform([&](RenderFrame&) -> RenderFrame
     {
         return RenderFrame
         {
@@ -27,7 +27,7 @@ void Renderer::init(const RendererCreateInfo& info)
 
     render_finished_semaphores = Array<Graphics::Semaphore*>::with_size(allocator, swap_chain->get_image_count());
     render_finished_semaphores.resize(max_frames_in_flight);
-    (void)render_finished_semaphores.iter().transform([&](...){ return graphics_device->create_semaphore(); });
+    (void)render_finished_semaphores.iter().transform([&](Graphics::Semaphore*){ return graphics_device->create_semaphore(); });
 }
 
 void Renderer::destroy()

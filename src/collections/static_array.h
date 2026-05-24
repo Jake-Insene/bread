@@ -69,7 +69,7 @@ struct [[nodiscard]] StaticArray
         };
     }
 
-    static constexpr StaticArray from_items(Slice<Type> items)
+    static constexpr StaticArray from_items(const Slice<Type>& items)
     {
 		DebugAssert(N >= items.len, "Static Array size is too small for the provided items");
         StaticArray array =
@@ -82,8 +82,8 @@ struct [[nodiscard]] StaticArray
         return array;
     }
 
-    template<typename... TList>
-    static constexpr StaticArray from_list(TList&&... list)
+    template<typename... TypeList>
+    static constexpr StaticArray from_list(TypeList&&... list)
     {
         static constexpr usize ListLen = sizeof...(list);
         DebugAssert(N >= ListLen, "Static Array size is too small for the provided items");

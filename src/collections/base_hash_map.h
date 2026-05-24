@@ -136,15 +136,15 @@ struct [[nodiscard]] BaseHashMap
         
         Slice<MapEntry*> new_entries = allocator->array<MapEntry*>(new_size);
 
-        for (MapEntry* e = first; e != nullptr; e = e->next)
+        for (MapEntry* entry = first; entry != nullptr; entry = entry->next)
         {
-            HashType hash = e->hashvalue();
-            usize i = hash & (new_size - 1);
-            while (new_entries[i] != nullptr)
+            HashType hash = entry->hashvalue();
+            usize index = hash & (new_size - 1);
+            while (new_entries[index] != nullptr)
             {
-                i = (i + 1) % new_size;
+                index = (index + 1) % new_size;
             }
-            new_entries[i] = e;
+            new_entries[index] = entry;
         }
 
         if (entries.ptr())
@@ -155,41 +155,41 @@ struct [[nodiscard]] BaseHashMap
         entries = new_entries;
     }
 
-    [[nodiscard]] bool has(const K& k) const
+    [[nodiscard]] bool has(const K& key) const
     {
-        HashType hash = Hasher::hashfunc(k);
+        HashType hash = Hasher::hashfunc(key);
         usize pos = InvalidPos;
-        return _find_entry(hash, k, pos);
+        return _find_entry(hash, key, pos);
     }
     
-    [[nodiscard]] V& get(const K& k)
+    [[nodiscard]] V& get(const K& key)
     {
-        HashType hash = Hasher::hashfunc(k);
+        HashType hash = Hasher::hashfunc(key);
         usize pos = InvalidPos;
-        (void)_find_entry(hash, k, pos);
+        (void)_find_entry(hash, key, pos);
         DebugAssert(pos != InvalidPos, "the item don't exists!");
         return entries[pos]->keyvalue().second;
     }
     
-    [[nodiscard]] const V& get(const K& k) const
+    [[nodiscard]] const V& get(const K& key) const
     {
-        HashType hash = Hasher::hashfunc(k);
+        HashType hash = Hasher::hashfunc(key);
         usize pos = InvalidPos;
-        (void)_find_entry(hash, k, pos);
+        (void)_find_entry(hash, key, pos);
         DebugAssert(pos != InvalidPos, "the item don't exists!");
         return entries[pos]->keyvalue().second;
     }
     
-    V& insert(const K& k, const V& value)
+    V& insert(const K& key, const V& value)
     {
-        return _insert_or_replace(k, value)->keyvalue().second;
+        return _insert_or_replace(key, value)->keyvalue().second;
     }
 
-    void remove(const K& k)
+    void remove(const K& key)
     {
-        HashType hash = Hasher::hashfunc(k);
+        HashType hash = Hasher::hashfunc(key);
         usize pos = InvalidPos;
-        if (!_find_entry(hash, k, pos))
+        if (!_find_entry(hash, key, pos))
         {
             DebugAssert(false, "the item don't exists!");
         }
@@ -220,7 +220,7 @@ struct [[nodiscard]] BaseHashMap
         }
 
         entry->set_hash(InvalidHash);
-        count--;
+        --count;
     }
 
     void clear()
@@ -237,9 +237,9 @@ struct [[nodiscard]] BaseHashMap
         first = last = nullptr;
     }
 
-    [[nodiscard]] bool _find_entry(const HashType hash, const K& k, usize& pos) const
+    [[nodiscard]] bool _find_entry(const HashType hash, const K& key, usize& pos) const
     {
-        u64 i = hash & (entries.len - 1);
+        u64 index = hash & (entries.len - 1);
         usize dist = 0;
 
         while(true)
@@ -249,25 +249,21 @@ struct [[nodiscard]] BaseHashMap
                 return false;
             }
 
-            if (entries[i] != nullptr
-                && entries[i]->hashvalue() == hash 
-                && TComparator::compare(k, entries[i]->keyvalue().first)
+            if (entries[index] != nullptr
+                && entries[index]->hashvalue() == hash 
+                && TComparator::compare(key, entries[index]->keyvalue().first)
             )
             {
-                pos = i;
+                pos = index;
                 return true;
             }
 
-            dist++;
-            i++;
-            if (i == entries.len)
-            {
-                i = 0;
-            }
+            ++dist;
+            index = (index + 1) % entries.len;
         }
     }
 
-    [[nodiscard]] MapEntry* _insert_or_replace(const K& k, const V& value)
+    [[nodiscard]] MapEntry* _insert_or_replace(const K& key, const V& value)
     {
         if (count >= entries.len)
         {
@@ -278,25 +274,25 @@ struct [[nodiscard]] BaseHashMap
             resize(DefaultCapacity);
         }
 
-        HashType hash = Hasher::hashfunc(k);
+        HashType hash = Hasher::hashfunc(key);
         usize pos = InvalidPos;
-        if (_find_entry(hash, k, pos))
+        if (_find_entry(hash, key, pos))
         {
             entries[pos]->set_value(value);
             return entries[pos];
         }
 
-        usize i = hash & (entries.len - 1);
+        usize index = hash & (entries.len - 1);
         while(true)
         {
-            if(entries[i] == nullptr)
+            if(entries[index] == nullptr)
             {
                 MapEntry* entry = Mem::from_bytes<MapEntry>(
                     allocator->alloc(sizeof(MapEntry), alignof(MapEntry))
                 ).ptr();
-                entry->init(allocator, KeyValue(k, value), hash);
+                entry->init(allocator, KeyValue(key, value), hash);
 
-                entries[i] = entry;
+                entries[index] = entry;
                 if(first == nullptr)
                 {
                     first = entry;
@@ -309,15 +305,15 @@ struct [[nodiscard]] BaseHashMap
                     last = entry;
                 }
 
-                count++;
+                ++count;
                 return entry;
             }
             
-            if(entries[i]->hashvalue() == InvalidHash)
+            if(entries[index]->hashvalue() == InvalidHash)
             {
-                MapEntry* entry = entries[i];
+                MapEntry* entry = entries[index];
                 entry->destroy(allocator);
-                entry->init(allocator, KeyValue(k, value), hash);
+                entry->init(allocator, KeyValue(key, value), hash);
 
                 if (first == nullptr)
                 {
@@ -331,15 +327,11 @@ struct [[nodiscard]] BaseHashMap
                     last = entry;
                 }
 
-                count++;
+                ++count;
                 return entry;
             }
             
-            i++;
-            if (i == entries.len)
-            {
-                i = 0;
-            }
+            index = (index + 1) % entries.len;
         }
     }
 };

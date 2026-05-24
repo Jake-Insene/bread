@@ -20,6 +20,8 @@ struct RendererBatch2DCreateInfo
 
 struct RendererBatch2D
 {
+    static constexpr usize MaxTexturesPerBatch = 16;
+
     enum class BatchType
     {
         Unknown = 0,

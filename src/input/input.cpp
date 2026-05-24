@@ -1,7 +1,6 @@
 #include "input/input.h"
 
 
-
 bool Input::is_key_down(Key k)
 {
 	return data.keys[i32(k)] == KeyState::Pressed;

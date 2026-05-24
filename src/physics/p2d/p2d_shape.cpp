@@ -75,7 +75,7 @@ void P2DShape::apply_transform(const Transform2D& transform)
         return;
     }
 
-    (void)vertices.iter().transform([&](const Vector2& v){ return transform * v; });
+    (void)vertices.iter().transform([&](const Vector2& vertice) -> Vector2 { return transform * vertice; });
 
     centroid = transform * centroid;
 
@@ -91,7 +91,7 @@ void P2DShape::translate(const Vector2& translation)
         return;
     }
 
-    (void)vertices.iter().transform([&](const Vector2& v){ return v + translation; });
+    (void)vertices.iter().transform([&](const Vector2& vertice) -> Vector2 { return vertice + translation; });
 
     centroid += translation;
  

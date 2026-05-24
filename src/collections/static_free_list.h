@@ -7,7 +7,7 @@
 * Useful for local system resource referenced as an ID.
 */
 template<typename T, usize N, typename SlotID = u32>
-    requires(sizeof(T) >= sizeof(SlotID))
+requires(sizeof(T) >= sizeof(SlotID))
 struct [[nodiscard]] StaticFreeList
 {
     using Type = T;

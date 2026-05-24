@@ -67,7 +67,7 @@ void EngineRuntime::initialize()
     main_window = Window(Display::window_create());
 
     Audio::initialize(&allocator, Audio::DriverType::Default);
-    Physics2D::initialize(&allocator, Physics2D::DEFAULT_DRIVER);
+    Physics2D::initialize(&allocator, Physics2D::DriverType::Default);
 
     // Initialize subsystems first
     audio_service.initialize(

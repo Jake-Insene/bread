@@ -61,9 +61,9 @@ struct [[nodiscard]] Array
     using Type = T;
     using Iterator = ArrayIterator<Type>;
 
-    Mem::Allocator* allocator = {};
-    Slice<Type> items = {};
-    usize count = 0;
+    Mem::Allocator* allocator;
+    Slice<Type> items;
+    usize count;
 
     static Array with_allocator(Mem::Allocator* allocator)
     {
@@ -75,7 +75,7 @@ struct [[nodiscard]] Array
         };
     }
 
-    static Array with_size(Mem::Allocator* allocator, const usize size)
+    static Array with_size(Mem::Allocator* allocator, usize size)
     {
         return
         {
@@ -85,7 +85,7 @@ struct [[nodiscard]] Array
         };
     }
 
-    static Array from_items(Mem::Allocator* allocator, Slice<Type> items)
+    static Array from_items(Mem::Allocator* allocator, const Slice<Type>& items)
     {
         Array array =
         {
@@ -98,8 +98,8 @@ struct [[nodiscard]] Array
         return array;
     }
 
-    template<typename... TList>
-    static constexpr Array from_list(Mem::Allocator* allocator, const TList... list)
+    template<typename... TypeList>
+    static constexpr Array from_list(Mem::Allocator* allocator, const TypeList... list)
     {
         static constexpr usize ListLen = sizeof...(list);
         Array array =

@@ -4,7 +4,6 @@
 #include "render_device/render_device.h"
 
 
-
 void GPUResourceManager::init(const GPUResourceManagerCreateInfo& info)
 {
     allocator = info.allocator;

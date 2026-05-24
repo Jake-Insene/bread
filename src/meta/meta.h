@@ -6,7 +6,7 @@
 namespace Meta
 {
 
-template<auto T>
+template<typename T>
 constexpr StringView get_type_name()
 {
     constexpr StringView function_sig = StringView(__PRETTY_FUNCTION__, sizeof(__PRETTY_FUNCTION__) - 1);

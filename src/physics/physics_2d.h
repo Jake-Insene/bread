@@ -19,13 +19,13 @@ struct Adapter;
 
 struct Physics2D
 {
-    enum DriverType
+    enum class DriverType
     {
-        UNKNOWN_DRIVER = 0,
+        Unknown = 0,
         
         P2D,
 
-        DEFAULT_DRIVER = P2D,
+        Default = P2D,
     };
 
     using BodyID = ID<u32, struct __BodyTag>;
