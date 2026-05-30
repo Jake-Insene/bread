@@ -18,10 +18,17 @@ struct Writer
 
     /*
     * Writes the given bytes to the object/segment.
-    * 
+    *
     * @param bytes The bytes to write.
     */
     void write(const Slice<const u8>& bytes) const;
+};
+
+template<typename T>
+concept Writable = requires(T&& object, const Slice<const u8>&& bytes)
+{
+    { object.writer() } -> ConvertibleTo<Writer>;
+    { object.writer().write(bytes) };
 };
 
 }

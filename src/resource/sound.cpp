@@ -5,14 +5,17 @@
 #include "engine/engine.h"
 
 
-static inline void* _dr_alloc(size_t size, void*)
+static inline void* dr_alloc(size_t size, void* user_data)
 {
+    Unused(user_data);
     Mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
     return allocator->alloc(size, 16).items;
 }
 
-static inline void* _dr_realloc(void* mem, size_t new_size, void*)
+static inline void* dr_realloc(void* mem, size_t new_size, void* user_data)
 {
+    Unused(user_data);
+ 
     Slice<u8> old_mem = Slice(reinterpret_cast<u8*>(mem), 1);
     Mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
     if (allocator->realloc(old_mem, new_size, 16))
@@ -29,8 +32,10 @@ static inline void* _dr_realloc(void* mem, size_t new_size, void*)
     return new_mem.items;
 }
 
-static inline void _dr_free(void* mem, void*)
+static inline void dr_free(void* mem, void* user_data)
 {
+    Unused(user_data);
+
     Mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
     allocator->free(
         Slice(reinterpret_cast<u8*>(mem), 1)
@@ -40,9 +45,9 @@ static inline void _dr_free(void* mem, void*)
 static inline drwav_allocation_callbacks alloc_callbacks =
 {
     .pUserData = nullptr,
-    .onMalloc = &_dr_alloc,
-    .onRealloc = &_dr_realloc,
-    .onFree = &_dr_free,
+    .onMalloc = &dr_alloc,
+    .onRealloc = &dr_realloc,
+    .onFree = &dr_free,
 };
 
 void Sound::init(const ResourceCreateInfo& info)
@@ -65,7 +70,7 @@ void Sound::destroy()
 
 Error Sound::load(StringView file_path)
 {
-    if (!File::exists(allocator, file_path))
+    if (!IO::File::exists(allocator, file_path))
     {
         RMDebugInfo("Couldn't load the font '{}'", file_path);
         return MakeError(ErrorCode::FileNotFound);
@@ -73,7 +78,7 @@ Error Sound::load(StringView file_path)
     
     path.set(file_path);
 
-    Slice<u8> content = File::read_all(allocator, file_path);
+    Slice<u8> content = IO::File::read_all(allocator, file_path);
 
     drwav wav = {};
     drwav_init_memory(&wav, content.ptr(), content.len, &alloc_callbacks);

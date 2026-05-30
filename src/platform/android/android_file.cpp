@@ -3,6 +3,8 @@
 #include "platform/android/android_engine.h"
 
 
+namespace IO
+{
 
 static constexpr usize StderrHandle = 1;
 static constexpr usize StdoutHandle = 2;
@@ -134,3 +136,4 @@ void File::flush()
     }
 }
 
+}

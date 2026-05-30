@@ -8,7 +8,7 @@ Transform2D Transform2D::with_rotation(const f32 rads)
 {
     f32 sin = 0;
     f32 cos = 0;
-    Math::sincos(sin, cos, rads);
+    Math::sincos(&sin, &cos, rads);
     return Transform2D(
         Vector2(cos, -sin),
         Vector2(sin, cos),
@@ -88,7 +88,7 @@ void Transform2D::set_rotation(const f32 rads)
 {
     f32 sin = 0;
     f32 cos = 0;
-    Math::sincos(sin, cos, rads);
+    Math::sincos(&sin, &cos, rads);
     rows[0] = Vector2(cos, -sin);
     rows[1] = Vector2(sin, cos);
 }

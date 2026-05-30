@@ -27,13 +27,13 @@ void Image::destroy()
 
 Error Image::load(StringView file_path)
 {
-    if (!File::exists(allocator, file_path))
+    if (!IO::File::exists(allocator, file_path))
     {
         RMDebugInfo("Couldn't load the font '{}'", file_path);
         return MakeError(ErrorCode::FileNotFound);
     }
 
-    Slice<u8> buffer = File::read_all(allocator, file_path);
+    Slice<u8> buffer = IO::File::read_all(allocator, file_path);
     
     i32 channels = 0;
     data.pixels.items = reinterpret_cast<u8*>(stbi_load_from_memory(
@@ -58,7 +58,7 @@ Error Image::load(StringView file_path)
         RMFatal("invalid channel count {}", channels);
     }
     
-    data.pixels.len = data.size.width * data.size.height * channels;
+    data.pixels.len = isize(data.size.width * data.size.height * channels);
     allocator->free(buffer);
     
     return ErrorCode::Ok;

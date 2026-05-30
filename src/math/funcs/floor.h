@@ -7,7 +7,7 @@ namespace Math
 {
 
 template<typename T, typename Integer = Conditional<IsSame<T, f32>, i32, i64>>
-    requires(IsFloatingPoint<T>)
+requires(IsFloatingPoint<T>)
 [[nodiscard]] constexpr Integer floor(T value)
 {
     const Integer i = Integer(value);

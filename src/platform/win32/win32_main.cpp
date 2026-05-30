@@ -188,8 +188,8 @@ void engine_loop()
 	if(enable_console)
 	{
 		u8 bytes[2] = {};
-		Format::format<false>(File::get_stdout().writer(), "Press enter to close the console...");
-		File::get_stdin().read(bytes);
+		Format::format<false>(IO::File::get_stdout().writer(), "Press enter to close the console...");
+		IO::File::get_stdin().read(bytes);
 	}
 
 	CoUninitialize();

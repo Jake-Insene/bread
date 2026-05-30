@@ -2,6 +2,7 @@
 #include "core/types.h"
 #include "mem/allocator.h"
 #include "mem/utils.h"
+#include "math/funcs.h"
 
 
 template<typename T>
@@ -55,11 +56,7 @@ struct [[nodiscard]] Stack
 			return;
 		}
 
-		usize new_cap = items.len + items.len / 2;
-		if (new_cap < required_capacity)
-		{
-			new_cap = required_capacity;
-		}
+		usize new_cap = Math::min(items.len + (items.len / 2), required_capacity);
 
 		if (!allocator->realloc(Mem::to_bytes(items), sizeof(Type) * new_cap, alignof(Type)))
 		{

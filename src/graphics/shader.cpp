@@ -11,7 +11,7 @@ void Shader::init(Mem::Allocator* _allocator, const ShaderInfo& info)
     allocator = _allocator;
 
     shader_info = info;
-    shader_code = File::read_all(allocator, info.file_path);
+    shader_code = IO::File::read_all(allocator, info.file_path);
 }
 
 void Shader::destroy()

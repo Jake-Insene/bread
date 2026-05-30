@@ -5,6 +5,9 @@
 #include "platform/platform_header.h"
 
 
+namespace IO
+{
+
 Slice<u8> File::read_all(Mem::Allocator* allocator, StringView path)
 {
 	Slice<char> tmp = allocator->array<char>(path.len + 1);
@@ -35,7 +38,7 @@ File File::get_stderr()
 	HANDLE handle = GetStdHandle(STD_ERROR_HANDLE);
 	return File
 	{
-		.handle = reinterpret_cast<usize>(handle),
+		.handle = reinterpret_cast<OS::Handle>(handle),
 	};
 }
 
@@ -44,7 +47,7 @@ File File::get_stdout()
 	HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
 	return File
 	{
-		.handle = reinterpret_cast<usize>(handle),
+		.handle = reinterpret_cast<OS::Handle>(handle),
 	};
 }
 
@@ -53,7 +56,7 @@ File File::get_stdin()
 	HANDLE handle = GetStdHandle(STD_INPUT_HANDLE);
 	return File
 	{
-		.handle = reinterpret_cast<usize>(handle),
+		.handle = reinterpret_cast<OS::Handle>(handle),
 	};
 }
 
@@ -90,7 +93,7 @@ File File::open(Mem::Allocator* allocator, StringView path, OpenMode mode)
 
 	return File
 	{
-		.handle = reinterpret_cast<usize>(file),
+		.handle = reinterpret_cast<OS::Handle>(file),
 	};
 }
 
@@ -120,7 +123,7 @@ void File::destroy()
 	CloseHandle(reinterpret_cast<HANDLE>(handle));
 }
 
-void File::write(const Slice<const u8> bytes)
+void File::write(const Slice<const u8>& bytes)
 {
 	DebugAssert(handle != 0, "invalid file handler");
 	(void)WriteFile(reinterpret_cast<HANDLE>(handle), bytes.ptr(), static_cast<DWORD>(bytes.len), 0, 0);
@@ -143,4 +146,6 @@ void File::flush()
 {
 	DebugAssert(handle != 0, "invalid file handler");
 	(void)FlushFileBuffers(reinterpret_cast<HANDLE>(handle));
+}
+
 }

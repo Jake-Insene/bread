@@ -1,5 +1,6 @@
 #pragma once
-#include "core/header.h"
+#include "os/os.h"
+
 
 struct StringView;
 
@@ -13,8 +14,8 @@ struct Allocator;
 
 namespace IO
 {
+
 struct Writer;
-}
 
 struct File
 {
@@ -25,7 +26,7 @@ struct File
         Create = Bit(2),
     };
 
-    usize handle;
+    OS::Handle handle;
 
     static Slice<u8> read_all(Mem::Allocator* allocator, StringView path);
 
@@ -38,13 +39,14 @@ struct File
 
     void destroy();
 
-    void write(const Slice<const u8> bytes);
+    void write(const Slice<const u8>& bytes);
     void put(u8 value);
     void read(Slice<u8> bytes);
 
     void flush();
 
-    IO::Writer writer();
+    Writer writer();
 };
 
+}
 

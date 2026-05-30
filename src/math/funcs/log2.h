@@ -6,7 +6,7 @@ namespace Math
 {
 
 template<typename T>
-    requires(IsArithmetic<T>)
+requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T log2(T n)
 {
     if constexpr (IsInteger<T>)

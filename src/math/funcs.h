@@ -8,7 +8,7 @@
 #include "math/funcs/atan2.h"
 #include "math/funcs/cos.h"
 #include "math/funcs/floor.h"
-#include "math/funcs/log.h"
+#include "math/funcs/log2.h"
 #include "math/funcs/pow.h"
 #include "math/funcs/sin.h"
 #include "math/funcs/sincos.h"
@@ -143,7 +143,7 @@ requires(IsArithmetic<T>)
     }
     else
     {
-        return a - trunc<i64>(a / b) * b;
+        return a - (trunc<i64>(a / b) * b);
     }
 }
 
@@ -164,50 +164,58 @@ requires(IsArithmetic<T>)
 }
 
 /*
-* @param r Angle in radians, compute the sine(x)
+* Compute the sine(x).
+*
+* @param r Angle in radians.
 */
 template<typename T>
 requires(IsArithmetic<T>)
-[[nodiscard]] constexpr T sin(T r)
+[[nodiscard]] constexpr T sin(T rads)
 {
-    return impl::sin<T>(r);
+    return impl::sin<T>(rads);
 }
 
 /*
-* @param r Angle in radians, compute the cosine(x)
+* Compute the cosine(x).
+*
+* @param r Angle in radians.
 */
 template<typename T>
 requires(IsArithmetic<T>)
-[[nodiscard]] constexpr T cos(T r)
+[[nodiscard]] constexpr T cos(T rads)
 {
-    return impl::cos<T>(r);
+    return impl::cos<T>(rads);
 }
 
 template<typename T>
 requires(IsArithmetic<T>)
-constexpr void sincos(T& s, T& c, T r)
+constexpr void sincos(T* s, T* c, T rads)
 {
-    impl::sincos<T>(s, c, r);
-}
-
-/*
-* @param r Angle in radians, compute the tan(x)
-*/
-template<typename T>
-requires(IsArithmetic<T>)
-[[nodiscard]] constexpr T tan(T r)
-{
-    return impl::tan_approx<T>(r);
+    impl::sincos<T>(s, c, rads);
 }
 
 /*
-* @param r Angle in radians, compute the acos(x)
+* Compute the tan(x).
+*
+* @param r Angle in radians.
 */
 template<typename T>
 requires(IsArithmetic<T>)
-[[nodiscard]] constexpr T acos(T r)
+[[nodiscard]] constexpr T tan(T rads)
 {
-    return impl::acos_approx(r);
+    return impl::tan_approx<T>(rads);
+}
+
+/*
+* Compute the acos(x).
+*
+* @param r Angle in radians.
+*/
+template<typename T>
+requires(IsArithmetic<T>)
+[[nodiscard]] constexpr T acos(T rads)
+{
+    return impl::acos_approx(rads);
 }
 
 template<typename T>

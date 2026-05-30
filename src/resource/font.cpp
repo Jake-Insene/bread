@@ -4,32 +4,31 @@
 #include "render_device/render_device.h"
 #include "resource/resource_manager.h"
 #include "resource/resource_manager_internal.h"
-#include "engine/engine.h"
 
 #include <external/stb_truetype.h>
 
 
-void flip_atlas_vertical(Mem::Allocator* allocator, Slice<u8> pixels, i32 width, i32 height)
+static void flip_atlas_vertical(Mem::Allocator* allocator, const Slice<u8>& pixels, const Vector2I& size)
 {
-    const i32 row_size = width; // R8
+    const i32 row_size = size.width; // R8
 
     Slice<u8> tmp = allocator->alloc(row_size, 16);
 
-    for (i32 y = 0; y < height / 2; ++y)
+    for (i32 y = 0; y < size.height / 2; ++y)
     {
-        Slice<u8> row_top    = pixels.add(y * row_size);
-        Slice<u8> row_bottom = pixels.add((height - 1 - y) * row_size);
+        Slice<u8> row_top    = pixels.add(isize(y * row_size));
+        Slice<u8> row_bottom = pixels.add(isize((size.height - 1 - y) * row_size));
 
-        Mem::copy(tmp,       row_top.slice(row_size));
-        Mem::copy(row_top,    row_bottom.slice(row_size));
+        Mem::copy(tmp, row_top.slice(row_size));
+        Mem::copy(row_top, row_bottom.slice(row_size));
         Mem::copy(row_bottom, tmp.slice(row_size));
     }
 
     allocator->free(tmp);
 }
 
-
-static void _load_theme(Mem::Allocator* allocator, const Slice<u8>& font_file_content, stbtt_fontinfo* font, Font::FontTheme& theme)
+static void load_theme(Mem::Allocator* allocator, const Slice<u8>& font_file_content,
+    stbtt_fontinfo* font, Font::FontTheme& theme)
 {
     stbtt_pack_context pack_context;
     stbtt_packedchar ranges[Font::MinimumGlyphCount] = {};
@@ -69,7 +68,7 @@ static void _load_theme(Mem::Allocator* allocator, const Slice<u8>& font_file_co
             stbtt_GetFontVMetrics(font, &ascent, &descent, &line_gap);
 
             f32 scale = stbtt_ScaleForPixelHeight(font, f32(theme.font_size));
-            f32 line_advance = (ascent - descent + line_gap) * scale;
+            f32 line_advance = f32(ascent - descent + line_gap) * scale;
             glyph.advance.height = line_advance;
             
             f32 u0 = f32(ranges[glyph_index].x0);
@@ -90,7 +89,7 @@ static void _load_theme(Mem::Allocator* allocator, const Slice<u8>& font_file_co
             );
         }
 
-        flip_atlas_vertical(allocator, pixels, width, width);
+        flip_atlas_vertical(allocator, pixels, Vector2I(width, width));
         theme.font_atlas = Engine::get_render_device()->get_gpu_resource_manager()->create_texture(
             {
                 .type = GPU::TextureType::Texture2D,
@@ -105,14 +104,12 @@ static void _load_theme(Mem::Allocator* allocator, const Slice<u8>& font_file_co
     }
 }
 
-
 void Font::init(const ResourceCreateInfo& info)
 {
     Resource::init(info);
 
     data.themes = Array<FontTheme>::with_allocator(allocator);
 }
-
 
 void Font::destroy()
 {
@@ -132,10 +129,9 @@ void Font::destroy()
     Resource::destroy();
 }
 
-
 Error Font::load(StringView file_path)
 {
-    if (!File::exists(allocator, file_path))
+    if (!IO::File::exists(allocator, file_path))
     {
         RMDebugInfo("Couldn't load the font '{}'", file_path);
         return MakeError(ErrorCode::FileNotFound);
@@ -143,7 +139,7 @@ Error Font::load(StringView file_path)
 
     path.set(file_path);
 
-    Slice<u8> content = File::read_all(allocator, file_path);
+    Slice<u8> content = IO::File::read_all(allocator, file_path);
 
     stbtt_fontinfo font;
     stbtt_InitFont(&font, content.ptr(), stbtt_GetFontOffsetForIndex(content.ptr(), 0));
@@ -153,7 +149,7 @@ Error Font::load(StringView file_path)
     default_theme.font_size = DefaultFontSize;
 
     default_theme.glyphs.resize(MinimumGlyphCount);
-    _load_theme(allocator, content, &font, default_theme);
+    load_theme(allocator, content, &font, default_theme);
     
     allocator->free(content);
 
@@ -162,10 +158,12 @@ Error Font::load(StringView file_path)
 
 const Font::FontTheme& Font::get_font_theme(i32 font_size)
 {
-    for (auto& theme : data.themes.iter())
+    for (FontTheme& theme : data.themes.iter())
     {
         if (theme.font_size == font_size)
+        {
             return theme;
+        }
     }
 
     return _theme_with_size(font_size);
@@ -173,7 +171,7 @@ const Font::FontTheme& Font::get_font_theme(i32 font_size)
 
 const Font::FontTheme& Font::_theme_with_size(i32 font_size)
 {
-    Slice<u8> content = File::read_all(allocator, path.view());
+    Slice<u8> content = IO::File::read_all(allocator, path.view());
 
     stbtt_fontinfo font;
     stbtt_InitFont(&font, content.ptr(), stbtt_GetFontOffsetForIndex(content.ptr(), 0));
@@ -183,7 +181,7 @@ const Font::FontTheme& Font::_theme_with_size(i32 font_size)
     new_theme.font_size = font_size;
 
     new_theme.glyphs.resize(MinimumGlyphCount);
-    _load_theme(allocator, content, &font, new_theme);
+    load_theme(allocator, content, &font, new_theme);
 
     allocator->free(content);
 

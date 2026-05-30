@@ -9,16 +9,28 @@ template<typename T>
 constexpr T __log(T x)
 {
     if (x <= 0) 
+    {
         return 0; // domain error -> return 0
+    }
+
     i32 n = 0;
-    while (x > 2) { x *= T(0.5); n++; }
-    while (x < T(0.5)) { x *= T(2.0); n--; }
+    while (x > 2)
+    {
+        x *= T(0.5);
+        n++;
+    }
+
+    while (x < T(0.5))
+    {
+        x *= T(2.0);
+        n--;
+    }
 
     // Use series expansion around 1.0: log(1+z) ~ z - z^2/2 + z^3/3
     T z = x - T(1.0);
     T z2 = z * z;
     T z3 = z2 * z;
-    T approx = z - z2 * T(0.5) + z3 * T(1.0 / 3.0);
+    T approx = z - (z2 * T(0.5)) + (z3 * T(1.0 / 3.0));
 
     return approx + n * T(0.6931471805599453); // ln(2)
 }
@@ -51,7 +63,9 @@ constexpr i64 __pow_integer(FP base, i64 exp)
     while (e)
     {
         if (e & 1)
+        {
             result *= b;
+        }
         b *= b;
         e >>= 1;
     }
@@ -60,7 +74,7 @@ constexpr i64 __pow_integer(FP base, i64 exp)
 }
 
 template<typename T>
-    requires(IsArithmetic<T>)
+requires(IsArithmetic<T>)
 [[nodiscard]] constexpr T pow(T x, T y)
 {
     if constexpr (IsInteger<T>)
@@ -79,7 +93,9 @@ template<typename T>
         
         // no negative base support without CRT
         if (x <= 0) 
+        {
             return 0;
+        }
         return __exp<T>(y * __log<T>(x));
     }
 }

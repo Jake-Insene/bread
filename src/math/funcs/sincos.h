@@ -8,11 +8,11 @@ namespace Math::impl
 {
 
 template<typename T>
-    requires(IsArithmetic<T>)
-constexpr void sincos(T& s, T& c, T r)
+requires(IsArithmetic<T>)
+constexpr void sincos(T* s, T* c, T rads)
 {
-    s = sin<T>(r);
-    c = cos<T>(r);
+    *s = sin<T>(rads);
+    *c = cos<T>(rads);
 }
 
 }
