@@ -15,8 +15,8 @@ float4 InstanceToWorld(in ObjectData Input, float4 InstancePosition)
     return mul(Input.WorldTransform, InstancePosition);
 }
 
-float4 WorldToClip(in FrameInfo Frame, float4 WorldPosition)
+float4 WorldToClip(in SceneUniform Scene, float4 WorldPosition)
 {
-    return mul(Frame.ViewProjection, WorldPosition);
+    return mul(Scene.ViewProjection, WorldPosition);
 }
 

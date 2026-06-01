@@ -1,6 +1,4 @@
 #pragma once
-#include "math/mat4.h"
-#include "math/mat4.h"
 #include "math/vec2.h"
 #include "math/color.h"
 #include "math/rect_2d.h"
@@ -51,7 +49,6 @@ struct Renderer
 
     u32 max_frames_in_flight;
     u32 frame_index;
-    bool frame_was_acquired;
     FrameInfo current_frame_info;
     
     Array<RenderFrame> frames;
@@ -60,11 +57,9 @@ struct Renderer
     void init(const RendererCreateInfo& info);
     void destroy();
 
-    FrameInfo get_current_frame_info() const;
-
     void handle_resize();
 
-    void begin_frame();
+    FrameInfo begin_frame();
     void end_frame();
 
     virtual void render(const FrameInfo& frame_info) = 0;

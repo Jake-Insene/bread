@@ -186,11 +186,14 @@ union [[nodiscard]] Vector2T
         }
 
 #if BREAD_ENABLE_INTRISICS
-        T x1 = x;
-        T y1 = y;
-        PlatformIntricics::vecnormalize(x1, y1);
-        return Vector2T(x1, y1);
-#else
+        if !consteval
+        {
+            T x1 = x;
+            T y1 = y;
+            PlatformIntricics::vecnormalize(x1, y1);
+            return Vector2T(x1, y1);
+        }
+#endif
         Vector2T v = *this;
         const T len = length();
         if(len)
@@ -200,25 +203,27 @@ union [[nodiscard]] Vector2T
         }
 
         return v;
-#endif
     }
     
     constexpr void normalize()
     {
-#if BREAD_ENABLE_INTRISICS
         if(x == 0 && y == 0)
         {
             return;
         }
-        PlatformIntricics::vecnormalize(x, y);
-#else
+#if BREAD_ENABLE_INTRISICS
+        if !consteval
+        {
+            PlatformIntricics::vecnormalize(x, y);
+            return;
+        }
+#endif
         const T len = length();
         if(len)
         {
             x /= len;
             y /= len;
         }
-#endif
     }
 
     constexpr T dot(const Vector2T& v) const

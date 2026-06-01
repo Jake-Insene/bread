@@ -1,5 +1,5 @@
 #pragma once
-struct FrameInfo
+struct SceneUniform
 {
     float4x4 View;
     float4x4 Projection;

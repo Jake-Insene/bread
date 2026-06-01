@@ -15,7 +15,7 @@ template<typename T>
 inline Slice<const u8> to_const_bytes(const Slice<T>& items);
 
 template<typename T>
-inline Slice<T> from_bytes(const Slice<u8> bytes);
+inline Slice<T> from_bytes(const Slice<u8>& bytes);
 
 template<typename T>
 constexpr T align_up(T value, T alignment)
@@ -51,7 +51,7 @@ template<typename T, typename U>
 constexpr void copy(Slice<T> dest, const Slice<U>& src);
 
 template<typename T>
-inline void set(Slice<T> dest, const T value);
+constexpr void set(Slice<T> dest, T value);
 
 template<typename T>
 constexpr void swap(T& a, T& b)
@@ -91,7 +91,7 @@ inline Slice<const u8> to_const_bytes(const Slice<T>& items)
 }
 
 template<typename T>
-inline Slice<T> from_bytes(const Slice<u8> bytes)
+inline Slice<T> from_bytes(const Slice<u8>& bytes)
 {
     return Slice<T>
     {
@@ -151,14 +151,17 @@ constexpr void copy(Slice<T> dest, const Slice<U>& src)
 void _set_zero(Slice<u8> dest);
 
 template<typename T>
-inline void set(Slice<T> dest, const T value)
+constexpr void set(Slice<T> dest, const T value)
 {
 #if BREAD_ENABLE_INTRISICS
-    if (value == T(0)) // for floating point values it works
+    if !consteval
     {
-        Slice<u8> dest_bytes = to_bytes(dest);
-        _set_zero(dest_bytes);
-        return;
+        if(value == T(0)) // for floating point values it works
+        {
+            Slice<u8> dest_bytes = to_bytes(dest);
+            _set_zero(dest_bytes);
+            return;
+        }
     }
 #endif
 

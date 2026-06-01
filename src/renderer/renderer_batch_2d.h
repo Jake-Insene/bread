@@ -5,6 +5,7 @@
 #include "math/rect_2d.h"
 #include "renderer/framed_buffer.h"
 #include "renderer/renderer.h"
+#include "renderer/scene_renderer.h"
 
 
 struct RendererBatch2DCreateInfo
@@ -33,6 +34,7 @@ struct RendererBatch2D
 
     struct FrameInfo : Renderer::FrameInfo
     {
+        Graphics::DescriptorSet* global_set;
         Vector2 viewport_size;
     };
 
@@ -102,14 +104,13 @@ struct RendererBatch2D
     
     struct Batch
     {
-        BatchType batch_type;
         Graphics::Pipeline* pipeline;
         Graphics::DescriptorSet* set;
         usize offset; // in instance buffer
         u32 vertices_per_instance;
         u32 instance_count;
-        GPU::TextureID textures[16];
-        Graphics::Sampler* samplers[16];
+        GPU::TextureID textures[MaxTexturesPerBatch];
+        Graphics::Sampler* samplers[MaxTexturesPerBatch];
         u32 texture_count;
     };
     static constexpr usize MaxInstancePerBatch = 128;
@@ -135,7 +136,6 @@ struct RendererBatch2D
     usize circle_offset_end;
 
     FramedDeviceBuffer instance_buffer;
-    FramedMappedBuffer uniform_buffer;
     Graphics::DescriptorPool* descriptor_pool;
     Array<Graphics::DescriptorSetRef> descriptor_sets;
 
@@ -156,7 +156,7 @@ struct RendererBatch2D
     void init(const RendererBatch2DCreateInfo& batch_info);
     void destroy();
 
-    void prepare_scene(const FrameInfo& frame_info);
+    void prepare_scene(SceneRenderer::SceneUniform* scene_uniform, const FrameInfo& frame_info);
     void build_batch(const FrameInfo& frame_info);
     void finish_scene(const FrameInfo& frame_info);
 

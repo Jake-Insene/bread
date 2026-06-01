@@ -2,6 +2,7 @@
 #include "core/templates.h"
 
 
+// TODO: Rewrite this, understand this and improve this(maybe)
 namespace Math
 {
 

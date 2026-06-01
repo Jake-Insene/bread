@@ -36,6 +36,48 @@ void Renderer2D::init(const Renderer2DCreateInfo& info)
             .max_lod = 0.F,
         }
     );
+
+    scene_uniform_buffer.init(
+        {
+            .allocator = allocator,
+            .graphics_device = graphics_device,
+            .gpu_memory_allocator = info.gpu_memory_allocator,
+            .buffer_size = MaxSceneUniformSize,
+            .frame_count = info.max_frames_in_flight,
+            .usage = GPU::BufferUsage::UniformBuffer,
+        }
+    );
+
+    Graphics::DescriptorSetLayoutCreateInfo set_layouts[] =
+    {
+        { SceneRenderer::GlobalSceneSet },
+    };
+
+    global_scene_layout = info.graphics_device->create_pipeline_layout(
+        {
+            .constant_blocks = {},
+            .set_layout_infos = set_layouts,
+        }
+    );
+
+    GPU::DescriptorPoolSize pool_sizes[] =
+    {
+        { .type = GPU::DescriptorType::UniformBuffer, .count = u32(info.max_frames_in_flight), },
+    };
+
+    global_scene_pool = graphics_device->create_descriptor_pool(info.max_frames_in_flight, pool_sizes);
+
+    global_scene_set = allocator->array<Graphics::DescriptorSetRef>(info.max_frames_in_flight);
+
+    for(usize i = 0; i < info.max_frames_in_flight; i++)
+    {
+        global_scene_set[i] = (global_scene_pool->allocate(global_scene_layout->get_layout(0)));
+        global_scene_pool->set(global_scene_set[i])->set_uniform_buffer(
+            0, scene_uniform_buffer.get_buffer(),
+            scene_uniform_buffer.get_buffer_info(i).offset,
+            MaxSceneUniformSize
+        );
+    }
 }
 
 void Renderer2D::destroy()
@@ -43,9 +85,18 @@ void Renderer2D::destroy()
     graphics_device->get_graphics_queue()->wait_idle();
     graphics_device->get_present_queue()->wait_idle();
     
-    batcher.destroy();
+    allocator->free(Mem::to_bytes(global_scene_set));
+    global_scene_pool->destroy();
+    global_scene_layout->destroy();
+    scene_uniform_buffer.destroy();
     sampler->destroy();
+    batcher.destroy();
     Renderer::destroy();
+}
+
+SceneRenderer::SceneUniform* Renderer2D::get_scene_uniform(const FrameInfo& frame_info)
+{
+    return reinterpret_cast<SceneRenderer::SceneUniform*>(scene_uniform_buffer.get_mapped(frame_info.image_index).ptr());
 }
 
 void Renderer2D::render(const FrameInfo& frame_info)
@@ -59,20 +110,19 @@ void Renderer2D::render(const FrameInfo& frame_info)
     Vector2I viewport_size = Engine::get_configuration().viewport_size;
     RenderFrame& frame = frames.get(frame_info.frame_index);
 
+    SceneRenderer::SceneUniform* scene_uniform = get_scene_uniform(frame_info);
+    update_scene_uniform(scene_uniform);
+
     RendererBatch2D::FrameInfo batch_frame = {};
     batch_frame.frame_index = frame_info.frame_index;
     batch_frame.image_index = frame_info.image_index;
     batch_frame.image = frame_info.image;
+    batch_frame.global_set = global_scene_pool->set(global_scene_set[frame_info.frame_index]);
     batch_frame.viewport_size = Vector2(viewport_size);
 
-    batcher.prepare_scene(batch_frame);
+    batcher.prepare_scene(scene_uniform, batch_frame);
     batcher.build_batch(batch_frame);
     batcher.finish_scene(batch_frame);
-    
-    GPU::PipelineStages wait_stages[] =
-    {
-        GPU::PipelineStages::RenderOutput,
-    };
 
     Graphics::CommandEncoder encoder = command_queue->acquire_encoder();
     encoder.begin();
@@ -173,6 +223,11 @@ void Renderer2D::render(const FrameInfo& frame_info)
         }
     );
     encoder.end();
+
+    GPU::PipelineStages wait_stages[] =
+    {
+        GPU::PipelineStages::RenderOutput,
+    };
 
     frame.in_flight_fence = command_queue->execute(
         {

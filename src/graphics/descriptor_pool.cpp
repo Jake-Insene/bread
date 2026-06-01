@@ -62,7 +62,6 @@ DescriptorSetRef DescriptorPool::allocate(GPU::DescriptorSetLayoutID gpu_set_lay
 
 void DescriptorPool::free(DescriptorSetRef set_ref)
 {
-
     bool is_allocated = false;
     for (DescriptorSetRef ref : allocated_sets.iter())
     {

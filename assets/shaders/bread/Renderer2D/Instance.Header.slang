@@ -1,5 +1,6 @@
 #pragma once
 #include "bread/Core/Header.slang"
+#include "bread/Renderer2D/Global.Header.slang"
 
 static float2 QuadPositions[6] = float2[6](
     float2(0, 1),

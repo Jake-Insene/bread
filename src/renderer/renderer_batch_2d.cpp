@@ -47,13 +47,14 @@ void RendererBatch2D::init(const RendererBatch2DCreateInfo& batch_info)
     // same layout for now
     GPU::DescriptorBinding frame_bindings[] =
     {
-        { .type = GPU::DescriptorType::UniformBuffer, .binding = 0, .count = 1, .stages = GPU::ShaderStage::Vertex, },
-        { .type = GPU::DescriptorType::CombinedTextureSampler, .binding = 1, .count = MaxTexturesPerBatch, .stages = GPU::ShaderStage::Fragment, },
+        { .type = GPU::DescriptorType::CombinedTextureSampler, .binding = 0, .count = MaxTexturesPerBatch, .stages = GPU::ShaderStage::Fragment, },
     };
 
     Graphics::DescriptorSetLayoutCreateInfo set_layouts[] =
     {
-        // Frame set
+        // Global set
+        { SceneRenderer::GlobalSceneSet },
+        // Batch set
         {
             .bindings = frame_bindings,
         }
@@ -143,17 +144,6 @@ void RendererBatch2D::init(const RendererBatch2DCreateInfo& batch_info)
         }
     );
 
-    uniform_buffer.init(
-        {
-            .allocator = allocator,
-            .graphics_device = graphics_device,
-            .gpu_memory_allocator = batch_info.gpu_memory_allocator,
-            .buffer_size = sizeof(Renderer2D::SceneUniform),
-            .frame_count = batch_info.max_frames_in_flight,
-            .usage = GPU::BufferUsage::UniformBuffer,
-        }
-    );
-
     GPU::DescriptorPoolSize pool_sizes[] =
     {
         { .type = GPU::DescriptorType::UniformBuffer, .count = u32(1 * MaxBatchesPerFrame * batch_info.max_frames_in_flight), },
@@ -166,7 +156,7 @@ void RendererBatch2D::init(const RendererBatch2DCreateInfo& batch_info)
     descriptor_sets = Array<Graphics::DescriptorSetRef>::with_size(allocator, max_descriptor_set_count);
     for(usize i = 0; i < max_descriptor_set_count; i++)
     {
-        (void)descriptor_sets.add(descriptor_pool->allocate(batch_pipeline_layout->get_layout(0)));
+        (void)descriptor_sets.add(descriptor_pool->allocate(batch_pipeline_layout->get_layout(1)));
     }
 
     batches = Array<Batch>::with_size(allocator, 32);
@@ -194,7 +184,6 @@ void RendererBatch2D::destroy()
     circle_pipeline->destroy();
 
     instance_buffer.destroy();
-    uniform_buffer.destroy();
     descriptor_pool->destroy();
     descriptor_sets.destroy();
 
@@ -206,11 +195,10 @@ void RendererBatch2D::destroy()
     batches.destroy();
 }
 
-void RendererBatch2D::prepare_scene(const FrameInfo& frame_info)
+void RendererBatch2D::prepare_scene(SceneRenderer::SceneUniform* scene_uniform, const FrameInfo& frame_info)
 {
     last_batch_type = BatchType::Unknown;
 
-    Renderer2D::SceneUniform* scene_uniform = reinterpret_cast<Renderer2D::SceneUniform*>(uniform_buffer.get_mapped(frame_info.frame_index).ptr());
     scene_uniform->view = Mat4::identity();
     scene_uniform->projection = Projection::orthographic(
         0, frame_info.viewport_size.width,
@@ -249,7 +237,6 @@ void RendererBatch2D::build_batch(const FrameInfo& frame_info)
     // updating batch sets
     usize base_set_index = frame_info.frame_index * MaxBatchesPerFrame;
     usize set_offset = 0;
-    FramedBuffer::BufferInfo buffer_info = uniform_buffer.get_buffer_info(frame_info.frame_index);
     
     for (Batch& batch : batches.iter())
     {
@@ -260,10 +247,9 @@ void RendererBatch2D::build_batch(const FrameInfo& frame_info)
         batch.set = set;
         set_offset++;
 
-        set->set_uniform_buffer(0, uniform_buffer.get_buffer(), buffer_info.offset, sizeof(Renderer2D::SceneUniform));
         if (batch.texture_count > 0)
         {
-            set->set_combined_texture_sampler_array(1, Slice(batch.textures, batch.texture_count), GPU::TextureLayout::ShaderReadOnly, Slice(batch.samplers, batch.texture_count));
+            set->set_combined_texture_sampler_array(0, Slice(batch.textures, batch.texture_count), GPU::TextureLayout::ShaderReadOnly, Slice(batch.samplers, batch.texture_count));
         }
         set->sync_writes();
     }
@@ -368,7 +354,7 @@ void RendererBatch2D::end_batch_record(const FrameInfo& frame_info, Graphics::Co
     for (const Batch& batch : batches.iter())
     {
         encoder.bind_pipeline(GPU::PipelineBindPoint::Graphics, batch.pipeline);
-        Graphics::DescriptorSet* sets[] = { batch.set };
+        Graphics::DescriptorSet* sets[] = { frame_info.global_set, batch.set };
         encoder.bind_set(GPU::PipelineBindPoint::Graphics, batch_pipeline_layout, 0, sets);
 
         usize buffer_offset = vertex_buffer_info.offset + batch.offset;
@@ -405,7 +391,6 @@ void RendererBatch2D::commit_sprite(const SpriteInstance& sprite, GPU::TextureID
     {
         (void)batches.add(
             {
-                .batch_type = BatchType::Quad,
                 .pipeline = sprite_pipeline,
                 .set = nullptr,
                 .offset = sprite_offset_begin + (sprites.count * sizeof(SpriteInstance)),
@@ -449,7 +434,6 @@ void RendererBatch2D::commit_quad(const QuadInstance& quad)
     {
         (void)batches.add(
             {
-                .batch_type = BatchType::Quad,
                 .pipeline = quad_pipeline,
                 .set = nullptr,
                 .offset = quad_offset_begin + (quads.count * sizeof(QuadInstance)),
@@ -472,7 +456,6 @@ void RendererBatch2D::commit_line(const LineInstance& line)
     {
         (void)batches.add(
             {
-                .batch_type = BatchType::Line,
                 .pipeline = line_pipeline,
                 .set = nullptr,
                 .offset = line_offset_begin + (lines.count * sizeof(LineInstance)),
@@ -495,7 +478,6 @@ void RendererBatch2D::commit_circle(const CircleInstance& circle)
     {
         (void)batches.add(
             {
-                .batch_type = BatchType::Circle,
                 .pipeline = circle_pipeline,
                 .set = nullptr,
                 .offset = circle_offset_begin + (circles.count * sizeof(CircleInstance)),

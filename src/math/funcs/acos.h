@@ -5,8 +5,7 @@
 namespace Math::impl
 {
 
-// TODO:
-// I don't know how this works.
+// TODO: I don't know how this works.
 // https://stackoverflow.com/questions/3380628/fast-arc-cos-algorithm
 template<typename T>
 requires(IsArithmetic<T>)

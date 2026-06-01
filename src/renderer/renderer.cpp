@@ -47,17 +47,12 @@ void Renderer::destroy()
     swap_chain->destroy();
 }
 
-Renderer::FrameInfo Renderer::get_current_frame_info() const
-{
-    return current_frame_info;
-}
-
 void Renderer::handle_resize()
 {
     swap_chain->resize();
 }
 
-void Renderer::begin_frame()
+Renderer::FrameInfo Renderer::begin_frame()
 {
     RenderFrame& frame = frames.get(frame_index);
 
@@ -99,12 +94,11 @@ void Renderer::begin_frame()
     }
     else if(image_acquired && image_index != MaxValue<u32>)
     {
-        frame_was_acquired = true;
         frame_flags |= FrameFlags::Acquired;
         image = swap_chain->get_image(image_index).texture;    
     }
 
-    current_frame_info =
+    return FrameInfo
     {
         .flags = frame_flags,
         .frame_index = frame_index,
@@ -115,7 +109,6 @@ void Renderer::begin_frame()
 
 void Renderer::end_frame()
 {
-    frame_was_acquired = false;
     frame_index = (frame_index + 1) % max_frames_in_flight;
 }
 

@@ -7,9 +7,9 @@
 #include "graphics/device.h"
 #include "graphics/sampler.h"
 #include "graphics/pipeline_2d.h"
-#include "render_device/core/gpu_memory_allocator.h"
 #include "renderer/framed_buffer.h"
 #include "renderer/framed_pool.h"
+#include "renderer/scene_renderer.h"
 #include "renderer/renderer.h"
 #include "renderer/renderer_batch_2d.h"
 
@@ -22,19 +22,21 @@ struct Renderer2DCreateInfo : RendererCreateInfo
 };
 
 struct Renderer2D : Renderer
-{    
-    struct SceneUniform
-    {
-        Mat4 view;
-        Mat4 projection;
-        Mat4 view_projection;
-    };
+{
+    // 4Kb
+    static constexpr usize MaxSceneUniformSize = 4096;
 
     RendererBatch2D batcher;
     Graphics::Sampler* sampler;
+    FramedMappedBuffer scene_uniform_buffer;
+    Graphics::PipelineLayout* global_scene_layout;
+    Graphics::DescriptorPool* global_scene_pool;
+    Slice<Graphics::DescriptorSetRef> global_scene_set;
 
     void init(const Renderer2DCreateInfo& info);
     void destroy();
+
+    SceneRenderer::SceneUniform* get_scene_uniform(const FrameInfo& frame_info);
 
     virtual void render(const FrameInfo& frame_info) override;
 
@@ -42,4 +44,6 @@ struct Renderer2D : Renderer
     void draw_quad(const Transform2D& transform, const Color& color, const Rect2D& rect);
     void draw_line(const Transform2D& transform, const Color& color, const Vector2& begin, const Vector2& end);
     void draw_circle(const Transform2D& transform, const Color& color, const Vector2& point, f32 radius);
+
+    virtual void update_scene_uniform(SceneRenderer::SceneUniform* scene_uniform) = 0;
 };

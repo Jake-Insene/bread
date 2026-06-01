@@ -1,8 +1,7 @@
 #include "bread/Renderer2D/Instance.Header.slang"
 
-layout(set = 0, binding = 0) ConstantBuffer<FrameInfo> Frame;
 #if defined(INSTANCE_SPRITE)
-layout(set = 0, binding = 1) Sampler2D BindTextures[16];
+layout(set = 1, binding = 0) Sampler2D BindTextures[16];
 #endif
 
 FragmentInput Vertex(ObjectData Object)
@@ -12,7 +11,7 @@ FragmentInput Vertex(ObjectData Object)
     Output.Color = Object.Color;
     Output.UV = Object.UV;
     float4 WorldPosition = InstanceToWorld(Object, Object.InstancePosition);
-    float4 WorldToClip = WorldToClip(Frame, WorldPosition);
+    float4 WorldToClip = WorldToClip(Scene, WorldPosition);
     Output.ClipPosition = WorldToClip;
     
     return Output;

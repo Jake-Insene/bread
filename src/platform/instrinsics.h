@@ -18,8 +18,8 @@ struct PlatformIntricics
 		if constexpr (IsSame<T, f32>)
 		{
 #if BREAD_X64
-			__m128 mm = _mm_set_ss(x);
-			return _mm_cvtss_f32(_mm_sqrt_ss(mm));
+			__m128 mm1 = _mm_set_ss(x);
+			return _mm_cvtss_f32(_mm_sqrt_ss(mm1));
 #elif BREAD_ARM64
             const float32x2_t v = vdup_n_f32(x);
             const float32x2_t result = vsqrt_f32(v);

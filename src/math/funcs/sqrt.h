@@ -7,14 +7,18 @@
 namespace Math
 {
 
+//TODO: Make the constexpr version perfomance
 template<typename T>
 requires(IsFloatingPoint<T>)
 [[nodiscard]] constexpr T sqrt(T n)
 {
-    // TODO: Improve this
 #if BREAD_ENABLE_INTRISICS
-    return PlatformIntricics::sqrt(n);
-#else
+    if !consteval
+    {
+        return PlatformIntricics::sqrt(n);
+    }
+#endif
+
     if (n == T(0))
     {
         return n;
@@ -34,7 +38,6 @@ requires(IsFloatingPoint<T>)
 
         x = root;
     }
-#endif
 }
 
 }
