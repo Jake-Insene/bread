@@ -195,11 +195,11 @@ VkImageType VkUtils::_vk_get_image_type(GPU::TextureType texture_type)
     return VkImageType(0);
 }
 
-VkImageViewType VkUtils::_vk_get_image_view_type(GPU::TextureType texture_type)
+VkImageViewType VkUtils::_vk_get_image_view_type(GPU::TextureViewType texture_view_type)
 {
-    switch(texture_type)
+    switch(texture_view_type)
     {
-    case GPU::TextureType::Texture2D:
+    case GPU::TextureViewType::Texture2D:
         return VK_IMAGE_VIEW_TYPE_2D;
     default:
         break;

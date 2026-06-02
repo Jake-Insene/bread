@@ -3,11 +3,12 @@
 #include "collections/hash_map.h"
 #include "gpu/gpu_adapter.h"
 #include "gpu/vk/vk_header.h"
+#include "math/hash.h"
 #include "mem/stack_allocator.h"
 #include "os/os.h"
-#include "platform/platform_header.h"
 
 
+// Members are in GPU format
 struct VkDriverAttachmentInfo
 {
 	u32 format : 10;
@@ -24,51 +25,11 @@ union VkDriverAttachment
 
 struct VkDriverRenderPassKey
 {
-	VkDriverAttachment attachment_0;
-	VkDriverAttachment attachment_1;
-	VkDriverAttachment attachment_2;
-	VkDriverAttachment attachment_3;
-	VkDriverAttachment attachment_4;
-	VkDriverAttachment attachment_5;
+	VkDriverAttachment render_attachments[GPU::MaxRenderAttachmentCount];
+	VkDriverAttachment depth_attachment;
+	VkDriverAttachment stencil_attachment;
 
-	static VkDriverRenderPassKey from_rendering_info(const GPU::RenderingInfo& rendering_info)
-	{
-		VkDriverRenderPassKey key = {};
-
-		for(usize i = 0; i < rendering_info.render_attachment_formats.len; i++)
-		{
-#define ATTACHMENT_I(n, attachment_format)\
-			if(i == n)\
-			{\
-				key.attachment_##n.attachment.format = static_cast<u32>(attachment_format);\
-				key.attachment_##n.attachment.layout = 0;\
-				key.attachment_##n.attachment.load_op = 0;\
-				key.attachment_##n.attachment.store_op = 0;\
-			}
-			ATTACHMENT_I(0, rendering_info.render_attachment_formats[0])
-			ATTACHMENT_I(1, rendering_info.render_attachment_formats[1])
-			ATTACHMENT_I(2, rendering_info.render_attachment_formats[2])
-			ATTACHMENT_I(3, rendering_info.render_attachment_formats[3])
-		}
-#undef ATTACHMENT_I
-		if(rendering_info.depth_attachment_format != GPU::TextureFormat::Unknown)
-		{
-			key.attachment_4.attachment.format = static_cast<u32>(rendering_info.depth_attachment_format);
-			key.attachment_4.attachment.layout = 0;
-			key.attachment_4.attachment.load_op = 0;
-			key.attachment_4.attachment.store_op = 0;
-		}
-		if(rendering_info.stencil_attachment_format != GPU::TextureFormat::Unknown)
-		{
-			key.attachment_5.attachment.format = static_cast<u32>(rendering_info.stencil_attachment_format);
-			key.attachment_5.attachment.layout = 0;
-			key.attachment_5.attachment.load_op = 0;
-			key.attachment_5.attachment.store_op = 0;
-		}
-
-		return key;
-	}
-
+	static VkDriverRenderPassKey from_rendering_info(const GPU::RenderingInfo& rendering_info);
 	static VkDriverRenderPassKey from_render_pass_begin_info(const GPU::RenderPassBeginInfo& begin_info);
 };
 
@@ -77,40 +38,24 @@ struct HashOfType<VkDriverRenderPassKey>
 {
 	[[nodiscard]] static constexpr u64 hashfunc(const VkDriverRenderPassKey& k)
     {
-		u64 hash = 0x9e3779b97f4a7c15ULL;
-
-		hash ^= static_cast<u64>(k.attachment_0.bits) * 0xbf58476d1ce4e5b9ULL;
-		hash ^= static_cast<u64>(k.attachment_1.bits) * 0x94d049bb133111ebULL;
-		hash ^= static_cast<u64>(k.attachment_2.bits) * 0x9e3779b97f4a7c15ULL;
-		hash ^= static_cast<u64>(k.attachment_3.bits) * 0xbf58476d1ce4e5b9ULL;
-		hash ^= static_cast<u64>(k.attachment_4.bits) * 0x94d049bb133111ebULL;
-		hash ^= static_cast<u64>(k.attachment_5.bits) * 0x9e3779b97f4a7c15ULL;
-
-		// final mix
-		hash ^= hash >> 30;
-		hash *= 0xbf58476d1ce4e5b9ULL;
-		hash ^= hash >> 27;
-
-		return hash;
+		return Math::Hash::fnv1a(
+			Slice(
+				reinterpret_cast<const u8*>(&k),
+				sizeof(k)
+			)
+		);
     }
 };
 
 template<>
 struct Comparator<VkDriverRenderPassKey>
 {
-	[[nodiscard]] static constexpr bool compare_attachment(const VkDriverAttachment& attachment_a, const VkDriverAttachment& attachment_b)
-	{
-		return attachment_a.bits == attachment_b.bits;
-	}
-	
 	[[nodiscard]] static constexpr bool compare(const VkDriverRenderPassKey& k1, const VkDriverRenderPassKey& k2)
     {
-        return compare_attachment(k1.attachment_0, k2.attachment_0)
-			&& compare_attachment(k1.attachment_1, k2.attachment_1)
-			&& compare_attachment(k1.attachment_2, k2.attachment_2)
-			&& compare_attachment(k1.attachment_3, k2.attachment_3)
-			&& compare_attachment(k1.attachment_4, k2.attachment_4)
-			&& compare_attachment(k1.attachment_5, k2.attachment_5);
+		return Mem::compare(
+			Slice(reinterpret_cast<const u8*>(&k1), sizeof(k1)),
+			Slice(reinterpret_cast<const u8*>(&k2), sizeof(k2))
+		);
     }
 };
 
@@ -190,6 +135,7 @@ struct VulkanDriver
 		VkImage vk_image;
 		VkImageView vk_image_view;
 		GPU::TextureID texture;
+		GPU::TextureViewID texture_view;
 	};
 
 	struct SwapChain
@@ -264,16 +210,23 @@ struct VulkanDriver
 	{
 		VkDevice vk_device;
 		VkImage vk_image;
-		VkImageView vk_image_view;
-		VkImageViewCreateInfo vk_image_view_info;
 		
-		VkFormat vk_format;
-
 		GPU::TextureFormat format;
 		Vector3U extent;
 
 		GPU::DeviceID device;
 		GPU::TextureID texture;
+	};
+
+	struct TextureView
+	{
+		VkDevice vk_device;
+		VkImageView vk_image_view;
+
+		GPU::TextureFormat format;
+
+		GPU::DeviceID device;
+		GPU::TextureViewID texture_view;
 	};
 
 	struct RenderTarget
@@ -365,6 +318,7 @@ struct VulkanDriver
 		FreeList<Buffer, GPU::BufferID> buffers;
 		FreeList<Sampler, GPU::SamplerID> samplers;
 		FreeList<Texture, GPU::TextureID> textures;
+		FreeList<TextureView, GPU::TextureViewID> texture_views;
 		FreeList<DescriptorSetLayout, GPU::DescriptorSetLayoutID> descriptor_set_layouts;
 		FreeList<DescriptorPool, GPU::DescriptorPoolID> descriptor_pools;
 		FreeList<DescriptorSet, GPU::DescriptorSetID> descriptor_sets;
@@ -412,6 +366,7 @@ struct VulkanDriver
 	static void swap_chain_destroy(GPU::SwapChainID swap_chain);
 	static u32 swap_chain_get_image_count(GPU::SwapChainID swap_chain);
 	static GPU::TextureID swap_chain_get_image(GPU::SwapChainID swap_chain, u32 image_index);
+	static GPU::TextureViewID swap_chain_get_image_view(GPU::SwapChainID swap_chain, u32 image_index);
 	static GPU::AcquireResult swap_chain_acquire_next_image(GPU::SwapChainID swap_chain, const GPU::AcquireInfo& acquire_info, u32* image_index);
 
 	static GPU::FenceID fence_create(const GPU::FenceCreateInfo& ci);
@@ -446,6 +401,9 @@ struct VulkanDriver
 	static void texture_destroy(GPU::TextureID texture);
 	static GPU::MemoryRequirements texture_get_memory_requirements(GPU::TextureID texture);
 	static void texture_bind_memory_heap(GPU::TextureID texture, const GPU::BindMemoryInfo& bind_info);
+
+	static GPU::TextureViewID texture_view_create(const GPU::TextureViewCreateInfo &ci);
+	static void texture_view_destroy(GPU::TextureViewID texture_view);
 
 	static GPU::DescriptorSetLayoutID descriptor_set_layout_create(const GPU::DescriptorSetLayoutCreateInfo& ci);
 	static void descriptor_set_layout_destroy(GPU::DescriptorSetLayoutID descriptor_set_layout);
@@ -502,6 +460,7 @@ struct VulkanDriver
 	static Buffer& _get_buffer(GPU::BufferID buffer) { return data.buffers.get(buffer); }
 	static Sampler& _get_sampler(GPU::SamplerID sampler) { return data.samplers.get(sampler); }
 	static Texture& _get_texture(GPU::TextureID texture) { return data.textures.get(texture); }
+	static TextureView& _get_texture_view(GPU::TextureViewID texture_view) { return data.texture_views.get(texture_view); }
 	static DescriptorSetLayout& _get_descriptor_set_layout(GPU::DescriptorSetLayoutID descriptor_set_layout) { return data.descriptor_set_layouts.get(descriptor_set_layout); }
 	static DescriptorPool& _get_descriptor_pool(GPU::DescriptorPoolID descriptor_pool) { return data.descriptor_pools.get(descriptor_pool); }
 	static DescriptorSet& _get_descriptor_set(GPU::DescriptorSetID descriptor_set) { return data.descriptor_sets.get(descriptor_set); }

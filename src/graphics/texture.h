@@ -20,7 +20,7 @@ struct TextureInfo
 	GPU::TextureTiling tiling;
 	GPU::TextureUsage usage;
 	GPU::TextureLayout initial_layout;
-    GPU::TextureSubresourceRanges subresource_range;
+    GPU::TextureSubresourceRange subresource_range;
 };
 
 struct Texture : DeviceObject

@@ -109,7 +109,7 @@ struct RendererBatch2D
         usize offset; // in instance buffer
         u32 vertices_per_instance;
         u32 instance_count;
-        GPU::TextureID textures[MaxTexturesPerBatch];
+        GPU::TextureViewID texture_views[MaxTexturesPerBatch];
         Graphics::Sampler* samplers[MaxTexturesPerBatch];
         u32 texture_count;
     };
@@ -163,7 +163,7 @@ struct RendererBatch2D
     void begin_batch_record(const FrameInfo& frame_info, Graphics::CommandEncoder& encoder);
     void end_batch_record(const FrameInfo& frame_info, Graphics::CommandEncoder& encoder);
 
-    void commit_sprite(const SpriteInstance& sprite, GPU::TextureID texture, Graphics::Sampler* sampler);
+    void commit_sprite(const SpriteInstance& sprite, GPU::TextureViewID texture_view, Graphics::Sampler* sampler);
     void commit_quad(const QuadInstance& quad);
     void commit_line(const LineInstance& line);
     void commit_circle(const CircleInstance& circle);

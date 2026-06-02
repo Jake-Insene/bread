@@ -249,7 +249,7 @@ void RendererBatch2D::build_batch(const FrameInfo& frame_info)
 
         if (batch.texture_count > 0)
         {
-            set->set_combined_texture_sampler_array(0, Slice(batch.textures, batch.texture_count), GPU::TextureLayout::ShaderReadOnly, Slice(batch.samplers, batch.texture_count));
+            set->set_combined_texture_sampler_array(0, Slice(batch.texture_views, batch.texture_count), GPU::TextureLayout::ShaderReadOnly, Slice(batch.samplers, batch.texture_count));
         }
         set->sync_writes();
     }
@@ -366,7 +366,7 @@ void RendererBatch2D::end_batch_record(const FrameInfo& frame_info, Graphics::Co
     batches.clear();
 }
 
-void RendererBatch2D::commit_sprite(const SpriteInstance& sprite, GPU::TextureID texture, Graphics::Sampler* sampler)
+void RendererBatch2D::commit_sprite(const SpriteInstance& sprite, GPU::TextureViewID texture_view, Graphics::Sampler* sampler)
 {
     bool need_new_batch = (last_batch_type != BatchType::Sprite);
     if (!need_new_batch)
@@ -375,7 +375,7 @@ void RendererBatch2D::commit_sprite(const SpriteInstance& sprite, GPU::TextureID
         bool texture_found = false;
         for (u32 i = 0; i < last_batch.texture_count; i++)
         {
-            if (last_batch.textures[i] == texture && last_batch.samplers[i] == sampler)
+            if (last_batch.texture_views[i] == texture_view && last_batch.samplers[i] == sampler)
             {
                 texture_found = true;
                 break;
@@ -396,7 +396,7 @@ void RendererBatch2D::commit_sprite(const SpriteInstance& sprite, GPU::TextureID
                 .offset = sprite_offset_begin + (sprites.count * sizeof(SpriteInstance)),
                 .vertices_per_instance = 6,
                 .instance_count = 0,
-                .textures = {},
+                .texture_views = {},
                 .samplers = {},
                 .texture_count = 0,
             }
@@ -410,7 +410,7 @@ void RendererBatch2D::commit_sprite(const SpriteInstance& sprite, GPU::TextureID
     new_sprite.texture_index = MaxValue<u32>;
     for (u32 i = 0; i < current_batch.texture_count; i++)
     {
-        if (current_batch.textures[i] == texture && current_batch.samplers[i] == sampler)
+        if (current_batch.texture_views[i] == texture_view && current_batch.samplers[i] == sampler)
         {
             new_sprite.texture_index = i;
             break;
@@ -419,7 +419,7 @@ void RendererBatch2D::commit_sprite(const SpriteInstance& sprite, GPU::TextureID
     if (new_sprite.texture_index == MaxValue<u32>)
     {
         new_sprite.texture_index = current_batch.texture_count;
-        current_batch.textures[new_sprite.texture_index] = texture;
+        current_batch.texture_views[new_sprite.texture_index] = texture_view;
         current_batch.samplers[new_sprite.texture_index] = sampler;
         current_batch.texture_count++;
     }
@@ -439,7 +439,7 @@ void RendererBatch2D::commit_quad(const QuadInstance& quad)
                 .offset = quad_offset_begin + (quads.count * sizeof(QuadInstance)),
                 .vertices_per_instance = 6,
                 .instance_count = 0,
-                .textures = {},
+                .texture_views = {},
                 .samplers = {},
                 .texture_count = 0,
             }
@@ -461,7 +461,7 @@ void RendererBatch2D::commit_line(const LineInstance& line)
                 .offset = line_offset_begin + (lines.count * sizeof(LineInstance)),
                 .vertices_per_instance = 2,
                 .instance_count = 0,
-                .textures = {},
+                .texture_views = {},
                 .samplers = {},
                 .texture_count = 0,
             }
@@ -483,7 +483,7 @@ void RendererBatch2D::commit_circle(const CircleInstance& circle)
                 .offset = circle_offset_begin + (circles.count * sizeof(CircleInstance)),
                 .vertices_per_instance = 6,
                 .instance_count = 0,
-                .textures = {},
+                .texture_views = {},
                 .samplers = {},
                 .texture_count = 0,
             }

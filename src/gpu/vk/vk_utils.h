@@ -15,7 +15,7 @@ struct VkUtils
     static VkSamplerMipmapMode _vk_get_mipmap_mode(GPU::SamplerMipMapMode mipmap_mode);
     static VkSamplerAddressMode _vk_get_address_mode(GPU::SamplerAddressMode address_mode);
     static VkImageType _vk_get_image_type(GPU::TextureType texture_type);
-    static VkImageViewType _vk_get_image_view_type(GPU::TextureType texture_type);
+    static VkImageViewType _vk_get_image_view_type(GPU::TextureViewType texture_view_type);
     static VkFormat _vk_get_texture_format(GPU::TextureFormat texture_format);
     static VkImageTiling _vk_get_tiling(GPU::TextureTiling texture_tiling);
     static VkImageUsageFlags _vk_get_texture_usage(GPU::TextureUsage texture_usage);

@@ -54,6 +54,24 @@ GPUTextureID GPUResourceManager::create_texture(const TextureAllocateInfo& alloc
         }
     );
 
+    GPU::TextureViewID gpu_texture_view = GPU::texture_view_create(
+        {
+            .device = graphics_device->gpu_device,
+            // TODO: Assumming type
+            .type = GPU::TextureViewType::Texture2D,
+            .format = alloc_info.format,
+            .texture = gpu_texture,
+            .subresource_range =
+            {
+                .aspect = GPU::TextureAspect::Color,
+                .base_mip_level = 0,
+                .level_count = 1,
+                .base_array_layer = 0,
+                .layer_count = 1,
+            },
+        }
+    );
+
     // Setting up the texture data
     {
         Graphics::Buffer* buffer = gpu_memory_allocator->begin_staging(alloc_info.pixels.len);
@@ -130,6 +148,7 @@ GPUTextureID GPUResourceManager::create_texture(const TextureAllocateInfo& alloc
     GPUTextureID texture_ref = textures.add(TextureData());
     TextureData& texture = textures.get(texture_ref);
     texture.gpu_texture = gpu_texture;
+    texture.gpu_texture_view = gpu_texture_view;
     texture.allocation = allocation;
 
     return texture_ref;
@@ -145,6 +164,11 @@ void GPUResourceManager::destroy_texture(GPUTextureID texture_ref)
 GPU::TextureID GPUResourceManager::texture_get_gpu_texture(GPUTextureID texture_ref)
 {
     return textures.get(texture_ref).gpu_texture;
+}
+
+GPU::TextureViewID GPUResourceManager::texture_get_gpu_texture_view(GPUTextureID texture_ref)
+{
+    return textures.get(texture_ref).gpu_texture_view;
 }
 
 void GPUResourceManager::_submit_and_wait(GPU::QueueID gpu_queue, void* arg, SubmitFn recorder)

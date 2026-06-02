@@ -34,6 +34,7 @@ struct Renderer
         u32 frame_index;
         u32 image_index;
         GPU::TextureID image;
+        GPU::TextureViewID image_view;
     };
 
     struct RenderFrame

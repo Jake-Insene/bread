@@ -4,7 +4,7 @@
 #include "gpu/vk/vk_vtable.h"
 #include "mem/utils.h"
 #include "os/os.h"
-
+#include "platform/platform_header.h"
 
 
 static constexpr const char* _vk_extensions[] =

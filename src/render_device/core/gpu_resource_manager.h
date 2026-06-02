@@ -30,6 +30,7 @@ struct GPUResourceManager
     struct TextureData
     {
         GPU::TextureID gpu_texture;
+        GPU::TextureViewID gpu_texture_view;
         GPUMemoryAllocationID allocation;
     };
 
@@ -46,6 +47,7 @@ struct GPUResourceManager
     void destroy_texture(GPUTextureID texture_ref);
 
     GPU::TextureID texture_get_gpu_texture(GPUTextureID texture_ref);
+    GPU::TextureViewID texture_get_gpu_texture_view(GPUTextureID texture_ref);
 
     template<typename Fn>
     void submit_and_wait(GPU::QueueID gpu_queue, Fn&& fn)

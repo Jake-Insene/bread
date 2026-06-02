@@ -52,8 +52,8 @@ struct DescriptorSet
     void set_deferred(bool _use_deferred) { use_deferred = _use_deferred; }
 
     void set_uniform_buffer(u32 binding, const Buffer* buffer, usize offset, usize range);
-    void set_combined_texture_sampler(u32 binding, GPU::TextureID texture, GPU::TextureLayout layout, Sampler* sampler);
-    void set_combined_texture_sampler_array(u32 binding, Slice<GPU::TextureID> textures, GPU::TextureLayout layout, Slice<Graphics::Sampler*> samplers);
+    void set_combined_texture_sampler(u32 binding, GPU::TextureViewID texture_view, GPU::TextureLayout layout, Sampler* sampler);
+    void set_combined_texture_sampler_array(u32 binding, Slice<GPU::TextureViewID> texture_views, GPU::TextureLayout layout, Slice<Graphics::Sampler*> samplers);
 
     void sync_writes();
 };

@@ -1,12 +1,10 @@
 #pragma once
-#include "core/header.h"
 #include "collections/string.h"
-#include "collections/map_iterator.h"
 #include "collections/base_hash_map.h"
 #include "collections/pair.h"
-#include "debug/assertion.h"
 #include "mem/allocator.h"
 #include "mem/utils.h"
+#include "math/hash.h"
 
 
 template<typename V>
@@ -66,18 +64,15 @@ struct StringHashMapEntry
 template<>
 struct HashOfType<StringView>
 {
+    // FNV-1a
     [[nodiscard]] static constexpr HashCode hashfunc(const StringView& key)
     {
-        HashCode hash = 0xcbf29ce484222325ULL;
-        HashCode i = 0;
-        while(key.len != i)
-        {
-            hash ^= key[i];
-            hash *= 0x100000001b3ULL;
-            i++;
-        }
-        
-        return hash;
+        return Math::Hash::fnv1a(
+            Slice(
+                reinterpret_cast<const u8*>(key.ptr()),
+                key.len
+            )
+        );
     }
 };
 
@@ -93,7 +88,6 @@ struct Comparator<StringView>
 /*
 * A collection of items referenced as a string.
 */
-
 template<typename V>
 using StringMap = BaseHashMap<HashCode, StringHashMapEntry<V>, StringView, V>;
 

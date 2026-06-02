@@ -117,7 +117,8 @@ void SwapChain::_init_images()
     {
         images.get(i) = 
         {
-            .texture = GPU::swap_chain_get_image(swap_chain, i),
+            .image = GPU::swap_chain_get_image(swap_chain, i),
+            .image_view = GPU::swap_chain_get_image_view(swap_chain, i),
         };
     }
 }

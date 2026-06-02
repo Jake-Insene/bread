@@ -40,7 +40,7 @@ struct Renderer2D : Renderer
 
     virtual void render(const FrameInfo& frame_info) override;
 
-    void draw_sprite(const Transform2D& transform, const Color& color, const Rect2D& rect, GPU::TextureID texture);
+    void draw_sprite(const Transform2D& transform, const Color& color, const Rect2D& rect, GPU::TextureViewID texture_view);
     void draw_quad(const Transform2D& transform, const Color& color, const Rect2D& rect);
     void draw_line(const Transform2D& transform, const Color& color, const Vector2& begin, const Vector2& end);
     void draw_circle(const Transform2D& transform, const Color& color, const Vector2& point, f32 radius);

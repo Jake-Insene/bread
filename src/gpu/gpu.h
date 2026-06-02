@@ -4,8 +4,6 @@
 #include "mem/allocator.h"
 #include "math/vec2.h"
 #include "math/vec3.h"
-#include "math/rect_2d.h"
-#include "math/color.h"
 
 
 namespace InternalGPU
@@ -33,6 +31,7 @@ namespace GPU
 		Buffer,
 		Sampler,
 		Texture,
+		TextureView,
 		DescriptorSetLayout,
 		DescriptorPool,
 		DescriptorSet,
@@ -57,6 +56,7 @@ namespace GPU
 	using BufferID = ID<IntegralIDType, struct _BufferTag>;
 	using SamplerID = ID<IntegralIDType, struct _SamplerTag>;
 	using TextureID = ID<IntegralIDType, struct _TextureTag>;
+	using TextureViewID = ID<IntegralIDType, struct _TextureViewTag>;
 	using DescriptorSetLayoutID = ID<IntegralIDType, struct _DescriptorSetLayout>;
 	using DescriptorPoolID = ID<IntegralIDType, struct _DescriptorPoolTag>;
 	using DescriptorSetID = ID<IntegralIDType, struct _DescriptorSet>;
@@ -296,12 +296,10 @@ namespace GPU
 	*/
 	SwapChainID swap_chain_create(const SwapChainCreateInfo& ci);
 
-	/*
-	* 
-	*/
 	void swap_chain_destroy(SwapChainID swap_chain);
 	u32 swap_chain_get_image_count(SwapChainID swap_chain);
 	TextureID swap_chain_get_image(SwapChainID swap_chain, u32 image_index);
+	TextureViewID swap_chain_get_image_view(SwapChainID swap_chain, u32 image_index);
 	AcquireResult swap_chain_acquire_next_image(SwapChainID swap_chain, const AcquireInfo& acquire_info, u32* image_index);
 
 	/*
@@ -359,9 +357,9 @@ namespace GPU
 
 	struct QueuePresentInfo
 	{
-		Slice<SemaphoreID> wait_semaphores;
-		Slice<SwapChainID> swapchains;
-		Slice<u32> image_indices;
+		Slice<const SemaphoreID> wait_semaphores;
+		Slice<const SwapChainID> swapchains;
+		Slice<const u32> image_indices;
 	};
 
 	QueueID queue_create(const QueueCreateInfo& ci);
@@ -371,6 +369,7 @@ namespace GPU
 	void queue_wait_idle(QueueID queue);
 
 	// ====== Resources ======
+	static constexpr u32 MaxRenderAttachmentCount = 8;
 
 	static constexpr u32 ConstantBlockAlignment = 4;
 	static constexpr u32 MaxConstantBlockSize = 128;
@@ -500,7 +499,6 @@ namespace GPU
 
 	SamplerID sampler_create(const SamplerCreateInfo& ci);
 	void sampler_destroy(SamplerID sampler);
-	
 
 	/*
 	* Texture API
@@ -556,7 +554,7 @@ namespace GPU
 		TransferDestination,
 	};
 
-	struct TextureSubresourceRanges
+	struct TextureSubresourceRange
 	{
 		TextureAspect aspect;
 		u32 base_mip_level;
@@ -585,7 +583,7 @@ namespace GPU
 		TextureTiling tiling;
 		TextureUsage usage;
 		TextureLayout initial_layout;
-		TextureSubresourceRanges subresource_range;
+		TextureSubresourceRange subresource_range;
 	};
 
 	TextureID texture_create(const TextureCreateInfo& ci);
@@ -593,6 +591,27 @@ namespace GPU
 
 	MemoryRequirements texture_get_memory_requirements(TextureID texture);
 	void texture_bind_memory_heap(TextureID texture, const BindMemoryInfo& bind_info);
+
+	/*
+	* Texture View
+	*/
+	enum class TextureViewType
+	{
+		Unknown = 0,
+		Texture2D,
+	};
+
+	struct TextureViewCreateInfo
+	{
+		DeviceID device;
+		TextureViewType type;
+		TextureFormat format;
+		TextureID texture;
+		TextureSubresourceRange subresource_range;
+	};
+
+	TextureViewID texture_view_create(const TextureViewCreateInfo& ci);
+	void texture_view_destroy(TextureViewID texture_view);
 
 	/*
 	* Descriptor Set
@@ -648,7 +667,7 @@ namespace GPU
 
 	struct DescriptorTextureInfo
 	{
-		TextureID texture;
+		TextureViewID texture_view;
 		TextureLayout layout;
 		SamplerID sampler;
 	};
@@ -666,13 +685,13 @@ namespace GPU
 		u32 array_element;
 		u32 count;
 		DescriptorType type;
-		Slice<DescriptorTextureInfo> textures;
-		Slice<DescriptorBufferInfo> buffers;
+		Slice<const DescriptorTextureInfo> textures;
+		Slice<const DescriptorBufferInfo> buffers;
 	};
 
 	struct UpdateDescriptorInfo
 	{
-		Slice<WriteDescriptorInfo> write_infos;
+		Slice<const WriteDescriptorInfo> write_infos;
 	};
 
 	DescriptorSetID descriptor_set_allocate(const DescriptorSetAllocateInfo& ci);
@@ -781,8 +800,8 @@ namespace GPU
 
 	struct VertexInput
 	{
-		Slice<VertexBinding> bindings;
-		Slice<VertexAttribute> attributes;
+		Slice<const VertexBinding> bindings;
+		Slice<const VertexAttribute> attributes;
 	};
 
 	struct InputAssembly
@@ -821,7 +840,7 @@ namespace GPU
 
 	struct RenderingInfo
 	{
-		Slice<TextureFormat> render_attachment_formats;
+		Slice<const TextureFormat> render_attachment_formats;
 		TextureFormat depth_attachment_format;
 		TextureFormat stencil_attachment_format;
 	};
@@ -914,9 +933,9 @@ namespace GPU
 
 	struct AttachmentInfo
 	{
-		TextureID texture;
+		TextureViewID texture_view;
 		TextureLayout layout;
-		TextureID resolve_texture;
+		TextureViewID resolve_texture_view;
 		TextureLayout resolve_layout;
 		LoadOp load_op;
 		StoreOp store_op;
@@ -927,7 +946,7 @@ namespace GPU
 	{
 		Vector2I offset;
 		Vector3U extent;
-		Slice<AttachmentInfo> render_attachments;
+		Slice<const AttachmentInfo> render_attachments;
 		AttachmentInfo depth_attachment;
 		AttachmentInfo stencil_attachment;
 	};
@@ -953,7 +972,7 @@ namespace GPU
 		TextureLayout src_layout;
 		TextureLayout dest_layout;
 		TextureID texture;
-		TextureSubresourceRanges subresource_range;
+		TextureSubresourceRange subresource_range;
 	};
 
 	struct BufferCopyRegion
@@ -980,7 +999,7 @@ namespace GPU
 	{
 		BufferID source_buffer;
 		BufferID destination_buffer;
-		Slice<BufferCopyRegion> copy_regions;
+		Slice<const BufferCopyRegion> copy_regions;
 	};
 
 	struct Viewport

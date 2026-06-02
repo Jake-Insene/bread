@@ -151,9 +151,9 @@ void Renderer2D::render(const FrameInfo& frame_info)
 
     GPU::AttachmentInfo render_attachment =
     {
-        .texture = frame_info.image,
+        .texture_view = frame_info.image_view,
         .layout = GPU::TextureLayout::RenderOutput,
-        .resolve_texture = GPU::TextureID::invalid(),
+        .resolve_texture_view = GPU::TextureViewID::invalid(),
         .resolve_layout = GPU::TextureLayout::Unknown,
         .load_op = GPU::LoadOp::Clear,
         .store_op = GPU::StoreOp::Store,
@@ -245,7 +245,7 @@ void Renderer2D::render(const FrameInfo& frame_info)
     );
 }
 
-void Renderer2D::draw_sprite(const Transform2D& transform, const Color& color, const Rect2D& rect, GPU::TextureID texture)
+void Renderer2D::draw_sprite(const Transform2D& transform, const Color& color, const Rect2D& rect, GPU::TextureViewID texture_view)
 {
     batcher.commit_sprite(
         {
@@ -257,7 +257,7 @@ void Renderer2D::draw_sprite(const Transform2D& transform, const Color& color, c
             .rect = rect,
             .uv_rect = Rect2D(),
         },
-        texture, sampler
+        texture_view, sampler
     );
 }
 

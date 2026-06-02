@@ -23,6 +23,7 @@ struct GPUAdapter
 	VTFunc(void, swap_chain_destroy, GPU::SwapChainID swap_chain);
 	VTFunc(u32, swap_chain_get_image_count, GPU::SwapChainID swap_chain);
 	VTFunc(GPU::TextureID, swap_chain_get_image, GPU::SwapChainID swap_chain, u32 image_index);
+	VTFunc(GPU::TextureViewID, swap_chain_get_image_view, GPU::SwapChainID swap_chain, u32 image_index);
 	VTFunc(GPU::AcquireResult, swap_chain_acquire_next_image, GPU::SwapChainID swap_chain, const GPU::AcquireInfo& acquire_info, u32* image_index);
 
 	VTFunc(GPU::FenceID, fence_create, const GPU::FenceCreateInfo& ci);
@@ -57,6 +58,9 @@ struct GPUAdapter
 	VTFunc(void, texture_destroy, GPU::TextureID texture);
 	VTFunc(GPU::MemoryRequirements, texture_get_memory_requirements, GPU::TextureID texture);
 	VTFunc(void, texture_bind_memory_heap, GPU::TextureID texture, const GPU::BindMemoryInfo& bind_info);
+
+	VTFunc(GPU::TextureViewID, texture_view_create, const GPU::TextureViewCreateInfo& ci);
+	VTFunc(void, texture_view_destroy, GPU::TextureViewID texture_view);
 
 	VTFunc(GPU::DescriptorSetLayoutID, descriptor_set_layout_create, const GPU::DescriptorSetLayoutCreateInfo& ci);
 	VTFunc(void, descriptor_set_layout_destroy, GPU::DescriptorSetLayoutID descriptor_set_layout);

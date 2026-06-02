@@ -108,6 +108,10 @@ struct GPUDebugLayer
 			.free_func_name = "GPU::texture_destroy",
 		},
 		{
+			.resource_name = "GPU::TextureViewID",
+			.free_func_name = "GPU::texture_view_destroy",
+		},
+		{
 			.resource_name = "GPU::DescriptorSetLayoutID",
 			.free_func_name = "GPU::descriptor_set_layout_destroy",
 		},
@@ -193,6 +197,10 @@ struct GPUDebugLayer
 		else if constexpr (IsSame<ResourceID, GPU::TextureID>)
 		{
 			return GPU::ObjectType::Texture;
+		}
+		else if constexpr (IsSame<ResourceID, GPU::TextureViewID>)
+		{
+			return GPU::ObjectType::TextureView;
 		}
 		else if constexpr (IsSame<ResourceID, GPU::DescriptorSetLayoutID>)
 		{
