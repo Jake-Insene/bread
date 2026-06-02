@@ -66,7 +66,7 @@ namespace GPU
 	using CommandBufferID = ID<IntegralIDType, struct _CommandBufferTag>;
 
     void initialize(Mem::Allocator* allocator);
-    void initialize_from_adapter(const InternalGPU::GPUAdapter* adapter);
+    void initialize_from_adapter(InternalGPU::GPUAdapter* adapter);
     void shutdown();
 
 	InternalGPU::GPUAdapter* get_adapter();

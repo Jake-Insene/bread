@@ -158,6 +158,7 @@ void GPUResourceManager::destroy_texture(GPUTextureID texture_ref)
 {
     TextureData& texture = textures.get(texture_ref);
     gpu_memory_allocator->free(texture.allocation);
+    GPU::texture_view_destroy(texture.gpu_texture_view);
     GPU::texture_destroy(texture.gpu_texture);
 }
 

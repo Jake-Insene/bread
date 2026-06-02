@@ -43,7 +43,7 @@ void GenericAllocator::destroy()
 
         Header* header = page.first_header;
         usize header_count = 0;
-        while(header)
+        while(header != nullptr)
         {
             page_size_accumulator += header->len + sizeof(Header);
             header_count++;
@@ -181,21 +181,23 @@ void GenericAllocator::free(const Slice<u8>& ptr)
     header->tags = HeaderTags(0);
 
     // TODO: Investigate page corruption.
-    if(header && header->prev && header->prev->tags == 0)
+    if(header != nullptr && header->prev != nullptr
+        && header->prev->tags == 0)
     {
         header->prev->len += header->len + sizeof(Header);
         header->prev->next = header->next;
-        if (header->next)
+        if (header->next != nullptr)
         {
             header->next->prev = header->prev;
         }
         header = header->prev;
     }
-    else if(header && header->next && header->next->tags == 0)
+    else if(header != nullptr && header->next != nullptr
+        && header->next->tags == 0)
     {
         header->len += header->next->len + sizeof(Header);
         header->next = header->next->next;
-        if (header->next)
+        if (header->next != nullptr)
         {
             header->next->prev = header;
         }
@@ -227,7 +229,7 @@ GenericAllocator::Header* GenericAllocator::_search_for_available_space(usize al
         Header* allocated_mem = page.first_header;
         while(allocated_mem != nullptr)
         {
-            if (allocated_mem->tags & Allocated)
+            if (HasValue(allocated_mem->tags & Allocated))
             {
                 allocated_mem = allocated_mem->next;
                 continue;
@@ -255,7 +257,7 @@ GenericAllocator::Header* GenericAllocator::_search_for_available_space(usize al
                 allocated_mem->tags = 0;
                 allocated_mem->index = copied_block.index;
 
-                if(prev)
+                if(prev != nullptr)
                 {
                     prev->len += offset;
                     prev->next = allocated_mem;
@@ -267,7 +269,7 @@ GenericAllocator::Header* GenericAllocator::_search_for_available_space(usize al
 
                 allocated_mem->prev = copied_block.prev;
                 allocated_mem->next = copied_block.next;
-                if (allocated_mem->next)
+                if (allocated_mem->next != nullptr)
                 {
                     allocated_mem->next->prev = allocated_mem;
                 }
@@ -305,7 +307,7 @@ GenericAllocator::Header* GenericAllocator::_search_for_available_space(usize al
                 allocated_mem->len = aligned_size + offset;
                 allocated_mem->next = remain_header;
 
-                if (remain_header->next)
+                if (remain_header->next != nullptr)
                 {
                     remain_header->next->prev = remain_header;
                 }

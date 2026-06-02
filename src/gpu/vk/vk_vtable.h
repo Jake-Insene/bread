@@ -20,14 +20,14 @@ using VkFuncGeneric = void(*)();
     VKFailOn(vk.name == nullptr, "couldn't load the function {}", #name);
 
 #define VK_DEVICE_REQUIRED_LOAD(table, device, name) \
-    table.name = reinterpret_cast<decltype(table.name)>(vk.vkGetDeviceProcAddr(device, #name)); \
-    VKFailOn(table.name == nullptr, "couldn't load the function {}", #name);
+    (table).name = reinterpret_cast<decltype((table).name)>(vk.vkGetDeviceProcAddr(device, #name)); \
+    VKFailOn((table).name == nullptr, "couldn't load the function {}", #name);
 
 #define VK_DEVICE_LOAD(table, device, name) \
-    table.name = reinterpret_cast<decltype(table.name)>(vk.vkGetDeviceProcAddr(device, #name)); \
+    (table).name = reinterpret_cast<decltype((table).name)>(vk.vkGetDeviceProcAddr(device, #name)); \
 
 #define VK_DEVICE_TRY_LOAD(table, device, field, name) \
-    if(table.field == nullptr) table.field = reinterpret_cast<decltype(table.field)>(vk.vkGetDeviceProcAddr(device, #name)); \
+    if((table).field == nullptr) (table).field = reinterpret_cast<decltype((table).field)>(vk.vkGetDeviceProcAddr(device, #name)); \
 
 #define VK_INSTANCE_REQUIRED_LOAD(instance, name) \
     vk.name = reinterpret_cast<decltype(vk.name)>(vk.vkGetInstanceProcAddr(instance, #name)); \

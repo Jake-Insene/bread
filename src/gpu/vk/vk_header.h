@@ -11,6 +11,7 @@
 #define VKFatal(...) Fatal("[VKDriver]: " __VA_ARGS__)
 #define VKFailOn(cond, ...) FailOn(cond, "[VKDriver]: " __VA_ARGS__)
 
+struct VulkanAdapter;
 
 struct Vulkan
 {
@@ -42,7 +43,7 @@ struct Vulkan
         return StringView(vk_str, __string_len(vk_str));
     }
     
-    static VkAllocationCallbacks* allocation_callbacks();
+    static VkAllocationCallbacks* allocation_callbacks(VulkanAdapter* adapter);
     static const char* const* core_device_extensions();
 
     static void load_core_procs(OS::Handle vk_lib);
@@ -50,16 +51,16 @@ struct Vulkan
     static void load_device_procs(DeviceVulkanTable& table, VkDevice device);
 
     static uint32_t get_api_version();
-    static VkInstance create_instance();
+    static VkInstance create_instance(VulkanAdapter* adapter);
 
-    static VkSurfaceKHR create_surface(VkInstance instance, MemoryAddress native_handle);
-    static void destroy_surface(VkInstance instance, VkSurfaceKHR surface);
+    static VkSurfaceKHR create_surface(VulkanAdapter* adapter, VkInstance instance, MemoryAddress native_handle);
     
-    static AdditionalExtensionSupport check_device_extensions(VkPhysicalDevice physical_device);
+    static AdditionalExtensionSupport check_device_extensions(Mem::Allocator* allocator, VkPhysicalDevice physical_device);
     static void check_device_features(VkPhysicalDevice physical_device);
 
-    static const char** get_device_extensions(VkPhysicalDevice physical_device, const AdditionalExtensionSupport& add_ext, Mem::Allocator* allocator, uint32_t* extension_count);
-    static VkPhysicalDeviceFeatures2* get_device_features(const AdditionalExtensionSupport& add_ext, Mem::Allocator* allocator);
+    static const char** get_device_extensions(Mem::Allocator* allocator, VkPhysicalDevice physical_device,
+        const AdditionalExtensionSupport& add_ext, uint32_t* extension_count);
+    static VkPhysicalDeviceFeatures2* get_device_features(Mem::Allocator* allocator, const AdditionalExtensionSupport& add_ext);
 
     static bool _has_extension(const Slice<VkExtensionProperties>& vk_device_extensions, const char* ext_name);
 
@@ -110,6 +111,6 @@ struct Vulkan
         VkSystemAllocationScope allocationScope
     );
 
-    static void _check_instance_extensions();
+    static void _check_instance_extensions(Mem::Allocator* allocator);
 };
 

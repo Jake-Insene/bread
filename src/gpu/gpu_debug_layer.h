@@ -20,18 +20,18 @@ struct ResourceInfo
 
 struct ResourceAllocator
 {
-	Array<u32> allocated;
+	Array<GPU::IntegralIDType> allocated;
 	ResourceInfo info;
 
 	void init(Mem::Allocator* allocator, const ResourceInfo& _info)
 	{
-		allocated = Array<u32>::with_size(allocator, 4);
+		allocated = Array<GPU::IntegralIDType>::with_size(allocator, 4);
 		info = _info;
 	}
 
 	void destroy()
 	{
-		for(u32 id : allocated.iter())
+		for(GPU::IntegralIDType id : allocated.iter())
 		{
 			GPUDebugInfo(
 				"{}({}): Was not deallocated correctly, you may forget to call {}",
@@ -42,12 +42,12 @@ struct ResourceAllocator
 		allocated.destroy();
 	}
 
-	void add(u32 id)
+	void add(GPU::IntegralIDType id)
 	{
 		(void)allocated.add(id);
 	}
 
-	void remove(u32 id)
+	void remove(GPU::IntegralIDType id)
 	{
 		allocated.remove(id);
 	}
@@ -257,7 +257,7 @@ struct GPUDebugLayer
 	template<typename ResourceID>
 	void add(ResourceID resource_id)
 	{
-		u32 as_integer = u32(resource_id.id);
+		GPU::IntegralIDType as_integer = GPU::IntegralIDType(resource_id.integer());
 		resource_allocators.get(
 			usize(GetObjectTypeByIDType<ResourceID>())
 		).add(as_integer);
@@ -266,7 +266,7 @@ struct GPUDebugLayer
 	template<typename ResourceID>
 	void remove(ResourceID resource_id)
 	{
-		u32 as_integer = u32(resource_id.id);
+		GPU::IntegralIDType as_integer = GPU::IntegralIDType(resource_id.integer());
 		resource_allocators.get(
 			usize(GetObjectTypeByIDType<ResourceID>())
 		).remove(as_integer);

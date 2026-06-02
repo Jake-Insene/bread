@@ -7,104 +7,104 @@ namespace InternalGPU
 
 struct GPUAdapter
 {
-	VTFunc(void, initialize, Mem::Allocator*);
-	VTFunc(void, shutdown);
+	virtual void initialize(Mem::Allocator* allocator) = 0;
+	virtual void shutdown() = 0;
 
-	VTFunc(Slice<GPU::PhysicalDeviceID>, physical_devices_enumerate);
-	VTFunc(GPU::PhysicalDeviceInfo, physical_device_get_info, GPU::PhysicalDeviceID physical_device);
-	
-	VTFunc(GPU::SurfaceID, surface_create, const GPU::SurfaceCreateInfo& ci);
-	VTFunc(void, surface_destroy, GPU::SurfaceID surface);
+	virtual Slice<GPU::PhysicalDeviceID> physical_devices_enumerate() = 0;
+	virtual GPU::PhysicalDeviceInfo physical_device_get_info(GPU::PhysicalDeviceID physical_device) = 0;
 
-	VTFunc(GPU::DeviceID, device_create, const GPU::DeviceCreateInfo& ci);
-	VTFunc(void, device_destroy, GPU::DeviceID device);
+	virtual GPU::SurfaceID surface_create(const GPU::SurfaceCreateInfo& ci) = 0;
+	virtual void surface_destroy(GPU::SurfaceID surface) = 0;
 
-	VTFunc(GPU::SwapChainID, swap_chain_create, const GPU::SwapChainCreateInfo& ci);
-	VTFunc(void, swap_chain_destroy, GPU::SwapChainID swap_chain);
-	VTFunc(u32, swap_chain_get_image_count, GPU::SwapChainID swap_chain);
-	VTFunc(GPU::TextureID, swap_chain_get_image, GPU::SwapChainID swap_chain, u32 image_index);
-	VTFunc(GPU::TextureViewID, swap_chain_get_image_view, GPU::SwapChainID swap_chain, u32 image_index);
-	VTFunc(GPU::AcquireResult, swap_chain_acquire_next_image, GPU::SwapChainID swap_chain, const GPU::AcquireInfo& acquire_info, u32* image_index);
+	virtual GPU::DeviceID device_create(const GPU::DeviceCreateInfo& ci) = 0;
+	virtual void device_destroy(GPU::DeviceID device) = 0;
 
-	VTFunc(GPU::FenceID, fence_create, const GPU::FenceCreateInfo& ci);
-	VTFunc(void, fence_destroy, GPU::FenceID fence);
-	VTFunc(bool, fence_get_state, GPU::FenceID fence);
-	VTFunc(void, fence_reset, Slice<GPU::FenceID> fences);
-	VTFunc(void, fence_wait_for, Slice<GPU::FenceID> fences, bool wait_for_all, u64 timeout);
+	virtual GPU::SwapChainID swap_chain_create(const GPU::SwapChainCreateInfo& ci) = 0;
+	virtual void swap_chain_destroy(GPU::SwapChainID swap_chain) = 0;
+	virtual u32 swap_chain_get_image_count(GPU::SwapChainID swap_chain) = 0;
+	virtual GPU::TextureID swap_chain_get_image(GPU::SwapChainID swap_chain, u32 image_index) = 0;
+	virtual GPU::TextureViewID swap_chain_get_image_view(GPU::SwapChainID swap_chain, u32 image_index) = 0;
+	virtual GPU::AcquireResult swap_chain_acquire_next_image(GPU::SwapChainID swap_chain, const GPU::AcquireInfo& acquire_info, u32* image_index) = 0;
 
-	VTFunc(GPU::SemaphoreID, semaphore_create, const GPU::SemaphoreCreateInfo& ci);
-	VTFunc(void, semaphore_destroy, GPU::SemaphoreID semaphore);
+	virtual GPU::FenceID fence_create(const GPU::FenceCreateInfo& ci) = 0;
+	virtual void fence_destroy(GPU::FenceID fence) = 0;
+	virtual bool fence_get_state(GPU::FenceID fence) = 0;
+	virtual void fence_reset(Slice<GPU::FenceID> fences) = 0;
+	virtual void fence_wait_for(Slice<GPU::FenceID> fences, bool wait_for_all, u64 timeout) = 0;
 
-	VTFunc(GPU::QueueID, queue_create, const GPU::QueueCreateInfo& ci);
-	VTFunc(void, queue_destroy, GPU::QueueID queue);
-	VTFunc(void, queue_execute_command_buffer, GPU::QueueID queue, const GPU::QueueExecuteInfo& execute_info);
-	VTFunc(GPU::AcquireResult, queue_present, GPU::QueueID queue, const GPU::QueuePresentInfo& present_info);
-	VTFunc(void, queue_wait_idle, GPU::QueueID queue);
+	virtual GPU::SemaphoreID semaphore_create(const GPU::SemaphoreCreateInfo& ci) = 0;
+	virtual void semaphore_destroy(GPU::SemaphoreID semaphore) = 0;
 
-	VTFunc(GPU::MemoryHeapID, memory_heap_create, const GPU::MemoryHeapCreateInfo& ci);
-	VTFunc(void, memory_heap_destroy, GPU::MemoryHeapID memory_heap);
-	VTFunc(Slice<u8>, memory_heap_map, GPU::MemoryHeapID memory_heap, usize offset, usize len);
-	VTFunc(void, memory_heap_unmap, GPU::MemoryHeapID memory_heap, const Slice<u8>& memory);
+	virtual GPU::QueueID queue_create(const GPU::QueueCreateInfo& ci) = 0;
+	virtual void queue_destroy(GPU::QueueID queue) = 0;
+	virtual void queue_execute_command_buffer(GPU::QueueID queue, const GPU::QueueExecuteInfo& execute_info) = 0;
+	virtual GPU::AcquireResult queue_present(GPU::QueueID queue, const GPU::QueuePresentInfo& present_info) = 0;
+	virtual void queue_wait_idle(GPU::QueueID queue) = 0;
 
-	VTFunc(GPU::BufferID, buffer_create, const GPU::BufferCreateInfo& ci);
-	VTFunc(void, buffer_destroy, GPU::BufferID buffer);
-	VTFunc(GPU::MemoryRequirements, buffer_get_memory_requirements, GPU::BufferID buffer);
-	VTFunc(void, buffer_bind_memory_heap, GPU::BufferID buffer, const GPU::BindMemoryInfo& bind_info);
+	virtual GPU::MemoryHeapID memory_heap_create(const GPU::MemoryHeapCreateInfo& ci) = 0;
+	virtual void memory_heap_destroy(GPU::MemoryHeapID memory_heap) = 0;
+	virtual Slice<u8> memory_heap_map(GPU::MemoryHeapID memory_heap, usize offset, usize len) = 0;
+	virtual void memory_heap_unmap(GPU::MemoryHeapID memory_heap, const Slice<u8>& memory) = 0;
 
-	VTFunc(GPU::SamplerID, sampler_create, const GPU::SamplerCreateInfo& ci);
-	VTFunc(void, sampler_destroy, GPU::SamplerID sampler);
+	virtual GPU::BufferID buffer_create(const GPU::BufferCreateInfo& ci) = 0;
+	virtual void buffer_destroy(GPU::BufferID buffer) = 0;
+	virtual GPU::MemoryRequirements buffer_get_memory_requirements(GPU::BufferID buffer) = 0;
+	virtual void buffer_bind_memory_heap(GPU::BufferID buffer, const GPU::BindMemoryInfo& bind_info) = 0;
 
-	VTFunc(GPU::TextureID, texture_create, const GPU::TextureCreateInfo& ci);
-	VTFunc(void, texture_destroy, GPU::TextureID texture);
-	VTFunc(GPU::MemoryRequirements, texture_get_memory_requirements, GPU::TextureID texture);
-	VTFunc(void, texture_bind_memory_heap, GPU::TextureID texture, const GPU::BindMemoryInfo& bind_info);
+	virtual GPU::SamplerID sampler_create(const GPU::SamplerCreateInfo& ci) = 0;
+	virtual void sampler_destroy(GPU::SamplerID sampler) = 0;
 
-	VTFunc(GPU::TextureViewID, texture_view_create, const GPU::TextureViewCreateInfo& ci);
-	VTFunc(void, texture_view_destroy, GPU::TextureViewID texture_view);
+	virtual GPU::TextureID texture_create(const GPU::TextureCreateInfo& ci) = 0;
+	virtual void texture_destroy(GPU::TextureID texture) = 0;
+	virtual GPU::MemoryRequirements texture_get_memory_requirements(GPU::TextureID texture) = 0;
+	virtual void texture_bind_memory_heap(GPU::TextureID texture, const GPU::BindMemoryInfo& bind_info) = 0;
 
-	VTFunc(GPU::DescriptorSetLayoutID, descriptor_set_layout_create, const GPU::DescriptorSetLayoutCreateInfo& ci);
-	VTFunc(void, descriptor_set_layout_destroy, GPU::DescriptorSetLayoutID descriptor_set_layout);
+	virtual GPU::TextureViewID texture_view_create(const GPU::TextureViewCreateInfo& ci) = 0;
+	virtual void texture_view_destroy(GPU::TextureViewID texture_view) = 0;
 
-	VTFunc(GPU::DescriptorPoolID, descriptor_pool_create, const GPU::DescriptorPoolCreateInfo& ci);
-	VTFunc(void, descriptor_pool_destroy, GPU::DescriptorPoolID descriptor_pool);
+	virtual GPU::DescriptorSetLayoutID descriptor_set_layout_create(const GPU::DescriptorSetLayoutCreateInfo& ci) = 0;
+	virtual void descriptor_set_layout_destroy(GPU::DescriptorSetLayoutID descriptor_set_layout) = 0;
 
-	VTFunc(GPU::DescriptorSetID, descriptor_set_allocate, const GPU::DescriptorSetAllocateInfo& ci);
-	VTFunc(void, descriptor_set_free, GPU::DescriptorSetID descriptor_set);
-	VTFunc(void, descriptor_set_update_descriptors, GPU::DescriptorSetID descriptor_set, const GPU::UpdateDescriptorInfo& update_info);
+	virtual GPU::DescriptorPoolID descriptor_pool_create(const GPU::DescriptorPoolCreateInfo& ci) = 0;
+	virtual void descriptor_pool_destroy(GPU::DescriptorPoolID descriptor_pool) = 0;
 
-	VTFunc(GPU::PipelineLayoutID, pipeline_layout_create, const GPU::PipelineLayoutCreateInfo& ci);
-	VTFunc(void, pipeline_layout_destroy, GPU::PipelineLayoutID pipeline_layout);
+	virtual GPU::DescriptorSetID descriptor_set_allocate(const GPU::DescriptorSetAllocateInfo& ci) = 0;
+	virtual void descriptor_set_free(GPU::DescriptorSetID descriptor_set) = 0;
+	virtual void descriptor_set_update_descriptors(GPU::DescriptorSetID descriptor_set, const GPU::UpdateDescriptorInfo& update_info) = 0;
 
-	VTFunc(GPU::PipelineID, pipeline_create, const GPU::PipelineCreateInfo& ci);
-	VTFunc(void, pipeline_destroy, GPU::PipelineID pipeline);
+	virtual GPU::PipelineLayoutID pipeline_layout_create(const GPU::PipelineLayoutCreateInfo& ci) = 0;
+	virtual void pipeline_layout_destroy(GPU::PipelineLayoutID pipeline_layout) = 0;
 
-	VTFunc(GPU::CommandPoolID, command_pool_create, const GPU::CommandPoolCreateInfo& ci);
-	VTFunc(void, command_pool_destroy, GPU::CommandPoolID command_pool);
-	
-	VTFunc(GPU::CommandBufferID, command_buffer_allocate, const GPU::CommandBufferAllocateInfo& ci);
-	VTFunc(void, command_buffer_free, GPU::CommandBufferID command_buffer);
+	virtual GPU::PipelineID pipeline_create(const GPU::PipelineCreateInfo& ci) = 0;
+	virtual void pipeline_destroy(GPU::PipelineID pipeline) = 0;
 
-	VTFunc(void, command_buffer_begin, GPU::CommandBufferID command_buffer);
-	VTFunc(void, command_buffer_end, GPU::CommandBufferID command_buffer);
-	VTFunc(void, command_buffer_begin_renderpass, GPU::CommandBufferID command_buffer, const GPU::RenderPassBeginInfo& begin_info);
-	VTFunc(void, command_buffer_end_renderpass, GPU::CommandBufferID command_buffer, const GPU::RenderPassEndInfo& end_info);
+	virtual GPU::CommandPoolID command_pool_create(const GPU::CommandPoolCreateInfo& ci) = 0;
+	virtual void command_pool_destroy(GPU::CommandPoolID command_pool) = 0;
+		
+	virtual GPU::CommandBufferID command_buffer_allocate(const GPU::CommandBufferAllocateInfo& ci) = 0;
+	virtual void command_buffer_free(GPU::CommandBufferID command_buffer) = 0;
 
-	VTFunc(void, command_buffer_memory_barrier, GPU::CommandBufferID command_buffer, const GPU::PipelineMemoryBarrier& memory_barrier);
-	VTFunc(void, command_buffer_buffer_barrier, GPU::CommandBufferID command_buffer, const GPU::PipelineBufferBarrier& buffer_barrier);
-	VTFunc(void, command_buffer_texture_barrier, GPU::CommandBufferID command_buffer, const GPU::PipelineTextureBarrier& texture_barrier);
+	virtual void command_buffer_begin(GPU::CommandBufferID command_buffer) = 0;
+	virtual void command_buffer_end(GPU::CommandBufferID command_buffer) = 0;
+	virtual void command_buffer_begin_renderpass(GPU::CommandBufferID command_buffer, const GPU::RenderPassBeginInfo& begin_info) = 0;
+	virtual void command_buffer_end_renderpass(GPU::CommandBufferID command_buffer, const GPU::RenderPassEndInfo& end_info) = 0;
 
-	VTFunc(void, command_buffer_copy_buffer_to_texture, GPU::CommandBufferID command_buffer, const GPU::CopyBufferToTextureInfo& copy_info);
-	VTFunc(void, command_buffer_copy_buffer, GPU::CommandBufferID command_buffer, const GPU::BufferCopyInfo& copy_info);
+	virtual void command_buffer_memory_barrier(GPU::CommandBufferID command_buffer, const GPU::PipelineMemoryBarrier& memory_barrier) = 0;
+	virtual void command_buffer_buffer_barrier(GPU::CommandBufferID command_buffer, const GPU::PipelineBufferBarrier& buffer_barrier) = 0;
+	virtual void command_buffer_texture_barrier(GPU::CommandBufferID command_buffer, const GPU::PipelineTextureBarrier& texture_barrier) = 0;
 
-	VTFunc(void, command_buffer_bind_pipeline, GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineID pipeline);
-	VTFunc(void, command_buffer_bind_descriptor_sets, GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineLayoutID pipeline_layout, u32 base_set, const Slice<GPU::DescriptorSetID>& descriptor_sets);
-	VTFunc(void, command_buffer_bind_vertex_buffers, GPU::CommandBufferID command_buffer, u32 base_binding, const Slice<GPU::BufferID>& buffers, const Slice<usize>& offsets);
-	VTFunc(void, command_buffer_constant_block, GPU::CommandBufferID command_buffer, GPU::PipelineLayoutID pipeline_layout, GPU::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address);
-	
-	VTFunc(void, command_buffer_set_viewports, GPU::CommandBufferID command_buffer, u32 base_viewport, const Slice<GPU::Viewport>& viewports);
-	VTFunc(void, command_buffer_set_scissors, GPU::CommandBufferID command_buffer, u32 base_scissor, const Slice<GPU::Scissor>& scissors);
+	virtual void command_buffer_copy_buffer_to_texture(GPU::CommandBufferID command_buffer, const GPU::CopyBufferToTextureInfo& copy_info) = 0;
+	virtual void command_buffer_copy_buffer(GPU::CommandBufferID command_buffer, const GPU::BufferCopyInfo& copy_info) = 0;
 
-	VTFunc(void, command_buffer_draw, GPU::CommandBufferID command_buffer, u32 vertex_count, u32 instance_count, u32 base_vertex, u32 base_instance);
+	virtual void command_buffer_bind_pipeline(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineID pipeline) = 0;
+	virtual void command_buffer_bind_descriptor_sets(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineLayoutID pipeline_layout, u32 base_set, const Slice<GPU::DescriptorSetID>& descriptor_sets) = 0;
+	virtual void command_buffer_bind_vertex_buffers(GPU::CommandBufferID command_buffer, u32 base_binding, const Slice<GPU::BufferID>& buffers, const Slice<usize>& offsets) = 0;
+	virtual void command_buffer_constant_block(GPU::CommandBufferID command_buffer, GPU::PipelineLayoutID pipeline_layout, GPU::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address) = 0;
+		
+	virtual void command_buffer_set_viewports(GPU::CommandBufferID command_buffer, u32 base_viewport, const Slice<GPU::Viewport>& viewports) = 0;
+	virtual void command_buffer_set_scissors(GPU::CommandBufferID command_buffer, u32 base_scissor, const Slice<GPU::Scissor>& scissors) = 0;
+
+	virtual void command_buffer_draw(GPU::CommandBufferID command_buffer, u32 vertex_count, u32 instance_count, u32 base_vertex, u32 base_instance) = 0;
 };
 
 }

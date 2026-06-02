@@ -127,7 +127,7 @@ file(GLOB ENGINE_SRC
 )
 
 file(GLOB VULKAN_ADAPTER_SRC
-    src/gpu/vk/vk_driver.cpp
+    src/gpu/vk/vk_adapter.cpp
     src/gpu/vk/vk_header.cpp
     src/gpu/vk/vk_utils.cpp
 )
