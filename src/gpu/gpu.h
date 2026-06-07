@@ -340,10 +340,17 @@ namespace GPU
 		Present,
 	};
 
-	struct QueueCreateInfo
+	struct QueueGetCountInfo
 	{
 		DeviceID device;
 		QueueUsage usage;
+	};
+
+	struct QueueGetInfo
+	{
+		DeviceID device;
+		QueueUsage usage;
+		u32 index;
 	};
 
 	struct QueueExecuteInfo
@@ -362,8 +369,8 @@ namespace GPU
 		Slice<const u32> image_indices;
 	};
 
-	QueueID queue_create(const QueueCreateInfo& ci);
-	void queue_destroy(QueueID queue);
+	u32 queue_get_count(const QueueGetCountInfo& gci);
+	QueueID queue_get(const QueueGetInfo& gi);
 	void queue_execute_command_buffer(QueueID queue, const QueueExecuteInfo& execute_info);
 	AcquireResult queue_present(QueueID queue, const QueuePresentInfo& present_info);
 	void queue_wait_idle(QueueID queue);
@@ -547,7 +554,7 @@ namespace GPU
 	enum class TextureLayout
 	{
 		Unknown = 0,
-		RenderOutput,
+		RenderAttachment,
 		Present,
 		ShaderReadOnly,
 		TransferSource,
@@ -561,6 +568,18 @@ namespace GPU
 		u32 level_count;
 		u32 base_array_layer;
 		u32 layer_count;
+
+		static constexpr TextureSubresourceRange color(u32 base_mip_level, u32 level_count, u32 base_array_layer, u32 layer_count)
+		{
+			return TextureSubresourceRange
+			{
+				.aspect = GPU::TextureAspect::Color,
+				.base_mip_level = base_mip_level,
+				.level_count = level_count,
+				.base_array_layer = base_array_layer,
+				.layer_count = layer_count,
+			};
+		}
 	};
 
 	struct TextureSubresourceLayers
@@ -888,8 +907,8 @@ namespace GPU
 
 	enum class AccessMasks
 	{
-		RenderOutputRead = Bit(0),
-		RenderOutputWrite = Bit(1),
+		RenderAttachmentRead = Bit(0),
+		RenderAttachmentWrite = Bit(1),
 		TransferRead = Bit(2),
 		TransferWrite = Bit(3),
 		ShaderRead = Bit(4),
@@ -924,6 +943,20 @@ namespace GPU
 	{
 		ClearColor clear_color;
 		ClearDepthStencil depth_stencil;
+
+		static constexpr ClearValue rgba(f32 red, f32 green, f32 blue, f32 alpha)
+		{
+			return ClearValue
+			{
+				.clear_color =
+				{
+					.r = red,
+					.g = green,
+					.b = blue,
+					.a = alpha,
+				}
+			};
+		}
 	};
 
 	struct CommandBufferAllocateInfo
@@ -1010,6 +1043,19 @@ namespace GPU
 		f32 height;
 		f32 min_depth;
 		f32 max_depth;
+
+		static constexpr Viewport only_size(f32 width, f32 height)
+		{
+			return Viewport
+			{
+				.x = 0,
+				.y = 0,
+				.width = width,
+				.height = height,
+				.min_depth = 0.F,
+				.max_depth = 1.F,
+			};
+		}
 	};
 
 	struct Scissor
@@ -1018,6 +1064,28 @@ namespace GPU
 		i32 y;
 		u32 width;
 		u32 height;
+
+		static constexpr Scissor only_size(u32 width, u32 height)
+		{
+			return Scissor
+			{
+				.x = 0,
+				.y = 0,
+				.width = width,
+				.height = height,
+			};
+		}
+
+		static constexpr Scissor make_scissor(i32 x, i32 y, u32 width, u32 height)
+		{
+			return Scissor
+			{
+				.x = x,
+				.y = y,
+				.width = width,
+				.height = height,
+			};
+		}
 	};
 
 	CommandBufferID command_buffer_allocate(const CommandBufferAllocateInfo& ci);
@@ -1041,8 +1109,8 @@ namespace GPU
 	void command_buffer_bind_vertex_buffers(CommandBufferID command_buffer, u32 base_binding, const Slice<BufferID>& buffers, const Slice<usize>& offsets);
 	void command_buffer_constant_block(CommandBufferID command_buffer, PipelineLayoutID pipeline_layout, ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address);
 
-	void command_buffer_set_viewports(CommandBufferID command_buffer, u32 base_viewport, const Slice<Viewport>& viewports);
-	void command_buffer_set_scissors(CommandBufferID command_buffer, u32 base_scissor, const Slice<Scissor>& scissors);
+	void command_buffer_set_viewports(CommandBufferID command_buffer, u32 base_viewport, const Slice<const Viewport>& viewports);
+	void command_buffer_set_scissors(CommandBufferID command_buffer, u32 base_scissor, const Slice<const Scissor>& scissors);
 
 	void command_buffer_draw(CommandBufferID command_buffer, u32 vertex_count, u32 instance_count, u32 base_vertex, u32 base_instance);
 };

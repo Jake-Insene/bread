@@ -97,6 +97,7 @@ struct VulkanAdapter : InternalGPU::GPUAdapter
 		Level1,
 	};
 
+	static constexpr usize MaxQueueFamilyCount = usize(GPU::QueueUsage::Present);
 	struct LogicalDevice
 	{
 		VkDevice vk_device;
@@ -109,18 +110,12 @@ struct VulkanAdapter : InternalGPU::GPUAdapter
 
 		struct QueueFamily
 		{
-			GPU::QueueUsage usage;
 			uint32_t vk_family_index;
 			Slice<VkQueue> vk_queues;
+			Slice<GPU::QueueID> queue_ids;
 		};
 
-		struct DeviceQueue
-		{
-			usize family_index;
-		};
-
-		Slice<QueueFamily> families;
-		Slice<DeviceQueue> device_queues;
+		QueueFamily families[MaxQueueFamilyCount];
 
 		DeviceVulkanTable vk;
 		
@@ -174,7 +169,9 @@ struct VulkanAdapter : InternalGPU::GPUAdapter
 		VkDevice vk_device;
 		VkQueue vk_queue;
 
-		usize device_queue_index;
+		uint32_t family_index;
+		uint32_t queue_index;
+
 		GPU::DeviceID device;
 		GPU::QueueID queue;
 	};
@@ -313,7 +310,9 @@ struct VulkanAdapter : InternalGPU::GPUAdapter
 	FreeList<SwapChain, GPU::SwapChainID> swap_chains;
 	FreeList<Fence, GPU::FenceID> fences;
 	FreeList<Semaphore, GPU::SemaphoreID> semaphores;
-	FreeList<Queue, GPU::QueueID> queues;
+
+	// Device will allocate more queue infos, so the GPU::QueueID can be unique per device created.
+	Array<Queue> queues;
 	FreeList<MemoryHeap, GPU::MemoryHeapID> memory_heaps;
 	FreeList<Buffer, GPU::BufferID> buffers;
 	FreeList<Sampler, GPU::SamplerID> samplers;
@@ -373,8 +372,8 @@ struct VulkanAdapter : InternalGPU::GPUAdapter
 	virtual GPU::SemaphoreID semaphore_create(const GPU::SemaphoreCreateInfo& ci) override;
 	virtual void semaphore_destroy(GPU::SemaphoreID semaphore) override;
 
-	virtual GPU::QueueID queue_create(const GPU::QueueCreateInfo& ci) override;
-	virtual void queue_destroy(GPU::QueueID queue) override;
+	virtual u32 queue_get_count(const GPU::QueueGetCountInfo& gci) override;
+	virtual GPU::QueueID queue_get(const GPU::QueueGetInfo& gi) override;
 	virtual void queue_execute_command_buffer(GPU::QueueID queue, const GPU::QueueExecuteInfo& execute_info) override;
 	virtual GPU::AcquireResult queue_present(GPU::QueueID queue, const GPU::QueuePresentInfo& present_info) override;
 	virtual void queue_wait_idle(GPU::QueueID queue) override;
@@ -439,8 +438,8 @@ struct VulkanAdapter : InternalGPU::GPUAdapter
 	virtual void command_buffer_bind_vertex_buffers(GPU::CommandBufferID command_buffer, u32 base_binding, const Slice<GPU::BufferID>& buffers, const Slice<usize>& offsets) override;
 	virtual void command_buffer_constant_block(GPU::CommandBufferID command_buffer, GPU::PipelineLayoutID pipeline_layout, GPU::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address) override;
 
-	virtual void command_buffer_set_viewports(GPU::CommandBufferID command_buffer, u32 base_viewport, const Slice<GPU::Viewport>& viewports) override;
-	virtual void command_buffer_set_scissors(GPU::CommandBufferID command_buffer, u32 base_scissor, const Slice<GPU::Scissor>& scissors) override;
+	virtual void command_buffer_set_viewports(GPU::CommandBufferID command_buffer, u32 base_viewport, const Slice<const GPU::Viewport>& viewports) override;
+	virtual void command_buffer_set_scissors(GPU::CommandBufferID command_buffer, u32 base_scissor, const Slice<const GPU::Scissor>& scissors) override;
 
 	virtual void command_buffer_draw(GPU::CommandBufferID command_buffer, u32 vertex_count, u32 instance_count, u32 base_vertex, u32 base_instance) override;
 
@@ -449,7 +448,7 @@ struct VulkanAdapter : InternalGPU::GPUAdapter
 	SwapChain& _get_swap_chain(GPU::SwapChainID swap_chain) { return swap_chains.get(swap_chain); }
 	Fence& _get_fence(GPU::FenceID fence) { return fences.get(fence); }
 	Semaphore& _get_semaphore(GPU::SemaphoreID semaphore) { return semaphores.get(semaphore); }
-	Queue& _get_queue(GPU::QueueID queue) { return queues.get(queue); }
+	Queue& _get_queue(GPU::QueueID queue) { return queues.get(queue.integer()); }
 	MemoryHeap& _get_memory_heap(GPU::MemoryHeapID memory_heap) { return memory_heaps.get(memory_heap); }
 	Buffer& _get_buffer(GPU::BufferID buffer) { return buffers.get(buffer); }
 	Sampler& _get_sampler(GPU::SamplerID sampler) { return samplers.get(sampler); }
@@ -464,10 +463,6 @@ struct VulkanAdapter : InternalGPU::GPUAdapter
 	CommandBuffer& _get_command_buffer(GPU::CommandBufferID command_buffer) { return command_buffers.get(command_buffer); }
 
 	void _get_physical_devices();
-	
-	void _vk_get_surface_format(GPU::TextureFormat surface_format, VkFormat* vk_image_format, VkColorSpaceKHR* vk_color_space);
-	VkSurfaceCapabilitiesKHR _vk_get_surface_capabilities(VkPhysicalDevice vk_physical_device, VkSurfaceKHR vk_surface);
-	VkExtent2D _vk_get_swap_chain_extent(const Vector2U& size, const VkSurfaceCapabilitiesKHR& vk_capabilities);
 
 	VkShaderModule _vk_create_shader_module(LogicalDevice& ld, const GPU::ShaderStageInfo& shader_stage_info);
 
@@ -476,7 +471,16 @@ struct VulkanAdapter : InternalGPU::GPUAdapter
 	void _get_render_pass_and_framebuffer_for(LogicalDevice& ld, const GPU::RenderPassBeginInfo& begin_info,
 		VkRenderPass* vk_render_pass, VkFramebuffer* vk_framebuffer);
 
-	GPU::DeviceType _vk_device_type_to_device_type(VkPhysicalDeviceType vk_device_type);
-	GPU::PresentMode _vk_present_mode_to_present_mode(VkPresentModeKHR vk_present_mode);
-	GPU::HeapUsage _vk_memory_property_to_heap_usage(VkMemoryPropertyFlags vk_memory_properties);
+	static GPU::DeviceType _vk_device_type_to_device_type(VkPhysicalDeviceType vk_device_type);
+	static GPU::PresentMode _vk_present_mode_to_present_mode(VkPresentModeKHR vk_present_mode);
+	static GPU::HeapUsage _vk_memory_property_to_heap_usage(VkMemoryPropertyFlags vk_memory_properties);
+
+	static uint32_t _get_queue_family_for(const Slice<VkQueueFamilyProperties2>& vk_families,
+		const Slice<u32>& acquired, VkQueueFlags vk_queue_flags);
+	static uint32_t _get_queue_family_for_present(VkPhysicalDevice vk_physical_device, VkSurfaceKHR vk_surface,
+		const Slice<VkQueueFamilyProperties2>& vk_families);
+	
+	static void _vk_get_surface_format(GPU::TextureFormat surface_format, VkFormat* vk_image_format, VkColorSpaceKHR* vk_color_space);
+	static VkSurfaceCapabilitiesKHR _vk_get_surface_capabilities(VkPhysicalDevice vk_physical_device, VkSurfaceKHR vk_surface);
+	static VkExtent2D _vk_get_swap_chain_extent(const Vector2U& size, const VkSurfaceCapabilitiesKHR& vk_capabilities);
 };

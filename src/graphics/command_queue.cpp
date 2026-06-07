@@ -104,7 +104,7 @@ Fence* CommandQueue::execute(const CommandQueueExecuteInfo& info)
         {
             .wait_semaphores = gpu_wait_semaphores,
             .wait_stages = info.wait_stages,
-            .command_buffers = Slice<const GPU::CommandBufferID>(&info.encoder.command_buffer, 1),
+            .command_buffers = Slice<const GPU::CommandBufferID>(&info.encoder->command_buffer, 1),
             .signal_semaphores = gpu_signal_semaphores,
             .fence = fence->gpu_fence,
         }
@@ -116,7 +116,7 @@ Fence* CommandQueue::execute(const CommandQueueExecuteInfo& info)
         WorkSubmit
         {
             .fence = fence,
-            .encoder = info.encoder,
+            .encoder = *info.encoder,
             .empty = false,
         }
     );
@@ -207,7 +207,7 @@ void CommandQueue::release_fence(Fence* fence)
 
         work_data.fence->reset();
         gpu_free_fences.push(work_data.fence);
-        if(work_data.empty == false)
+        if(!work_data.empty)
         {
             free_encoders.push(work_data.encoder);
         }
@@ -228,13 +228,13 @@ void CommandQueue::_remove_finished_work()
     for(usize i = 0; i < work_submited.count; i++)
     {
         WorkSubmit& work_data = work_submited.get(i);
-        if(work_data.fence->get_state() == false)
+        if(!work_data.fence->get_state())
         {
             continue;
         }
 
         gpu_free_fences.push(work_data.fence);
-        if(work_data.empty == false)
+        if(!work_data.empty)
         {
             free_encoders.push(work_data.encoder);
         }

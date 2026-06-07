@@ -48,7 +48,6 @@ file(GLOB ENGINE_SRC
     src/graphics/device.cpp
     src/graphics/fence.cpp
     src/graphics/memory_heap.cpp
-    src/graphics/pipeline_2d.cpp
     src/graphics/pipeline_layout.cpp
     src/graphics/pipeline.cpp
     src/graphics/queue.cpp
@@ -109,9 +108,10 @@ file(GLOB ENGINE_SRC
 
     src/renderer/framed_buffer.cpp
     src/renderer/framed_pool.cpp
+    src/renderer/render_pass.cpp
     src/renderer/renderer_2d.cpp
-    src/renderer/renderer_batch_2d.cpp
     src/renderer/renderer.cpp
+    src/renderer/sprite_renderer.cpp
     
     src/resource/font.cpp
     src/resource/image.cpp

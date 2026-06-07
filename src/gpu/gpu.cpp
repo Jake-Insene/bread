@@ -180,17 +180,21 @@ void GPU::semaphore_destroy(SemaphoreID semaphore)
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(semaphore, current_adapter->semaphore_destroy(semaphore));
 }
 
-GPU::QueueID GPU::queue_create(const QueueCreateInfo& ci)
+u32 GPU::queue_get_count(const QueueGetCountInfo& gci)
 {
-    GPUValidationCheck(ci.device.is_valid() == false, "invalid device");
-    GPUValidationCheck(ci.usage == GPU::QueueUsage::Unknown, "invalid queue usage");
-	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->queue_create(ci));
+    GPUValidationCheck(gci.device.is_valid() == false, "invalid device");
+    GPUValidationCheck(gci.usage == GPU::QueueUsage::Unknown, "invalid queue usage");
+
+	return current_adapter->queue_get_count(gci);
 }
 
-void GPU::queue_destroy(QueueID queue)
+GPU::QueueID GPU::queue_get(const QueueGetInfo& gi)
 {
-    GPUValidationCheck(queue.is_valid() == false, "invalid queue");
-	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(queue, current_adapter->queue_destroy(queue));
+    GPUValidationCheck(gi.device.is_valid() == false, "invalid device");
+    GPUValidationCheck(gi.usage == QueueUsage::Unknown, "invalid queue usage");
+    GPUValidationCheck(gi.index >= queue_get_count({.device = gi.device, .usage = gi.usage}), "invalid queue index");
+
+	return current_adapter->queue_get(gi);
 }
 
 void GPU::queue_execute_command_buffer(QueueID queue, const QueueExecuteInfo& execute_info)
@@ -564,13 +568,13 @@ void GPU::command_buffer_constant_block(GPU::CommandBufferID command_buffer, Pip
 	current_adapter->command_buffer_constant_block(command_buffer, pipeline_layout, stages, offset, size, block_address);
 }
 
-void GPU::command_buffer_set_viewports(CommandBufferID command_buffer, u32 base_viewport, const Slice<Viewport>& viewports)
+void GPU::command_buffer_set_viewports(CommandBufferID command_buffer, u32 base_viewport, const Slice<const Viewport>& viewports)
 {
     GPUValidationCheck(command_buffer.is_valid() == false, "invalid command buffer");
 	current_adapter->command_buffer_set_viewports(command_buffer, base_viewport, viewports);
 }
 
-void GPU::command_buffer_set_scissors(CommandBufferID command_buffer, u32 base_scissor, const Slice<Scissor>& scissors)
+void GPU::command_buffer_set_scissors(CommandBufferID command_buffer, u32 base_scissor, const Slice<const Scissor>& scissors)
 {
     GPUValidationCheck(command_buffer.is_valid() == false, "invalid command buffer");
 	current_adapter->command_buffer_set_scissors(command_buffer, base_scissor, scissors);

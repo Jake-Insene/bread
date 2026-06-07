@@ -164,76 +164,78 @@ void DescriptorSet::set_combined_texture_sampler_array(u32 binding, Slice<GPU::T
 
 void DescriptorSet::sync_writes()
 {
-    if(use_deferred && deferred_writes.count != 0)
+    if(!use_deferred && deferred_writes.count == 0)
     {
-        Slice<GPU::WriteDescriptorInfo> writes = allocator->array<GPU::WriteDescriptorInfo>(deferred_writes.count);
-        Slice<GPU::DescriptorBufferInfo> buffers = allocator->array<GPU::DescriptorBufferInfo>(deferred_buffers);
-        Slice<GPU::DescriptorTextureInfo> textures = allocator->array<GPU::DescriptorTextureInfo>(deferred_textures);
+        return;
+    }
 
-        usize buffer_index = 0;
-        usize texture_index = 0;
-        for(usize i = 0; i < writes.len; i++)
-        {
-            const DeferredWrite& deferred_write = deferred_writes.get(i);
-            writes[i].binding = deferred_write.binding;
-            writes[i].array_element = 0;
-            writes[i].count = 1;
-            writes[i].type = deferred_write.type;
+    Slice<GPU::WriteDescriptorInfo> writes = allocator->array<GPU::WriteDescriptorInfo>(deferred_writes.count);
+    Slice<GPU::DescriptorBufferInfo> buffers = allocator->array<GPU::DescriptorBufferInfo>(deferred_buffers);
+    Slice<GPU::DescriptorTextureInfo> textures = allocator->array<GPU::DescriptorTextureInfo>(deferred_textures);
 
-            if(IsAnyEqual(deferred_write.type, GPU::DescriptorType::UniformBuffer, GPU::DescriptorType::StorageBuffer))
-            {
-                if(deferred_write.write_array.buffers.len != 0)
-                {
-                    writes[i].count = deferred_write.write_array.buffers.len;
-                    writes[i].buffers = deferred_write.write_array.buffers;
-                }
-                else
-                {
-                    buffers[buffer_index] = deferred_write.write.buffer;
-                    writes[i].buffers = Slice(&buffers[buffer_index], 1);
-                }
-                buffer_index++;
-            }
-            else if(IsAnyEqual(deferred_write.type, GPU::DescriptorType::CombinedTextureSampler))
-            {
-                if(deferred_write.write_array.textures.len != 0)
-                {
-                    writes[i].count = deferred_write.write_array.textures.len;
-                    writes[i].textures = deferred_write.write_array.textures;
-                }
-                else {
-                    textures[texture_index] = deferred_write.write.texture;
-                    writes[i].textures = Slice(&textures[texture_index], 1);
-                }
-                texture_index++;
-            }
-        }
+    usize buffer_index = 0;
+    usize texture_index = 0;
+    for(usize i = 0; i < writes.len; i++)
+    {
+        const DeferredWrite& deferred_write = deferred_writes.get(i);
+        writes[i].binding = deferred_write.binding;
+        writes[i].array_element = 0;
+        writes[i].count = 1;
+        writes[i].type = deferred_write.type;
 
-        GPU::descriptor_set_update_descriptors(descriptor_set,
-            {
-                .write_infos = writes,
-            }
-        );
-        allocator->free(Mem::to_bytes(writes));
-        allocator->free(Mem::to_bytes(buffers));
-        allocator->free(Mem::to_bytes(textures));
-
-        for(const DeferredWrite& deferred_write : deferred_writes.iter())
+        if(IsAnyEqual(deferred_write.type, GPU::DescriptorType::UniformBuffer, GPU::DescriptorType::StorageBuffer))
         {
             if(deferred_write.write_array.buffers.len != 0)
             {
-                allocator->free(Mem::to_bytes(deferred_write.write_array.buffers));
+                writes[i].count = deferred_write.write_array.buffers.len;
+                writes[i].buffers = deferred_write.write_array.buffers;
             }
-            else if(deferred_write.write_array.textures.len != 0)
+            else
             {
-                allocator->free(Mem::to_bytes(deferred_write.write_array.textures));
+                buffers[buffer_index] = deferred_write.write.buffer;
+                writes[i].buffers = Slice(&buffers[buffer_index], 1);
             }
+            buffer_index++;
         }
-        deferred_writes.clear();
-
-        deferred_buffers = 0;
-        deferred_textures = 0;
+        else if(IsAnyEqual(deferred_write.type, GPU::DescriptorType::CombinedTextureSampler))
+        {
+            if(deferred_write.write_array.textures.len != 0)
+            {
+                writes[i].count = deferred_write.write_array.textures.len;
+                writes[i].textures = deferred_write.write_array.textures;
+            }
+            else {
+                textures[texture_index] = deferred_write.write.texture;
+                writes[i].textures = Slice(&textures[texture_index], 1);
+            }
+            texture_index++;
+        }
     }
+
+    GPU::descriptor_set_update_descriptors(descriptor_set,
+        {
+            .write_infos = writes,
+        }
+    );
+    allocator->free(Mem::to_bytes(writes));
+    allocator->free(Mem::to_bytes(buffers));
+    allocator->free(Mem::to_bytes(textures));
+
+    for(const DeferredWrite& deferred_write : deferred_writes.iter())
+    {
+        if(deferred_write.write_array.buffers.len != 0)
+        {
+            allocator->free(Mem::to_bytes(deferred_write.write_array.buffers));
+        }
+        else if(deferred_write.write_array.textures.len != 0)
+        {
+            allocator->free(Mem::to_bytes(deferred_write.write_array.textures));
+        }
+    }
+    deferred_writes.clear();
+
+    deferred_buffers = 0;
+    deferred_textures = 0;
 }
 
 }

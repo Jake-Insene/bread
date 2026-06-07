@@ -47,11 +47,6 @@ void Renderer::destroy()
     swap_chain->destroy();
 }
 
-void Renderer::handle_resize()
-{
-    swap_chain->resize();
-}
-
 Renderer::FrameInfo Renderer::begin_frame()
 {
     RenderFrame& frame = frames.get(frame_index);
@@ -60,8 +55,6 @@ Renderer::FrameInfo Renderer::begin_frame()
     {
         frame.in_flight_fence->wait(MaxValue<u64>);
     }
-
-    // Sending data to mapped buffers
 
     // Acquiring image
     GPU::PipelineStages wait_stages[] =
@@ -113,5 +106,32 @@ Renderer::FrameInfo Renderer::begin_frame()
 void Renderer::end_frame()
 {
     frame_index = (frame_index + 1) % max_frames_in_flight;
+}
+
+Graphics::CommandEncoder Renderer::acquire_encoder(const FrameInfo&)
+{
+    return command_queue->acquire_encoder();
+}
+
+void Renderer::submit_encoder(const FrameInfo& frame_info, const Slice<const GPU::PipelineStages>& wait_stages, Graphics::CommandEncoder* encoder)
+{
+    RenderFrame& frame = frames.get(frame_info.frame_index);
+    frame.in_flight_fence = command_queue->execute(
+        {
+            .wait_semaphores = Slice(&frame.present_complete_semaphore, 1),
+            .wait_stages = wait_stages,
+            .signal_semaphores = Slice(&render_finished_semaphores.get(frame_info.image_index), 1),
+            .encoder = encoder,
+        }
+    );
+}
+
+void Renderer::present(const FrameInfo& frame_info)
+{
+    swap_chain->present(
+        graphics_device->get_present_queue(),
+        frame_info.image_index,
+        Slice(&render_finished_semaphores.get(frame_info.image_index), 1)
+    );
 }
 

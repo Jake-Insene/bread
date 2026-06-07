@@ -35,8 +35,8 @@ struct GPUAdapter
 	virtual GPU::SemaphoreID semaphore_create(const GPU::SemaphoreCreateInfo& ci) = 0;
 	virtual void semaphore_destroy(GPU::SemaphoreID semaphore) = 0;
 
-	virtual GPU::QueueID queue_create(const GPU::QueueCreateInfo& ci) = 0;
-	virtual void queue_destroy(GPU::QueueID queue) = 0;
+	virtual u32 queue_get_count(const GPU::QueueGetCountInfo& gci) = 0;
+	virtual GPU::QueueID queue_get(const GPU::QueueGetInfo& gi) = 0;
 	virtual void queue_execute_command_buffer(GPU::QueueID queue, const GPU::QueueExecuteInfo& execute_info) = 0;
 	virtual GPU::AcquireResult queue_present(GPU::QueueID queue, const GPU::QueuePresentInfo& present_info) = 0;
 	virtual void queue_wait_idle(GPU::QueueID queue) = 0;
@@ -101,8 +101,8 @@ struct GPUAdapter
 	virtual void command_buffer_bind_vertex_buffers(GPU::CommandBufferID command_buffer, u32 base_binding, const Slice<GPU::BufferID>& buffers, const Slice<usize>& offsets) = 0;
 	virtual void command_buffer_constant_block(GPU::CommandBufferID command_buffer, GPU::PipelineLayoutID pipeline_layout, GPU::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address) = 0;
 		
-	virtual void command_buffer_set_viewports(GPU::CommandBufferID command_buffer, u32 base_viewport, const Slice<GPU::Viewport>& viewports) = 0;
-	virtual void command_buffer_set_scissors(GPU::CommandBufferID command_buffer, u32 base_scissor, const Slice<GPU::Scissor>& scissors) = 0;
+	virtual void command_buffer_set_viewports(GPU::CommandBufferID command_buffer, u32 base_viewport, const Slice<const GPU::Viewport>& viewports) = 0;
+	virtual void command_buffer_set_scissors(GPU::CommandBufferID command_buffer, u32 base_scissor, const Slice<const GPU::Scissor>& scissors) = 0;
 
 	virtual void command_buffer_draw(GPU::CommandBufferID command_buffer, u32 vertex_count, u32 instance_count, u32 base_vertex, u32 base_instance) = 0;
 };

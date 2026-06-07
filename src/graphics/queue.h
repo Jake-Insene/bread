@@ -12,7 +12,7 @@ struct Queue
 
     GPU::QueueID gpu_queue;
 
-    void init(Mem::Allocator* _allocator, const GPU::QueueCreateInfo& info);
+    void init(Mem::Allocator* _allocator, GPU::DeviceID gpu_device, GPU::QueueUsage usage, u32 index);
     void destroy();
 
     void wait_idle();

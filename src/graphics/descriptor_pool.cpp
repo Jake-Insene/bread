@@ -12,7 +12,6 @@ void DescriptorPool::init(Mem::Allocator* _allocator, Device* _parent, const GPU
     gpu_descriptor_pool = GPU::descriptor_pool_create(info);
 
     descriptor_sets = FreeList<DescriptorSet, DescriptorSetRef>::with_size(allocator, 4);
-    available_sets = Array<DescriptorSetRef>::with_size(allocator, 4);
     allocated_sets = Array<DescriptorSetRef>::with_size(allocator, 4);
 }
 
@@ -25,7 +24,6 @@ void DescriptorPool::destroy()
     }
 
     descriptor_sets.destroy();
-    available_sets.destroy();
     allocated_sets.destroy();
     GPU::descriptor_pool_destroy(gpu_descriptor_pool);
 
@@ -34,17 +32,6 @@ void DescriptorPool::destroy()
 
 DescriptorSetRef DescriptorPool::allocate(GPU::DescriptorSetLayoutID gpu_set_layout)
 {
-    for (usize i = 0; i < available_sets.count; ++i)
-    {
-        DescriptorSetRef avail_set = available_sets.get(i);
-        DescriptorSet* descriptor_set = set(avail_set);
-        if (descriptor_set->set_layout == gpu_set_layout)
-        {
-            available_sets.remove_at(i);
-            return avail_set;
-        }
-    }
-
     DescriptorSet descriptor_set = {};
     descriptor_set.init(allocator,
         {
@@ -62,22 +49,9 @@ DescriptorSetRef DescriptorPool::allocate(GPU::DescriptorSetLayoutID gpu_set_lay
 
 void DescriptorPool::free(DescriptorSetRef set_ref)
 {
-    bool is_allocated = false;
-    for (DescriptorSetRef ref : allocated_sets.iter())
-    {
-        if (ref == set_ref)
-        {
-            is_allocated = true;
-            break;
-        }
-    }
-    
-    if (!is_allocated)
-    {
-        return;
-    }
-    
-    (void)available_sets.add(set_ref);
+    set(set_ref)->destroy();
+
+    descriptor_sets.remove(set_ref);
 }
 
 }

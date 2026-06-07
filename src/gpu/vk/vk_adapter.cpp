@@ -82,7 +82,7 @@ void VulkanAdapter::initialize(Mem::Allocator* _allocator)
     swap_chains = FreeList<SwapChain, GPU::SwapChainID>::with_allocator(get_allocator());
     fences = FreeList<Fence, GPU::FenceID>::with_allocator(get_allocator());
     semaphores = FreeList<Semaphore, GPU::SemaphoreID>::with_allocator(get_allocator());
-    queues = FreeList<Queue, GPU::QueueID>::with_allocator(get_allocator());
+    queues = Array<Queue>::with_allocator(get_allocator());
     memory_heaps = FreeList<MemoryHeap, GPU::MemoryHeapID>::with_allocator(get_allocator());
     buffers = FreeList<Buffer, GPU::BufferID>::with_allocator(get_allocator());
     samplers = FreeList<Sampler, GPU::SamplerID>::with_allocator(get_allocator());
@@ -267,6 +267,7 @@ GPU::DeviceID VulkanAdapter::device_create(const GPU::DeviceCreateInfo& ci)
     vk.vkGetPhysicalDeviceQueueFamilyProperties2(pd.vk_physical_device, &vk_family_count, nullptr);
 
     Slice<VkQueueFamilyProperties2> vk_families = allocator->array<VkQueueFamilyProperties2>(vk_family_count);
+    Slice<u32> vk_acquired = allocator->array<u32>(vk_family_count);
     for(VkQueueFamilyProperties2& vk_family : vk_families)
     {
         vk_family.sType = VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2;
@@ -274,110 +275,82 @@ GPU::DeviceID VulkanAdapter::device_create(const GPU::DeviceCreateInfo& ci)
     }
     vk.vkGetPhysicalDeviceQueueFamilyProperties2(pd.vk_physical_device, &vk_family_count, vk_families.ptr());    
 
-    // 0->graphics, 1->present
+    // 0->graphics, 1->compute, 2->copy, 3->present
     uint32_t vk_graphics_index = MaxValue<uint32_t>;
     uint32_t vk_compute_index = MaxValue<uint32_t>;
     uint32_t vk_copy_index = MaxValue<uint32_t>;
     uint32_t vk_present_index = MaxValue<uint32_t>;
 
-    for(usize i = 0; i < vk_families.len; i++)
-    {
-        VkQueueFamilyProperties2 family = vk_families[i];
-        bool has_graphics = HasValue(family.queueFamilyProperties.queueFlags & VK_QUEUE_GRAPHICS_BIT);
-        bool has_compute = HasValue(family.queueFamilyProperties.queueFlags & VK_QUEUE_COMPUTE_BIT);
-        bool has_copy = HasValue(family.queueFamilyProperties.queueFlags & VK_QUEUE_TRANSFER_BIT);
+    Array<VkDeviceQueueCreateInfo> vk_queue_infos = Array<VkDeviceQueueCreateInfo>::with_allocator(allocator);
+    f32 priority = 1.F;
 
-        if(vk_graphics_index == MaxValue<uint32_t> && has_graphics)
-        {
-            // graphics
-            vk_graphics_index = static_cast<uint32_t>(i);
-        }
-        if(vk_compute_index == MaxValue<uint32_t> && has_compute && !has_graphics)
-        {
-            // exclusive compute
-            vk_compute_index = static_cast<uint32_t>(i);
-        }
-        if(vk_copy_index == MaxValue<uint32_t> && has_copy && !has_graphics)
-        {
-            // exclusive copy
-            vk_copy_index = static_cast<uint32_t>(i);
-        }
-
-        VkBool32 supported = VK_FALSE;
-        vk.vkGetPhysicalDeviceSurfaceSupportKHR(pd.vk_physical_device, static_cast<uint32_t>(i), dummy_surface, &supported);
-        if(vk_present_index == MaxValue<uint32_t> && supported == VK_TRUE)
-        {
-            vk_present_index = static_cast<uint32_t>(i);
-        }
-    }
-    VKFailOn(vk_graphics_index == MaxValue<uint32_t> || vk_present_index == MaxValue<uint32_t>,
-        "graphics and present is required");
-
-    // Default to graphics queue, graphics and present are expected to be.
-    if(vk_compute_index == MaxValue<uint32_t>
-        && HasValue(vk_families[vk_graphics_index].queueFamilyProperties.queueFlags & VK_QUEUE_COMPUTE_BIT))
-    {
-        vk_compute_index = vk_graphics_index;
-    }
-
-    if(vk_copy_index == MaxValue<uint32_t>)
-    {
-        // Prefer the compute queue.
-        if(vk_compute_index != vk_graphics_index)
-        {
-            vk_copy_index = vk_compute_index;
-        }
-        else
-        {
-            vk_copy_index = vk_graphics_index;
-        }
-    }
-    
-    static constexpr usize VkFamilyCount = 4; // Graphics, Compute, Copy, Present
-
-    uint32_t vk_family_indices[] =
-    {
-        vk_graphics_index, vk_compute_index, vk_copy_index, vk_present_index
-    };
-    ArrayIterator<uint32_t> iterator = {.base = vk_family_indices, .extent = ArraySize(vk_family_indices) };
-
-    uint32_t uniques[VkFamilyCount] = {};
-    uint32_t unique_count = 0;
-
-    (void)iterator.for_each(
-        [&](uint32_t v)
-        {
-            bool finded = false;;
-            for(usize i = 0; i < unique_count; i++)
-            {
-                if(uniques[i] == v && v != MaxValue<uint32_t>)
-                {
-                    finded = true;
-                    break;
-                }
-            }
-
-            if(!finded)
-            {
-                uniques[unique_count] = v;
-                unique_count++;
-            }
-        }
-    );
-    
-    VkDeviceQueueCreateInfo queue_infos[VkFamilyCount] = {};
-    for(usize i = 0; i < unique_count; i++)
-    {
-        f32 priority = 1.F;
-        queue_infos[i] =
+    vk_graphics_index = _get_queue_family_for(vk_families, vk_acquired, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT);
+    VKFailOn(vk_graphics_index == MaxValue<uint32_t>, "couldn't find the graphics queue");
+    vk_acquired[vk_graphics_index] = 1;
+    (void)vk_queue_infos.add(
+        VkDeviceQueueCreateInfo
         {
             .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
             .pNext = nullptr,
             .flags = 0,
-            .queueFamilyIndex = uniques[i],
-            .queueCount = 1,
+            .queueFamilyIndex = vk_graphics_index,
+            .queueCount = vk_families[vk_graphics_index].queueFamilyProperties.queueCount,
             .pQueuePriorities = &priority,
-        };
+        }
+    );
+
+    vk_compute_index = _get_queue_family_for(vk_families, vk_acquired, VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT);
+    if(vk_compute_index != MaxValue<uint32_t>)
+    {
+        vk_acquired[vk_compute_index] = 1;
+
+        (void)vk_queue_infos.add(
+            VkDeviceQueueCreateInfo
+            {
+                .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = 0,
+                .queueFamilyIndex = vk_compute_index,
+                .queueCount = vk_families[vk_compute_index].queueFamilyProperties.queueCount,
+                .pQueuePriorities = &priority,
+            }
+        );
+    }
+
+    vk_copy_index = _get_queue_family_for(vk_families, vk_acquired, VK_QUEUE_TRANSFER_BIT);
+    if(vk_copy_index != MaxValue<uint32_t>)
+    {
+        vk_acquired[vk_copy_index] = 1;
+
+        (void)vk_queue_infos.add(
+            VkDeviceQueueCreateInfo
+            {
+                .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = 0,
+                .queueFamilyIndex = vk_copy_index,
+                .queueCount = vk_families[vk_copy_index].queueFamilyProperties.queueCount,
+                .pQueuePriorities = &priority,
+            }
+        );
+    }
+
+    vk_present_index = _get_queue_family_for_present(ld.vk_physical_device, dummy_surface, vk_families);
+    VKFailOn(vk_graphics_index == MaxValue<uint32_t> || vk_present_index == MaxValue<uint32_t>,
+        "graphics and present queues are required");
+    if(vk_present_index != vk_graphics_index && vk_present_index != vk_compute_index && vk_present_index != vk_copy_index)
+    {
+        (void)vk_queue_infos.add(
+            VkDeviceQueueCreateInfo
+            {
+                .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = 0,
+                .queueFamilyIndex = vk_present_index,
+                .queueCount = vk_families[vk_present_index].queueFamilyProperties.queueCount,
+                .pQueuePriorities = &priority,
+            }
+        );
     }
 
     uint32_t extension_count = 0;
@@ -387,8 +360,8 @@ GPU::DeviceID VulkanAdapter::device_create(const GPU::DeviceCreateInfo& ci)
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext = Vulkan::get_device_features(allocator, add_ext),
         .flags = 0,
-        .queueCreateInfoCount = unique_count,
-        .pQueueCreateInfos = queue_infos,
+        .queueCreateInfoCount = static_cast<uint32_t>(vk_queue_infos.count),
+        .pQueueCreateInfos = vk_queue_infos.slice().ptr(),
         .enabledLayerCount = 0,
         .ppEnabledLayerNames = nullptr,
         .enabledExtensionCount = extension_count,
@@ -398,6 +371,8 @@ GPU::DeviceID VulkanAdapter::device_create(const GPU::DeviceCreateInfo& ci)
 
     VkResult result = vk.vkCreateDevice(pd.vk_physical_device, &vk_device_info, Vulkan::allocation_callbacks(this), &ld.vk_device);
     VKFailOn(result != VK_SUCCESS, "vkCreateDevice({})", Vulkan::result_as_string(result));
+    vk_queue_infos.destroy();
+    
     Vulkan::load_device_procs(ld.vk, ld.vk_device);
 
     // Device info
@@ -432,36 +407,43 @@ GPU::DeviceID VulkanAdapter::device_create(const GPU::DeviceCreateInfo& ci)
     ld.additional_extension_support = add_ext;
 
     // Queues
-    GPU::QueueUsage queue_usages[VkFamilyCount] =
+    const uint32_t vk_family_indices[MaxQueueFamilyCount] =
     {
-        GPU::QueueUsage::Graphics,
-        GPU::QueueUsage::Compute,
-        GPU::QueueUsage::Copy,
-        GPU::QueueUsage::Present,
+        vk_graphics_index,
+        vk_compute_index,
+        vk_copy_index,
+        vk_present_index,
     };
 
-    ld.families = get_allocator()->array<LogicalDevice::QueueFamily>(unique_count);
-    for(usize i = 0; i < ld.families.len; i++)
+    for(usize i = 0; i < MaxQueueFamilyCount; i++)
     {
         LogicalDevice::QueueFamily& family = ld.families[i];
 
-        family.usage = queue_usages[i];
         family.vk_family_index = vk_family_indices[i];
-
-        family.vk_queues = get_allocator()->array<VkQueue>(1);
-        ld.vk.vkGetDeviceQueue(ld.vk_device, family.vk_family_index, 0, family.vk_queues.ptr());
-    }
-
-    ld.device_queues = get_allocator()->array<LogicalDevice::DeviceQueue>(VkFamilyCount);
-    for(usize i = 0; i < ld.device_queues.len; i++)
-    {
-        for(usize family_i = 0; family_i < ld.families.len; family_i++)
+        if(vk_family_indices[i] == MaxValue<uint32_t>)
         {
-            if(vk_family_indices[i] == ld.families[family_i].vk_family_index)
-            {
-                ld.device_queues[i].family_index = family_i;
-                continue;
-            }
+            continue;
+        }
+
+        family.vk_queues = get_allocator()->array<VkQueue>(vk_families[vk_family_indices[i]].queueFamilyProperties.queueCount);
+        family.queue_ids = get_allocator()->array<GPU::QueueID>(vk_families[vk_family_indices[i]].queueFamilyProperties.queueCount);
+        for(uint32_t queue_i = 0; queue_i < family.vk_queues.len; queue_i++)
+        {
+            ld.vk.vkGetDeviceQueue(ld.vk_device, family.vk_family_index, queue_i, &family.vk_queues[queue_i]);
+
+            Queue& q = queues.add(
+                Queue
+                {
+                    .vk_device = ld.vk_device,
+                    .vk_queue = family.vk_queues[queue_i],
+                    .family_index = family.vk_family_index,
+                    .queue_index = queue_i,
+                    .device = device_id,
+                    .queue = GPU::QueueID::invalid(),
+                }
+            );
+            q.queue = GPU::QueueID(queues.count - 1);
+            family.queue_ids[queue_i] = GPU::QueueID(queues.count - 1);
         }
     }
 
@@ -482,14 +464,18 @@ void VulkanAdapter::device_destroy(GPU::DeviceID device)
 {
     LogicalDevice& ld = _get_logical_device(device);
     
-    for(usize i = 0; i < ld.families.len; i++)
+    for(usize i = 0; i < MaxQueueFamilyCount; i++)
     {
         LogicalDevice::QueueFamily& queue_family = ld.families[i];
 
+        if(queue_family.vk_queues.len == 0)
+        {
+            continue;
+        }
+
         get_allocator()->free(Mem::to_bytes(queue_family.vk_queues));
+        get_allocator()->free(Mem::to_bytes(queue_family.queue_ids));
     }
-    get_allocator()->free(Mem::to_bytes(ld.device_queues));
-    get_allocator()->free(Mem::to_bytes(ld.families));
     
     for(RenderPassEntry& it : ld.render_pass_cache.iter())
     {
@@ -529,7 +515,7 @@ GPU::SwapChainID VulkanAdapter::swap_chain_create(const GPU::SwapChainCreateInfo
     VkSurfaceCapabilitiesKHR capabilities = _vk_get_surface_capabilities(ld.vk_physical_device, surface.vk_surface);
     VkExtent2D vk_swap_chain_extent = _vk_get_swap_chain_extent(ci.size, capabilities);
 
-    VkSwapchainCreateInfoKHR swap_chain_info =
+    VkSwapchainCreateInfoKHR vk_swap_chain_info =
     {
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
         .pNext = nullptr,
@@ -542,8 +528,8 @@ GPU::SwapChainID VulkanAdapter::swap_chain_create(const GPU::SwapChainCreateInfo
         .imageArrayLayers = 1,
         .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
         .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        .queueFamilyIndexCount = 1,
-        .pQueueFamilyIndices = & ld.families[ld.device_queues[3].family_index].vk_family_index,
+        .queueFamilyIndexCount = 0,
+        .pQueueFamilyIndices = nullptr,
         .preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
         .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
         .presentMode = vk_present_mode,
@@ -551,7 +537,7 @@ GPU::SwapChainID VulkanAdapter::swap_chain_create(const GPU::SwapChainCreateInfo
         .oldSwapchain = VK_NULL_HANDLE,
     };
 
-    VkResult result = ld.vk.vkCreateSwapchainKHR(ld.vk_device, &swap_chain_info, Vulkan::allocation_callbacks(this), &swap_chain.vk_swapchain);
+    VkResult result = ld.vk.vkCreateSwapchainKHR(ld.vk_device, &vk_swap_chain_info, Vulkan::allocation_callbacks(this), &swap_chain.vk_swapchain);
     VKFailOn(result != VK_SUCCESS, "vkCreateSwapchainKHR({})", Vulkan::result_as_string(result));
 
     {
@@ -811,27 +797,20 @@ void VulkanAdapter::semaphore_destroy(GPU::SemaphoreID semaphore)
     semaphores.remove(semaphore);
 }
 
-GPU::QueueID VulkanAdapter::queue_create(const GPU::QueueCreateInfo& ci)
+u32 VulkanAdapter::queue_get_count(const GPU::QueueGetCountInfo& gci)
 {
-    LogicalDevice& ld = _get_logical_device(ci.device);
+    LogicalDevice& ld = _get_logical_device(gci.device);
 
-    usize device_queue_index = usize(ci.usage) - 1;
-    LogicalDevice::QueueFamily& family = ld.families[ld.device_queues[device_queue_index].family_index];
-    GPU::QueueID queue_id = queues.add(Queue());
-    Queue& q = _get_queue(queue_id);
-
-    q.vk_device = ld.vk_device;
-    q.vk_queue = family.vk_queues[0];
-    q.device_queue_index = device_queue_index;
-    q.device = ld.device;
-    q.queue = queue_id;
-
-    return queue_id;
+    LogicalDevice::QueueFamily& family = ld.families[usize(gci.usage) - 1];
+    return family.queue_ids.len;
 }
 
-void VulkanAdapter::queue_destroy(GPU::QueueID queue)
+GPU::QueueID VulkanAdapter::queue_get(const GPU::QueueGetInfo& gi)
 {
-    queues.remove(queue);
+    LogicalDevice& ld = _get_logical_device(gi.device);
+
+    LogicalDevice::QueueFamily& family = ld.families[usize(gi.usage) - 1];
+    return family.queue_ids[gi.index];
 }
 
 void VulkanAdapter::queue_execute_command_buffer(GPU::QueueID queue, const GPU::QueueExecuteInfo& execute_info)
@@ -1878,13 +1857,12 @@ GPU::CommandPoolID VulkanAdapter::command_pool_create(const GPU::CommandPoolCrea
     GPU::CommandPoolID cmd_pool_id = command_pools.add(CommandPool());
     CommandPool& cmd_pool = _get_command_pool(cmd_pool_id);
 
-    LogicalDevice::QueueFamily& family = ld.families[ld.device_queues[queue.device_queue_index].family_index];
     VkCommandPoolCreateInfo cmd_pool_info =
     {
         .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
         .pNext = nullptr,
         .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-        .queueFamilyIndex = family.vk_family_index,
+        .queueFamilyIndex = queue.family_index,
     };
 
     VkResult result = ld.vk.vkCreateCommandPool(ld.vk_device, &cmd_pool_info, Vulkan::allocation_callbacks(this), &cmd_pool.vk_command_pool);
@@ -1973,7 +1951,8 @@ void VulkanAdapter::command_buffer_begin_renderpass(GPU::CommandBufferID command
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
 
-    VkClearValue vk_clear_values[6] = {};
+    // render attachment and depth + stencil
+    VkClearValue vk_clear_values[GPU::MaxRenderAttachmentCount + 2] = {};
 
     bool has_depth = begin_info.depth_attachment.texture_view.is_valid();
 
@@ -1995,7 +1974,7 @@ void VulkanAdapter::command_buffer_begin_renderpass(GPU::CommandBufferID command
 
     if(has_depth)
     {
-        vk_clear_values[begin_info.render_attachments.len] =
+        vk_clear_values[GPU::MaxRenderAttachmentCount] =
         {
             .depthStencil =
             {
@@ -2101,7 +2080,7 @@ void VulkanAdapter::command_buffer_begin_renderpass(GPU::CommandBufferID command
                 .storeOp = VkUtils::_vk_get_store_op(begin_info.depth_attachment.store_op),
                 .clearValue =
                 {
-                    vk_clear_values[begin_info.render_attachments.len]
+                    vk_clear_values[GPU::MaxRenderAttachmentCount]
                 },
             };
         }
@@ -2337,7 +2316,7 @@ void VulkanAdapter::command_buffer_constant_block(GPU::CommandBufferID command_b
     );
 }
 
-void VulkanAdapter::command_buffer_set_viewports(GPU::CommandBufferID command_buffer, u32 base_viewport, const Slice<GPU::Viewport>& viewports)
+void VulkanAdapter::command_buffer_set_viewports(GPU::CommandBufferID command_buffer, u32 base_viewport, const Slice<const GPU::Viewport>& viewports)
 {
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
@@ -2360,7 +2339,7 @@ void VulkanAdapter::command_buffer_set_viewports(GPU::CommandBufferID command_bu
     ld.vk.vkCmdSetViewport(cmd_buffer.vk_command_buffer, base_viewport, static_cast<uint32_t>(vk_viewports.len), vk_viewports.ptr());
 }
 
-void VulkanAdapter::command_buffer_set_scissors(GPU::CommandBufferID command_buffer, u32 base_scissor, const Slice<GPU::Scissor>& scissors)
+void VulkanAdapter::command_buffer_set_scissors(GPU::CommandBufferID command_buffer, u32 base_scissor, const Slice<const GPU::Scissor>& scissors)
 {
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
@@ -2420,53 +2399,6 @@ void VulkanAdapter::_get_physical_devices()
         vk.vkGetPhysicalDeviceProperties2(physical_device.vk_physical_device, &properties);
         physical_device.info.device_type = _vk_device_type_to_device_type(properties.properties.deviceType);
     }
-}
-
-void VulkanAdapter::_vk_get_surface_format(GPU::TextureFormat surface_format, VkFormat* vk_image_format, VkColorSpaceKHR* vk_color_space)
-{
-    switch(surface_format)
-    {
-    case GPU::TextureFormat::RGBA8Unorm:
-        *vk_image_format = VK_FORMAT_R8G8B8A8_UNORM;
-        *vk_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-        return;
-    case GPU::TextureFormat::RGBA8Srgb:
-        *vk_image_format = VK_FORMAT_R8G8B8A8_SRGB;
-        *vk_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-        return;
-    case GPU::TextureFormat::BGRA8Unorm:
-        *vk_image_format = VK_FORMAT_B8G8R8A8_UNORM;
-        *vk_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-        return;
-    case GPU::TextureFormat::BGRA8Srgb:
-        *vk_image_format = VK_FORMAT_B8G8R8A8_SRGB;
-        *vk_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-        return;
-    default:
-        break;
-    }
-
-    VKFailOn(true, "invalid surface format");
-}
-
-VkSurfaceCapabilitiesKHR VulkanAdapter::_vk_get_surface_capabilities(VkPhysicalDevice vk_physical_device, VkSurfaceKHR vk_surface)
-{
-    VkSurfaceCapabilitiesKHR capabilities;
-    vk.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vk_physical_device, vk_surface, &capabilities);
-    return capabilities;   
-}
-
-VkExtent2D VulkanAdapter::_vk_get_swap_chain_extent(const Vector2U& size, const VkSurfaceCapabilitiesKHR& vk_capabilities)
-{
-    if(vk_capabilities.currentExtent.width != MaxValue<uint32_t>)
-    {
-        return vk_capabilities.currentExtent;
-    }
-    
-    VkExtent2D vk_extent = {};
-    vk_extent.width = Math::clamp(size.width, vk_capabilities.minImageExtent.width, vk_capabilities.maxImageExtent.width);
-    vk_extent.height = Math::clamp(size.height, vk_capabilities.minImageExtent.height, vk_capabilities.maxImageExtent.height);
-    return vk_extent;
 }
 
 VkShaderModule VulkanAdapter::_vk_create_shader_module(LogicalDevice& ld, const GPU::ShaderStageInfo& shader_stage_info)
@@ -2845,3 +2777,90 @@ GPU::HeapUsage VulkanAdapter::_vk_memory_property_to_heap_usage(VkMemoryProperty
 
 }
 
+uint32_t VulkanAdapter::_get_queue_family_for(const Slice<VkQueueFamilyProperties2>& vk_families,
+    const Slice<u32>& acquired, VkQueueFlags vk_queue_flags)
+{
+    uint32_t best_match_index = MaxValue<uint32_t>;
+
+    for(usize i = 0; i < vk_families.len; i++)
+    {
+        if(acquired[i] != 0)
+        {
+            continue;
+        }
+
+        bool exact_match = (vk_families[i].queueFamilyProperties.queueFlags & vk_queue_flags) == vk_queue_flags;
+        
+        if(exact_match && acquired[i] == 0)
+        {
+            best_match_index = i;
+        }
+    }
+
+    return best_match_index;
+}
+
+uint32_t VulkanAdapter::_get_queue_family_for_present(VkPhysicalDevice vk_physical_device, VkSurfaceKHR vk_surface,
+    const Slice<VkQueueFamilyProperties2>& vk_families)
+{
+    uint32_t best_match_index = MaxValue<uint32_t>;
+    for(usize i = 0; i < vk_families.len; i++)
+    {
+        VkBool32 supported = VK_FALSE;
+        vk.vkGetPhysicalDeviceSurfaceSupportKHR(vk_physical_device, i, vk_surface, &supported);
+
+        if(supported == VK_TRUE)
+        {
+            best_match_index = i;
+        }
+    }
+
+    return best_match_index;
+}
+
+void VulkanAdapter::_vk_get_surface_format(GPU::TextureFormat surface_format, VkFormat* vk_image_format, VkColorSpaceKHR* vk_color_space)
+{
+    switch(surface_format)
+    {
+    case GPU::TextureFormat::RGBA8Unorm:
+        *vk_image_format = VK_FORMAT_R8G8B8A8_UNORM;
+        *vk_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+        return;
+    case GPU::TextureFormat::RGBA8Srgb:
+        *vk_image_format = VK_FORMAT_R8G8B8A8_SRGB;
+        *vk_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+        return;
+    case GPU::TextureFormat::BGRA8Unorm:
+        *vk_image_format = VK_FORMAT_B8G8R8A8_UNORM;
+        *vk_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+        return;
+    case GPU::TextureFormat::BGRA8Srgb:
+        *vk_image_format = VK_FORMAT_B8G8R8A8_SRGB;
+        *vk_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+        return;
+    default:
+        break;
+    }
+
+    VKFailOn(true, "invalid surface format");
+}
+
+VkSurfaceCapabilitiesKHR VulkanAdapter::_vk_get_surface_capabilities(VkPhysicalDevice vk_physical_device, VkSurfaceKHR vk_surface)
+{
+    VkSurfaceCapabilitiesKHR capabilities;
+    vk.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vk_physical_device, vk_surface, &capabilities);
+    return capabilities;   
+}
+
+VkExtent2D VulkanAdapter::_vk_get_swap_chain_extent(const Vector2U& size, const VkSurfaceCapabilitiesKHR& vk_capabilities)
+{
+    if(vk_capabilities.currentExtent.width != MaxValue<uint32_t>)
+    {
+        return vk_capabilities.currentExtent;
+    }
+    
+    VkExtent2D vk_extent = {};
+    vk_extent.width = Math::clamp(size.width, vk_capabilities.minImageExtent.width, vk_capabilities.maxImageExtent.width);
+    vk_extent.height = Math::clamp(size.height, vk_capabilities.minImageExtent.height, vk_capabilities.maxImageExtent.height);
+    return vk_extent;
+}

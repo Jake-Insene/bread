@@ -374,11 +374,11 @@ VkAccessFlags VkUtils::_vk_get_access_masks(GPU::AccessMasks access_masks)
 {
     VkAccessFlags vk_access_masks = 0;
 
-    if (HasValue(access_masks & GPU::AccessMasks::RenderOutputRead))
+    if (HasValue(access_masks & GPU::AccessMasks::RenderAttachmentRead))
     {
         vk_access_masks |= VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
     }
-    if (HasValue(access_masks & GPU::AccessMasks::RenderOutputWrite))
+    if (HasValue(access_masks & GPU::AccessMasks::RenderAttachmentWrite))
     {
         vk_access_masks |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
     }
@@ -408,7 +408,7 @@ VkImageLayout VkUtils::_vk_get_image_layout(GPU::TextureLayout texture_layout)
     {
     case GPU::TextureLayout::Unknown:
         return VK_IMAGE_LAYOUT_UNDEFINED;
-    case GPU::TextureLayout::RenderOutput:
+    case GPU::TextureLayout::RenderAttachment:
         return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     case GPU::TextureLayout::Present:
         return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;

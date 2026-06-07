@@ -4,16 +4,21 @@
 namespace Graphics
 {
 
-void Queue::init(Mem::Allocator* _allocator, const GPU::QueueCreateInfo& info)
+void Queue::init(Mem::Allocator* _allocator, GPU::DeviceID gpu_device, GPU::QueueUsage usage, u32 index)
 {
     allocator = _allocator;
 
-    gpu_queue = GPU::queue_create(info);
+    gpu_queue = GPU::queue_get(
+        {
+            .device = gpu_device,
+            .usage = usage,
+            .index = index,
+        }
+    );
 }
 
 void Queue::destroy()
 {
-    GPU::queue_destroy(gpu_queue);
 }
 
 void Queue::wait_idle()

@@ -17,8 +17,6 @@ struct DescriptorPool : DeviceObject
     GPU::DescriptorPoolID gpu_descriptor_pool;
 
     FreeList<DescriptorSet, DescriptorSetRef> descriptor_sets;
-    // Free sets that it can be reused.
-    Array<DescriptorSetRef> available_sets;
     // Allocated sets that require destruction.
     Array<DescriptorSetRef> allocated_sets;
 

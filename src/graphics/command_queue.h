@@ -21,15 +21,15 @@ struct CommandQueueInfo
 struct CommandQueueExecuteInfo
 {
     Slice<Graphics::Semaphore*> wait_semaphores;
-    Slice<GPU::PipelineStages> wait_stages;
+    Slice<const GPU::PipelineStages> wait_stages;
     Slice<Graphics::Semaphore*> signal_semaphores;
-    const CommandEncoder& encoder;
+    const CommandEncoder* encoder;
 };
 
 struct CommandQueueExecuteEmptyInfo
 {
     Slice<Graphics::Semaphore*> wait_semaphores;
-    Slice<GPU::PipelineStages> wait_stages;
+    Slice<const GPU::PipelineStages> wait_stages;
     Slice<Graphics::Semaphore*> signal_semaphores;
 };
 

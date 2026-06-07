@@ -20,37 +20,55 @@ void Device::init(Mem::Allocator* _allocator, GPU::PhysicalDeviceID _gpu_physica
         }
     );
 
+    // Garanted
     graphics_queue.init(
         allocator,
-        {
-            .device = gpu_device,
-            .usage = GPU::QueueUsage::Graphics,
-        }
+        gpu_device,
+        GPU::QueueUsage::Graphics,
+        0
     );
 
-    compute_queue.init(
-        allocator,
-        {
-            .device = gpu_device,
-            .usage = GPU::QueueUsage::Compute,
-        }
-    );
+    if(GPU::queue_get_count({.device = gpu_device, .usage = GPU::QueueUsage::Compute}) > 0)
+    {
+        compute_queue.init(
+            allocator,
+            gpu_device,
+            GPU::QueueUsage::Graphics,
+            0
+        );
+    }
+    else
+    {
+        compute_queue = graphics_queue;
+    }
 
-    copy_queue.init(
-        allocator,
-        {
-            .device = gpu_device,
-            .usage = GPU::QueueUsage::Copy,
-        }
-    );
+    if(GPU::queue_get_count({.device = gpu_device, .usage = GPU::QueueUsage::Copy}) > 0)
+    {
+        copy_queue.init(
+            allocator,
+            gpu_device,
+            GPU::QueueUsage::Copy,
+            0
+        );
+    }
+    else
+    {
+        copy_queue = compute_queue;
+    }
 
-    present_queue.init(
-        allocator,
-        {
-            .device = gpu_device,
-            .usage = GPU::QueueUsage::Present,
-        }
-    );
+    if(GPU::queue_get_count({.device = gpu_device, .usage = GPU::QueueUsage::Present}) > 0)
+    {
+        present_queue.init(
+            allocator,
+            gpu_device,
+            GPU::QueueUsage::Present,
+            0
+        );
+    }
+    else
+    {
+        present_queue = graphics_queue;
+    }
 
     allocated_objects = Array<DeviceObject*>::with_size(allocator, 4);
 

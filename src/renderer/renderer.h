@@ -1,7 +1,4 @@
 #pragma once
-#include "math/vec2.h"
-#include "math/color.h"
-#include "math/rect_2d.h"
 #include "graphics/device.h"
 #include "render_device/core/gpu_memory_allocator.h"
 #include "renderer/framed_buffer.h"
@@ -58,12 +55,12 @@ struct Renderer
     void init(const RendererCreateInfo& info);
     void destroy();
 
-    void handle_resize();
-
     FrameInfo begin_frame();
     void end_frame();
 
-    virtual void render(const FrameInfo& frame_info) = 0;
+    Graphics::CommandEncoder acquire_encoder(const FrameInfo& frame_info);
+    void submit_encoder(const FrameInfo& frame_info, const Slice<const GPU::PipelineStages>& wait_stages, Graphics::CommandEncoder* encoder);
+    void present(const FrameInfo& frame_info);
 };
 
 EnableBitOp(Renderer::FrameFlags);
