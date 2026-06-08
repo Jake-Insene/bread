@@ -16,17 +16,14 @@ struct DescriptorPool : DeviceObject
     GPU::DeviceID gpu_device;
     GPU::DescriptorPoolID gpu_descriptor_pool;
 
-    FreeList<DescriptorSet, DescriptorSetRef> descriptor_sets;
     // Allocated sets that require destruction.
-    Array<DescriptorSetRef> allocated_sets;
+    Array<DescriptorSet*> allocated_sets;
 
     void init(Mem::Allocator* _allocator, Device* _parent, const GPU::DescriptorPoolCreateInfo& info);
     void destroy();
 
-    DescriptorSetRef allocate(GPU::DescriptorSetLayoutID set_layout);
-    void free(DescriptorSetRef set_ref);
-
-    DescriptorSet* set(DescriptorSetRef set_ref) { return &descriptor_sets.get(set_ref); }
+    DescriptorSet* allocate(GPU::DescriptorSetLayoutID gpu_descriptor_set_layout);
+    void free(DescriptorSet* descriptor_set);
 };
 
 }

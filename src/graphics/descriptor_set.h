@@ -2,51 +2,23 @@
 #include "collections/array.h"
 #include "gpu/gpu.h"
 #include "graphics/buffer.h"
-#include "graphics/sampler.h"
+#include "graphics/device_object.h"
+#include "graphics/structures.h"
 
 
 namespace Graphics
 {
 
-struct DescriptorSetInfo
+struct DescriptorSet : DeviceObject
 {
-    GPU::DeviceID gpu_device;
-    GPU::DescriptorPoolID gpu_pool;
-    GPU::DescriptorSetLayoutID gpu_set_layout;
-};
-
-union WriteInfo
-{
-    GPU::DescriptorBufferInfo buffer;
-    GPU::DescriptorTextureInfo texture;
-};
-
-struct WriteArrayInfo
-{
-    Slice<GPU::DescriptorBufferInfo> buffers;
-    Slice<GPU::DescriptorTextureInfo> textures;
-};
-
-struct DeferredWrite
-{
-    u32 binding;
-    GPU::DescriptorType type;
-    WriteInfo write;
-    WriteArrayInfo write_array;
-};
-
-struct DescriptorSet
-{
-    Mem::Allocator* allocator;
-
-    Array<DeferredWrite> deferred_writes;
+    Array<DescriptorDeferredWrite> deferred_writes;
     usize deferred_buffers;
     usize deferred_textures;
     bool use_deferred;
-    GPU::DescriptorSetID descriptor_set;
-    GPU::DescriptorSetLayoutID set_layout;
+    GPU::DescriptorSetID gpu_descriptor_set;
+    GPU::DescriptorSetLayoutID gpu_descriptor_set_layout;
 
-    void init(Mem::Allocator* _allocator, const DescriptorSetInfo& info);
+    void init(Mem::Allocator* _allocator, Device* _parent, const DescriptorSetInfo& info);
     void destroy();
 
     void set_deferred(bool _use_deferred) { use_deferred = _use_deferred; }

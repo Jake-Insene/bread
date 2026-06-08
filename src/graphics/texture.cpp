@@ -1,5 +1,7 @@
 #include "graphics/texture.h"
 
+#include "graphics/memory_heap.h"
+
 
 namespace Graphics
 {
@@ -22,20 +24,27 @@ void Texture::init(Mem::Allocator* _allocator, Device* _parent, GPU::DeviceID gp
             .subresource_range = info.subresource_range,
         }
     );
+    heap = nullptr;
+    heap_offset = 0;
+    gpu_memory_requirements = GPU::texture_get_memory_requirements(gpu_texture);
 }
 
 void Texture::destroy()
 {
+    GPU::texture_destroy(gpu_texture);
     DeviceObject::destroy();
 }
 
 GPU::MemoryRequirements Texture::get_requirements() const
 {
-    return GPU::texture_get_memory_requirements(gpu_texture);
+    return gpu_memory_requirements;
 }
 
 void Texture::bind_memory(MemoryHeap* memory_heap, usize offset)
 {
+    heap = memory_heap;
+    heap_offset = offset;
+
     GPU::texture_bind_memory_heap(gpu_texture,
         {
             .memory_heap = memory_heap->gpu_memory_heap,

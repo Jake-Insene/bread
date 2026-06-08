@@ -1,5 +1,8 @@
 #include "renderer/renderer.h"
 
+#include "graphics/command_pool.h"
+#include "graphics/fence.h"
+
 
 void Renderer::init(const RendererCreateInfo& info)
 {
@@ -7,7 +10,7 @@ void Renderer::init(const RendererCreateInfo& info)
 
     graphics_device = info.graphics_device;
 
-    command_queue = graphics_device->create_command_queue(graphics_device->get_graphics_queue());
+    command_pool = graphics_device->create_command_pool(graphics_device->get_graphics_queue());
 
     swap_chain = graphics_device->create_swap_chain(info.target_window, info.surface_format);
 
@@ -43,7 +46,7 @@ void Renderer::destroy()
     render_finished_semaphores.destroy();
     frames.destroy();
 
-    command_queue->destroy();
+    command_pool->destroy();
     swap_chain->destroy();
 }
 
@@ -69,7 +72,7 @@ Renderer::FrameInfo Renderer::begin_frame()
     );
     if(image_acquired && frame.in_flight_fence != nullptr)
     {
-        command_queue->release_fence(frame.in_flight_fence);
+        command_pool->release_fence(frame.in_flight_fence);
         frame.in_flight_fence = nullptr;
     }
 
@@ -78,7 +81,7 @@ Renderer::FrameInfo Renderer::begin_frame()
     GPU::TextureViewID image_view = GPU::TextureViewID::invalid();
     if(image_index == MaxValue<u32> && image_acquired)
     {
-        frame.in_flight_fence = command_queue->execute_empty(
+        frame.in_flight_fence = command_pool->execute_empty(
             {
                 .wait_semaphores = Slice(&frame.present_complete_semaphore, 1),
                 .wait_stages = wait_stages,
@@ -108,20 +111,21 @@ void Renderer::end_frame()
     frame_index = (frame_index + 1) % max_frames_in_flight;
 }
 
-Graphics::CommandEncoder Renderer::acquire_encoder(const FrameInfo&)
+Graphics::CommandBuffer* Renderer::acquire_command_buffer(const FrameInfo&)
 {
-    return command_queue->acquire_encoder();
+    return command_pool->acquire_command_buffer();
 }
 
-void Renderer::submit_encoder(const FrameInfo& frame_info, const Slice<const GPU::PipelineStages>& wait_stages, Graphics::CommandEncoder* encoder)
+void Renderer::submit_command_buffer(const FrameInfo& frame_info, const Slice<const GPU::PipelineStages>& wait_stages,
+    Graphics::CommandBuffer* command_buffer)
 {
     RenderFrame& frame = frames.get(frame_info.frame_index);
-    frame.in_flight_fence = command_queue->execute(
+    frame.in_flight_fence = command_pool->execute(
         {
             .wait_semaphores = Slice(&frame.present_complete_semaphore, 1),
             .wait_stages = wait_stages,
             .signal_semaphores = Slice(&render_finished_semaphores.get(frame_info.image_index), 1),
-            .encoder = encoder,
+            .command_buffer = command_buffer,
         }
     );
 }

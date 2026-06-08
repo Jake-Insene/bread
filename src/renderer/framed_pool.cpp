@@ -1,5 +1,7 @@
 #include "renderer/framed_pool.h"
 
+#include "graphics/descriptor_pool.h"
+
 
 void FramedPool::init(const FramedPoolCreateInfo& info)
 {

@@ -1,32 +1,33 @@
 #include "graphics/descriptor_set.h"
 
+#include "graphics/sampler.h"
 
 
 namespace Graphics
 {
 
-void DescriptorSet::init(Mem::Allocator* _allocator, const DescriptorSetInfo& info)
+void DescriptorSet::init(Mem::Allocator* _allocator, Device* _parent, const DescriptorSetInfo& info)
 {
-    allocator = _allocator;
-    
+    DeviceObject::init(_allocator, _parent);
+
     deferred_buffers = 0;
     deferred_textures = 0;
-    deferred_writes = Array<DeferredWrite>::with_size(allocator, 4);
+    deferred_writes = Array<DescriptorDeferredWrite>::with_size(allocator, 4);
     use_deferred = false;
-    descriptor_set = GPU::descriptor_set_allocate(
+    gpu_descriptor_set = GPU::descriptor_set_allocate(
         {
             .device = info.gpu_device,
-            .pool = info.gpu_pool,
-            .set_layout = info.gpu_set_layout
+            .pool = info.gpu_descriptor_pool,
+            .set_layout = info.gpu_descriptor_set_layout
         }
     );
-    set_layout = info.gpu_set_layout;
+    gpu_descriptor_set_layout = info.gpu_descriptor_set_layout;
 }
 
 void DescriptorSet::destroy()
 {
     deferred_writes.destroy();
-    GPU::descriptor_set_free(descriptor_set);
+    GPU::descriptor_set_free(gpu_descriptor_set);
 }
 
 void DescriptorSet::set_uniform_buffer(u32 binding, const Buffer* buffer, usize offset, usize range)
@@ -63,7 +64,7 @@ void DescriptorSet::set_uniform_buffer(u32 binding, const Buffer* buffer, usize 
             { .binding = binding, .array_element = 0, .count = 1, .type = GPU::DescriptorType::UniformBuffer, .textures = {}, .buffers = buffers, },
         };
         
-        GPU::descriptor_set_update_descriptors(descriptor_set,
+        GPU::descriptor_set_update_descriptors(gpu_descriptor_set,
             {
                 .write_infos = write_info,
             }
@@ -105,7 +106,7 @@ void DescriptorSet::set_combined_texture_sampler(u32 binding, GPU::TextureViewID
             { .binding = binding, .array_element = 0, .count = 1, .type = GPU::DescriptorType::CombinedTextureSampler, .textures = textures, .buffers = {}, },
         };
 
-        GPU::descriptor_set_update_descriptors(descriptor_set,
+        GPU::descriptor_set_update_descriptors(gpu_descriptor_set,
             {
                 .write_infos = write_info,
             }
@@ -152,7 +153,7 @@ void DescriptorSet::set_combined_texture_sampler_array(u32 binding, Slice<GPU::T
             { .binding = binding, .array_element = 0, .count = u32(texture_views.len), .type = GPU::DescriptorType::CombinedTextureSampler, .textures = Slice(texture_infos, texture_views.len), .buffers = {}, },
         };
         
-        GPU::descriptor_set_update_descriptors(descriptor_set,
+        GPU::descriptor_set_update_descriptors(gpu_descriptor_set,
             {
                 .write_infos = write_info,
             }
@@ -177,7 +178,7 @@ void DescriptorSet::sync_writes()
     usize texture_index = 0;
     for(usize i = 0; i < writes.len; i++)
     {
-        const DeferredWrite& deferred_write = deferred_writes.get(i);
+        const DescriptorDeferredWrite& deferred_write = deferred_writes.get(i);
         writes[i].binding = deferred_write.binding;
         writes[i].array_element = 0;
         writes[i].count = 1;
@@ -212,7 +213,7 @@ void DescriptorSet::sync_writes()
         }
     }
 
-    GPU::descriptor_set_update_descriptors(descriptor_set,
+    GPU::descriptor_set_update_descriptors(gpu_descriptor_set,
         {
             .write_infos = writes,
         }
@@ -221,7 +222,7 @@ void DescriptorSet::sync_writes()
     allocator->free(Mem::to_bytes(buffers));
     allocator->free(Mem::to_bytes(textures));
 
-    for(const DeferredWrite& deferred_write : deferred_writes.iter())
+    for(const DescriptorDeferredWrite& deferred_write : deferred_writes.iter())
     {
         if(deferred_write.write_array.buffers.len != 0)
         {

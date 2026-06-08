@@ -1,5 +1,8 @@
 #include "renderer/renderer_2d.h"
 
+#include "graphics/descriptor_pool.h"
+#include "graphics/descriptor_set.h"
+#include "graphics/pipeline_layout.h"
 
 
 void Renderer2D::init(const RendererCreateInfo& info)
@@ -54,12 +57,12 @@ void Renderer2D::init(const RendererCreateInfo& info)
 
     global_scene_pool = graphics_device->create_descriptor_pool(info.max_frames_in_flight, pool_sizes);
 
-    global_scene_set = allocator->array<Graphics::DescriptorSetRef>(info.max_frames_in_flight);
+    global_scene_set = allocator->array<Graphics::DescriptorSet*>(info.max_frames_in_flight);
 
     for(usize i = 0; i < info.max_frames_in_flight; i++)
     {
         global_scene_set[i] = (global_scene_pool->allocate(global_scene_layout->get_layout(0)));
-        global_scene_pool->set(global_scene_set[i])->set_uniform_buffer(
+        global_scene_set[i]->set_uniform_buffer(
             0, scene_uniform_buffer.get_buffer(),
             scene_uniform_buffer.get_buffer_info(i).offset,
             MaxSceneUniformSize
@@ -87,5 +90,5 @@ SceneRenderer::SceneUniform* Renderer2D::get_scene_uniform(const FrameInfo& fram
 
 Graphics::DescriptorSet* Renderer2D::get_global_set(const FrameInfo& frame_info)
 {
-    return global_scene_pool->set(global_scene_set[frame_info.frame_index]);
+    return global_scene_set[frame_info.frame_index];
 }

@@ -3,8 +3,7 @@
 #include "collections/stack.h"
 #include "gpu/gpu.h"
 #include "mem/allocator.h"
-#include "mem/stack_allocator.h"
-#include "graphics/command_encoder.h"
+#include "graphics/command_buffer.h"
 #include "graphics/device_object.h"
 #include "graphics/semaphore.h"
 
@@ -23,7 +22,7 @@ struct CommandQueueExecuteInfo
     Slice<Graphics::Semaphore*> wait_semaphores;
     Slice<const GPU::PipelineStages> wait_stages;
     Slice<Graphics::Semaphore*> signal_semaphores;
-    const CommandEncoder* encoder;
+    CommandBuffer* command_buffer;
 };
 
 struct CommandQueueExecuteEmptyInfo
@@ -35,7 +34,7 @@ struct CommandQueueExecuteEmptyInfo
 
 struct Fence;
 
-struct CommandQueue : DeviceObject
+struct CommandPool : DeviceObject
 {
     static constexpr usize TmpAllocatorSize = 1024 * 1024;
     
@@ -46,22 +45,21 @@ struct CommandQueue : DeviceObject
     struct WorkSubmit
     {
         Fence* fence;
-        CommandEncoder encoder;
+        CommandBuffer* command_buffer;
         bool empty;
     };
 
-    Mem::StackAllocator tmp_allocator;
-    Array<CommandEncoder> encoders;
+    Array<CommandBuffer*> command_buffers;
     Array<Fence*> gpu_work_fences;
     Array<WorkSubmit> work_submited;
     
     Stack<Fence*> gpu_free_fences;
-    Stack<CommandEncoder> free_encoders;
+    Stack<CommandBuffer*> free_command_buffers;
 
     void init(Mem::Allocator* _allocator, Device* _parent, const CommandQueueInfo& info);
     void destroy();
 
-    CommandEncoder acquire_encoder();
+    CommandBuffer* acquire_command_buffer();
     Fence* execute(const CommandQueueExecuteInfo& info);
     Fence* execute_empty(const CommandQueueExecuteEmptyInfo& info);
 

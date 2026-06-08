@@ -2,21 +2,11 @@
 #include "gpu/gpu.h"
 #include "mem/allocator.h"
 #include "graphics/device_object.h"
+#include "graphics/structures.h"
 
 
 namespace Graphics
 {
-
-struct DescriptorSetLayoutCreateInfo
-{
-	Slice<const GPU::DescriptorBinding> bindings;
-};
-
-struct PipelineLayoutInfo
-{
-	Slice<const GPU::ConstantBlock> constant_blocks;
-	Slice<const DescriptorSetLayoutCreateInfo> set_layout_infos;
-};
 
 struct PipelineLayout : DeviceObject
 {

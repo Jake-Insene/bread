@@ -71,7 +71,7 @@ struct SpriteRenderer
 
     FramedDeviceBuffer instance_buffer;
     Graphics::DescriptorPool* descriptor_pool;
-    Array<Graphics::DescriptorSetRef> descriptor_sets;
+    Array<Graphics::DescriptorSet*> descriptor_sets;
 
     Array<Batch> batches;
     Array<StreamSpriteUnit> streams;
@@ -84,8 +84,8 @@ struct SpriteRenderer
     void build_batch(const FrameInfo& frame_info);
     void finish_scene(const FrameInfo& frame_info);
 
-    void begin_batch_record(const FrameInfo& frame_info, Graphics::CommandEncoder& encoder);
-    void end_batch_record(const FrameInfo& frame_info, Graphics::CommandEncoder& encoder);
+    void begin_batch_record(const FrameInfo& frame_info, Graphics::CommandBuffer* command_buffer);
+    void end_batch_record(const FrameInfo& frame_info, Graphics::CommandBuffer* command_buffer);
 
     void commit_sprite(const StreamSpriteUnit& sprite, GPU::TextureViewID texture_view, Graphics::Sampler* sampler);
 };

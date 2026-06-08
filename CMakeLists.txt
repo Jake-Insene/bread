@@ -40,8 +40,8 @@ file(GLOB ENGINE_SRC
     src/gpu/gpu.cpp
 
     src/graphics/buffer.cpp
-    src/graphics/command_encoder.cpp
-    src/graphics/command_queue.cpp
+    src/graphics/command_buffer.cpp
+    src/graphics/command_pool.cpp
     src/graphics/descriptor_pool.cpp
     src/graphics/descriptor_set.cpp
     src/graphics/device_object.cpp

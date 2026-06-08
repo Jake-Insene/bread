@@ -1,5 +1,6 @@
 #pragma once
 #include "graphics/device.h"
+#include "graphics/swap_chain.h"
 #include "render_device/core/gpu_memory_allocator.h"
 #include "renderer/framed_buffer.h"
 
@@ -42,7 +43,7 @@ struct Renderer
 
     Mem::Allocator* allocator;
     Graphics::Device* graphics_device;
-    Graphics::CommandQueue* command_queue;
+    Graphics::CommandPool* command_pool;
     Graphics::SwapChain* swap_chain;
 
     u32 max_frames_in_flight;
@@ -58,8 +59,8 @@ struct Renderer
     FrameInfo begin_frame();
     void end_frame();
 
-    Graphics::CommandEncoder acquire_encoder(const FrameInfo& frame_info);
-    void submit_encoder(const FrameInfo& frame_info, const Slice<const GPU::PipelineStages>& wait_stages, Graphics::CommandEncoder* encoder);
+    Graphics::CommandBuffer* acquire_command_buffer(const FrameInfo& frame_info);
+    void submit_command_buffer(const FrameInfo& frame_info, const Slice<const GPU::PipelineStages>& wait_stages, Graphics::CommandBuffer* command_buffers);
     void present(const FrameInfo& frame_info);
 };
 

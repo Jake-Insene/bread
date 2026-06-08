@@ -1,5 +1,16 @@
 #include "graphics/device.h"
 
+#include "graphics/buffer.h"
+#include "graphics/command_pool.h"
+#include "graphics/descriptor_pool.h"
+#include "graphics/fence.h"
+#include "graphics/memory_heap.h"
+#include "graphics/pipeline_layout.h"
+#include "graphics/pipeline.h"
+#include "graphics/sampler.h"
+#include "graphics/semaphore.h"
+#include "graphics/swap_chain.h"
+#include "graphics/texture.h"
 #include "log/log.h"
 
 
@@ -217,18 +228,18 @@ Pipeline* Device::create_pipeline(const PipelineInfo& pipeline_info)
     return pipe;
 }
 
-CommandQueue* Device::create_command_queue(Queue* queue)
+CommandPool* Device::create_command_pool(Queue* queue)
 {
     mutex.lock();
-    CommandQueue* command_queue = _allocate_object<CommandQueue>();
-    command_queue->init(allocator, this,
+    CommandPool* command_pool = _allocate_object<CommandPool>();
+    command_pool->init(allocator, this,
         {
             .gpu_device = gpu_device,
             .gpu_queue = queue->gpu_queue,
         }
     );
     mutex.unlock();
-    return command_queue;
+    return command_pool;
 }
 
 void Device::release_object(DeviceObject* child)

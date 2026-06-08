@@ -1,6 +1,5 @@
 #pragma once
 #include "graphics/sampler.h"
-#include "graphics/pipeline.h"
 #include "renderer/framed_buffer.h"
 #include "renderer/scene_renderer.h"
 #include "renderer/renderer.h"
@@ -17,7 +16,7 @@ struct Renderer2D : Renderer
     FramedMappedBuffer scene_uniform_buffer;
     Graphics::PipelineLayout* global_scene_layout;
     Graphics::DescriptorPool* global_scene_pool;
-    Slice<Graphics::DescriptorSetRef> global_scene_set;
+    Slice<Graphics::DescriptorSet*> global_scene_set;
 
     void init(const RendererCreateInfo& info);
     void destroy();

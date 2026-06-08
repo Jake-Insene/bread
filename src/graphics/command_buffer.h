@@ -1,6 +1,6 @@
 #pragma once
-#include "collections/array.h"
 #include "gpu/gpu.h"
+#include "graphics/device_object.h"
 #include "mem/allocator.h"
 
 
@@ -9,10 +9,12 @@ struct RenderDevice;
 namespace Graphics
 {
 
-struct CommandEncoder
+struct CommandBuffer : DeviceObject
 {
-    Mem::Allocator* allocator;
-    GPU::CommandBufferID command_buffer;
+    GPU::CommandBufferID gpu_command_buffer;
+
+    void init(Mem::Allocator* _allocator, Device* _parent, CommandPool* command_pool);
+    void destroy();
 
     void begin();
     void end();

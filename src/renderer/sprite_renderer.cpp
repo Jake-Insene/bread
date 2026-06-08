@@ -1,8 +1,10 @@
 #include "renderer/sprite_renderer.h"
 
+#include "graphics/command_buffer.h"
+#include "graphics/descriptor_pool.h"
+#include "graphics/descriptor_set.h"
 #include "graphics/pipeline_layout.h"
-#include "math/projection.h"
-#include "renderer/renderer_2d.h"
+#include "graphics/pipeline.h"
 
 
 void SpriteRenderer::init(const SpriteRendererCreateInfo& info)
@@ -130,7 +132,7 @@ void SpriteRenderer::init(const SpriteRendererCreateInfo& info)
     descriptor_pool = graphics_device->create_descriptor_pool(u32(MaxBatchesPerFrame * info.max_frames_in_flight), pool_sizes);
 
     const usize max_descriptor_set_count = MaxBatchesPerFrame * info.max_frames_in_flight;
-    descriptor_sets = Array<Graphics::DescriptorSetRef>::with_size(allocator, max_descriptor_set_count);
+    descriptor_sets = Array<Graphics::DescriptorSet*>::with_size(allocator, max_descriptor_set_count);
     for(usize i = 0; i < max_descriptor_set_count; i++)
     {
         (void)descriptor_sets.add(descriptor_pool->allocate(batch_pipeline_layout->get_layout(1)));
@@ -173,8 +175,7 @@ void SpriteRenderer::build_batch(const FrameInfo& frame_info)
     {
         DebugAssert(set_offset < MaxBatchesPerFrame, "not enough batches for scene");
 
-        Graphics::DescriptorSetRef set_ref = descriptor_sets.get(base_set_index + set_offset);
-        Graphics::DescriptorSet* set = descriptor_pool->set(set_ref);
+        Graphics::DescriptorSet* set = descriptor_sets.get(base_set_index + set_offset);
         batch.set = set;
         set_offset++;
 
@@ -190,7 +191,7 @@ void SpriteRenderer::finish_scene(const FrameInfo&)
 {
 }
 
-void SpriteRenderer::begin_batch_record(const FrameInfo& frame_info, Graphics::CommandEncoder& encoder)
+void SpriteRenderer::begin_batch_record(const FrameInfo& frame_info, Graphics::CommandBuffer* command_buffer)
 {
     FramedBuffer::BufferInfo vertex_buffer_info = instance_buffer.get_buffer_info(frame_info.frame_index);
     Graphics::Buffer* vb = instance_buffer.get_buffer();
@@ -206,7 +207,7 @@ void SpriteRenderer::begin_batch_record(const FrameInfo& frame_info, Graphics::C
             .destination_offset = vertex_buffer_info.offset,
             .size = stream_count * sizeof(StreamSpriteUnit),
         };
-        GPU::command_buffer_copy_buffer(encoder.command_buffer,
+        GPU::command_buffer_copy_buffer(command_buffer->gpu_command_buffer,
             {
                 .source_buffer = svb->gpu_buffer,
                 .destination_buffer = vb->gpu_buffer,
@@ -218,7 +219,7 @@ void SpriteRenderer::begin_batch_record(const FrameInfo& frame_info, Graphics::C
     stream_count = 0;
 }
 
-void SpriteRenderer::end_batch_record(const FrameInfo& frame_info, Graphics::CommandEncoder& encoder)
+void SpriteRenderer::end_batch_record(const FrameInfo& frame_info, Graphics::CommandBuffer* command_buffer)
 {
     FramedBuffer::BufferInfo vertex_buffer_info = instance_buffer.get_buffer_info(frame_info.frame_index);
 
@@ -226,14 +227,14 @@ void SpriteRenderer::end_batch_record(const FrameInfo& frame_info, Graphics::Com
 
     for (const Batch& batch : batches.iter())
     {
-        encoder.bind_pipeline(GPU::PipelineBindPoint::Graphics, batch.pipeline->gpu_pipeline);
-        GPU::DescriptorSetID sets[] = { frame_info.global_set->descriptor_set, batch.set->descriptor_set };
-        encoder.bind_set(GPU::PipelineBindPoint::Graphics, batch_pipeline_layout->gpu_pipeline_layout, 0, sets);
+        command_buffer->bind_pipeline(GPU::PipelineBindPoint::Graphics, batch.pipeline->gpu_pipeline);
+        GPU::DescriptorSetID sets[] = { frame_info.global_set->gpu_descriptor_set, batch.set->gpu_descriptor_set };
+        command_buffer->bind_set(GPU::PipelineBindPoint::Graphics, batch_pipeline_layout->gpu_pipeline_layout, 0, sets);
 
         usize buffer_offset = vertex_buffer_info.offset + batch.offset;
-        encoder.bind_vertex_buffers(0, Slice(&vb, 1), Slice(&buffer_offset, 1));
+        command_buffer->bind_vertex_buffers(0, Slice(&vb, 1), Slice(&buffer_offset, 1));
 
-        encoder.draw(batch.vertices_per_instance, batch.instance_count, 0, 0);
+        command_buffer->draw(batch.vertices_per_instance, batch.instance_count, 0, 0);
     }
 
     batches.clear();

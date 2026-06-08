@@ -16,6 +16,7 @@ void Buffer::init(Mem::Allocator* _allocator, Device* _parent, const BufferInfo&
     );
     heap = nullptr;
     heap_offset = 0;
+    gpu_memory_requirements = GPU::buffer_get_memory_requirements(gpu_buffer);
 }
 
 void Buffer::destroy()
@@ -26,7 +27,7 @@ void Buffer::destroy()
 
 GPU::MemoryRequirements Buffer::get_requirements() const
 {
-    return GPU::buffer_get_memory_requirements(gpu_buffer);
+    return gpu_memory_requirements;
 }
 
 void Buffer::bind_memory(MemoryHeap* memory_heap, usize offset)
@@ -42,12 +43,12 @@ void Buffer::bind_memory(MemoryHeap* memory_heap, usize offset)
     );
 }
 
-Slice<u8> Buffer::map(usize offset, usize len)
+Slice<u8> Buffer::map(usize offset, usize len) const
 {
     return heap->map(heap_offset + offset, len);
 }
 
-void Buffer::unmap(const Slice<u8>& memory)
+void Buffer::unmap(const Slice<u8>& memory) const
 {
     heap->unmap(memory);
 }

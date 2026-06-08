@@ -31,6 +31,7 @@ void Sampler::init(Mem::Allocator* _allocator, Device* _parent, GPU::DeviceID gp
 void Sampler::destroy()
 {
     GPU::sampler_destroy(gpu_sampler);
+    DeviceObject::destroy();
 }
 
 }

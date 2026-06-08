@@ -1,25 +1,19 @@
 #pragma once
+#include "collections/array.h"
 #include "display/window.h"
 #include "mem/allocator.h"
 #include "os/mutex.h"
 #include "gpu/gpu.h"
-#include "graphics/buffer.h"
-#include "graphics/command_queue.h"
-#include "graphics/descriptor_pool.h"
 #include "graphics/device_object.h"
-#include "graphics/fence.h"
-#include "graphics/memory_heap.h"
-#include "graphics/pipeline_layout.h"
-#include "graphics/pipeline.h"
 #include "graphics/queue.h"
-#include "graphics/sampler.h"
-#include "graphics/semaphore.h"
-#include "graphics/swap_chain.h"
-#include "graphics/texture.h"
+#include "graphics/structures.h"
 
 
 namespace Graphics
 {
+
+struct Buffer;
+struct CommandPool;
 
 struct Device
 {
@@ -54,7 +48,7 @@ struct Device
     DescriptorPool* create_descriptor_pool(u32 max_sets, Slice<const GPU::DescriptorPoolSize> sizes);
     PipelineLayout* create_pipeline_layout(const PipelineLayoutInfo& pipeline_layout_info);
     Pipeline* create_pipeline(const PipelineInfo& pipeline_info);
-    CommandQueue* create_command_queue(Queue* queue);
+    CommandPool* create_command_pool(Queue* queue);
 
     void release_object(DeviceObject* child);
 

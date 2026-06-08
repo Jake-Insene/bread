@@ -1,31 +1,19 @@
 #pragma once
-#include "collections/ptr.h"
 #include "gpu/gpu.h"
 #include "mem/allocator.h"
 #include "graphics/device_object.h"
-#include "graphics/memory_heap.h"
+#include "graphics/structures.h"
 
 
 namespace Graphics
 {
 
-struct TextureInfo
-{
-    GPU::TextureType type;
-	GPU::TextureFormat format;
-	Vector3U extent;
-	u32 mip_levels;
-	u32 array_levels;
-	GPU::SampleCount sample_count;
-	GPU::TextureTiling tiling;
-	GPU::TextureUsage usage;
-	GPU::TextureLayout initial_layout;
-    GPU::TextureSubresourceRange subresource_range;
-};
-
 struct Texture : DeviceObject
 {
     GPU::TextureID gpu_texture;
+	MemoryHeap* heap;
+    usize heap_offset;
+    GPU::MemoryRequirements gpu_memory_requirements;
     
     void init(Mem::Allocator* _allocator, Device* _parent, GPU::DeviceID gpu_device, const TextureInfo& info);
     void destroy();
