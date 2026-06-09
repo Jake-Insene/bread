@@ -8,6 +8,7 @@
 /*
 * Contains a linear collection of T elements.
 * T The type of the elements in the slice.
+* Read and Write are allowed.
 */
 template<typename T>
 struct [[nodiscard]] Slice
@@ -19,10 +20,18 @@ struct [[nodiscard]] Slice
     
     constexpr Slice() : items(nullptr), len(0) {}
     
-    constexpr Slice(const Slice<RemoveConst<T>>& slice) : items(slice.items), len(slice.len) {}
+    template<typename U>
+    requires(ConvertibleTo<U, T>)
+    constexpr Slice(const Slice<U>& slice) : items(slice.items), len(slice.len) {}
 
     template<usize N>
     constexpr Slice(T(&_items)[N])
+        : items(_items), len(N)
+    {}
+
+    template<typename U, usize N>
+    requires(ConvertibleTo<U, T>)
+    constexpr Slice(U(&_items)[N])
         : items(_items), len(N)
     {}
 
@@ -30,7 +39,15 @@ struct [[nodiscard]] Slice
         : items(_items), len(_len)
     {}
 
-    constexpr Slice& operator=(const Slice<RemoveConst<T>>& slice)
+    template<typename U>
+    requires(ConvertibleTo<U, T>)
+    constexpr Slice(U* _items, const usize _len)
+        : items(_items), len(_len)
+    {}
+
+    template<typename U>
+    requires(ConvertibleTo<U, T>)
+    constexpr Slice& operator=(const Slice<U>& slice)
     {
         items = slice.items;
         len = slice.len;

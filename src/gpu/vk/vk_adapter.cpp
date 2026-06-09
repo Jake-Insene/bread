@@ -73,7 +73,7 @@ void VulkanAdapter::initialize(Mem::Allocator* _allocator)
 {
     VKDebugInfo("Initializing Vulkan Driver...");
     
-    allocator = _allocator;
+    internal_allocator = _allocator;
 
     tmp_allocator.init(OS::map_memory(1024*1024, OS::MapReadWrite));
 
@@ -2136,53 +2136,76 @@ void VulkanAdapter::command_buffer_end_renderpass(GPU::CommandBufferID command_b
     }
 }
 
-void VulkanAdapter::command_buffer_memory_barrier(GPU::CommandBufferID command_buffer, const GPU::PipelineMemoryBarrier& memory_barrier)
-{
-    Unused(command_buffer, memory_barrier);
-}
-
-void VulkanAdapter::command_buffer_buffer_barrier(GPU::CommandBufferID command_buffer, const GPU::PipelineBufferBarrier& buffer_barrier)
-{
-    Unused(command_buffer, buffer_barrier);
-}
-
-void VulkanAdapter::command_buffer_texture_barrier(GPU::CommandBufferID command_buffer, const GPU::PipelineTextureBarrier& texture_barrier)
+void VulkanAdapter::command_buffer_pipeline_barrier(GPU::CommandBufferID command_buffer, const GPU::PipelineBarrier& pipeline_barrier)
 {
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
+    Mem::Allocator* allocator = acquire_tmp_allocator();
 
-    VkPipelineStageFlags vk_src_stages = VkUtils::_vk_get_pipeline_stages(texture_barrier.src_stages);
-    VkPipelineStageFlags vk_dest_stages = VkUtils::_vk_get_pipeline_stages(texture_barrier.dest_stages);
+    VkPipelineStageFlags vk_src_stages = VkUtils::_vk_get_pipeline_stages(pipeline_barrier.src_stages);
+    VkPipelineStageFlags vk_dest_stages = VkUtils::_vk_get_pipeline_stages(pipeline_barrier.dest_stages);
 
-    VkImageSubresourceRange vk_subresource_range =
+    Slice<VkMemoryBarrier> vk_memory_barries = allocator->array<VkMemoryBarrier>(pipeline_barrier.memory_barriers.len);
+    for(usize i = 0; i < vk_memory_barries.len; i++)
     {
-        .aspectMask = VkUtils::_vk_get_aspect_masks(texture_barrier.subresource_range.aspect),
-        .baseMipLevel = texture_barrier.subresource_range.base_mip_level,
-        .levelCount = texture_barrier.subresource_range.level_count,
-        .baseArrayLayer = texture_barrier.subresource_range.base_array_layer,
-        .layerCount = texture_barrier.subresource_range.layer_count,
-    };
+        vk_memory_barries[i] =
+        {
+            .sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER,
+            .pNext = nullptr,
+            .srcAccessMask = VkUtils::_vk_get_access_masks(pipeline_barrier.memory_barriers[i].src_masks),
+            .dstAccessMask = VkUtils::_vk_get_access_masks(pipeline_barrier.memory_barriers[i].dest_masks),
+        };
+    }
 
-    Texture& tex = _get_texture(texture_barrier.texture);
-    VkImage vk_image = tex.vk_image;
-
-    VkImageMemoryBarrier vk_image_barrier =
+    Slice<VkBufferMemoryBarrier> vk_buffer_barries = allocator->array<VkBufferMemoryBarrier>(pipeline_barrier.buffer_barriers.len);
+    for(usize i = 0; i < vk_buffer_barries.len; i++)
     {
-        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-        .pNext = nullptr,
-        .srcAccessMask = VkUtils::_vk_get_access_masks(texture_barrier.src_masks),
-        .dstAccessMask = VkUtils::_vk_get_access_masks(texture_barrier.dest_masks),
-        .oldLayout = VkUtils::_vk_get_image_layout(texture_barrier.src_layout),
-        .newLayout = VkUtils::_vk_get_image_layout(texture_barrier.dest_layout),
-        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .image = vk_image,
-        .subresourceRange = vk_subresource_range,
-    };
+        Buffer& buffer = _get_buffer(pipeline_barrier.buffer_barriers[i].buffer);
+        vk_buffer_barries[i] =
+        {
+            .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+            .pNext = nullptr,
+            .srcAccessMask = VkUtils::_vk_get_access_masks(pipeline_barrier.buffer_barriers[i].src_masks),
+            .dstAccessMask = VkUtils::_vk_get_access_masks(pipeline_barrier.buffer_barriers[i].dest_masks),
+            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .buffer = buffer.vk_buffer,
+            .offset = pipeline_barrier.buffer_barriers[i].offset,
+            .size = pipeline_barrier.buffer_barriers[i].size,
+        };
+    }
 
+    Slice<VkImageMemoryBarrier> vk_image_barries = allocator->array<VkImageMemoryBarrier>(pipeline_barrier.texture_barriers.len);
+    for(usize i = 0; i < vk_image_barries.len; i++)
+    {
+        Texture& tex = _get_texture(pipeline_barrier.texture_barriers[i].texture);
+        vk_image_barries[i] =
+        {
+            .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+            .pNext = nullptr,
+            .srcAccessMask = VkUtils::_vk_get_access_masks(pipeline_barrier.texture_barriers[i].src_masks),
+            .dstAccessMask = VkUtils::_vk_get_access_masks(pipeline_barrier.texture_barriers[i].dest_masks),
+            .oldLayout = VkUtils::_vk_get_image_layout(pipeline_barrier.texture_barriers[i].src_layout),
+            .newLayout = VkUtils::_vk_get_image_layout(pipeline_barrier.texture_barriers[i].dest_layout),
+            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .image = tex.vk_image,
+            .subresourceRange = 
+            {
+                .aspectMask = VkUtils::_vk_get_aspect_masks(pipeline_barrier.texture_barriers[i].subresource_range.aspect),
+                .baseMipLevel = pipeline_barrier.texture_barriers[i].subresource_range.base_mip_level,
+                .levelCount = pipeline_barrier.texture_barriers[i].subresource_range.level_count,
+                .baseArrayLayer = pipeline_barrier.texture_barriers[i].subresource_range.base_array_layer,
+                .layerCount = pipeline_barrier.texture_barriers[i].subresource_range.layer_count,
+            },
+        };
+    }
+        
     ld.vk.vkCmdPipelineBarrier(
         cmd_buffer.vk_command_buffer, vk_src_stages, vk_dest_stages, 0,
-        0, nullptr, 0, nullptr, 1, &vk_image_barrier
+        static_cast<uint32_t>(vk_memory_barries.len), vk_memory_barries.ptr(),
+        static_cast<uint32_t>(vk_buffer_barries.len), vk_buffer_barries.ptr(),
+        static_cast<uint32_t>(vk_image_barries.len), vk_image_barries.ptr()
     );
 }
 
@@ -2190,41 +2213,46 @@ void VulkanAdapter::command_buffer_copy_buffer_to_texture(GPU::CommandBufferID c
 {
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
+    Mem::Allocator* allocator = acquire_tmp_allocator();
 
-    Buffer& src_buffer = _get_buffer(copy_info.source_buffer);
-    Texture& dest_texture = _get_texture(copy_info.destination_texture);
+    Buffer& src_buffer = _get_buffer(copy_info.src_buffer);
+    Texture& dest_texture = _get_texture(copy_info.dest_texture);
 
-    VkImageSubresourceLayers vk_subresource_layer =
+    Slice<VkBufferImageCopy> vk_regions = allocator->array<VkBufferImageCopy>(copy_info.regions.len);
+    for(usize i = 0; i < vk_regions.len; i++)
     {
-        .aspectMask = VkUtils::_vk_get_aspect_masks(copy_info.subresource_layer.aspect),
-        .mipLevel = copy_info.subresource_layer.mip_level,
-        .baseArrayLayer = copy_info.subresource_layer.base_array_layer,
-        .layerCount = copy_info.subresource_layer.layer_count,
-    };
-
-    VkBufferImageCopy vk_buffer_image_copy =
-    {
-        .bufferOffset = copy_info.source_offset,
-        .bufferRowLength = copy_info.row_length,
-        .bufferImageHeight = copy_info.texture_height,
-        .imageSubresource = vk_subresource_layer,
-        .imageOffset =
+        vk_regions[i] =
         {
-            .x = copy_info.offset.x,
-            .y = copy_info.offset.y,
-            .z = copy_info.offset.z,
-        },
-        .imageExtent =
-        {
-            .width = copy_info.extent.x,
-            .height = copy_info.extent.y,
-            .depth = copy_info.extent.z,
-        },
-    };
+            .bufferOffset = copy_info.regions[i].buffer_offset,
+            .bufferRowLength = copy_info.regions[i].buffer_row_length,
+            .bufferImageHeight = copy_info.regions[i].buffer_texture_height,
+            .imageSubresource =
+            {
+                .aspectMask = VkUtils::_vk_get_aspect_masks(copy_info.regions[i].texture_subresource_layer.aspect),
+                .mipLevel = copy_info.regions[i].texture_subresource_layer.mip_level,
+                .baseArrayLayer = copy_info.regions[i].texture_subresource_layer.base_array_layer,
+                .layerCount = copy_info.regions[i].texture_subresource_layer.layer_count,
+            },
+            .imageOffset =
+            {
+                .x = copy_info.regions[i].texture_offset.x,
+                .y = copy_info.regions[i].texture_offset.y,
+                .z = copy_info.regions[i].texture_offset.z,
+            },
+            .imageExtent =
+            {
+                .width = copy_info.regions[i].texture_extent.x,
+                .height = copy_info.regions[i].texture_extent.y,
+                .depth = copy_info.regions[i].texture_extent.z,
+            },
+        };
+    }
 
     ld.vk.vkCmdCopyBufferToImage(
-        cmd_buffer.vk_command_buffer, src_buffer.vk_buffer, dest_texture.vk_image,
-        VkUtils::_vk_get_image_layout(copy_info.destination_layout), 1, &vk_buffer_image_copy
+        cmd_buffer.vk_command_buffer,
+        src_buffer.vk_buffer, dest_texture.vk_image,
+        VkUtils::_vk_get_image_layout(copy_info.dest_layout),
+        static_cast<uint32_t>(vk_regions.len), vk_regions.ptr()
     );
 }
     
@@ -2234,16 +2262,16 @@ void VulkanAdapter::command_buffer_copy_buffer(GPU::CommandBufferID command_buff
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
     Mem::Allocator* allocator = acquire_tmp_allocator();
 
-    Buffer& src_buffer = _get_buffer(copy_info.source_buffer);
-    Buffer& dest_buffer = _get_buffer(copy_info.destination_buffer);
+    Buffer& src_buffer = _get_buffer(copy_info.src_buffer);
+    Buffer& dest_buffer = _get_buffer(copy_info.dest_buffer);
 
     Slice<VkBufferCopy> vk_regions = allocator->array<VkBufferCopy>(copy_info.copy_regions.len);
     for(usize i = 0; i < copy_info.copy_regions.len; i++)
     {
         vk_regions[i] =
         {
-            .srcOffset = copy_info.copy_regions[i].source_offset,
-            .dstOffset = copy_info.copy_regions[i].destination_offset,
+            .srcOffset = copy_info.copy_regions[i].src_offset,
+            .dstOffset = copy_info.copy_regions[i].dest_offset,
             .size = copy_info.copy_regions[i].size,
         };
     }

@@ -5,33 +5,39 @@
 
 void RenderPass::transition_to_render_attachment(Graphics::CommandBuffer* command_buffer, GPU::TextureID texture)
 {
-    command_buffer->texture_barrier(
-        {
-            .src_stages = GPU::PipelineStages::RenderOutput,
-            .dest_stages = GPU::PipelineStages::RenderOutput,
-            .src_masks = GPU::AccessMasks(0),
-            .dest_masks = GPU::AccessMasks::RenderAttachmentWrite,
-            .src_layout = GPU::TextureLayout::Unknown,
-            .dest_layout = GPU::TextureLayout::RenderAttachment,
-            .texture = texture,
-            .subresource_range = GPU::TextureSubresourceRange::color(0, 1, 0, 1),
-        }
+    GPU::PipelineTextureBarrier texture_barrier =
+    {
+        .src_masks = GPU::AccessMasks(),
+        .dest_masks = GPU::AccessMasks::RenderAttachmentWrite,
+        .src_layout = GPU::TextureLayout::Unknown,
+        .dest_layout = GPU::TextureLayout::RenderAttachment,
+        .texture = texture,
+        .subresource_range = GPU::TextureSubresourceRange::color(0, 1, 0, 1),
+    };
+    command_buffer->pipeline_barrier(
+        GPU::PipelineBarrier::texture_barrier(
+            GPU::PipelineStages::RenderOutput, GPU::PipelineStages::RenderOutput,
+            Slice(&texture_barrier, 1)
+        )
     );
 }
 
 void RenderPass::transition_to_present(Graphics::CommandBuffer* command_buffer, GPU::TextureID texture)
 {
-    command_buffer->texture_barrier(
-        {
-            .src_stages = GPU::PipelineStages::RenderOutput,
-            .dest_stages = GPU::PipelineStages::End,
-            .src_masks = GPU::AccessMasks::RenderAttachmentWrite,
-            .dest_masks = GPU::AccessMasks(0),
-            .src_layout = GPU::TextureLayout::RenderAttachment,
-            .dest_layout = GPU::TextureLayout::Present,
-            .texture = texture,
-            .subresource_range = GPU::TextureSubresourceRange::color(0, 1, 0, 1),
-        }
+    GPU::PipelineTextureBarrier texture_barrier =
+    {
+        .src_masks = GPU::AccessMasks::RenderAttachmentWrite,
+        .dest_masks = GPU::AccessMasks(),
+        .src_layout = GPU::TextureLayout::RenderAttachment,
+        .dest_layout = GPU::TextureLayout::Present,
+        .texture = texture,
+        .subresource_range = GPU::TextureSubresourceRange::color(0, 1, 0, 1),
+    };
+    command_buffer->pipeline_barrier(
+        GPU::PipelineBarrier::texture_barrier(
+            GPU::PipelineStages::RenderOutput, GPU::PipelineStages::End,
+            Slice(&texture_barrier, 1)
+        )
     );
 }
 

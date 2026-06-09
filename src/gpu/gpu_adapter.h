@@ -86,12 +86,11 @@ struct GPUAdapter
 
 	virtual void command_buffer_begin(GPU::CommandBufferID command_buffer) = 0;
 	virtual void command_buffer_end(GPU::CommandBufferID command_buffer) = 0;
+	
 	virtual void command_buffer_begin_renderpass(GPU::CommandBufferID command_buffer, const GPU::RenderPassBeginInfo& begin_info) = 0;
 	virtual void command_buffer_end_renderpass(GPU::CommandBufferID command_buffer, const GPU::RenderPassEndInfo& end_info) = 0;
 
-	virtual void command_buffer_memory_barrier(GPU::CommandBufferID command_buffer, const GPU::PipelineMemoryBarrier& memory_barrier) = 0;
-	virtual void command_buffer_buffer_barrier(GPU::CommandBufferID command_buffer, const GPU::PipelineBufferBarrier& buffer_barrier) = 0;
-	virtual void command_buffer_texture_barrier(GPU::CommandBufferID command_buffer, const GPU::PipelineTextureBarrier& texture_barrier) = 0;
+	virtual void command_buffer_pipeline_barrier(GPU::CommandBufferID command_buffer, const GPU::PipelineBarrier& pipeline_barrier) = 0;
 
 	virtual void command_buffer_copy_buffer_to_texture(GPU::CommandBufferID command_buffer, const GPU::CopyBufferToTextureInfo& copy_info) = 0;
 	virtual void command_buffer_copy_buffer(GPU::CommandBufferID command_buffer, const GPU::BufferCopyInfo& copy_info) = 0;

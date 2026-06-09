@@ -145,7 +145,7 @@ constexpr void _copy_impl(Slice<T> dest, const Slice<const T>& src)
 template<typename T, typename U>
 constexpr void copy(Slice<T> dest, const Slice<U>& src)
 {
-    _copy_impl<T>(dest, src);
+    _copy_impl<T>(dest, Slice<const T>(src.items, src.len));
 }
 
 void _set_zero(Slice<u8> dest);

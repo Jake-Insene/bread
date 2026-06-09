@@ -203,14 +203,14 @@ void SpriteRenderer::begin_batch_record(const FrameInfo& frame_info, Graphics::C
     {
         GPU::BufferCopyRegion region =
         {
-            .source_offset = vertex_buffer_info.offset,
-            .destination_offset = vertex_buffer_info.offset,
+            .src_offset = vertex_buffer_info.offset,
+            .dest_offset = vertex_buffer_info.offset,
             .size = stream_count * sizeof(StreamSpriteUnit),
         };
         GPU::command_buffer_copy_buffer(command_buffer->gpu_command_buffer,
             {
-                .source_buffer = svb->gpu_buffer,
-                .destination_buffer = vb->gpu_buffer,
+                .src_buffer = svb->gpu_buffer,
+                .dest_buffer = vb->gpu_buffer,
                 .copy_regions = Slice(&region, 1),
             }
         );
@@ -223,16 +223,16 @@ void SpriteRenderer::end_batch_record(const FrameInfo& frame_info, Graphics::Com
 {
     FramedBuffer::BufferInfo vertex_buffer_info = instance_buffer.get_buffer_info(frame_info.frame_index);
 
-    GPU::BufferID vb = instance_buffer.get_buffer()->gpu_buffer;
+    const Graphics::Buffer* vb[] = { instance_buffer.get_buffer() };
 
     for (const Batch& batch : batches.iter())
     {
-        command_buffer->bind_pipeline(GPU::PipelineBindPoint::Graphics, batch.pipeline->gpu_pipeline);
-        GPU::DescriptorSetID sets[] = { frame_info.global_set->gpu_descriptor_set, batch.set->gpu_descriptor_set };
-        command_buffer->bind_set(GPU::PipelineBindPoint::Graphics, batch_pipeline_layout->gpu_pipeline_layout, 0, sets);
+        command_buffer->bind_pipeline(GPU::PipelineBindPoint::Graphics, batch.pipeline);
+        const Graphics::DescriptorSet* sets[] = { frame_info.global_set, batch.set };
+        command_buffer->bind_set(GPU::PipelineBindPoint::Graphics, batch_pipeline_layout, 0, sets);
 
         usize buffer_offset = vertex_buffer_info.offset + batch.offset;
-        command_buffer->bind_vertex_buffers(0, Slice(&vb, 1), Slice(&buffer_offset, 1));
+        command_buffer->bind_vertex_buffers(0, vb, Slice(&buffer_offset, 1));
 
         command_buffer->draw(batch.vertices_per_instance, batch.instance_count, 0, 0);
     }

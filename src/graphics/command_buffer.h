@@ -2,15 +2,17 @@
 #include "gpu/gpu.h"
 #include "graphics/device_object.h"
 #include "mem/allocator.h"
+#include "mem/stack_allocator.h"
 
-
-struct RenderDevice;
 
 namespace Graphics
 {
 
 struct CommandBuffer : DeviceObject
 {
+    static constexpr usize DefaultStackSize = 4096;
+
+    Mem::StackAllocator tmp_allocator;
     GPU::CommandBufferID gpu_command_buffer;
 
     void init(Mem::Allocator* _allocator, Device* _parent, CommandPool* command_pool);
@@ -22,11 +24,14 @@ struct CommandBuffer : DeviceObject
     void begin_renderpass(const GPU::RenderPassBeginInfo& begin_info);
     void end_renderpass(const GPU::RenderPassEndInfo& end_info);
 
-    void texture_barrier(const GPU::PipelineTextureBarrier& barrier);
+    void pipeline_barrier(const GPU::PipelineBarrier& pipeline_barrier);
 
-    void bind_pipeline(GPU::PipelineBindPoint bind_point, GPU::PipelineID pipeline);
-    void bind_set(GPU::PipelineBindPoint bind_point, GPU::PipelineLayoutID pipeline_layout, u32 base_set, const Slice<GPU::DescriptorSetID>& sets);
-    void bind_vertex_buffers(u32 base_binding, const Slice<GPU::BufferID>& buffers, const Slice<usize>& offsets);
+    void copy_buffer_to_texture(const GPU::CopyBufferToTextureInfo& copy_info);
+	void copy_buffer(const GPU::BufferCopyInfo& copy_info);
+
+    void bind_pipeline(GPU::PipelineBindPoint bind_point, const Pipeline* pipeline);
+    void bind_set(GPU::PipelineBindPoint bind_point, const PipelineLayout* pipeline_layout, u32 base_set, const Slice<const DescriptorSet*>& sets);
+    void bind_vertex_buffers(u32 base_binding, const Slice<const Buffer*>& buffers, const Slice<usize>& offsets);
 
     void set_viewports(u32 base_viewport, const Slice<const GPU::Viewport>& viewports);
     void set_scissors(u32 base_scissor, const Slice<const GPU::Scissor>& scissors);

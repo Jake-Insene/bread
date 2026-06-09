@@ -494,37 +494,26 @@ void GPU::command_buffer_end_renderpass(CommandBufferID command_buffer, const Re
 	current_adapter->command_buffer_end_renderpass(command_buffer, end_info);
 }
 
-void GPU::command_buffer_memory_barrier(CommandBufferID command_buffer, const PipelineMemoryBarrier& memory_barrier)
+void GPU::command_buffer_pipeline_barrier(CommandBufferID command_buffer, const PipelineBarrier& pipeline_barrier)
 {
     GPUValidationCheck(command_buffer.is_valid() == false, "invalid command buffer");
-	current_adapter->command_buffer_memory_barrier(command_buffer, memory_barrier);
-}
-
-void GPU::command_buffer_buffer_barrier(CommandBufferID command_buffer, const PipelineBufferBarrier& buffer_barrier)
-{
-    GPUValidationCheck(command_buffer.is_valid() == false, "invalid command buffer");
-	current_adapter->command_buffer_buffer_barrier(command_buffer, buffer_barrier);
-}
-
-void GPU::command_buffer_texture_barrier(CommandBufferID command_buffer, const PipelineTextureBarrier& texture_barrier)
-{
-    GPUValidationCheck(command_buffer.is_valid() == false, "invalid command buffer");
-	current_adapter->command_buffer_texture_barrier(command_buffer, texture_barrier);
+	current_adapter->command_buffer_pipeline_barrier(command_buffer, pipeline_barrier);
 }
 
 void GPU::command_buffer_copy_buffer_to_texture(CommandBufferID command_buffer, const CopyBufferToTextureInfo& copy_info)
 {
 	GPUValidationCheck(command_buffer.is_valid() == false, "invalid command buffer");
-    GPUValidationCheck(copy_info.source_buffer.is_valid() == false, "invalid source buffer");
-    GPUValidationCheck(copy_info.destination_texture.is_valid() == false, "invalid destination texture");
+    GPUValidationCheck(copy_info.src_buffer.is_valid() == false, "invalid source buffer");
+    GPUValidationCheck(copy_info.dest_texture.is_valid() == false, "invalid destination texture");
+    GPUValidationCheck(copy_info.dest_layout == GPU::TextureLayout::Unknown, "invalid destination texture layout");
 	current_adapter->command_buffer_copy_buffer_to_texture(command_buffer, copy_info);
 }
 
 void GPU::command_buffer_copy_buffer(CommandBufferID command_buffer, const BufferCopyInfo& copy_info)
 {
 	GPUValidationCheck(command_buffer.is_valid() == false, "invalid command buffer");
-	GPUValidationCheck(copy_info.source_buffer.is_valid() == false, "invalid source buffer");
-    GPUValidationCheck(copy_info.destination_buffer.is_valid() == false, "invalid destination buffer");
+	GPUValidationCheck(copy_info.src_buffer.is_valid() == false, "invalid source buffer");
+    GPUValidationCheck(copy_info.dest_buffer.is_valid() == false, "invalid destination buffer");
 	current_adapter->command_buffer_copy_buffer(command_buffer, copy_info);
 }
 

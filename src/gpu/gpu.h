@@ -588,6 +588,17 @@ namespace GPU
     	uint32_t mip_level;
     	uint32_t base_array_layer;
     	uint32_t layer_count;
+
+		static constexpr TextureSubresourceLayers color(u32 mip_level, u32 base_array_layer, u32 layer_count)
+		{
+			return TextureSubresourceLayers
+			{
+				.aspect = GPU::TextureAspect::Color,
+				.mip_level = mip_level,
+				.base_array_layer = base_array_layer,
+				.layer_count = layer_count,
+			};
+		}
 	};
 
 	struct TextureCreateInfo
@@ -990,16 +1001,21 @@ namespace GPU
 
 	struct PipelineMemoryBarrier
 	{
+		AccessMasks src_masks;
+		AccessMasks dest_masks;
 	};
 
 	struct PipelineBufferBarrier
 	{
+		AccessMasks src_masks;
+		AccessMasks dest_masks;
+		BufferID buffer;
+		usize offset;
+		usize size;
 	};
 
 	struct PipelineTextureBarrier
 	{
-		PipelineStages src_stages;
-		PipelineStages dest_stages;
 		AccessMasks src_masks;
 		AccessMasks dest_masks;
 		TextureLayout src_layout;
@@ -1008,30 +1024,84 @@ namespace GPU
 		TextureSubresourceRange subresource_range;
 	};
 
+	struct PipelineBarrier
+	{
+		PipelineStages src_stages;
+		PipelineStages dest_stages;
+		Slice<const PipelineMemoryBarrier> memory_barriers;
+		Slice<const PipelineBufferBarrier> buffer_barriers;
+		Slice<const PipelineTextureBarrier> texture_barriers;
+
+		static constexpr PipelineBarrier texture_barrier(PipelineStages src_stages, PipelineStages dest_stages,
+			const Slice<const PipelineTextureBarrier>& texture_barries)
+		{
+			return PipelineBarrier
+			{
+				.src_stages = src_stages,
+				.dest_stages = dest_stages,
+				.memory_barriers = {},
+				.buffer_barriers = {},
+				.texture_barriers = texture_barries,
+			};
+		}
+	};
+
 	struct BufferCopyRegion
 	{
-		usize source_offset;
-		usize destination_offset;
+		usize src_offset;
+		usize dest_offset;
 		usize size;
+	};
+
+	struct BufferTextureCopyRegion
+	{
+		usize buffer_offset;
+		u32 buffer_row_length;
+		u32 buffer_texture_height;
+		TextureSubresourceLayers texture_subresource_layer;
+		Vector3I texture_offset;
+		Vector3U texture_extent;
+
+		static constexpr BufferTextureCopyRegion region(usize buffer_offset,
+			const TextureSubresourceLayers& texture_subresource_layer,
+			const Vector3I& texture_offset, const Vector3U& texture_extent)
+		{
+			return BufferTextureCopyRegion
+			{
+				.buffer_offset = buffer_offset,
+				.buffer_row_length = 0,
+				.buffer_texture_height = 0,
+				.texture_subresource_layer = texture_subresource_layer,
+				.texture_offset = texture_offset,
+				.texture_extent = texture_extent,
+			};
+		}
 	};
 	
 	struct CopyBufferToTextureInfo
 	{
-		BufferID source_buffer;
-		usize source_offset;
-		u32 row_length;
-		u32 texture_height;
-		TextureID destination_texture;
-		TextureLayout destination_layout;
-		TextureSubresourceLayers subresource_layer;
-		Vector3I offset;
-		Vector3U extent;
+		BufferID src_buffer;
+		TextureID dest_texture;
+		TextureLayout dest_layout;
+		Slice<const BufferTextureCopyRegion> regions;
+		
+		static constexpr CopyBufferToTextureInfo copy(BufferID src_buffer, TextureID dest_texture,
+			TextureLayout dest_layout, const Slice<const BufferTextureCopyRegion>& regions)
+		{
+			return CopyBufferToTextureInfo
+			{
+				.src_buffer = src_buffer,
+				.dest_texture = dest_texture,
+				.dest_layout = dest_layout,
+				.regions = regions,
+			};
+		}
 	};
 
 	struct  BufferCopyInfo
 	{
-		BufferID source_buffer;
-		BufferID destination_buffer;
+		BufferID src_buffer;
+		BufferID dest_buffer;
 		Slice<const BufferCopyRegion> copy_regions;
 	};
 
@@ -1097,9 +1167,7 @@ namespace GPU
 	void command_buffer_begin_renderpass(CommandBufferID command_buffer, const RenderPassBeginInfo& begin_info);
 	void command_buffer_end_renderpass(CommandBufferID command_buffer, const RenderPassEndInfo& end_info);
 
-	void command_buffer_memory_barrier(CommandBufferID command_buffer, const PipelineMemoryBarrier& memory_barrier);
-	void command_buffer_buffer_barrier(CommandBufferID command_buffer, const PipelineBufferBarrier& buffer_barrier);
-	void command_buffer_texture_barrier(CommandBufferID command_buffer, const PipelineTextureBarrier& texture_barrier);
+	void command_buffer_pipeline_barrier(CommandBufferID command_buffer, const PipelineBarrier& pipeline_barrier);
 
 	void command_buffer_copy_buffer_to_texture(CommandBufferID command_buffer, const CopyBufferToTextureInfo& copy_info);
 	void command_buffer_copy_buffer(CommandBufferID command_buffer, const BufferCopyInfo& copy_info);

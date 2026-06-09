@@ -82,62 +82,48 @@ GPUTextureID GPUResourceManager::create_texture(const TextureAllocateInfo& alloc
         submit_and_wait(
             graphics_device->copy_queue.gpu_queue, [&](GPU::CommandBufferID cmd)
             {
-                GPU::command_buffer_texture_barrier(cmd,
-                    {
-                        .src_stages = GPU::PipelineStages::Begin,
-                        .dest_stages = GPU::PipelineStages::Transfer,
-                        .src_masks = GPU::AccessMasks(),
-                        .dest_masks = GPU::AccessMasks::TransferWrite,
-                        .src_layout = GPU::TextureLayout::Unknown,
-                        .dest_layout = GPU::TextureLayout::TransferDestination,
-                        .texture = gpu_texture,
-                        .subresource_range =
-                        {
-                            .aspect = GPU::TextureAspect::Color,
-                            .base_mip_level = 0,
-                            .level_count = 1,
-                            .base_array_layer = 0,
-                            .layer_count = 1,
-                        },
-                    }
+                const GPU::PipelineTextureBarrier begin_barrier =
+                {
+                    .src_masks = GPU::AccessMasks(),
+                    .dest_masks = GPU::AccessMasks::TransferWrite,
+                    .src_layout = GPU::TextureLayout::Unknown,
+                    .dest_layout = GPU::TextureLayout::TransferDestination,
+                    .texture = gpu_texture,
+                    .subresource_range = GPU::TextureSubresourceRange::color(0, 1, 0, 1),
+                };
+                GPU::command_buffer_pipeline_barrier(cmd,
+                    GPU::PipelineBarrier::texture_barrier(
+                        GPU::PipelineStages::Begin, GPU::PipelineStages::Transfer,
+                        Slice(&begin_barrier, 1)
+                    )
+                );
+
+                GPU::BufferTextureCopyRegion region = GPU::BufferTextureCopyRegion::region(
+                    0, GPU::TextureSubresourceLayers::color(0, 0, 1),
+                    Vector3I(), alloc_info.extent
                 );
                 GPU::command_buffer_copy_buffer_to_texture(cmd,
-                    {
-                        .source_buffer = buffer->gpu_buffer,
-                        .source_offset = 0,
-                        .row_length = 0,
-                        .texture_height = 0,
-                        .destination_texture = gpu_texture,
-                        .destination_layout = GPU::TextureLayout::TransferDestination,
-                        .subresource_layer =
-                        {
-                            .aspect = GPU::TextureAspect::Color,
-                            .mip_level = 0,
-                            .base_array_layer = 0,
-                            .layer_count = 1,
-                        },
-                        .offset = Vector3I(),
-                        .extent = alloc_info.extent,
-                    }
+                    GPU::CopyBufferToTextureInfo::copy(
+                        buffer->gpu_buffer, gpu_texture,
+                        GPU::TextureLayout::TransferDestination,
+                        Slice(&region, 1)
+                    )
                 );
-                GPU::command_buffer_texture_barrier(cmd,
-                    {
-                        .src_stages = GPU::PipelineStages::Transfer,
-                        .dest_stages = GPU::PipelineStages::FragmentShader,
-                        .src_masks = GPU::AccessMasks::TransferWrite,
-                        .dest_masks = GPU::AccessMasks::ShaderRead,
-                        .src_layout = GPU::TextureLayout::TransferDestination,
-                        .dest_layout = GPU::TextureLayout::ShaderReadOnly,
-                        .texture = gpu_texture,
-                        .subresource_range =
-                        {
-                            .aspect = GPU::TextureAspect::Color,
-                            .base_mip_level = 0,
-                            .level_count = 1,
-                            .base_array_layer = 0,
-                            .layer_count = 1,
-                        },
-                    }
+
+                const GPU::PipelineTextureBarrier end_barrier =
+                {
+                    .src_masks = GPU::AccessMasks::TransferWrite,
+                    .dest_masks = GPU::AccessMasks::ShaderRead,
+                    .src_layout = GPU::TextureLayout::TransferDestination,
+                    .dest_layout = GPU::TextureLayout::ShaderReadOnly,
+                    .texture = gpu_texture,
+                    .subresource_range = GPU::TextureSubresourceRange::color(0, 1, 0, 1),
+                };
+                GPU::command_buffer_pipeline_barrier(cmd,
+                    GPU::PipelineBarrier::texture_barrier(
+                        GPU::PipelineStages::Transfer, GPU::PipelineStages::FragmentShader,
+                        Slice(&end_barrier, 1)
+                    )
                 );
             }
         );
