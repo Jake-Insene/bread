@@ -1,7 +1,6 @@
 #pragma once
 #include "gpu/gpu.h"
 #include "graphics/device_object.h"
-#include "mem/allocator.h"
 #include "mem/stack_allocator.h"
 
 
@@ -27,7 +26,7 @@ struct CommandBuffer : DeviceObject
     void pipeline_barrier(const GPU::PipelineBarrier& pipeline_barrier);
 
     void copy_buffer_to_texture(const GPU::CopyBufferToTextureInfo& copy_info);
-	void copy_buffer(const GPU::BufferCopyInfo& copy_info);
+	void copy_buffer(const GPU::CopyBufferInfo& copy_info);
 
     void bind_pipeline(GPU::PipelineBindPoint bind_point, const Pipeline* pipeline);
     void bind_set(GPU::PipelineBindPoint bind_point, const PipelineLayout* pipeline_layout, u32 base_set, const Slice<const DescriptorSet*>& sets);

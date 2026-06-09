@@ -81,9 +81,9 @@ Slice<u8> Win32OS::map_memory(usize memory_size, OS::MapAccess access)
 
     switch (access)
     {
-    case OS::MapUnknown:
+    case OS::Unknown:
         break;
-    case OS::MapReadWrite:
+    case OS::ReadWrite:
     {
         ptr.items = reinterpret_cast<u8*>(
             VirtualAllocEx(GetCurrentProcess(),
@@ -95,7 +95,7 @@ Slice<u8> Win32OS::map_memory(usize memory_size, OS::MapAccess access)
         ptr.len = aligned_size;
     }
         break;
-    case OS::MapReadWriteExecute:
+    case OS::ReadWriteExecute:
     {
         ptr.items = reinterpret_cast<u8*>(
             VirtualAllocEx(GetCurrentProcess(),

@@ -8,6 +8,7 @@ struct ObjectData
     float4 VertexPosition;
     float4 InstancePosition;
     float4x4 WorldTransform;
+    nointerpolation uint TextureIndex;
 };
 
 float4 InstanceToWorld(in ObjectData Input, float4 InstancePosition)

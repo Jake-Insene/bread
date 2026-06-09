@@ -10,7 +10,7 @@ void Renderer::init(const RendererCreateInfo& info)
 
     graphics_device = info.graphics_device;
 
-    command_pool = graphics_device->create_command_pool(graphics_device->get_graphics_queue());
+    command_pool = graphics_device->create_command_pool(GPU::QueueUsage::Graphics);
 
     swap_chain = graphics_device->create_swap_chain(info.target_window, info.surface_format);
 
@@ -82,6 +82,7 @@ Renderer::FrameInfo Renderer::begin_frame()
     if(image_index == MaxValue<u32> && image_acquired)
     {
         frame.in_flight_fence = command_pool->execute_empty(
+            graphics_device->get_graphics_queue(),
             {
                 .wait_semaphores = Slice(&frame.present_complete_semaphore, 1),
                 .wait_stages = wait_stages,
@@ -121,11 +122,12 @@ void Renderer::submit_command_buffer(const FrameInfo& frame_info, const Slice<co
 {
     RenderFrame& frame = frames.get(frame_info.frame_index);
     frame.in_flight_fence = command_pool->execute(
+        graphics_device->get_graphics_queue(),
         {
             .wait_semaphores = Slice(&frame.present_complete_semaphore, 1),
             .wait_stages = wait_stages,
-            .signal_semaphores = Slice(&render_finished_semaphores.get(frame_info.image_index), 1),
             .command_buffer = command_buffer,
+            .signal_semaphores = Slice(&render_finished_semaphores.get(frame_info.image_index), 1),
         }
     );
 }

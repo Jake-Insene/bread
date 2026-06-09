@@ -1,6 +1,5 @@
 #pragma once
 #include "gpu/gpu.h"
-#include "mem/allocator.h"
 #include "graphics/device_object.h"
 #include "graphics/structures.h"
 
@@ -15,7 +14,7 @@ struct Texture : DeviceObject
     usize heap_offset;
     GPU::MemoryRequirements gpu_memory_requirements;
     
-    void init(Mem::Allocator* _allocator, Device* _parent, GPU::DeviceID gpu_device, const TextureInfo& info);
+    void init(Mem::Allocator* _allocator, Device* _parent, const TextureInfo& info);
     void destroy();
 
 	GPU::MemoryRequirements get_requirements() const;

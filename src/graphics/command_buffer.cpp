@@ -1,5 +1,6 @@
 #include "graphics/command_buffer.h"
 
+#include "graphics/buffer.h"
 #include "graphics/command_pool.h"
 #include "graphics/descriptor_set.h"
 #include "graphics/pipeline_layout.h"
@@ -15,7 +16,7 @@ void CommandBuffer::init(Mem::Allocator* _allocator, Device* _parent, CommandPoo
     DeviceObject::init(_allocator, _parent);
 
     ConstructObject(tmp_allocator);
-    tmp_allocator.init(OS::map_memory(DefaultStackSize, OS::MapAccess::MapReadWrite));
+    tmp_allocator.init(OS::map_memory(DefaultStackSize, OS::MapAccess::ReadWrite));
 
     gpu_command_buffer = GPU::command_buffer_allocate(
         {
@@ -63,7 +64,7 @@ void CommandBuffer::copy_buffer_to_texture(const GPU::CopyBufferToTextureInfo& c
         gpu_command_buffer, copy_info);
 }
 
-void CommandBuffer::copy_buffer(const GPU::BufferCopyInfo& copy_info)
+void CommandBuffer::copy_buffer(const GPU::CopyBufferInfo& copy_info)
 {
     GPU::command_buffer_copy_buffer(
         gpu_command_buffer, copy_info);
@@ -71,6 +72,7 @@ void CommandBuffer::copy_buffer(const GPU::BufferCopyInfo& copy_info)
 
 void CommandBuffer::bind_pipeline(GPU::PipelineBindPoint bind_point, const Pipeline* pipeline)
 {
+    DebugAssert(pipeline != nullptr, "invalid graphics pipeline");
     GPU::command_buffer_bind_pipeline(gpu_command_buffer, bind_point, pipeline->gpu_pipeline);
 }
 
@@ -79,6 +81,7 @@ void CommandBuffer::bind_set(GPU::PipelineBindPoint bind_point, const PipelineLa
     Slice<GPU::DescriptorSetID> gpu_sets = tmp_allocator.array<GPU::DescriptorSetID>(sets.len);
     for(usize i = 0; i < gpu_sets.len; i++)
     {
+        DebugAssert(sets[i] != nullptr, "invalid graphics descriptor set");
         gpu_sets[i] = sets[i]->gpu_descriptor_set;
     }
 
@@ -90,6 +93,7 @@ void CommandBuffer::bind_vertex_buffers(u32 base_binding, const Slice<const Buff
     Slice<GPU::BufferID> gpu_buffers = tmp_allocator.array<GPU::BufferID>(buffers.len);
     for(usize i = 0; i < gpu_buffers.len; i++)
     {
+        DebugAssert(buffers[i] != nullptr, "invalid graphics buffer");
         gpu_buffers[i] = buffers[i]->gpu_buffer;
     }
 

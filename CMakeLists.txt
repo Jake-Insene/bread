@@ -55,6 +55,7 @@ file(GLOB ENGINE_SRC
     src/graphics/semaphore.cpp
     src/graphics/shader.cpp
     src/graphics/swap_chain.cpp
+    src/graphics/texture_view.cpp
     src/graphics/texture.cpp
 
     src/input/input.cpp
@@ -101,7 +102,6 @@ file(GLOB ENGINE_SRC
     src/platform/intrinsics.cpp
 
     src/render_device/render_device.cpp
-    
     src/render_device/core/gpu_material_manager.cpp
     src/render_device/core/gpu_memory_allocator.cpp
     src/render_device/core/gpu_resource_manager.cpp
@@ -109,6 +109,7 @@ file(GLOB ENGINE_SRC
     src/renderer/framed_buffer.cpp
     src/renderer/framed_pool.cpp
     src/renderer/render_pass.cpp
+    src/renderer/render_pipeline.cpp
     src/renderer/renderer_2d.cpp
     src/renderer/renderer.cpp
     src/renderer/sprite_renderer.cpp

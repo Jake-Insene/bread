@@ -1,6 +1,5 @@
 #pragma once
 #include "collections/free_list.h"
-#include "gpu/gpu.h"
 #include "graphics/device.h"
 #include "render_device/resource/gpu_resource_types.h"
 #include "render_device/core/gpu_memory_allocator_types.h"
@@ -29,8 +28,8 @@ struct GPUResourceManager
 
     struct TextureData
     {
-        GPU::TextureID gpu_texture;
-        GPU::TextureViewID gpu_texture_view;
+        Graphics::Texture* texture;
+        Graphics::TextureView* texture_view;
         GPUMemoryAllocationID allocation;
     };
 
@@ -46,18 +45,18 @@ struct GPUResourceManager
     GPUTextureID create_texture(const TextureAllocateInfo& alloc_info);
     void destroy_texture(GPUTextureID texture_ref);
 
-    GPU::TextureID texture_get_gpu_texture(GPUTextureID texture_ref);
-    GPU::TextureViewID texture_get_gpu_texture_view(GPUTextureID texture_ref);
+    Graphics::Texture* texture_get_texture(GPUTextureID texture_ref);
+    Graphics::TextureView* texture_get_texture_view(GPUTextureID texture_ref);
 
     template<typename Fn>
-    void submit_and_wait(GPU::QueueID gpu_queue, Fn&& fn)
+    void submit_and_wait(Graphics::Queue* queue, Fn&& fn)
     {
         SubmitFn recorder = [](void* arg, GPU::CommandBufferID cmd)
         {
             (*reinterpret_cast<Fn*>(arg))(cmd);
         };
-        _submit_and_wait(gpu_queue, reinterpret_cast<void*>(&fn), recorder);
+        _submit_and_wait(queue, reinterpret_cast<void*>(&fn), recorder);
     }
 
-    void _submit_and_wait(GPU::QueueID gpu_queue, void* arg, SubmitFn recorder);
+    void _submit_and_wait(Graphics::Queue* queue, void* arg, SubmitFn recorder);
 };

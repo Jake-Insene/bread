@@ -169,7 +169,7 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 		VkDevice vk_device;
 		VkQueue vk_queue;
 
-		uint32_t family_index;
+		uint32_t vk_family_index;
 		uint32_t queue_index;
 
 		GPU::DeviceID device;
@@ -405,9 +405,9 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 	GPU::DescriptorPoolID descriptor_pool_create(const GPU::DescriptorPoolCreateInfo& ci) override;
 	void descriptor_pool_destroy(GPU::DescriptorPoolID descriptor_pool) override;
 
-	GPU::DescriptorSetID descriptor_set_allocate(const GPU::DescriptorSetAllocateInfo& ci) override;
-	void descriptor_set_free(GPU::DescriptorSetID descriptor_set) override;
-	void descriptor_set_update_descriptors(GPU::DescriptorSetID descriptor_set, const GPU::UpdateDescriptorInfo& update_info) override;
+	void descriptor_set_allocate(const GPU::DescriptorSetAllocateInfo& ci, Slice<GPU::DescriptorSetID> out_descriptor_sets) override;
+	void descriptor_set_free(GPU::DescriptorPoolID descriptor_pool, const Slice<const GPU::DescriptorSetID>& _descriptor_sets) override;
+	void descriptor_set_update_descriptors(const GPU::UpdateDescriptorInfo& update_info) override;
 
 	GPU::PipelineLayoutID pipeline_layout_create(const GPU::PipelineLayoutCreateInfo& ci) override;
 	void pipeline_layout_destroy(GPU::PipelineLayoutID pipeline_layout) override;
@@ -429,7 +429,7 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 	void command_buffer_pipeline_barrier(GPU::CommandBufferID command_buffer, const GPU::PipelineBarrier& pipeline_barrier) override;
 
 	void command_buffer_copy_buffer_to_texture(GPU::CommandBufferID command_buffer, const GPU::CopyBufferToTextureInfo& copy_info) override;
-	void command_buffer_copy_buffer(GPU::CommandBufferID command_buffer, const GPU::BufferCopyInfo& copy_info) override;
+	void command_buffer_copy_buffer(GPU::CommandBufferID command_buffer, const GPU::CopyBufferInfo& copy_info) override;
 
 	void command_buffer_bind_pipeline(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineID pipeline) override;
 	void command_buffer_bind_descriptor_sets(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineLayoutID pipeline_layout, u32 base_set, const Slice<GPU::DescriptorSetID>& descriptor_sets) override;

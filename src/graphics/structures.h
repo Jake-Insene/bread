@@ -6,7 +6,12 @@
 namespace Graphics
 {
 
+struct Buffer;
+struct Sampler;
+struct Texture;
+struct TextureView;
 struct PipelineLayout;
+struct DescriptorSet;
 
 struct SamplerInfo
 {
@@ -39,6 +44,14 @@ struct TextureInfo
     GPU::TextureSubresourceRange subresource_range;
 };
 
+struct TextureViewInfo
+{
+    GPU::TextureViewType type;
+    GPU::TextureFormat format;
+    Texture* texture;
+    GPU::TextureSubresourceRange subresource_range;  
+};
+
 struct DescriptorSetInfo
 {
     GPU::DeviceID gpu_device;
@@ -46,27 +59,31 @@ struct DescriptorSetInfo
     GPU::DescriptorSetLayoutID gpu_descriptor_set_layout;
 };
 
-union WriteInfo
+struct DescriptorBuffer
 {
-    GPU::DescriptorBufferInfo buffer;
-    GPU::DescriptorTextureInfo texture;
+    Buffer* buffer;
+    usize offset;
+    usize range;
 };
 
-struct WriteArrayInfo
+struct DescriptorTexture
 {
-    Slice<GPU::DescriptorBufferInfo> buffers;
-    Slice<GPU::DescriptorTextureInfo> textures;
+    TextureView* texture_view;
+    GPU::TextureLayout layout;
+    Sampler* sampler;
 };
 
-struct DescriptorDeferredWrite
+struct DescriptorWrite
 {
+    DescriptorSet* set;
     u32 binding;
+    u32 array_element;
     GPU::DescriptorType type;
-    WriteInfo write;
-    WriteArrayInfo write_array;
+    Slice<const DescriptorBuffer> buffers;
+    Slice<const DescriptorTexture> textures;
 };
 
-struct DescriptorSetLayoutCreateInfo
+struct DescriptorSetLayoutInfo
 {
 	Slice<const GPU::DescriptorBinding> bindings;
 };
@@ -74,13 +91,13 @@ struct DescriptorSetLayoutCreateInfo
 struct PipelineLayoutInfo
 {
 	Slice<const GPU::ConstantBlock> constant_blocks;
-	Slice<const DescriptorSetLayoutCreateInfo> set_layout_infos;
+	Slice<const DescriptorSetLayoutInfo> set_layout_infos;
 };
 
 struct PipelineInfo
 {
     GPU::PipelineBindPoint bind_point;
-    Shader shader;
+    Shader* shader;
     GPU::VertexInput vertex_input;
 	GPU::InputAssembly input_assembly;
     GPU::RasterizerState rasterizer_state;

@@ -13,8 +13,8 @@ void Pipeline::init(Mem::Allocator* _allocator, Device* _parent, GPU::DeviceID g
 
     GPU::ShaderStageInfo shader_stages[] =
     {
-        { .stage = GPU::ShaderStage::Vertex, .code = info.shader.shader_code, .name = info.shader.shader_info.vertex_name, },
-        { .stage = GPU::ShaderStage::Fragment, .code = info.shader.shader_code, .name = info.shader.shader_info.fragment_name, },
+        { .stage = GPU::ShaderStage::Vertex, .code = info.shader->shader_code, .name = info.shader->shader_info.vertex_name, },
+        { .stage = GPU::ShaderStage::Fragment, .code = info.shader->shader_code, .name = info.shader->shader_info.fragment_name, },
     };
 
     const GPU::PipelineCreateInfo pipeline_ci =

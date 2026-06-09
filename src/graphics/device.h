@@ -2,6 +2,7 @@
 #include "collections/array.h"
 #include "display/window.h"
 #include "mem/allocator.h"
+#include "mem/stack_allocator.h"
 #include "os/mutex.h"
 #include "gpu/gpu.h"
 #include "graphics/device_object.h"
@@ -12,12 +13,13 @@
 namespace Graphics
 {
 
-struct Buffer;
-struct CommandPool;
-
 struct Device
 {
+    static constexpr usize DefaultStackSize = 4096;
+
     Mem::Allocator* allocator;
+    Mem::StackAllocator tmp_allocator;
+
     Mutex mutex;
 
     GPU::PhysicalDeviceID gpu_physical_device;
@@ -45,10 +47,13 @@ struct Device
     Buffer* create_buffer(GPU::BufferUsage usage, usize size);
     Sampler* create_sampler(const SamplerInfo& sampler_info);
     Texture* create_texture(const TextureInfo& texture_info);
+    TextureView* create_texture_view(const TextureViewInfo& texture_view_info);
     DescriptorPool* create_descriptor_pool(u32 max_sets, Slice<const GPU::DescriptorPoolSize> sizes);
     PipelineLayout* create_pipeline_layout(const PipelineLayoutInfo& pipeline_layout_info);
     Pipeline* create_pipeline(const PipelineInfo& pipeline_info);
-    CommandPool* create_command_pool(Queue* queue);
+    CommandPool* create_command_pool(GPU::QueueUsage gpu_queue_usage);
+
+    void update_descriptor_sets(const Slice<const DescriptorWrite>& descriptor_writes);
 
     void release_object(DeviceObject* child);
 

@@ -13,9 +13,9 @@ struct OS
 
     enum MapAccess
     {
-        MapUnknown = 0,
-        MapReadWrite,
-        MapReadWriteExecute,
+        Unknown = 0,
+        ReadWrite,
+        ReadWriteExecute,
     };
 
     using VoidFunction = void(*)();

@@ -2,20 +2,21 @@
 
 #include "graphics/device.h"
 #include "graphics/fence.h"
+#include "graphics/semaphore.h"
 
 
 namespace Graphics
 {
 
-void CommandPool::init(Mem::Allocator* _allocator, Device* _parent, const CommandQueueInfo& info)
+void CommandPool::init(Mem::Allocator* _allocator, Device* _parent, const CommandPoolInfo& info)
 {
     DeviceObject::init(_allocator, _parent);
     gpu_device = info.gpu_device;
-    gpu_queue = info.gpu_queue;
+    gpu_queue_usage = info.gpu_queue_usage;
     gpu_command_pool = GPU::command_pool_create(
         {
             .device = info.gpu_device,
-            .queue = info.gpu_queue,
+            .usage = info.gpu_queue_usage,
         }
     );
 
@@ -29,8 +30,6 @@ void CommandPool::init(Mem::Allocator* _allocator, Device* _parent, const Comman
 
 void CommandPool::destroy()
 {
-    GPU::queue_wait_idle(gpu_queue);
-
     for(CommandBuffer* command_buffer : command_buffers.iter())
     {
         command_buffer->destroy();
@@ -64,7 +63,7 @@ CommandBuffer* CommandPool::acquire_command_buffer()
     return command_buffers.add(command_buffer);
 }
 
-Fence* CommandPool::execute(const CommandQueueExecuteInfo& info)
+Fence* CommandPool::execute(Queue* queue, const CommandPoolExecuteInfo& info)
 {
     // check for free command buffers
     Fence* fence = nullptr;
@@ -90,7 +89,7 @@ Fence* CommandPool::execute(const CommandQueueExecuteInfo& info)
         gpu_signal_semaphores[i] = info.signal_semaphores[i]->gpu_semaphore;
     }
 
-    GPU::queue_execute_command_buffer(gpu_queue,
+    GPU::queue_execute_command_buffer(queue->gpu_queue,
         {
             .wait_semaphores = gpu_wait_semaphores,
             .wait_stages = info.wait_stages,
@@ -114,7 +113,7 @@ Fence* CommandPool::execute(const CommandQueueExecuteInfo& info)
     return fence;
 }
 
-Fence* CommandPool::execute_empty(const CommandQueueExecuteEmptyInfo& info)
+Fence* CommandPool::execute_empty(Queue* queue, const CommandPoolExecuteEmptyInfo& info)
 {
     // check for free command buffers
     Fence* fence = nullptr;
@@ -140,7 +139,7 @@ Fence* CommandPool::execute_empty(const CommandQueueExecuteEmptyInfo& info)
         gpu_signal_semaphores[i] = info.signal_semaphores[i]->gpu_semaphore;
     }
 
-    GPU::queue_execute_command_buffer(gpu_queue,
+    GPU::queue_execute_command_buffer(queue->gpu_queue,
         {
             .wait_semaphores = gpu_wait_semaphores,
             .wait_stages = info.wait_stages,

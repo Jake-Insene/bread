@@ -68,9 +68,9 @@ struct GPUAdapter
 	virtual GPU::DescriptorPoolID descriptor_pool_create(const GPU::DescriptorPoolCreateInfo& ci) = 0;
 	virtual void descriptor_pool_destroy(GPU::DescriptorPoolID descriptor_pool) = 0;
 
-	virtual GPU::DescriptorSetID descriptor_set_allocate(const GPU::DescriptorSetAllocateInfo& ci) = 0;
-	virtual void descriptor_set_free(GPU::DescriptorSetID descriptor_set) = 0;
-	virtual void descriptor_set_update_descriptors(GPU::DescriptorSetID descriptor_set, const GPU::UpdateDescriptorInfo& update_info) = 0;
+	virtual void descriptor_set_allocate(const GPU::DescriptorSetAllocateInfo& ci, Slice<GPU::DescriptorSetID> out_descriptor_sets) = 0;
+	virtual void descriptor_set_free(GPU::DescriptorPoolID descriptor_pool, const Slice<const GPU::DescriptorSetID>& descriptor_sets) = 0;
+	virtual void descriptor_set_update_descriptors(const GPU::UpdateDescriptorInfo& update_info) = 0;
 
 	virtual GPU::PipelineLayoutID pipeline_layout_create(const GPU::PipelineLayoutCreateInfo& ci) = 0;
 	virtual void pipeline_layout_destroy(GPU::PipelineLayoutID pipeline_layout) = 0;
@@ -93,7 +93,7 @@ struct GPUAdapter
 	virtual void command_buffer_pipeline_barrier(GPU::CommandBufferID command_buffer, const GPU::PipelineBarrier& pipeline_barrier) = 0;
 
 	virtual void command_buffer_copy_buffer_to_texture(GPU::CommandBufferID command_buffer, const GPU::CopyBufferToTextureInfo& copy_info) = 0;
-	virtual void command_buffer_copy_buffer(GPU::CommandBufferID command_buffer, const GPU::BufferCopyInfo& copy_info) = 0;
+	virtual void command_buffer_copy_buffer(GPU::CommandBufferID command_buffer, const GPU::CopyBufferInfo& copy_info) = 0;
 
 	virtual void command_buffer_bind_pipeline(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineID pipeline) = 0;
 	virtual void command_buffer_bind_descriptor_sets(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineLayoutID pipeline_layout, u32 base_set, const Slice<GPU::DescriptorSetID>& descriptor_sets) = 0;

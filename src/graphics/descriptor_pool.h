@@ -1,15 +1,12 @@
 #pragma once
-#include "collections/free_list.h"
+#include "collections/array.h"
 #include "gpu/gpu.h"
-#include "mem/allocator.h"
 #include "graphics/descriptor_set.h"
 #include "graphics/device_object.h"
 
 
 namespace Graphics
 {
-
-using DescriptorSetRef = ID<u32, struct _DescriptorSetRefTag>;
 
 struct DescriptorPool : DeviceObject
 {

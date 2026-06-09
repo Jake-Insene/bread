@@ -75,7 +75,7 @@ void VulkanAdapter::initialize(Mem::Allocator* _allocator)
     
     internal_allocator = _allocator;
 
-    tmp_allocator.init(OS::map_memory(1024*1024, OS::MapReadWrite));
+    tmp_allocator.init(OS::map_memory(1024*1024, OS::ReadWrite));
 
     surfaces = FreeList<Surface, GPU::SurfaceID>::with_allocator(get_allocator());
     devices = FreeList<LogicalDevice, GPU::DeviceID>::with_allocator(get_allocator());
@@ -436,7 +436,7 @@ GPU::DeviceID VulkanAdapter::device_create(const GPU::DeviceCreateInfo& ci)
                 {
                     .vk_device = ld.vk_device,
                     .vk_queue = family.vk_queues[queue_i],
-                    .family_index = family.vk_family_index,
+                    .vk_family_index = family.vk_family_index,
                     .queue_index = queue_i,
                     .device = device_id,
                     .queue = GPU::QueueID::invalid(),
@@ -1413,50 +1413,72 @@ void VulkanAdapter::descriptor_pool_destroy(GPU::DescriptorPoolID descriptor_poo
     descriptor_pools.remove(descriptor_pool);
 }
 
-GPU::DescriptorSetID VulkanAdapter::descriptor_set_allocate(const GPU::DescriptorSetAllocateInfo& ci)
+void VulkanAdapter::descriptor_set_allocate(const GPU::DescriptorSetAllocateInfo& ci, Slice<GPU::DescriptorSetID> out_descriptor_sets)
 {
-    GPU::DescriptorSetID descriptor_set_id = descriptor_sets.add(DescriptorSet());
-    DescriptorSet& set = _get_descriptor_set(descriptor_set_id);
     DescriptorPool& pool = _get_descriptor_pool(ci.pool);
-    DescriptorSetLayout& layout = _get_descriptor_set_layout(ci.set_layout);
     LogicalDevice& ld = _get_logical_device(ci.device);
+    Mem::Allocator* allocator = acquire_tmp_allocator();
 
-    set.vk_device = ld.vk_device;
-    set.vk_descriptor_pool = pool.vk_descriptor_pool;
-    set.device = ci.device;
-    set.descriptor_set = descriptor_set_id;
-    set.descriptor_pool = ci.pool;
+    Slice<VkDescriptorSetLayout> vk_set_layouts = allocator->array<VkDescriptorSetLayout>(ci.set_layouts.len);
+    Slice<VkDescriptorSet> vk_sets = allocator->array<VkDescriptorSet>(ci.set_layouts.len);
+    for(usize i = 0; i < vk_set_layouts.len; i++)
+    {
+        vk_set_layouts[i] = _get_descriptor_set_layout(ci.set_layouts[i]).vk_set_layout;
+    }
 
     VkDescriptorSetAllocateInfo vk_allocate_set_info =
     {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
         .pNext = nullptr,
         .descriptorPool = pool.vk_descriptor_pool,
-        .descriptorSetCount = 1,
-        .pSetLayouts = &layout.vk_set_layout,
+        .descriptorSetCount = static_cast<uint32_t>(vk_set_layouts.len),
+        .pSetLayouts = vk_set_layouts.ptr(),
     };
 
-    VkResult result = ld.vk.vkAllocateDescriptorSets(ld.vk_device, &vk_allocate_set_info, &set.vk_descriptor_set);
+    VkResult result = ld.vk.vkAllocateDescriptorSets(ld.vk_device, &vk_allocate_set_info, vk_sets.ptr());
     VKFailOn(result != VK_SUCCESS, "vkAllocateDescriptorSets({})", Vulkan::result_as_string(result));
 
-    return descriptor_set_id;
+    for(usize i = 0; i < vk_sets.len; i++)
+    {
+        out_descriptor_sets[i] = descriptor_sets.add(DescriptorSet());
+
+        DescriptorSet& set = _get_descriptor_set(out_descriptor_sets[i]);
+        set.vk_device = ld.vk_device;
+        set.vk_descriptor_pool = pool.vk_descriptor_pool;
+        set.vk_descriptor_set = vk_sets[i];
+        set.device = ci.device;
+        set.descriptor_set = out_descriptor_sets[i];
+        set.descriptor_pool = ci.pool;
+    }
 }
 
-void VulkanAdapter::descriptor_set_free(GPU::DescriptorSetID descriptor_set)
+void VulkanAdapter::descriptor_set_free(GPU::DescriptorPoolID descriptor_pool, const Slice<const GPU::DescriptorSetID>& _descriptor_sets)
 {
-    DescriptorSet& set = _get_descriptor_set(descriptor_set);
-    LogicalDevice& ld = _get_logical_device(set.device);
+    DescriptorPool& pool = _get_descriptor_pool(descriptor_pool);
+    LogicalDevice& ld = _get_logical_device(pool.device);
+    Mem::Allocator* allocator = acquire_tmp_allocator();
 
-    VkResult result = ld.vk.vkFreeDescriptorSets(set.vk_device, set.vk_descriptor_pool, 1, &set.vk_descriptor_set);
+    Slice<VkDescriptorSet> vk_sets = allocator->array<VkDescriptorSet>(_descriptor_sets.len);
+    for(usize i = 0; i < vk_sets.len; i++)
+    {
+        vk_sets[i] = _get_descriptor_set(_descriptor_sets[i]).vk_descriptor_set;
+    }
+
+    VkResult result = ld.vk.vkFreeDescriptorSets(
+        ld.vk_device, pool.vk_descriptor_pool,
+        static_cast<uint32_t>(vk_sets.len), vk_sets.ptr()
+    );
     VKFailOn(result != VK_SUCCESS, "vkFreeDescriptorSets({})", Vulkan::result_as_string(result));
 
-    descriptor_sets.remove(descriptor_set);
+    for(usize i = 0; i < vk_sets.len; i++)
+    {
+        descriptor_sets.remove(_descriptor_sets[i]);
+    }
 }
 
-void VulkanAdapter::descriptor_set_update_descriptors(GPU::DescriptorSetID descriptor_set, const GPU::UpdateDescriptorInfo& update_info)
+void VulkanAdapter::descriptor_set_update_descriptors(const GPU::UpdateDescriptorInfo& update_info)
 {
-    DescriptorSet& set = _get_descriptor_set(descriptor_set);
-    LogicalDevice& ld = _get_logical_device(set.device);
+    LogicalDevice& ld = _get_logical_device(update_info.device);
     Mem::Allocator* allocator = acquire_tmp_allocator();
 
     Slice<VkWriteDescriptorSet> vk_write_descriptor = allocator->array<VkWriteDescriptorSet>(update_info.write_infos.len);
@@ -1468,11 +1490,11 @@ void VulkanAdapter::descriptor_set_update_descriptors(GPU::DescriptorSetID descr
         if(update_info.write_infos[i].type == GPU::DescriptorType::UniformBuffer
             || update_info.write_infos[i].type == GPU::DescriptorType::StorageBuffer)
         {
-            total_buffer_infos += update_info.write_infos[i].count;
+            total_buffer_infos += update_info.write_infos[i].buffers.len;
         }
         else if(update_info.write_infos[i].type == GPU::DescriptorType::CombinedTextureSampler)
         {
-            total_image_infos += update_info.write_infos[i].count;
+            total_image_infos += update_info.write_infos[i].textures.len;
         }
     }
 
@@ -1488,10 +1510,10 @@ void VulkanAdapter::descriptor_set_update_descriptors(GPU::DescriptorSetID descr
         {
             .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
             .pNext = nullptr,
-            .dstSet = set.vk_descriptor_set,
+            .dstSet = _get_descriptor_set(write_info.descriptor_set).vk_descriptor_set,
             .dstBinding = write_info.binding,
             .dstArrayElement = write_info.array_element,
-            .descriptorCount = write_info.count,
+            .descriptorCount = 0, // Based on type
             .descriptorType = VkUtils::_vk_get_descriptor_type(write_info.type),
             .pImageInfo = nullptr,
             .pBufferInfo = nullptr,
@@ -1504,6 +1526,7 @@ void VulkanAdapter::descriptor_set_update_descriptors(GPU::DescriptorSetID descr
         case GPU::DescriptorType::StorageBuffer:
         {
             vk_write_descriptor[i].pBufferInfo = &vk_buffer_infos[vk_buffer_infos_index];
+            vk_write_descriptor[i].descriptorCount = static_cast<uint32_t>(write_info.buffers.len);
             for(usize buffer_i = 0; buffer_i < write_info.buffers.len; buffer_i++)
             {
                 const GPU::DescriptorBufferInfo& buffer_info = write_info.buffers[buffer_i];
@@ -1521,6 +1544,7 @@ void VulkanAdapter::descriptor_set_update_descriptors(GPU::DescriptorSetID descr
         case GPU::DescriptorType::CombinedTextureSampler:
         {
             vk_write_descriptor[i].pImageInfo = &vk_image_infos[vk_image_infos_index];
+            vk_write_descriptor[i].descriptorCount = static_cast<uint32_t>(write_info.textures.len);
             for(usize texture_i = 0; texture_i < write_info.textures.len; texture_i++)
             {
                 const GPU::DescriptorTextureInfo& texture_info = write_info.textures[texture_i];
@@ -1538,11 +1562,11 @@ void VulkanAdapter::descriptor_set_update_descriptors(GPU::DescriptorSetID descr
         default:
             VKFailOn(true, "invalid descriptor type");
             break;
-        }   
+        }
     }
 
     ld.vk.vkUpdateDescriptorSets(
-        set.vk_device, static_cast<uint32_t>(vk_write_descriptor.len), vk_write_descriptor.ptr(),
+        ld.vk_device, static_cast<uint32_t>(vk_write_descriptor.len), vk_write_descriptor.ptr(),
         0, nullptr
     );
 }
@@ -1852,20 +1876,19 @@ void VulkanAdapter::pipeline_destroy(GPU::PipelineID pipeline)
 GPU::CommandPoolID VulkanAdapter::command_pool_create(const GPU::CommandPoolCreateInfo& ci)
 {
     LogicalDevice& ld = _get_logical_device(ci.device);
-    Queue& queue = _get_queue(ci.queue);
     
     GPU::CommandPoolID cmd_pool_id = command_pools.add(CommandPool());
     CommandPool& cmd_pool = _get_command_pool(cmd_pool_id);
 
-    VkCommandPoolCreateInfo cmd_pool_info =
+    VkCommandPoolCreateInfo vk_cmd_pool_info =
     {
         .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
         .pNext = nullptr,
         .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-        .queueFamilyIndex = queue.family_index,
+        .queueFamilyIndex = ld.families[u32(ci.usage) - 1].vk_family_index,
     };
 
-    VkResult result = ld.vk.vkCreateCommandPool(ld.vk_device, &cmd_pool_info, Vulkan::allocation_callbacks(this), &cmd_pool.vk_command_pool);
+    VkResult result = ld.vk.vkCreateCommandPool(ld.vk_device, &vk_cmd_pool_info, Vulkan::allocation_callbacks(this), &cmd_pool.vk_command_pool);
     VKFailOn(result != VK_SUCCESS, "vkCreateCommandPool({})", Vulkan::result_as_string(result));
 
     cmd_pool.vk_device = ld.vk_device;
@@ -2256,7 +2279,7 @@ void VulkanAdapter::command_buffer_copy_buffer_to_texture(GPU::CommandBufferID c
     );
 }
     
-void VulkanAdapter::command_buffer_copy_buffer(GPU::CommandBufferID command_buffer, const GPU::BufferCopyInfo& copy_info)
+void VulkanAdapter::command_buffer_copy_buffer(GPU::CommandBufferID command_buffer, const GPU::CopyBufferInfo& copy_info)
 {
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);

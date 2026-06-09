@@ -1,17 +1,18 @@
 #include "graphics/texture.h"
 
+#include "graphics/device.h"
 #include "graphics/memory_heap.h"
 
 
 namespace Graphics
 {
 
-void Texture::init(Mem::Allocator* _allocator, Device* _parent, GPU::DeviceID gpu_device, const TextureInfo& info)
+void Texture::init(Mem::Allocator* _allocator, Device* _parent, const TextureInfo& info)
 {
     DeviceObject::init(_allocator, _parent);
     gpu_texture = GPU::texture_create(
         {
-            .device = gpu_device,
+            .device = parent->gpu_device,
             .type = info.type,
             .format = info.format,
             .extent = info.extent,

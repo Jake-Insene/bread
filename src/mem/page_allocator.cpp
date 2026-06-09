@@ -13,7 +13,7 @@ Slice<u8> PageAllocator::alloc(usize size, usize)
 
     const usize aligned_size = Mem::align_up(size, OS::get_page_size());
 
-    ptr = OS::map_memory(aligned_size, OS::MapReadWrite);
+    ptr = OS::map_memory(aligned_size, OS::ReadWrite);
     ptr.len = aligned_size;
 
     return ptr;

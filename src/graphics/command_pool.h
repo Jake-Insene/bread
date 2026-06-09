@@ -2,44 +2,39 @@
 #include "collections/array.h"
 #include "collections/stack.h"
 #include "gpu/gpu.h"
-#include "mem/allocator.h"
 #include "graphics/command_buffer.h"
 #include "graphics/device_object.h"
-#include "graphics/semaphore.h"
+#include "graphics/queue.h"
 
 
 namespace Graphics
 {
 
-struct CommandQueueInfo
+struct CommandPoolInfo
 {
     GPU::DeviceID gpu_device;
-    GPU::QueueID gpu_queue;
+    GPU::QueueUsage gpu_queue_usage;
 };
 
-struct CommandQueueExecuteInfo
+struct CommandPoolExecuteInfo
 {
     Slice<Graphics::Semaphore*> wait_semaphores;
     Slice<const GPU::PipelineStages> wait_stages;
-    Slice<Graphics::Semaphore*> signal_semaphores;
     CommandBuffer* command_buffer;
+    Slice<Graphics::Semaphore*> signal_semaphores;
 };
 
-struct CommandQueueExecuteEmptyInfo
+struct CommandPoolExecuteEmptyInfo
 {
     Slice<Graphics::Semaphore*> wait_semaphores;
     Slice<const GPU::PipelineStages> wait_stages;
     Slice<Graphics::Semaphore*> signal_semaphores;
 };
-
-struct Fence;
 
 struct CommandPool : DeviceObject
 {
-    static constexpr usize TmpAllocatorSize = 1024 * 1024;
-    
     GPU::DeviceID gpu_device;
-    GPU::QueueID gpu_queue;
+    GPU::QueueUsage gpu_queue_usage;
     GPU::CommandPoolID gpu_command_pool;
 
     struct WorkSubmit
@@ -56,12 +51,12 @@ struct CommandPool : DeviceObject
     Stack<Fence*> gpu_free_fences;
     Stack<CommandBuffer*> free_command_buffers;
 
-    void init(Mem::Allocator* _allocator, Device* _parent, const CommandQueueInfo& info);
+    void init(Mem::Allocator* _allocator, Device* _parent, const CommandPoolInfo& info);
     void destroy();
 
     CommandBuffer* acquire_command_buffer();
-    Fence* execute(const CommandQueueExecuteInfo& info);
-    Fence* execute_empty(const CommandQueueExecuteEmptyInfo& info);
+    Fence* execute(Queue* queue, const CommandPoolExecuteInfo& info);
+    Fence* execute_empty(Queue* queue, const CommandPoolExecuteEmptyInfo& info);
 
     void wait_for_all();
 

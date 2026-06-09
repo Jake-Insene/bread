@@ -6,6 +6,7 @@ namespace Graphics
 {
 
 struct Device;
+struct Queue;
 struct SwapChain;
 struct Fence;
 struct Semaphore;
@@ -13,6 +14,7 @@ struct MemoryHeap;
 struct Buffer;
 struct Sampler;
 struct Texture;
+struct TextureView;
 struct DescriptorPool;
 struct DescriptorSet;
 struct PipelineLayout;

@@ -1,14 +1,15 @@
 #define INSTANCE_SPRITE
-#include "bread/Renderer2D/Instance.Header.slang"
 #include "bread/Renderer2D/Renderer2D.Header.slang"
 
 DECLARE_SCENE_UNIFORM(SceneUniform, Scene);
 layout(set = 1, binding = 0) Sampler2D BindTextures[16];
 
-FragmentInput Vertex(ObjectData Object)
+[shader("vertex")]
+SpriteFragmentInput VertexMain(SpriteVertexInput Input, uint VertexIndex : SV_VertexID)
 {
-    FragmentInput Output;
-
+    ObjectData Object = SpriteVertex(Input, VertexIndex);
+    
+    SpriteFragmentInput Output;
     Output.Color = Object.Color;
     Output.UV = Object.UV;
     float4 WorldPosition = InstanceToWorld(Object, Object.InstancePosition);
@@ -18,7 +19,8 @@ FragmentInput Vertex(ObjectData Object)
     return Output;
 }
 
-half4 Fragment(FragmentInput Input) : SV_Target
+[shader("fragment")]
+half4 FragmentMain(SpriteFragmentInput Input) : SV_Target
 {
     return Input.Color * LoadPixel(BindTextures[Input.TextureIndex], Input.UV);
 }

@@ -38,7 +38,7 @@ void Renderer2D::init(const RendererCreateInfo& info)
         }
     );
 
-    Graphics::DescriptorSetLayoutCreateInfo set_layouts[] =
+    Graphics::DescriptorSetLayoutInfo set_layouts[] =
     {
         { SceneRenderer::GlobalSceneSet },
     };
@@ -62,11 +62,12 @@ void Renderer2D::init(const RendererCreateInfo& info)
     for(usize i = 0; i < info.max_frames_in_flight; i++)
     {
         global_scene_set[i] = (global_scene_pool->allocate(global_scene_layout->get_layout(0)));
-        global_scene_set[i]->set_uniform_buffer(
-            0, scene_uniform_buffer.get_buffer(),
-            scene_uniform_buffer.get_buffer_info(i).offset,
-            MaxSceneUniformSize
-        );
+        // TODO: Setup global scene set
+        //global_scene_set[i]->set_uniform_buffer(
+        //    0, scene_uniform_buffer.get_buffer(),
+        //    scene_uniform_buffer.get_buffer_info(i).offset,
+        //    MaxSceneUniformSize
+        //);
     }
 }
 

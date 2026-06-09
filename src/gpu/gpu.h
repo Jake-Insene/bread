@@ -692,14 +692,7 @@ namespace GPU
 	{
 		DeviceID device;
 		DescriptorPoolID pool;
-		DescriptorSetLayoutID set_layout;
-	};
-
-	struct DescriptorTextureInfo
-	{
-		TextureViewID texture_view;
-		TextureLayout layout;
-		SamplerID sampler;
+		Slice<const DescriptorSetLayoutID> set_layouts;
 	};
 
 	struct DescriptorBufferInfo
@@ -709,24 +702,32 @@ namespace GPU
 		usize range;
 	};
 
+	struct DescriptorTextureInfo
+	{
+		TextureViewID texture_view;
+		TextureLayout layout;
+		SamplerID sampler;
+	};
+
 	struct WriteDescriptorInfo
 	{
+		DescriptorSetID descriptor_set;
 		u32 binding;
 		u32 array_element;
-		u32 count;
 		DescriptorType type;
-		Slice<const DescriptorTextureInfo> textures;
 		Slice<const DescriptorBufferInfo> buffers;
+		Slice<const DescriptorTextureInfo> textures;
 	};
 
 	struct UpdateDescriptorInfo
 	{
+		DeviceID device;
 		Slice<const WriteDescriptorInfo> write_infos;
 	};
 
-	DescriptorSetID descriptor_set_allocate(const DescriptorSetAllocateInfo& ci);
-	void descriptor_set_free(DescriptorSetID descriptor_set);
-	void descriptor_set_update_descriptors(DescriptorSetID descriptor_set, const UpdateDescriptorInfo& update_info);
+	void descriptor_set_allocate(const DescriptorSetAllocateInfo& ci, Slice<DescriptorSetID> out_descriptor_sets);
+	void descriptor_set_free(DescriptorPoolID descriptor_pool, const Slice<const GPU::DescriptorSetID>& descriptor_sets);
+	void descriptor_set_update_descriptors(const UpdateDescriptorInfo& update_info);
 
 	/*
 	* Pipeline Layout API
@@ -832,6 +833,16 @@ namespace GPU
 	{
 		Slice<const VertexBinding> bindings;
 		Slice<const VertexAttribute> attributes;
+
+		static constexpr VertexInput input(const Slice<const VertexBinding>& bindings,
+			const Slice<const VertexAttribute>& attributes)
+		{
+			return VertexInput
+			{
+				.bindings = bindings,
+				.attributes = attributes,
+			};
+		}
 	};
 
 	struct InputAssembly
@@ -847,6 +858,19 @@ namespace GPU
 		CullMode cull_mode;
 		FrontFace front_face;
 		f32 line_width;
+
+		static constexpr RasterizerState state(PolygonMode polygon_mode, CullMode cull_mode, FrontFace front_face)
+		{
+			return RasterizerState
+			{
+				.depth_clamp_enable = false,
+				.rasterizer_discard_enable = false,
+				.polygon_mode = polygon_mode,
+				.cull_mode = cull_mode,
+				.front_face = front_face,
+				.line_width = 1.F,
+			};
+		}
 	};
 
 	struct MultisampleState
@@ -856,6 +880,18 @@ namespace GPU
 		bool sample_shading_enable;
 		bool alpha_to_coverage_enable;
 		bool alpha_one_enable;
+
+		static constexpr MultisampleState disable()
+		{
+			return MultisampleState
+			{
+				.sample_count = SampleCount::Sample1,
+				.min_sample_shading = 0.F,
+				.sample_shading_enable = false,
+				.alpha_to_coverage_enable = false,
+				.alpha_one_enable = false,
+			};
+		}
 	};
 
 	struct DepthStencilState
@@ -865,7 +901,20 @@ namespace GPU
 		bool depth_bounds_test_enable;
 		bool stencil_test_enable;
 		f32 min_depth_bounds;		
-		f32 max_depth_bounds;		
+		f32 max_depth_bounds;	
+		
+		static constexpr DepthStencilState depth_stencil_disable()
+		{
+			return DepthStencilState
+			{
+				.depth_test_enable = false,
+				.depth_write_enable = false,
+				.depth_bounds_test_enable = false,
+				.stencil_test_enable = false,
+				.min_depth_bounds = 0.F,
+				.max_depth_bounds = 1.F,
+			};
+		}
 	};
 
 	struct RenderingInfo
@@ -873,6 +922,16 @@ namespace GPU
 		Slice<const TextureFormat> render_attachment_formats;
 		TextureFormat depth_attachment_format;
 		TextureFormat stencil_attachment_format;
+
+		static constexpr RenderingInfo render_attachments(const Slice<const TextureFormat>& render_attachment_formats)
+		{
+			return RenderingInfo
+			{
+				.render_attachment_formats = render_attachment_formats,
+				.depth_attachment_format = TextureFormat::Unknown,
+				.stencil_attachment_format = TextureFormat::Unknown,
+			};
+		}
 	};
 
 	struct PipelineCreateInfo
@@ -898,7 +957,7 @@ namespace GPU
 	struct CommandPoolCreateInfo
 	{
 		DeviceID device;
-		QueueID queue;
+		QueueUsage usage;
 	};
 
 	CommandPoolID command_pool_create(const CommandPoolCreateInfo& ci);
@@ -1098,7 +1157,7 @@ namespace GPU
 		}
 	};
 
-	struct  BufferCopyInfo
+	struct  CopyBufferInfo
 	{
 		BufferID src_buffer;
 		BufferID dest_buffer;
@@ -1114,7 +1173,7 @@ namespace GPU
 		f32 min_depth;
 		f32 max_depth;
 
-		static constexpr Viewport only_size(f32 width, f32 height)
+		static constexpr Viewport extent(f32 width, f32 height)
 		{
 			return Viewport
 			{
@@ -1135,7 +1194,7 @@ namespace GPU
 		u32 width;
 		u32 height;
 
-		static constexpr Scissor only_size(u32 width, u32 height)
+		static constexpr Scissor extent(u32 width, u32 height)
 		{
 			return Scissor
 			{
@@ -1146,7 +1205,7 @@ namespace GPU
 			};
 		}
 
-		static constexpr Scissor make_scissor(i32 x, i32 y, u32 width, u32 height)
+		static constexpr Scissor scissor(i32 x, i32 y, u32 width, u32 height)
 		{
 			return Scissor
 			{
@@ -1170,7 +1229,7 @@ namespace GPU
 	void command_buffer_pipeline_barrier(CommandBufferID command_buffer, const PipelineBarrier& pipeline_barrier);
 
 	void command_buffer_copy_buffer_to_texture(CommandBufferID command_buffer, const CopyBufferToTextureInfo& copy_info);
-	void command_buffer_copy_buffer(CommandBufferID command_buffer, const BufferCopyInfo& copy_info);
+	void command_buffer_copy_buffer(CommandBufferID command_buffer, const CopyBufferInfo& copy_info);
 
 	void command_buffer_bind_pipeline(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineID pipeline);
 	void command_buffer_bind_descriptor_sets(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineLayoutID pipeline_layout, u32 base_set, const Slice<DescriptorSetID>& descriptor_sets);

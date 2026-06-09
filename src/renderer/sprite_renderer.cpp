@@ -28,7 +28,7 @@ void SpriteRenderer::init(const SpriteRendererCreateInfo& info)
         { .type = GPU::DescriptorType::CombinedTextureSampler, .binding = 0, .count = MaxTexturesPerBatch, .stages = GPU::ShaderStage::Fragment, },
     };
 
-    Graphics::DescriptorSetLayoutCreateInfo set_layouts[] =
+    Graphics::DescriptorSetLayoutInfo set_layouts[] =
     {
         // Global set
         { SceneRenderer::GlobalSceneSet },
@@ -66,46 +66,15 @@ void SpriteRenderer::init(const SpriteRendererCreateInfo& info)
     Graphics::PipelineInfo pipeline_info =
     {
         .bind_point = GPU::PipelineBindPoint::Graphics,
-        .shader = shader_code,
-        .vertex_input =
-        {
-            .bindings = bindings,
-            .attributes = Slice(&attributes[0], StreamAttributeCount),
-        },
+        .shader = &shader_code,
+        .vertex_input = GPU::VertexInput::input(bindings, Slice(&attributes[0], StreamAttributeCount)),
         .input_assembly = { .topology = GPU::PrimitiveTopology::TriangleList },
-        .rasterizer_state =
-        {
-            .depth_clamp_enable = false,
-            .rasterizer_discard_enable = false,
-            .polygon_mode = GPU::PolygonMode::Fill,
-            .cull_mode = GPU::CullMode::Front,
-            .front_face = GPU::FrontFace::ClockWise,
-            .line_width = 1.F,
-        },
-        .multisample_state =
-        {
-            .sample_count = GPU::SampleCount::Sample1,
-            .min_sample_shading = 0,
-            .sample_shading_enable = false,
-            .alpha_to_coverage_enable = false,
-            .alpha_one_enable = false,
-        },
-        .depth_stencil_state =
-        {
-            .depth_test_enable = false,
-            .depth_write_enable = false,
-            .depth_bounds_test_enable = false,
-            .stencil_test_enable = false,
-            .min_depth_bounds = 0.F,
-            .max_depth_bounds = 1.F,
-        },
+        .rasterizer_state = GPU::RasterizerState::state(
+            GPU::PolygonMode::Fill, GPU::CullMode::Front, GPU::FrontFace::ClockWise),
+        .multisample_state = GPU::MultisampleState::disable(),
+        .depth_stencil_state = GPU::DepthStencilState::depth_stencil_disable(),
         .pipeline_layout = batch_pipeline_layout,
-        .rendering_info =
-        {
-            .render_attachment_formats = Slice(&image_format, 1),
-            .depth_attachment_format = GPU::TextureFormat::Unknown,
-            .stencil_attachment_format = GPU::TextureFormat::Unknown,
-        },
+        .rendering_info = GPU::RenderingInfo::render_attachments(Slice(&image_format, 1)),
     };
 
     sprite_pipeline = graphics_device->create_pipeline(pipeline_info);
@@ -170,7 +139,16 @@ void SpriteRenderer::build_batch(const FrameInfo& frame_info)
     // updating batch sets
     usize base_set_index = frame_info.frame_index * MaxBatchesPerFrame;
     usize set_offset = 0;
-    
+
+    //GPU::WriteDescriptorInfo write_texture_sampler_array =
+    //{
+    //    .descriptor_set = GPU::DescriptorSetID::invalid(),
+    //    .binding = 0,
+    //    .array_element = 0,
+    //    .count = 0,
+    //    .type = GPU::DescriptorType::CombinedTextureSampler,
+    //};
+    // TODO: Update textures
     for (Batch& batch : batches.iter())
     {
         DebugAssert(set_offset < MaxBatchesPerFrame, "not enough batches for scene");
@@ -181,9 +159,15 @@ void SpriteRenderer::build_batch(const FrameInfo& frame_info)
 
         if (batch.texture_count > 0)
         {
-            set->set_combined_texture_sampler_array(0, Slice(batch.texture_views, batch.texture_count), GPU::TextureLayout::ShaderReadOnly, Slice(batch.samplers, batch.texture_count));
+            //GPU::descriptor_set_update_descriptors(
+            //    {
+            //        .device = set->parent->gpu_device,
+            //        .write_infos = Slice(&write_texture_sampler_array, 1)
+            //    }
+            //)
+            //set->set_combined_texture_sampler_array(0, Slice(batch.texture_views, batch.texture_count), GPU::TextureLayout::ShaderReadOnly, Slice(batch.samplers, batch.texture_count));
         }
-        set->sync_writes();
+        //set->sync_writes();
     }
 }
 
