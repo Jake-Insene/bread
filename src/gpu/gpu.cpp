@@ -70,10 +70,10 @@ void GPU::surface_destroy(SurfaceID surface)
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(surface, current_adapter->surface_destroy(surface));
 }
 
-GPU::DeviceID GPU::device_create(const DeviceCreateInfo &ci)
+GPU::DeviceID GPU::device_create(PhysicalDeviceID physical_device, const DeviceCreateInfo &ci)
 {
-    GPUValidationCheck(ci.physical_device.is_valid() == false, "invalid physical device");
-	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->device_create(ci);)
+    GPUValidationCheck(physical_device.is_valid() == false, "invalid physical device");
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->device_create(physical_device, ci);)
 }
 
 void GPU::device_destroy(DeviceID device)
@@ -82,15 +82,15 @@ void GPU::device_destroy(DeviceID device)
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(device, current_adapter->device_destroy(device));
 }
 
-GPU::SwapChainID GPU::swap_chain_create(const SwapChainCreateInfo& ci)
+GPU::SwapChainID GPU::swap_chain_create(DeviceID device, const SwapChainCreateInfo& ci)
 {
-    GPUValidationCheck(ci.device.is_valid() == false, "invalid device");
+    GPUValidationCheck(device.is_valid() == false, "invalid device");
 	GPUValidationCheck(ci.surface.is_valid() == false, "invalid surface");
     GPUValidationCheck(ci.present_mode == PresentMode::Unknown, "invalid present mode");
     GPUValidationCheck(ci.format == TextureFormat::Unknown, "invalid surface format");
     GPUValidationCheck(ci.min_image_count == 0, "invalid min image count");
 
-	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->swap_chain_create(ci));
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->swap_chain_create(device, ci));
 }
 
 void GPU::swap_chain_destroy(SwapChainID swap_chain)
@@ -130,10 +130,10 @@ GPU::AcquireResult GPU::swap_chain_acquire_next_image(SwapChainID swap_chain, co
 	return current_adapter->swap_chain_acquire_next_image(swap_chain, acquire_info, image_index);
 }
 
-GPU::FenceID GPU::fence_create(const FenceCreateInfo &ci)
+GPU::FenceID GPU::fence_create(DeviceID device, const FenceCreateInfo &ci)
 {
-	GPUValidationCheck(ci.device.is_valid() == false, "invalid device");
-	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->fence_create(ci));
+	GPUValidationCheck(device.is_valid() == false, "invalid device");
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->fence_create(device, ci));
 }
 
 void GPU::fence_destroy(FenceID fence)
@@ -168,10 +168,10 @@ void GPU::fence_wait_for(Slice<FenceID> fences, bool wait_for_all, u64 timeout)
 	current_adapter->fence_wait_for(fences, wait_for_all, timeout);
 }
 
-GPU::SemaphoreID GPU::semaphore_create(const SemaphoreCreateInfo &ci)
+GPU::SemaphoreID GPU::semaphore_create(DeviceID device, const SemaphoreCreateInfo &ci)
 {
-    GPUValidationCheck(ci.device.is_valid() == false, "invalid device");
-	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->semaphore_create(ci));
+    GPUValidationCheck(device.is_valid() == false, "invalid device");
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->semaphore_create(device, ci));
 }
 
 void GPU::semaphore_destroy(SemaphoreID semaphore)
@@ -180,21 +180,21 @@ void GPU::semaphore_destroy(SemaphoreID semaphore)
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(semaphore, current_adapter->semaphore_destroy(semaphore));
 }
 
-u32 GPU::queue_get_count(const QueueGetCountInfo& gci)
+u32 GPU::queue_get_count(DeviceID device, const QueueGetCountInfo& gci)
 {
-    GPUValidationCheck(gci.device.is_valid() == false, "invalid device");
+    GPUValidationCheck(device.is_valid() == false, "invalid device");
     GPUValidationCheck(gci.usage == QueueUsage::Unknown, "invalid queue usage");
 
-	return current_adapter->queue_get_count(gci);
+	return current_adapter->queue_get_count(device, gci);
 }
 
-GPU::QueueID GPU::queue_get(const QueueGetInfo& gi)
+GPU::QueueID GPU::queue_get(DeviceID device, const QueueGetInfo& gi)
 {
-    GPUValidationCheck(gi.device.is_valid() == false, "invalid device");
+    GPUValidationCheck(device.is_valid() == false, "invalid device");
     GPUValidationCheck(gi.usage == QueueUsage::Unknown, "invalid queue usage");
-    GPUValidationCheck(gi.index >= queue_get_count({.device = gi.device, .usage = gi.usage}), "invalid queue index");
+    GPUValidationCheck(gi.index >= queue_get_count(device, {.usage = gi.usage}), "invalid queue index");
 
-	return current_adapter->queue_get(gi);
+	return current_adapter->queue_get(device, gi);
 }
 
 void GPU::queue_execute_command_buffer(QueueID queue, const QueueExecuteInfo& execute_info)
@@ -226,11 +226,11 @@ void GPU::queue_wait_idle(QueueID queue)
 	current_adapter->queue_wait_idle(queue);
 }
 
-GPU::MemoryHeapID GPU::memory_heap_create(const MemoryHeapCreateInfo& ci)
+GPU::MemoryHeapID GPU::memory_heap_create(DeviceID device, const MemoryHeapCreateInfo& ci)
 {
-	GPUValidationCheck(ci.device.is_valid() == false, "invalid device");
+	GPUValidationCheck(device.is_valid() == false, "invalid device");
     GPUValidationCheck(ci.heap_usage == HeapUsage::Unknown, "invalid heap usage");
-	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->memory_heap_create(ci));
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->memory_heap_create(device, ci));
 }
 
 void GPU::memory_heap_destroy(MemoryHeapID memory_heap)
@@ -253,11 +253,11 @@ void GPU::memory_heap_unmap(MemoryHeapID memory_heap, const Slice<u8>& memory)
 	current_adapter->memory_heap_unmap(memory_heap, memory);
 }
 
-GPU::BufferID GPU::buffer_create(const BufferCreateInfo& ci)
+GPU::BufferID GPU::buffer_create(DeviceID device, const BufferCreateInfo& ci)
 {
-	GPUValidationCheck(ci.device.is_valid() == false, "invalid device");
+	GPUValidationCheck(device.is_valid() == false, "invalid device");
     GPUValidationCheck(ci.usage == BufferUsage(0), "invalid buffer usage");
-	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->buffer_create(ci));
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->buffer_create(device, ci));
 }
 
 void GPU::buffer_destroy(BufferID buffer)
@@ -279,9 +279,9 @@ void GPU::buffer_bind_memory_heap(BufferID buffer, const BindMemoryInfo& bind_in
 	current_adapter->buffer_bind_memory_heap(buffer, bind_info);
 }
 
-GPU::SamplerID GPU::sampler_create(const SamplerCreateInfo& ci)
+GPU::SamplerID GPU::sampler_create(DeviceID device, const SamplerCreateInfo& ci)
 {
-    GPUValidationCheck(ci.device.is_valid() == false, "invalid device");
+    GPUValidationCheck(device.is_valid() == false, "invalid device");
     GPUValidationCheck(ci.min_filter == Filter::Unknown, "invalid min filter");
     GPUValidationCheck(ci.mag_filter == Filter::Unknown, "invalid mag filter");
     GPUValidationCheck(ci.mipmap_mode == SamplerMipMapMode::Unknown, "invalid mipmap mode");
@@ -289,7 +289,7 @@ GPU::SamplerID GPU::sampler_create(const SamplerCreateInfo& ci)
     GPUValidationCheck(ci.address_mode_v == SamplerAddressMode::Unknown, "invalid address mode v");
     GPUValidationCheck(ci.address_mode_w == SamplerAddressMode::Unknown, "invalid address mode w");
     GPUValidationCheck(ci.compare_op == CompareOp::Unknown, "invalid compare op");
-	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->sampler_create(ci));
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->sampler_create(device, ci));
 }
 
 void GPU::sampler_destroy(SamplerID sampler)
@@ -298,9 +298,9 @@ void GPU::sampler_destroy(SamplerID sampler)
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(sampler, current_adapter->sampler_destroy(sampler));
 }
 
-GPU::TextureID GPU::texture_create(const TextureCreateInfo& ci)
+GPU::TextureID GPU::texture_create(DeviceID device, const TextureCreateInfo& ci)
 {
-	GPUValidationCheck(ci.device.is_valid() == false, "invalid device");
+	GPUValidationCheck(device.is_valid() == false, "invalid device");
     GPUValidationCheck(ci.type == TextureType::Unknown, "invalid texture type");
     GPUValidationCheck(ci.format == TextureFormat::Unknown, "invalid texture format");
     GPUValidationCheck(ci.extent.x == 0 || ci.extent.y == 0 || ci.extent.z == 0, "invalid texture size");
@@ -309,7 +309,7 @@ GPU::TextureID GPU::texture_create(const TextureCreateInfo& ci)
     GPUValidationCheck(ci.sample_count == SampleCount::Unknown, "invalid texture sample count");
     GPUValidationCheck(ci.tiling == TextureTiling::Unknown, "invalid texture tiling");
     GPUValidationCheck(ci.usage == TextureUsage(0), "invalid texture usage");
-	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->texture_create(ci));
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->texture_create(device, ci));
 }
 
 void GPU::texture_destroy(TextureID texture)
@@ -331,13 +331,13 @@ void GPU::texture_bind_memory_heap(TextureID texture, const BindMemoryInfo& bind
 	current_adapter->texture_bind_memory_heap(texture, bind_info);
 }
 
-GPU::TextureViewID GPU::texture_view_create(const TextureViewCreateInfo& ci)
+GPU::TextureViewID GPU::texture_view_create(DeviceID device, const TextureViewCreateInfo& ci)
 {
-	GPUValidationCheck(ci.device.is_valid() == false, "invalid device");
+	GPUValidationCheck(device.is_valid() == false, "invalid device");
     GPUValidationCheck(ci.type == TextureViewType::Unknown, "invalid texture view type");
     GPUValidationCheck(ci.texture.is_valid() == false, "invalid texture");
     GPUValidationCheck(ci.format == TextureFormat::Unknown, "invalid texture format");
-	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->texture_view_create(ci));
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->texture_view_create(device, ci));
 }
 
 void GPU::texture_view_destroy(TextureViewID texture_view)
@@ -346,11 +346,11 @@ void GPU::texture_view_destroy(TextureViewID texture_view)
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(texture_view, current_adapter->texture_view_destroy(texture_view));
 }
 
-GPU::DescriptorSetLayoutID GPU::descriptor_set_layout_create(const DescriptorSetLayoutCreateInfo& ci)
+GPU::DescriptorSetLayoutID GPU::descriptor_set_layout_create(DeviceID device, const DescriptorSetLayoutCreateInfo& ci)
 {
-	GPUValidationCheck(ci.device.is_valid() == false, "invalid device");
+	GPUValidationCheck(device.is_valid() == false, "invalid device");
     GPUValidationCheck(ci.bindings.len == 0, "invalid descriptor binding count");
-	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->descriptor_set_layout_create(ci));
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->descriptor_set_layout_create(device, ci));
 }
 
 void GPU::descriptor_set_layout_destroy(DescriptorSetLayoutID descriptor_set_layout)
@@ -359,10 +359,10 @@ void GPU::descriptor_set_layout_destroy(DescriptorSetLayoutID descriptor_set_lay
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(descriptor_set_layout, current_adapter->descriptor_set_layout_destroy(descriptor_set_layout));
 }
 
-GPU::DescriptorPoolID GPU::descriptor_pool_create(const DescriptorPoolCreateInfo &ci)
+GPU::DescriptorPoolID GPU::descriptor_pool_create(DeviceID device, const DescriptorPoolCreateInfo &ci)
 {
-    GPUValidationCheck(ci.device.is_valid() == false, "invalid device");
-	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->descriptor_pool_create(ci));
+    GPUValidationCheck(device.is_valid() == false, "invalid device");
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->descriptor_pool_create(device, ci));
 }
 
 void GPU::descriptor_pool_destroy(DescriptorPoolID descriptor_pool)
@@ -371,9 +371,9 @@ void GPU::descriptor_pool_destroy(DescriptorPoolID descriptor_pool)
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(descriptor_pool, current_adapter->descriptor_pool_destroy(descriptor_pool));
 }
 
-void GPU::descriptor_set_allocate(const DescriptorSetAllocateInfo& ci, Slice<DescriptorSetID> out_descriptor_sets)
+void GPU::descriptor_set_allocate(DeviceID device, const DescriptorSetAllocateInfo& ci, Slice<DescriptorSetID> out_descriptor_sets)
 {
-	GPUValidationCheck(ci.device.is_valid() == false, "invalid device");
+	GPUValidationCheck(device.is_valid() == false, "invalid device");
     GPUValidationCheck(ci.pool.is_valid() == false, "invalid descriptor pool");
     GPUValidationCheck(ci.set_layouts.len == 0, "invalid set layout count, at least one is expected");
 	for(usize i = 0; i < ci.set_layouts.len; i++)
@@ -381,7 +381,7 @@ void GPU::descriptor_set_allocate(const DescriptorSetAllocateInfo& ci, Slice<Des
     	GPUValidationCheck(ci.set_layouts[i].is_valid() == false, "invalid descriptor set layout");
 	}
 	
-	current_adapter->descriptor_set_allocate(ci, out_descriptor_sets);
+	current_adapter->descriptor_set_allocate(device, ci, out_descriptor_sets);
 
 	for(usize i = 0; i < out_descriptor_sets.len; i++)
 	{
@@ -405,9 +405,9 @@ void GPU::descriptor_set_free(DescriptorPoolID descriptor_pool, const Slice<cons
 	}
 }
 
-void GPU::descriptor_set_update_descriptors(const UpdateDescriptorInfo& update_info)
+void GPU::descriptor_set_update_descriptors(DeviceID device, const UpdateDescriptorInfo& update_info)
 {
-    GPUValidationCheck(update_info.device.is_valid() == false, "invalid device");
+    GPUValidationCheck(device.is_valid() == false, "invalid device");
 	for(usize write_index = 0; write_index < update_info.write_infos.len; write_index++)
 	{
 		const WriteDescriptorInfo& write_info = update_info.write_infos[write_index];
@@ -424,12 +424,12 @@ void GPU::descriptor_set_update_descriptors(const UpdateDescriptorInfo& update_i
 			"invalid textures len, at least one is expected"
 		);
 	}
-	current_adapter->descriptor_set_update_descriptors(update_info);
+	current_adapter->descriptor_set_update_descriptors(device, update_info);
 }
 
-GPU::PipelineLayoutID GPU::pipeline_layout_create(const PipelineLayoutCreateInfo &ci)
+GPU::PipelineLayoutID GPU::pipeline_layout_create(DeviceID device, const PipelineLayoutCreateInfo &ci)
 {
-	GPUValidationCheck(ci.device.is_valid() == false, "invalid device");
+	GPUValidationCheck(device.is_valid() == false, "invalid device");
 
 	for(const ConstantBlock& cb : ci.constant_blocks)
 	{
@@ -440,7 +440,7 @@ GPU::PipelineLayoutID GPU::pipeline_layout_create(const PipelineLayoutCreateInfo
     	);
 	}
 
-	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->pipeline_layout_create(ci));
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->pipeline_layout_create(device, ci));
 }
 
 void GPU::pipeline_layout_destroy(PipelineLayoutID pipeline_layout)
@@ -449,15 +449,15 @@ void GPU::pipeline_layout_destroy(PipelineLayoutID pipeline_layout)
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(pipeline_layout, current_adapter->pipeline_layout_destroy(pipeline_layout));
 }
 
-GPU::PipelineID GPU::pipeline_create(const PipelineCreateInfo& ci)
+GPU::PipelineID GPU::pipeline_create(DeviceID device, const PipelineCreateInfo& ci)
 {
-	GPUValidationCheck(ci.device.is_valid() == false, "invalid device");
+	GPUValidationCheck(device.is_valid() == false, "invalid device");
     GPUValidationCheck(ci.bind_point == PipelineBindPoint::Unknown, "invalid pipeline bind point");
     GPUValidationCheck(ci.input_assembly.topology == PrimitiveTopology::Unknown, "invalid topology");
     GPUValidationCheck(ci.shader_stages.len == 0, "at least one shader stage was expected");
     GPUValidationCheck(ci.pipeline_layout.is_valid() == false, "invalid pipeline layout");
 	
-	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->pipeline_create(ci));
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->pipeline_create(device, ci));
 }
 
 void GPU::pipeline_destroy(PipelineID pipeline)
@@ -466,11 +466,11 @@ void GPU::pipeline_destroy(PipelineID pipeline)
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(pipeline, current_adapter->pipeline_destroy(pipeline));
 }
 
-GPU::CommandPoolID GPU::command_pool_create(const CommandPoolCreateInfo &ci)
+GPU::CommandPoolID GPU::command_pool_create(DeviceID device, const CommandPoolCreateInfo &ci)
 {
-	GPUValidationCheck(ci.device.is_valid() == false, "invalid device");
+	GPUValidationCheck(device.is_valid() == false, "invalid device");
     GPUValidationCheck(ci.usage == QueueUsage::Unknown, "invalid queue usage");
-	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->command_pool_create(ci));
+	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->command_pool_create(device, ci));
 }
 
 void GPU::command_pool_destroy(CommandPoolID command_pool)
@@ -479,8 +479,9 @@ void GPU::command_pool_destroy(CommandPoolID command_pool)
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(command_pool, current_adapter->command_pool_destroy(command_pool));
 }
 
-GPU::CommandBufferID GPU::command_buffer_allocate(const CommandBufferAllocateInfo& ci)
+GPU::CommandBufferID GPU::command_buffer_allocate(DeviceID device, const CommandBufferAllocateInfo& ci)
 {
+	GPUValidationCheck(device.is_valid() == false, "invalid device");
     GPUValidationCheck(ci.pool.is_valid() == false, "invalid command pool");
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->command_buffer_allocate(ci));
 }
@@ -546,7 +547,7 @@ void GPU::command_buffer_bind_pipeline(CommandBufferID command_buffer, PipelineB
 	current_adapter->command_buffer_bind_pipeline(command_buffer, bind_point, pipeline);
 }
 
-void GPU::command_buffer_bind_descriptor_sets(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineLayoutID pipeline_layout, u32 base_set, const Slice<DescriptorSetID>& descriptor_sets)
+void GPU::command_buffer_bind_descriptor_sets(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineLayoutID pipeline_layout, u32 base_set, const Slice<const DescriptorSetID>& descriptor_sets)
 {
     GPUValidationCheck(command_buffer.is_valid() == false, "invalid command buffer");
 	GPUValidationCheck(bind_point == PipelineBindPoint::Unknown, "invalid bind point");
@@ -556,7 +557,7 @@ void GPU::command_buffer_bind_descriptor_sets(CommandBufferID command_buffer, Pi
 }
 
 
-void GPU::command_buffer_bind_vertex_buffers(CommandBufferID command_buffer, u32 base_binding, const Slice<BufferID>& buffers, const Slice<usize>& offsets)
+void GPU::command_buffer_bind_vertex_buffers(CommandBufferID command_buffer, u32 base_binding, const Slice<const BufferID>& buffers, const Slice<const usize>& offsets)
 {
     GPUValidationCheck(command_buffer.is_valid() == false, "invalid command buffer");
     GPUValidationCheck(buffers.len != offsets.len, "inconsistent buffers and offsets count");

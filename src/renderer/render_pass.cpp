@@ -1,9 +1,7 @@
 #include "renderer/render_pass.h"
 
-#include "graphics/command_buffer.h"
 
-
-void RenderPass::transition_to_render_attachment(Graphics::CommandBuffer* command_buffer, GPU::TextureID texture)
+void RenderPass::transition_to_render_attachment(GPU::CommandBufferID command_buffer, GPU::TextureID texture)
 {
     GPU::PipelineTextureBarrier texture_barrier =
     {
@@ -14,7 +12,8 @@ void RenderPass::transition_to_render_attachment(Graphics::CommandBuffer* comman
         .texture = texture,
         .subresource_range = GPU::TextureSubresourceRange::color(0, 1, 0, 1),
     };
-    command_buffer->pipeline_barrier(
+    GPU::command_buffer_pipeline_barrier(
+        command_buffer,
         GPU::PipelineBarrier::texture_barrier(
             GPU::PipelineStages::RenderOutput, GPU::PipelineStages::RenderOutput,
             Slice(&texture_barrier, 1)
@@ -22,7 +21,7 @@ void RenderPass::transition_to_render_attachment(Graphics::CommandBuffer* comman
     );
 }
 
-void RenderPass::transition_to_present(Graphics::CommandBuffer* command_buffer, GPU::TextureID texture)
+void RenderPass::transition_to_present(GPU::CommandBufferID command_buffer, GPU::TextureID texture)
 {
     GPU::PipelineTextureBarrier texture_barrier =
     {
@@ -33,7 +32,8 @@ void RenderPass::transition_to_present(Graphics::CommandBuffer* command_buffer, 
         .texture = texture,
         .subresource_range = GPU::TextureSubresourceRange::color(0, 1, 0, 1),
     };
-    command_buffer->pipeline_barrier(
+    GPU::command_buffer_pipeline_barrier(
+        command_buffer,
         GPU::PipelineBarrier::texture_barrier(
             GPU::PipelineStages::RenderOutput, GPU::PipelineStages::End,
             Slice(&texture_barrier, 1)
@@ -41,7 +41,7 @@ void RenderPass::transition_to_present(Graphics::CommandBuffer* command_buffer, 
     );
 }
 
-void RenderPass::begin(Graphics::CommandBuffer* command_buffer, const Vector2U& extent, const GPU::Viewport& viewport,
+void RenderPass::begin(GPU::CommandBufferID command_buffer, const Vector2U& extent, const GPU::Viewport& viewport,
     const GPU::Scissor& scissor, GPU::TextureViewID render_attachment_view, const GPU::ClearValue& clear_value)
 {
     GPU::AttachmentInfo render_attachment =
@@ -55,7 +55,8 @@ void RenderPass::begin(Graphics::CommandBuffer* command_buffer, const Vector2U& 
         .clear_value = clear_value,
     };
 
-    command_buffer->begin_renderpass(
+    GPU::command_buffer_begin_renderpass(
+        command_buffer,
         {
             .offset = Vector2I(0, 0),
             .extent = Vector3U(extent.x, extent.y, 1),
@@ -65,11 +66,11 @@ void RenderPass::begin(Graphics::CommandBuffer* command_buffer, const Vector2U& 
         }
     );
 
-    command_buffer->set_viewports(0, Slice(&viewport, 1));
-    command_buffer->set_scissors(0, Slice(&scissor, 1));
+    GPU::command_buffer_set_viewports(command_buffer, 0, Slice(&viewport, 1));
+    GPU::command_buffer_set_scissors(command_buffer, 0, Slice(&scissor, 1));
 }
 
-void RenderPass::end(Graphics::CommandBuffer* command_buffer)
+void RenderPass::end(GPU::CommandBufferID command_buffer)
 {
-    command_buffer->end_renderpass({});
+    GPU::command_buffer_end_renderpass(command_buffer, {});
 }

@@ -1,15 +1,12 @@
 #include "renderer/renderer_2d.h"
 
-#include "graphics/descriptor_pool.h"
-#include "graphics/descriptor_set.h"
-#include "graphics/pipeline_layout.h"
-
 
 void Renderer2D::init(const RendererCreateInfo& info)
 {
     Renderer::init(info);
 
-    sampler = graphics_device->create_sampler(
+    sampler = GPU::sampler_create(
+        render_device->get_device(),
         {
             .min_filter = GPU::Filter::Nearest,
             .mag_filter = GPU::Filter::Nearest,
@@ -30,57 +27,62 @@ void Renderer2D::init(const RendererCreateInfo& info)
     scene_uniform_buffer.init(
         {
             .allocator = allocator,
-            .graphics_device = graphics_device,
+            .device = render_device->get_device(),
             .gpu_memory_allocator = info.gpu_memory_allocator,
             .buffer_size = MaxSceneUniformSize,
-            .frame_count = info.max_frames_in_flight,
+            .frame_count = max_frames_in_flight,
             .usage = GPU::BufferUsage::UniformBuffer,
         }
     );
 
-    Graphics::DescriptorSetLayoutInfo set_layouts[] =
+    GPU::DescriptorSetLayoutCreateInfo set_layouts =
     {
         { SceneRenderer::GlobalSceneSet },
     };
 
-    global_scene_layout = info.graphics_device->create_pipeline_layout(
-        {
-            .constant_blocks = {},
-            .set_layout_infos = set_layouts,
-        }
+    global_set_layout = GPU::descriptor_set_layout_create(render_device->get_device(), set_layouts);
+
+    global_scene_layout = GPU::pipeline_layout_create(render_device->get_device(),
+        GPU::PipelineLayoutCreateInfo::create({}, Slice(&global_set_layout, 1))
     );
 
     GPU::DescriptorPoolSize pool_sizes[] =
     {
-        { .type = GPU::DescriptorType::UniformBuffer, .count = u32(info.max_frames_in_flight), },
+        { .type = GPU::DescriptorType::UniformBuffer, .count = u32(max_frames_in_flight), },
     };
 
-    global_scene_pool = graphics_device->create_descriptor_pool(info.max_frames_in_flight, pool_sizes);
+    global_scene_pool = GPU::descriptor_pool_create(render_device->get_device(),
+        GPU::DescriptorPoolCreateInfo::create(max_frames_in_flight, pool_sizes)
+    );
 
-    global_scene_set = allocator->array<Graphics::DescriptorSet*>(info.max_frames_in_flight);
-
-    for(usize i = 0; i < info.max_frames_in_flight; i++)
+    global_scene_set = allocator->array<GPU::DescriptorSetID>(max_frames_in_flight);
+    Slice<GPU::DescriptorSetLayoutID> global_scene_set_layouts = allocator->array<GPU::DescriptorSetLayoutID>(info.max_frames_in_flight);
+    for(usize i = 0; i < global_scene_set_layouts.len; i++)
     {
-        global_scene_set[i] = (global_scene_pool->allocate(global_scene_layout->get_layout(0)));
-        // TODO: Setup global scene set
-        //global_scene_set[i]->set_uniform_buffer(
-        //    0, scene_uniform_buffer.get_buffer(),
-        //    scene_uniform_buffer.get_buffer_info(i).offset,
-        //    MaxSceneUniformSize
-        //);
+        global_scene_set_layouts[i] = global_set_layout;
     }
+
+    GPU::descriptor_set_allocate(render_device->get_device(),
+        {.pool = global_scene_pool, .set_layouts = global_scene_set_layouts},
+        global_scene_set
+    );
+
+    allocator->free(Mem::to_bytes(global_scene_set_layouts));
 }
 
 void Renderer2D::destroy()
 {
-    graphics_device->get_graphics_queue()->wait_idle();
-    graphics_device->get_present_queue()->wait_idle();
+    GPU::queue_wait_idle(render_device->get_graphics_queue());
+    GPU::queue_wait_idle(render_device->get_present_queue());
     
     allocator->free(Mem::to_bytes(global_scene_set));
-    global_scene_pool->destroy();
-    global_scene_layout->destroy();
+
+    GPU::descriptor_set_layout_destroy(global_set_layout);
+    GPU::descriptor_set_free(global_scene_pool, global_scene_set);
+    GPU::descriptor_pool_destroy(global_scene_pool);
+    GPU::pipeline_layout_destroy(global_scene_layout);
     scene_uniform_buffer.destroy();
-    sampler->destroy();
+    GPU::sampler_destroy(sampler);
     Renderer::destroy();
 }
 
@@ -89,7 +91,7 @@ SceneRenderer::SceneUniform* Renderer2D::get_scene_uniform(const FrameInfo& fram
     return reinterpret_cast<SceneRenderer::SceneUniform*>(scene_uniform_buffer.get_mapped(frame_info.image_index).ptr());
 }
 
-Graphics::DescriptorSet* Renderer2D::get_global_set(const FrameInfo& frame_info)
+GPU::DescriptorSetID Renderer2D::get_global_set(const FrameInfo& frame_info)
 {
     return global_scene_set[frame_info.frame_index];
 }

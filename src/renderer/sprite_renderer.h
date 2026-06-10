@@ -1,8 +1,8 @@
 #pragma once
-#include "math/mat4.h"
 #include "math/vec2.h"
 #include "math/color.h"
 #include "math/rect_2d.h"
+#include "render_device/render_device.h"
 #include "renderer/framed_buffer.h"
 #include "renderer/renderer.h"
 #include "renderer/scene_renderer.h"
@@ -11,7 +11,7 @@
 struct SpriteRendererCreateInfo
 {
     Mem::Allocator* allocator;
-    Graphics::Device* graphics_device;
+    RenderDevice* render_device;
     GPUMemoryAllocator* gpu_memory_allocator;
     u32 max_frames_in_flight;
     u32 initial_unit_per_batch;
@@ -24,7 +24,7 @@ struct SpriteRenderer
 
     struct FrameInfo : Renderer::FrameInfo
     {
-        Graphics::DescriptorSet* global_set;
+        GPU::DescriptorSetID global_set;
         Vector2 viewport_size;
     };
 
@@ -49,29 +49,30 @@ struct SpriteRenderer
 
     struct Batch
     {
-        Graphics::Pipeline* pipeline;
-        Graphics::DescriptorSet* set;
+        GPU::PipelineID pipeline;
+        GPU::DescriptorSetID set;
         usize offset; // in stream buffer
         u32 vertices_per_instance;
         u32 instance_count;
         GPU::TextureViewID texture_views[MaxTexturesPerBatch];
-        Graphics::Sampler* samplers[MaxTexturesPerBatch];
+        GPU::SamplerID samplers[MaxTexturesPerBatch];
         u32 texture_count;
     };
     // TODO: Allow dynamic batch count
     static constexpr usize MaxBatchesPerFrame = 64;
 
     Mem::Allocator* allocator;
-    Graphics::Device* graphics_device;
+    RenderDevice* reneder_device;
 
-    Graphics::PipelineLayout* batch_pipeline_layout;
-    Graphics::Pipeline* sprite_pipeline;
+    GPU::DescriptorSetLayoutID batch_set_layout[2];
+    GPU::PipelineLayoutID batch_pipeline_layout;
+    GPU::PipelineID sprite_pipeline;
 
     usize instance_buffer_size;
 
     FramedDeviceBuffer instance_buffer;
-    Graphics::DescriptorPool* descriptor_pool;
-    Array<Graphics::DescriptorSet*> descriptor_sets;
+    GPU::DescriptorPoolID descriptor_pool;
+    Array<GPU::DescriptorSetID> descriptor_sets;
 
     Array<Batch> batches;
     Array<StreamSpriteUnit> streams;
@@ -84,9 +85,9 @@ struct SpriteRenderer
     void build_batch(const FrameInfo& frame_info);
     void finish_scene(const FrameInfo& frame_info);
 
-    void begin_batch_record(const FrameInfo& frame_info, Graphics::CommandBuffer* command_buffer);
-    void end_batch_record(const FrameInfo& frame_info, Graphics::CommandBuffer* command_buffer);
+    void begin_batch_record(const FrameInfo& frame_info, GPU::CommandBufferID command_buffer);
+    void end_batch_record(const FrameInfo& frame_info, GPU::CommandBufferID command_buffer);
 
-    void commit_sprite(const StreamSpriteUnit& sprite, GPU::TextureViewID texture_view, Graphics::Sampler* sampler);
+    void commit_sprite(const StreamSpriteUnit& sprite, GPU::TextureViewID texture_view, GPU::SamplerID sampler);
 };
 

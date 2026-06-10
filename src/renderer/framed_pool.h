@@ -1,12 +1,13 @@
 #pragma once
-#include "graphics/device.h"
+#include "collections/array.h"
+#include "gpu/gpu.h"
 
 
 
 struct FramedPoolCreateInfo
 {
     Mem::Allocator* allocator;
-    Graphics::Device* graphics_device;
+    GPU::DeviceID device;
 
     Slice<GPU::DescriptorPoolSize> sizes;
     u32 max_sets;
@@ -16,12 +17,12 @@ struct FramedPoolCreateInfo
 struct FramedPool
 {
     Mem::Allocator* allocator;
-    Graphics::Device* graphics_device;
+    GPU::DeviceID device;
 
-    Array<Graphics::DescriptorPool*> pools;
+    Array<GPU::DescriptorPoolID> pools;
 
     void init(const FramedPoolCreateInfo& info);
     void destroy();
 
-    Graphics::DescriptorPool* get_pool(usize frame_index); 
+    GPU::DescriptorPoolID get_pool(usize frame_index); 
 };

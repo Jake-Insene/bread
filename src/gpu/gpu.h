@@ -216,17 +216,14 @@ namespace GPU
 	*/
 	struct DeviceCreateInfo
 	{
-		/**
-		* Selected physical device.
-		*/
-		PhysicalDeviceID physical_device;
 	};
 
 	/**
 	* Create a logical device that operates with the given device to commit work, allocate memory, etc...
+	* @param physical_device Selected physical device.
 	* @param ci Device creation parameters.
 	*/
-	DeviceID device_create(const DeviceCreateInfo& ci);
+	DeviceID device_create(PhysicalDeviceID physical_device, const DeviceCreateInfo& ci);
 
 	/**
 	* Destroy the given logical device.
@@ -256,10 +253,6 @@ namespace GPU
 
 	struct SwapChainCreateInfo
 	{
-		/*
-		* Logical device where the resource will reside.
-		*/
-		DeviceID device;
 		/*
 		* Surface as present target of the images.
 		*/
@@ -291,10 +284,11 @@ namespace GPU
 		FenceID fence;
 	};
 	
-	/*
+	/**
 	* Create a swap chain to present content on a surface.
+	* @param device Logical device where the resource will reside.
 	*/
-	SwapChainID swap_chain_create(const SwapChainCreateInfo& ci);
+	SwapChainID swap_chain_create(DeviceID device, const SwapChainCreateInfo& ci);
 
 	void swap_chain_destroy(SwapChainID swap_chain);
 	u32 swap_chain_get_image_count(SwapChainID swap_chain);
@@ -307,11 +301,10 @@ namespace GPU
 	*/
 	struct FenceCreateInfo
 	{
-		DeviceID device;
 		bool signaled;
 	};
 
-	FenceID fence_create(const FenceCreateInfo& ci);
+	FenceID fence_create(DeviceID device, const FenceCreateInfo& ci);
 	void fence_destroy(FenceID fence);
 	bool fence_get_state(FenceID fence);
 	void fence_reset(Slice<FenceID> fences);
@@ -322,10 +315,9 @@ namespace GPU
 	*/
 	struct SemaphoreCreateInfo
 	{
-		DeviceID device;
 	};
 
-	SemaphoreID semaphore_create(const SemaphoreCreateInfo& ci);
+	SemaphoreID semaphore_create(DeviceID device, const SemaphoreCreateInfo& ci);
 	void semaphore_destroy(SemaphoreID semaphore);
 
 	/*
@@ -342,13 +334,11 @@ namespace GPU
 
 	struct QueueGetCountInfo
 	{
-		DeviceID device;
 		QueueUsage usage;
 	};
 
 	struct QueueGetInfo
 	{
-		DeviceID device;
 		QueueUsage usage;
 		u32 index;
 	};
@@ -369,8 +359,8 @@ namespace GPU
 		Slice<const u32> image_indices;
 	};
 
-	u32 queue_get_count(const QueueGetCountInfo& gci);
-	QueueID queue_get(const QueueGetInfo& gi);
+	u32 queue_get_count(DeviceID device, const QueueGetCountInfo& gci);
+	QueueID queue_get(DeviceID device, const QueueGetInfo& gi);
 	void queue_execute_command_buffer(QueueID queue, const QueueExecuteInfo& execute_info);
 	AcquireResult queue_present(QueueID queue, const QueuePresentInfo& present_info);
 	void queue_wait_idle(QueueID queue);
@@ -398,9 +388,17 @@ namespace GPU
 
 	struct MemoryHeapCreateInfo
 	{
-		DeviceID device;
 		HeapUsage heap_usage;
 		usize heap_size;
+
+		static constexpr MemoryHeapCreateInfo create(HeapUsage heap_usage, usize heap_size)
+		{
+			return MemoryHeapCreateInfo
+			{
+				.heap_usage = heap_usage,
+				.heap_size = heap_size,
+			};
+		}
 	};
 
 	struct MemoryRequirements
@@ -414,9 +412,18 @@ namespace GPU
 	{
 		MemoryHeapID memory_heap;
 		usize heap_offset;
+
+		static constexpr BindMemoryInfo bind(MemoryHeapID memory_heap, usize heap_offset)
+		{
+			return BindMemoryInfo
+			{
+				.memory_heap = memory_heap,
+				.heap_offset = heap_offset,
+			};
+		}
 	};
 
-	MemoryHeapID memory_heap_create(const MemoryHeapCreateInfo& ci);
+	MemoryHeapID memory_heap_create(DeviceID device, const MemoryHeapCreateInfo& ci);
 	void memory_heap_destroy(MemoryHeapID memory_heap);
 
 	Slice<u8> memory_heap_map(MemoryHeapID memory_heap, usize offset, usize len);
@@ -448,12 +455,20 @@ namespace GPU
 	
 	struct BufferCreateInfo
 	{
-		DeviceID device;
 		BufferUsage usage;
 		usize size;
+
+		static constexpr BufferCreateInfo create(BufferUsage usage, usize size)
+		{
+			return BufferCreateInfo
+			{
+				.usage = usage,
+				.size = size,
+			};
+		}
 	};
 
-	BufferID buffer_create(const BufferCreateInfo& ci);
+	BufferID buffer_create(DeviceID device, const BufferCreateInfo& ci);
 	void buffer_destroy(BufferID buffer);
 
 	MemoryRequirements buffer_get_memory_requirements(BufferID buffer);
@@ -462,7 +477,6 @@ namespace GPU
 	/*
 	* Sampler API
 	*/
-
 	enum class Filter
 	{
 		Unknown = 0,
@@ -488,7 +502,6 @@ namespace GPU
 
 	struct SamplerCreateInfo
 	{
-		DeviceID device;
 		Filter min_filter;
 		Filter mag_filter;
 		SamplerMipMapMode mipmap_mode;
@@ -504,7 +517,7 @@ namespace GPU
 		f32 max_lod;
 	};
 
-	SamplerID sampler_create(const SamplerCreateInfo& ci);
+	SamplerID sampler_create(DeviceID device, const SamplerCreateInfo& ci);
 	void sampler_destroy(SamplerID sampler);
 
 	/*
@@ -603,7 +616,6 @@ namespace GPU
 
 	struct TextureCreateInfo
 	{
-		DeviceID device;
 		TextureType type;
 		TextureFormat format;
 		Vector3U extent;
@@ -614,9 +626,29 @@ namespace GPU
 		TextureUsage usage;
 		TextureLayout initial_layout;
 		TextureSubresourceRange subresource_range;
+
+		static constexpr TextureCreateInfo create(TextureType type, TextureFormat format,
+			const Vector3U& extent, u32 mip_levels, u32 array_levels, SampleCount sample_count,
+			TextureTiling tiling, TextureUsage usage, TextureLayout initial_layout,
+			TextureSubresourceRange subresource_range)
+		{
+			return TextureCreateInfo
+			{
+				.type = type,
+				.format = format,
+				.extent = extent,
+				.mip_levels = mip_levels,
+				.array_levels = array_levels,
+				.sample_count = sample_count,
+				.tiling = tiling,
+				.usage = usage,
+				.initial_layout = initial_layout,
+				.subresource_range = subresource_range,
+			};
+		}
 	};
 
-	TextureID texture_create(const TextureCreateInfo& ci);
+	TextureID texture_create(DeviceID device, const TextureCreateInfo& ci);
 	void texture_destroy(TextureID texture);
 
 	MemoryRequirements texture_get_memory_requirements(TextureID texture);
@@ -633,14 +665,25 @@ namespace GPU
 
 	struct TextureViewCreateInfo
 	{
-		DeviceID device;
 		TextureViewType type;
 		TextureFormat format;
 		TextureID texture;
 		TextureSubresourceRange subresource_range;
+
+		static constexpr TextureViewCreateInfo create(TextureViewType type, TextureFormat format,
+			TextureID texture, TextureSubresourceRange subresource_range)
+		{
+			return TextureViewCreateInfo
+			{
+				.type = type,
+				.format = format,
+				.texture = texture,
+				.subresource_range = subresource_range,
+			};
+		}
 	};
 
-	TextureViewID texture_view_create(const TextureViewCreateInfo& ci);
+	TextureViewID texture_view_create(DeviceID device, const TextureViewCreateInfo& ci);
 	void texture_view_destroy(TextureViewID texture_view);
 
 	/*
@@ -656,11 +699,18 @@ namespace GPU
 
 	struct DescriptorSetLayoutCreateInfo
 	{
-		DeviceID device;
 		Slice<const DescriptorBinding> bindings;
+
+		static constexpr DescriptorSetLayoutCreateInfo create(const Slice<const DescriptorBinding>& bindings)
+		{
+			return DescriptorSetLayoutCreateInfo
+			{
+				.bindings = bindings,
+			};
+		}
 	};
 
-	DescriptorSetLayoutID descriptor_set_layout_create(const DescriptorSetLayoutCreateInfo& ci);
+	DescriptorSetLayoutID descriptor_set_layout_create(DeviceID device, const DescriptorSetLayoutCreateInfo& ci);
 	void descriptor_set_layout_destroy(DescriptorSetLayoutID descriptor_set_layout);
 
 	/*
@@ -675,12 +725,20 @@ namespace GPU
 	
 	struct DescriptorPoolCreateInfo
 	{
-		DeviceID device;
 		u32 max_sets;
 		Slice<const DescriptorPoolSize> sizes;
+
+		static constexpr DescriptorPoolCreateInfo create(u32 max_sets, Slice<const DescriptorPoolSize> sizes)
+		{
+			return DescriptorPoolCreateInfo
+			{
+				.max_sets = max_sets,
+				.sizes = sizes,
+			};
+		}
 	};
 
-	DescriptorPoolID descriptor_pool_create(const DescriptorPoolCreateInfo& ci);
+	DescriptorPoolID descriptor_pool_create(DeviceID device, const DescriptorPoolCreateInfo& ci);
 	void descriptor_pool_destroy(DescriptorPoolID descriptor_pool);
 
 
@@ -690,7 +748,6 @@ namespace GPU
 
 	struct DescriptorSetAllocateInfo
 	{
-		DeviceID device;
 		DescriptorPoolID pool;
 		Slice<const DescriptorSetLayoutID> set_layouts;
 	};
@@ -721,13 +778,12 @@ namespace GPU
 
 	struct UpdateDescriptorInfo
 	{
-		DeviceID device;
 		Slice<const WriteDescriptorInfo> write_infos;
 	};
 
-	void descriptor_set_allocate(const DescriptorSetAllocateInfo& ci, Slice<DescriptorSetID> out_descriptor_sets);
+	void descriptor_set_allocate(DeviceID device, const DescriptorSetAllocateInfo& ci, Slice<DescriptorSetID> out_descriptor_sets);
 	void descriptor_set_free(DescriptorPoolID descriptor_pool, const Slice<const GPU::DescriptorSetID>& descriptor_sets);
-	void descriptor_set_update_descriptors(const UpdateDescriptorInfo& update_info);
+	void descriptor_set_update_descriptors(DeviceID device, const UpdateDescriptorInfo& update_info);
 
 	/*
 	* Pipeline Layout API
@@ -741,12 +797,21 @@ namespace GPU
 
 	struct PipelineLayoutCreateInfo
 	{
-		DeviceID device;
 		Slice<const ConstantBlock> constant_blocks;
 		Slice<const DescriptorSetLayoutID> set_layouts;
+
+		static constexpr PipelineLayoutCreateInfo create(const Slice<const ConstantBlock>& constant_blocks,
+			const Slice<const DescriptorSetLayoutID>& set_layouts)
+		{
+			return PipelineLayoutCreateInfo
+			{
+				.constant_blocks = constant_blocks,
+				.set_layouts = set_layouts,
+			};
+		}
 	};
 
-	PipelineLayoutID pipeline_layout_create(const PipelineLayoutCreateInfo& ci);
+	PipelineLayoutID pipeline_layout_create(DeviceID device, const PipelineLayoutCreateInfo& ci);
 	void pipeline_layout_destroy(PipelineLayoutID pipeline_layout);
 
 	/*
@@ -936,7 +1001,6 @@ namespace GPU
 
 	struct PipelineCreateInfo
 	{
-		DeviceID device;
 		PipelineBindPoint bind_point;
 		Slice<const ShaderStageInfo> shader_stages;
 		VertexInput vertex_input;
@@ -948,7 +1012,7 @@ namespace GPU
 		RenderingInfo rendering_info;
 	};
 
-	PipelineID pipeline_create(const PipelineCreateInfo& ci);
+	PipelineID pipeline_create(DeviceID device, const PipelineCreateInfo& ci);
 	void pipeline_destroy(PipelineID pipeline);
 
 	/*
@@ -956,11 +1020,10 @@ namespace GPU
 	*/
 	struct CommandPoolCreateInfo
 	{
-		DeviceID device;
 		QueueUsage usage;
 	};
 
-	CommandPoolID command_pool_create(const CommandPoolCreateInfo& ci);
+	CommandPoolID command_pool_create(DeviceID device, const CommandPoolCreateInfo& ci);
 	void command_pool_destroy(CommandPoolID command_pool);
 
 	/*
@@ -1157,7 +1220,7 @@ namespace GPU
 		}
 	};
 
-	struct  CopyBufferInfo
+	struct CopyBufferInfo
 	{
 		BufferID src_buffer;
 		BufferID dest_buffer;
@@ -1217,7 +1280,7 @@ namespace GPU
 		}
 	};
 
-	CommandBufferID command_buffer_allocate(const CommandBufferAllocateInfo& ci);
+	CommandBufferID command_buffer_allocate(DeviceID device, const CommandBufferAllocateInfo& ci);
 	void command_buffer_free(CommandBufferID command_buffer);
 
 	void command_buffer_begin(CommandBufferID command_buffer);
@@ -1232,8 +1295,8 @@ namespace GPU
 	void command_buffer_copy_buffer(CommandBufferID command_buffer, const CopyBufferInfo& copy_info);
 
 	void command_buffer_bind_pipeline(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineID pipeline);
-	void command_buffer_bind_descriptor_sets(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineLayoutID pipeline_layout, u32 base_set, const Slice<DescriptorSetID>& descriptor_sets);
-	void command_buffer_bind_vertex_buffers(CommandBufferID command_buffer, u32 base_binding, const Slice<BufferID>& buffers, const Slice<usize>& offsets);
+	void command_buffer_bind_descriptor_sets(CommandBufferID command_buffer, PipelineBindPoint bind_point, PipelineLayoutID pipeline_layout, u32 base_set, const Slice<const DescriptorSetID>& descriptor_sets);
+	void command_buffer_bind_vertex_buffers(CommandBufferID command_buffer, u32 base_binding, const Slice<const BufferID>& buffers, const Slice<const usize>& offsets);
 	void command_buffer_constant_block(CommandBufferID command_buffer, PipelineLayoutID pipeline_layout, ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address);
 
 	void command_buffer_set_viewports(CommandBufferID command_buffer, u32 base_viewport, const Slice<const Viewport>& viewports);

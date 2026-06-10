@@ -2,9 +2,6 @@
 #include "collections/array.h"
 #include "collections/stack.h"
 #include "gpu/gpu.h"
-#include "graphics/command_buffer.h"
-#include "graphics/device_object.h"
-#include "graphics/queue.h"
 
 
 namespace Graphics
@@ -12,57 +9,58 @@ namespace Graphics
 
 struct CommandPoolInfo
 {
-    GPU::DeviceID gpu_device;
-    GPU::QueueUsage gpu_queue_usage;
+    Mem::Allocator* allocator;
+    GPU::DeviceID device;
+    GPU::QueueUsage queue_usage;
 };
 
 struct CommandPoolExecuteInfo
 {
-    Slice<Graphics::Semaphore*> wait_semaphores;
+    Slice<const GPU::SemaphoreID> wait_semaphores;
     Slice<const GPU::PipelineStages> wait_stages;
-    CommandBuffer* command_buffer;
-    Slice<Graphics::Semaphore*> signal_semaphores;
+    GPU::CommandBufferID command_buffer;
+    Slice<const GPU::SemaphoreID> signal_semaphores;
 };
 
 struct CommandPoolExecuteEmptyInfo
 {
-    Slice<Graphics::Semaphore*> wait_semaphores;
+    Slice<const GPU::SemaphoreID> wait_semaphores;
     Slice<const GPU::PipelineStages> wait_stages;
-    Slice<Graphics::Semaphore*> signal_semaphores;
+    Slice<const GPU::SemaphoreID> signal_semaphores;
 };
 
-struct CommandPool : DeviceObject
+struct CommandPool
 {
-    GPU::DeviceID gpu_device;
-    GPU::QueueUsage gpu_queue_usage;
-    GPU::CommandPoolID gpu_command_pool;
-
     struct WorkSubmit
     {
-        Fence* fence;
-        CommandBuffer* command_buffer;
+        GPU::FenceID fence;
+        GPU::CommandBufferID command_buffer;
         bool empty;
     };
 
-    Array<CommandBuffer*> command_buffers;
-    Array<Fence*> gpu_work_fences;
+    Mem::Allocator* allocator;
+    GPU::DeviceID device;
+    GPU::QueueUsage queue_usage;
+    GPU::CommandPoolID gpu_command_pool;
+    Array<GPU::CommandBufferID> command_buffers;
+    Array<GPU::FenceID> gpu_work_fences;
     Array<WorkSubmit> work_submited;
     
-    Stack<Fence*> gpu_free_fences;
-    Stack<CommandBuffer*> free_command_buffers;
+    Stack<GPU::FenceID> gpu_free_fences;
+    Stack<GPU::CommandBufferID> free_command_buffers;
 
-    void init(Mem::Allocator* _allocator, Device* _parent, const CommandPoolInfo& info);
+    void init(const CommandPoolInfo& info);
     void destroy();
 
-    CommandBuffer* acquire_command_buffer();
-    Fence* execute(Queue* queue, const CommandPoolExecuteInfo& info);
-    Fence* execute_empty(Queue* queue, const CommandPoolExecuteEmptyInfo& info);
+    GPU::CommandBufferID acquire_command_buffer();
+    GPU::FenceID execute(GPU::QueueID queue, const CommandPoolExecuteInfo& info);
+    GPU::FenceID execute_empty(GPU::QueueID queue, const CommandPoolExecuteEmptyInfo& info);
 
     void wait_for_all();
 
-    void release_fence(Fence* fence);
+    void release_fence(GPU::FenceID fence);
 
-    Fence* _alloc_new_fence();
+    GPU::FenceID _alloc_new_fence();
     void _remove_finished_work();
 };
 

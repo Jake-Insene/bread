@@ -20,9 +20,12 @@ struct Shader
 
     ShaderInfo shader_info;
     Slice<u8> shader_code;
+    GPU::ShaderStageInfo shader_stages[2];
 
     void init(Mem::Allocator* _allocator, const ShaderInfo& info);
     void destroy();
+
+    Slice<const GPU::ShaderStageInfo> get_stages() const { return shader_stages; }
 };
 
 }

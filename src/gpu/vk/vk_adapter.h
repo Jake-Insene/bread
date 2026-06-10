@@ -353,69 +353,69 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 	GPU::SurfaceID surface_create(const GPU::SurfaceCreateInfo& ci) override;
 	void surface_destroy(GPU::SurfaceID surface) override;
 
-	GPU::DeviceID device_create(const GPU::DeviceCreateInfo& ci) override;
+	GPU::DeviceID device_create(GPU::PhysicalDeviceID physical_device, const GPU::DeviceCreateInfo& ci) override;
 	void device_destroy(GPU::DeviceID device) override;
 
-	GPU::SwapChainID swap_chain_create(const GPU::SwapChainCreateInfo& ci) override;
+	GPU::SwapChainID swap_chain_create(GPU::DeviceID device, const GPU::SwapChainCreateInfo& ci) override;
 	void swap_chain_destroy(GPU::SwapChainID swap_chain) override;
 	u32 swap_chain_get_image_count(GPU::SwapChainID swap_chain) override;
 	GPU::TextureID swap_chain_get_image(GPU::SwapChainID swap_chain, u32 image_index) override;
 	GPU::TextureViewID swap_chain_get_image_view(GPU::SwapChainID swap_chain, u32 image_index) override;
 	GPU::AcquireResult swap_chain_acquire_next_image(GPU::SwapChainID swap_chain, const GPU::AcquireInfo& acquire_info, u32* image_index) override;
 
-	GPU::FenceID fence_create(const GPU::FenceCreateInfo& ci) override;
+	GPU::FenceID fence_create(GPU::DeviceID device, const GPU::FenceCreateInfo& ci) override;
 	void fence_destroy(GPU::FenceID fence) override;
 	bool fence_get_state(GPU::FenceID fence) override;
 	void fence_reset(Slice<GPU::FenceID> fences) override;
 	void fence_wait_for(Slice<GPU::FenceID> fences, bool wait_for_all, u64 timeout) override;
 
-	GPU::SemaphoreID semaphore_create(const GPU::SemaphoreCreateInfo& ci) override;
+	GPU::SemaphoreID semaphore_create(GPU::DeviceID device, const GPU::SemaphoreCreateInfo& ci) override;
 	void semaphore_destroy(GPU::SemaphoreID semaphore) override;
 
-	u32 queue_get_count(const GPU::QueueGetCountInfo& gci) override;
-	GPU::QueueID queue_get(const GPU::QueueGetInfo& gi) override;
+	u32 queue_get_count(GPU::DeviceID device, const GPU::QueueGetCountInfo& gci) override;
+	GPU::QueueID queue_get(GPU::DeviceID device, const GPU::QueueGetInfo& gi) override;
 	void queue_execute_command_buffer(GPU::QueueID queue, const GPU::QueueExecuteInfo& execute_info) override;
 	GPU::AcquireResult queue_present(GPU::QueueID queue, const GPU::QueuePresentInfo& present_info) override;
 	void queue_wait_idle(GPU::QueueID queue) override;
 
-	GPU::MemoryHeapID memory_heap_create(const GPU::MemoryHeapCreateInfo& ci) override;
+	GPU::MemoryHeapID memory_heap_create(GPU::DeviceID device, const GPU::MemoryHeapCreateInfo& ci) override;
 	void memory_heap_destroy(GPU::MemoryHeapID memory_heap) override;
 	Slice<u8> memory_heap_map(GPU::MemoryHeapID memory_heap, usize offset, usize len) override;
 	void memory_heap_unmap(GPU::MemoryHeapID memory_heap, const Slice<u8>& memory) override;
 
-	GPU::BufferID buffer_create(const GPU::BufferCreateInfo& ci) override;
+	GPU::BufferID buffer_create(GPU::DeviceID device, const GPU::BufferCreateInfo& ci) override;
 	void buffer_destroy(GPU::BufferID buffer) override;
 	GPU::MemoryRequirements buffer_get_memory_requirements(GPU::BufferID buffer) override;
 	void buffer_bind_memory_heap(GPU::BufferID buffer, const GPU::BindMemoryInfo& bind_info) override;
 
-	GPU::SamplerID sampler_create(const GPU::SamplerCreateInfo& ci) override;
+	GPU::SamplerID sampler_create(GPU::DeviceID device, const GPU::SamplerCreateInfo& ci) override;
 	void sampler_destroy(GPU::SamplerID sampler) override;
 	
-	GPU::TextureID texture_create(const GPU::TextureCreateInfo& ci) override;
+	GPU::TextureID texture_create(GPU::DeviceID device, const GPU::TextureCreateInfo& ci) override;
 	void texture_destroy(GPU::TextureID texture) override;
 	GPU::MemoryRequirements texture_get_memory_requirements(GPU::TextureID texture) override;
 	void texture_bind_memory_heap(GPU::TextureID texture, const GPU::BindMemoryInfo& bind_info) override;
 
-	GPU::TextureViewID texture_view_create(const GPU::TextureViewCreateInfo &ci) override;
+	GPU::TextureViewID texture_view_create(GPU::DeviceID device, const GPU::TextureViewCreateInfo &ci) override;
 	void texture_view_destroy(GPU::TextureViewID texture_view) override;
 
-	GPU::DescriptorSetLayoutID descriptor_set_layout_create(const GPU::DescriptorSetLayoutCreateInfo& ci) override;
+	GPU::DescriptorSetLayoutID descriptor_set_layout_create(GPU::DeviceID device, const GPU::DescriptorSetLayoutCreateInfo& ci) override;
 	void descriptor_set_layout_destroy(GPU::DescriptorSetLayoutID descriptor_set_layout) override;
 
-	GPU::DescriptorPoolID descriptor_pool_create(const GPU::DescriptorPoolCreateInfo& ci) override;
+	GPU::DescriptorPoolID descriptor_pool_create(GPU::DeviceID device, const GPU::DescriptorPoolCreateInfo& ci) override;
 	void descriptor_pool_destroy(GPU::DescriptorPoolID descriptor_pool) override;
 
-	void descriptor_set_allocate(const GPU::DescriptorSetAllocateInfo& ci, Slice<GPU::DescriptorSetID> out_descriptor_sets) override;
+	void descriptor_set_allocate(GPU::DeviceID device, const GPU::DescriptorSetAllocateInfo& ci, Slice<GPU::DescriptorSetID> out_descriptor_sets) override;
 	void descriptor_set_free(GPU::DescriptorPoolID descriptor_pool, const Slice<const GPU::DescriptorSetID>& _descriptor_sets) override;
-	void descriptor_set_update_descriptors(const GPU::UpdateDescriptorInfo& update_info) override;
+	void descriptor_set_update_descriptors(GPU::DeviceID device, const GPU::UpdateDescriptorInfo& update_info) override;
 
-	GPU::PipelineLayoutID pipeline_layout_create(const GPU::PipelineLayoutCreateInfo& ci) override;
+	GPU::PipelineLayoutID pipeline_layout_create(GPU::DeviceID device, const GPU::PipelineLayoutCreateInfo& ci) override;
 	void pipeline_layout_destroy(GPU::PipelineLayoutID pipeline_layout) override;
 
-	GPU::PipelineID pipeline_create(const GPU::PipelineCreateInfo& ci) override;
+	GPU::PipelineID pipeline_create(GPU::DeviceID device, const GPU::PipelineCreateInfo& ci) override;
 	void pipeline_destroy(GPU::PipelineID pipeline) override;
 
-	GPU::CommandPoolID command_pool_create(const GPU::CommandPoolCreateInfo& ci) override;
+	GPU::CommandPoolID command_pool_create(GPU::DeviceID device, const GPU::CommandPoolCreateInfo& ci) override;
 	void command_pool_destroy(GPU::CommandPoolID command_pool) override;
 
 	GPU::CommandBufferID command_buffer_allocate(const GPU::CommandBufferAllocateInfo& ci) override;
@@ -432,8 +432,8 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 	void command_buffer_copy_buffer(GPU::CommandBufferID command_buffer, const GPU::CopyBufferInfo& copy_info) override;
 
 	void command_buffer_bind_pipeline(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineID pipeline) override;
-	void command_buffer_bind_descriptor_sets(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point, GPU::PipelineLayoutID pipeline_layout, u32 base_set, const Slice<GPU::DescriptorSetID>& descriptor_sets) override;
-	void command_buffer_bind_vertex_buffers(GPU::CommandBufferID command_buffer, u32 base_binding, const Slice<GPU::BufferID>& buffers, const Slice<usize>& offsets) override;
+	void command_buffer_bind_descriptor_sets(GPU::CommandBufferID command_buffer, GPU::PipelineBindPoint bind_point,GPU::PipelineLayoutID pipeline_layout, u32 base_set, const Slice<const GPU::DescriptorSetID>& descriptor_sets) override;
+	void command_buffer_bind_vertex_buffers(GPU::CommandBufferID command_buffer, u32 base_binding, const Slice<const GPU::BufferID>& buffers, const Slice<const usize>& offsets) override;
 	void command_buffer_constant_block(GPU::CommandBufferID command_buffer, GPU::PipelineLayoutID pipeline_layout, GPU::ShaderStage stages, u32 offset, u32 size, MemoryAddress block_address) override;
 
 	void command_buffer_set_viewports(GPU::CommandBufferID command_buffer, u32 base_viewport, const Slice<const GPU::Viewport>& viewports) override;

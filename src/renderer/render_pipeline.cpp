@@ -1,26 +1,22 @@
 #include "renderer/render_pipeline.h"
 
-#include "graphics/device.h"
-#include "graphics/pipeline.h"
-#include "graphics/pipeline_layout.h"
 
-
-RenderPipeline RenderPipeline::create(Mem::Allocator* allocator, Graphics::Device* graphics_device,
+RenderPipeline RenderPipeline::create(Mem::Allocator* allocator, GPU::DeviceID device,
     Graphics::Shader* shader, GPU::VertexInput vertex_input, GPU::PrimitiveTopology topology,
     const GPU::RenderingInfo& rendering_info)
 {
-    Graphics::PipelineLayout* pipeline_layout = graphics_device->create_pipeline_layout(
-        {
-        }
+    GPU::PipelineLayoutID pipeline_layout = GPU::pipeline_layout_create(
+        device, GPU::PipelineLayoutCreateInfo::create({}, {})
     );
 
     return RenderPipeline
     {
         .allocator = allocator,
-        .pipeline = graphics_device->create_pipeline(
+        .pipeline = GPU::pipeline_create(
+            device,
             {
                 .bind_point = GPU::PipelineBindPoint::Graphics,
-                .shader = shader,
+                .shader_stages = shader->get_stages(),
                 .vertex_input = vertex_input,
                 .input_assembly = { .topology = topology },
                 .rasterizer_state = GPU::RasterizerState::state(GPU::PolygonMode::Fill,
@@ -37,6 +33,6 @@ RenderPipeline RenderPipeline::create(Mem::Allocator* allocator, Graphics::Devic
 
 void RenderPipeline::destroy()
 {
-    pipeline->destroy();
-    pipeline_layout->destroy();
+    GPU::pipeline_destroy(pipeline);
+    GPU::pipeline_layout_destroy(pipeline_layout);
 }

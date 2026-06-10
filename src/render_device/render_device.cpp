@@ -1,25 +1,59 @@
 #include "render_device/render_device.h"
 
 #include "engine/engine.h"
-#include "log/log.h"
 
 
 void RenderDevice::initialize(const RenderDeviceCreateInfo& info)
 {
-    allocator = info.allocator;
+    data.allocator = info.allocator;
 
-    device.init(allocator, Engine::get_selected_gpu_device());
+    data.physical_device = Engine::get_selected_gpu_device();
 
-    gpu_memory_allocator.init(
+    data.device = GPU::device_create(
+        data.physical_device,
+        {}
+    );
+
+    // Garanted
+    data.queues.graphics = GPU::queue_get(data.device, {.usage = GPU::QueueUsage::Graphics, .index = 0});
+
+    if(GPU::queue_get_count(data.device, {.usage = GPU::QueueUsage::Compute}) > 0)
+    {
+        data.queues.compute = GPU::queue_get(data.device, {.usage = GPU::QueueUsage::Compute, .index = 0});
+    }
+    else
+    {
+        data.queues.compute = data.queues.graphics;
+    }
+
+    if(GPU::queue_get_count(data.device, {.usage = GPU::QueueUsage::Copy}) > 0)
+    {
+        data.queues.copy = GPU::queue_get(data.device, {.usage = GPU::QueueUsage::Copy, .index = 0});
+    }
+    else
+    {
+        data.queues.copy = data.queues.compute;
+    }
+
+    if(GPU::queue_get_count(data.device, {.usage = GPU::QueueUsage::Present}) > 0)
+    {
+        data.queues.present = GPU::queue_get(data.device, {.usage = GPU::QueueUsage::Present, .index = 0});
+    }
+    else
+    {
+        data.queues.present = data.queues.graphics;
+    }
+
+    data.gpu_memory_allocator.init(
         {
-            .allocator = allocator,
-            .graphics_device = get_graphics_device(),
+            .allocator = data.allocator,
+            .render_device = this,
         }
     );
-    gpu_resource_manager.init(
+    data.gpu_resource_manager.init(
         {
-            .allocator = allocator,
-            .graphics_device = get_graphics_device(),
+            .allocator = data.allocator,
+            .render_device = this,
             .gpu_memory_allocator = get_gpu_memory_allocator(),
         }
     );
@@ -27,14 +61,14 @@ void RenderDevice::initialize(const RenderDeviceCreateInfo& info)
 
 void RenderDevice::shutdown()
 {
-    device.get_graphics_queue()->wait_idle();
-    device.get_compute_queue()->wait_idle();
-    device.get_copy_queue()->wait_idle();
-    device.get_present_queue()->wait_idle();
+    GPU::queue_wait_idle(get_graphics_queue());
+    GPU::queue_wait_idle(get_compute_queue());
+    GPU::queue_wait_idle(get_copy_queue());
+    GPU::queue_wait_idle(get_present_queue());
 
-    gpu_resource_manager.destroy();
-    gpu_memory_allocator.destroy();
+    data.gpu_resource_manager.destroy();
+    data.gpu_memory_allocator.destroy();
 
-    device.destroy();
+    GPU::device_destroy(data.device);
 }
 

@@ -1,16 +1,12 @@
 #include "renderer/sprite_renderer.h"
 
-#include "graphics/command_buffer.h"
-#include "graphics/descriptor_pool.h"
-#include "graphics/descriptor_set.h"
-#include "graphics/pipeline_layout.h"
-#include "graphics/pipeline.h"
+#include "graphics/shader.h"
 
 
 void SpriteRenderer::init(const SpriteRendererCreateInfo& info)
 {
     allocator = info.allocator;
-    graphics_device = info.graphics_device;
+    reneder_device = info.render_device;
 
     Graphics::Shader shader_code = {};
     shader_code.init(
@@ -28,7 +24,7 @@ void SpriteRenderer::init(const SpriteRendererCreateInfo& info)
         { .type = GPU::DescriptorType::CombinedTextureSampler, .binding = 0, .count = MaxTexturesPerBatch, .stages = GPU::ShaderStage::Fragment, },
     };
 
-    Graphics::DescriptorSetLayoutInfo set_layouts[] =
+    const GPU::DescriptorSetLayoutCreateInfo set_layouts[] =
     {
         // Global set
         { SceneRenderer::GlobalSceneSet },
@@ -38,11 +34,16 @@ void SpriteRenderer::init(const SpriteRendererCreateInfo& info)
         }
     };
 
-    batch_pipeline_layout = graphics_device->create_pipeline_layout(
-        {
-            .constant_blocks = {},
-            .set_layout_infos = set_layouts,
-        }
+    batch_set_layout[0] = GPU::descriptor_set_layout_create(reneder_device->get_device(),
+        GPU::DescriptorSetLayoutCreateInfo::create(set_layouts[0].bindings)
+    );
+
+    batch_set_layout[1] = GPU::descriptor_set_layout_create(reneder_device->get_device(),
+        GPU::DescriptorSetLayoutCreateInfo::create(set_layouts[1].bindings)
+    );
+
+    batch_pipeline_layout = GPU::pipeline_layout_create(reneder_device->get_device(),
+        GPU::PipelineLayoutCreateInfo::create({}, batch_set_layout)
     );
 
     GPU::VertexBinding bindings[] =
@@ -63,10 +64,10 @@ void SpriteRenderer::init(const SpriteRendererCreateInfo& info)
     }
 
     GPU::TextureFormat image_format = info.surface_format;
-    Graphics::PipelineInfo pipeline_info =
+    GPU::PipelineCreateInfo pipeline_info =
     {
         .bind_point = GPU::PipelineBindPoint::Graphics,
-        .shader = &shader_code,
+        .shader_stages = shader_code.get_stages(),
         .vertex_input = GPU::VertexInput::input(bindings, Slice(&attributes[0], StreamAttributeCount)),
         .input_assembly = { .topology = GPU::PrimitiveTopology::TriangleList },
         .rasterizer_state = GPU::RasterizerState::state(
@@ -77,7 +78,7 @@ void SpriteRenderer::init(const SpriteRendererCreateInfo& info)
         .rendering_info = GPU::RenderingInfo::render_attachments(Slice(&image_format, 1)),
     };
 
-    sprite_pipeline = graphics_device->create_pipeline(pipeline_info);
+    sprite_pipeline = GPU::pipeline_create(reneder_device->get_device(), pipeline_info);
     shader_code.destroy();
 
     instance_buffer_size = sizeof(StreamSpriteUnit) * info.initial_unit_per_batch;
@@ -85,7 +86,7 @@ void SpriteRenderer::init(const SpriteRendererCreateInfo& info)
     instance_buffer.init(
         {
             .allocator = allocator,
-            .graphics_device = graphics_device,
+            .device = reneder_device->get_device(),
             .gpu_memory_allocator = info.gpu_memory_allocator,
             .buffer_size = instance_buffer_size,
             .frame_count = info.max_frames_in_flight,
@@ -98,13 +99,23 @@ void SpriteRenderer::init(const SpriteRendererCreateInfo& info)
         { .type = GPU::DescriptorType::CombinedTextureSampler, .count = u32(MaxTexturesPerBatch * MaxBatchesPerFrame * info.max_frames_in_flight), },
     };
 
-    descriptor_pool = graphics_device->create_descriptor_pool(u32(MaxBatchesPerFrame * info.max_frames_in_flight), pool_sizes);
+    descriptor_pool = GPU::descriptor_pool_create(reneder_device->get_device(),
+        GPU::DescriptorPoolCreateInfo::create(u32(MaxBatchesPerFrame * info.max_frames_in_flight), pool_sizes)
+    );
 
     const usize max_descriptor_set_count = MaxBatchesPerFrame * info.max_frames_in_flight;
-    descriptor_sets = Array<Graphics::DescriptorSet*>::with_size(allocator, max_descriptor_set_count);
+    descriptor_sets = Array<GPU::DescriptorSetID>::with_size(allocator, max_descriptor_set_count);
     for(usize i = 0; i < max_descriptor_set_count; i++)
     {
-        (void)descriptor_sets.add(descriptor_pool->allocate(batch_pipeline_layout->get_layout(1)));
+        GPU::DescriptorSetID output_sets[1] = {};
+        GPU::DescriptorSetLayoutID set_layout = batch_set_layout[1];
+
+        GPU::descriptor_set_allocate(reneder_device->get_device(),
+           {.pool = descriptor_pool, .set_layouts = Slice(&set_layout, 1)},
+           output_sets
+        );
+
+        (void)descriptor_sets.add(output_sets[0]);
     }
 
     batches = Array<Batch>::with_size(allocator, 32);
@@ -114,12 +125,16 @@ void SpriteRenderer::init(const SpriteRendererCreateInfo& info)
 
 void SpriteRenderer::destroy()
 {
-    batch_pipeline_layout->destroy();
+    GPU::descriptor_set_layout_destroy(batch_set_layout[0]);
+    GPU::descriptor_set_layout_destroy(batch_set_layout[1]);
 
-    sprite_pipeline->destroy();
+    GPU::pipeline_layout_destroy(batch_pipeline_layout);
+    GPU::pipeline_destroy(sprite_pipeline);
 
     instance_buffer.destroy();
-    descriptor_pool->destroy();
+
+    GPU::descriptor_set_free(descriptor_pool, descriptor_sets.slice());
+    GPU::descriptor_pool_destroy(descriptor_pool);
     descriptor_sets.destroy();
 
     batches.destroy();
@@ -153,7 +168,7 @@ void SpriteRenderer::build_batch(const FrameInfo& frame_info)
     {
         DebugAssert(set_offset < MaxBatchesPerFrame, "not enough batches for scene");
 
-        Graphics::DescriptorSet* set = descriptor_sets.get(base_set_index + set_offset);
+        GPU::DescriptorSetID set = descriptor_sets.get(base_set_index + set_offset);
         batch.set = set;
         set_offset++;
 
@@ -175,11 +190,11 @@ void SpriteRenderer::finish_scene(const FrameInfo&)
 {
 }
 
-void SpriteRenderer::begin_batch_record(const FrameInfo& frame_info, Graphics::CommandBuffer* command_buffer)
+void SpriteRenderer::begin_batch_record(const FrameInfo& frame_info, GPU::CommandBufferID command_buffer)
 {
     FramedBuffer::BufferInfo vertex_buffer_info = instance_buffer.get_buffer_info(frame_info.frame_index);
-    Graphics::Buffer* vb = instance_buffer.get_buffer();
-    Graphics::Buffer* svb = instance_buffer.get_staging_buffer();
+    GPU::BufferID vb = instance_buffer.get_buffer();
+    GPU::BufferID svb = instance_buffer.get_staging_buffer();
 
     // Copy per type
     // sprite
@@ -191,10 +206,10 @@ void SpriteRenderer::begin_batch_record(const FrameInfo& frame_info, Graphics::C
             .dest_offset = vertex_buffer_info.offset,
             .size = stream_count * sizeof(StreamSpriteUnit),
         };
-        GPU::command_buffer_copy_buffer(command_buffer->gpu_command_buffer,
+        GPU::command_buffer_copy_buffer(command_buffer,
             {
-                .src_buffer = svb->gpu_buffer,
-                .dest_buffer = vb->gpu_buffer,
+                .src_buffer = svb,
+                .dest_buffer = vb,
                 .copy_regions = Slice(&region, 1),
             }
         );
@@ -203,28 +218,28 @@ void SpriteRenderer::begin_batch_record(const FrameInfo& frame_info, Graphics::C
     stream_count = 0;
 }
 
-void SpriteRenderer::end_batch_record(const FrameInfo& frame_info, Graphics::CommandBuffer* command_buffer)
+void SpriteRenderer::end_batch_record(const FrameInfo& frame_info, GPU::CommandBufferID command_buffer)
 {
     FramedBuffer::BufferInfo vertex_buffer_info = instance_buffer.get_buffer_info(frame_info.frame_index);
 
-    const Graphics::Buffer* vb[] = { instance_buffer.get_buffer() };
+    const GPU::BufferID vb[] = { instance_buffer.get_buffer() };
 
     for (const Batch& batch : batches.iter())
     {
-        command_buffer->bind_pipeline(GPU::PipelineBindPoint::Graphics, batch.pipeline);
-        const Graphics::DescriptorSet* sets[] = { frame_info.global_set, batch.set };
-        command_buffer->bind_set(GPU::PipelineBindPoint::Graphics, batch_pipeline_layout, 0, sets);
+        GPU::command_buffer_bind_pipeline(command_buffer, GPU::PipelineBindPoint::Graphics, batch.pipeline);
+        const GPU::DescriptorSetID sets[] = { frame_info.global_set, batch.set };
+        GPU::command_buffer_bind_descriptor_sets(command_buffer, GPU::PipelineBindPoint::Graphics, batch_pipeline_layout, 0, sets);
 
         usize buffer_offset = vertex_buffer_info.offset + batch.offset;
-        command_buffer->bind_vertex_buffers(0, vb, Slice(&buffer_offset, 1));
+        GPU::command_buffer_bind_vertex_buffers(command_buffer, 0, vb, Slice(&buffer_offset, 1));
 
-        command_buffer->draw(batch.vertices_per_instance, batch.instance_count, 0, 0);
+        GPU::command_buffer_draw(command_buffer, batch.vertices_per_instance, batch.instance_count, 0, 0);
     }
 
     batches.clear();
 }
 
-void SpriteRenderer::commit_sprite(const StreamSpriteUnit& sprite, GPU::TextureViewID texture_view, Graphics::Sampler* sampler)
+void SpriteRenderer::commit_sprite(const StreamSpriteUnit& sprite, GPU::TextureViewID texture_view, GPU::SamplerID sampler)
 {
     bool need_new_batch = batches.is_empty();
     if (!need_new_batch)
@@ -250,7 +265,7 @@ void SpriteRenderer::commit_sprite(const StreamSpriteUnit& sprite, GPU::TextureV
         (void)batches.add(
             {
                 .pipeline = sprite_pipeline,
-                .set = nullptr,
+                .set = GPU::DescriptorSetID::invalid(),
                 .offset = (streams.count * sizeof(StreamSpriteUnit)),
                 .vertices_per_instance = 6,
                 .instance_count = 0,

@@ -1,7 +1,9 @@
 #pragma once
-#include "graphics/device.h"
+#include "display/window.h"
+#include "graphics/command_pool.h"
 #include "graphics/swap_chain.h"
 #include "render_device/core/gpu_memory_allocator.h"
+#include "render_device/render_device.h"
 #include "renderer/framed_buffer.h"
 
 
@@ -10,7 +12,7 @@ struct GPUMemoryAllocator;
 struct RendererCreateInfo
 {
     Mem::Allocator* allocator;
-    Graphics::Device* graphics_device;
+    RenderDevice* render_device;
     GPUMemoryAllocator* gpu_memory_allocator;
     u32 max_frames_in_flight;
     Window* target_window;
@@ -37,21 +39,21 @@ struct Renderer
 
     struct RenderFrame
     {
-        Graphics::Semaphore* present_complete_semaphore;
-        Graphics::Fence* in_flight_fence;
+        GPU::SemaphoreID present_complete_semaphore;
+        GPU::FenceID in_flight_fence;
     };
 
     Mem::Allocator* allocator;
-    Graphics::Device* graphics_device;
-    Graphics::CommandPool* command_pool;
-    Graphics::SwapChain* swap_chain;
+    RenderDevice* render_device;
+    Graphics::CommandPool command_pool;
+    Graphics::SwapChain swap_chain;
 
     u32 max_frames_in_flight;
     u32 frame_index;
     FrameInfo current_frame_info;
     
     Array<RenderFrame> frames;
-    Array<Graphics::Semaphore*> render_finished_semaphores;
+    Array<GPU::SemaphoreID> render_finished_semaphores;
 
     void init(const RendererCreateInfo& info);
     void destroy();
@@ -59,8 +61,8 @@ struct Renderer
     FrameInfo begin_frame();
     void end_frame();
 
-    Graphics::CommandBuffer* acquire_command_buffer(const FrameInfo& frame_info);
-    void submit_command_buffer(const FrameInfo& frame_info, const Slice<const GPU::PipelineStages>& wait_stages, Graphics::CommandBuffer* command_buffers);
+    GPU::CommandBufferID acquire_command_buffer(const FrameInfo& frame_info);
+    void submit_command_buffer(const FrameInfo& frame_info, const Slice<const GPU::PipelineStages>& wait_stages, GPU::CommandBufferID command_buffers);
     void present(const FrameInfo& frame_info);
 };
 

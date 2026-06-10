@@ -1,5 +1,4 @@
 #pragma once
-#include "graphics/device.h"
 #include "render_device/core/gpu_memory_allocator.h"
 #include "render_device/core/gpu_memory_allocator_types.h"
 
@@ -9,7 +8,7 @@ struct GPUMemoryAllocator;
 struct FramedBufferCreateInfo
 {
     Mem::Allocator* allocator;
-    Graphics::Device* graphics_device;
+    GPU::DeviceID device;
     GPUMemoryAllocator* gpu_memory_allocator;
     usize buffer_size;
     u32 frame_count;
@@ -24,7 +23,7 @@ struct FramedBuffer
     };
 
     Mem::Allocator* allocator;
-    Graphics::Device* graphics_device;
+    GPU::DeviceID device;
     GPUMemoryAllocator* gpu_memory_allocator;
 
     usize buffer_size;
@@ -39,10 +38,10 @@ struct FramedBuffer
 struct FramedDeviceBuffer : FramedBuffer
 {
     GPUMemoryAllocationID buffer_allocation;
-    Graphics::Buffer* buffer;
+    GPU::BufferID buffer;
 
     GPUMemoryAllocationID staging_allocation;
-    Graphics::Buffer* staging_buffer;
+    GPU::BufferID staging_buffer;
     Slice<u8> mapped_staging;
 
     void init(const FramedBufferCreateInfo& info);
@@ -53,14 +52,14 @@ struct FramedDeviceBuffer : FramedBuffer
         return mapped_staging.add(get_buffer_info(frame_index).offset);
     }
 
-    Graphics::Buffer* get_buffer() const { return buffer; }
-    Graphics::Buffer* get_staging_buffer() const { return staging_buffer; }
+    GPU::BufferID get_buffer() const { return buffer; }
+    GPU::BufferID get_staging_buffer() const { return staging_buffer; }
 };
 
 struct FramedMappedBuffer : FramedBuffer
 {
     GPUMemoryAllocationID mapped_buffer_allocation;
-    Graphics::Buffer* mapped_buffer;
+    GPU::BufferID mapped_buffer;
     Slice<u8> mapped;
 
     void init(const FramedBufferCreateInfo& info);
@@ -71,6 +70,6 @@ struct FramedMappedBuffer : FramedBuffer
         return mapped.add(get_buffer_info(frame_index).offset);
     }
 
-    Graphics::Buffer* get_buffer() const { return mapped_buffer; }
+    GPU::BufferID get_buffer() const { return mapped_buffer; }
 };
 

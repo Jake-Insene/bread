@@ -2,9 +2,6 @@
 #include "collections/array.h"
 #include "display/display.h"
 #include "gpu/gpu.h"
-#include "graphics/device_object.h"
-#include "graphics/queue.h"
-#include "graphics/semaphore.h"
 
 
 namespace Graphics
@@ -12,13 +9,14 @@ namespace Graphics
 
 struct SwapChainInfo
 {
-    GPU::DeviceID gpu_device;
-    Queue* present_queue;
+    Mem::Allocator* allocator;
+    GPU::DeviceID device;
+    GPU::QueueID present_queue;
     Display::WindowID window;
     GPU::TextureFormat surface_format;
 };
 
-struct SwapChain : DeviceObject
+struct SwapChain
 {
     static constexpr GPU::TextureFormat DefaultSurfaceFormat = GPU::TextureFormat::RGBA8Unorm;
     static constexpr usize DefaultMinImageCount = 3;
@@ -29,8 +27,9 @@ struct SwapChain : DeviceObject
         GPU::TextureViewID image_view;
     };
     
-    GPU::DeviceID gpu_device;
-    Queue* present_queue;
+    Mem::Allocator* allocator;
+    GPU::DeviceID device;
+    GPU::QueueID present_queue;
     Display::WindowID window;
     GPU::TextureFormat surface_format;
     GPU::PresentMode present_mode;
@@ -41,13 +40,13 @@ struct SwapChain : DeviceObject
     bool is_valid_swap_chain;
     bool pending_rebuild;
 
-    void init(Mem::Allocator* _allocator, Device* _parent, const SwapChainInfo& info);
+    void init(const SwapChainInfo& info);
     void destroy();
 
     void resize();
 
-    bool acquire_image(u32* image_index, Semaphore* present_complete);
-    bool present(Queue* present_queue, u32 image_index, const Slice<Semaphore*>& wait_semaphores);
+    bool acquire_image(u32* image_index, GPU::SemaphoreID present_complete);
+    bool present(u32 image_index, const Slice<const GPU::SemaphoreID>& wait_semaphores);
 
     void set_present_mode(GPU::PresentMode new_present_mode);
     [[nodiscard]] GPU::PresentMode get_present_mode() const { return present_mode; }

@@ -4,17 +4,17 @@
 namespace Graphics
 {
 
-void SwapChain::init(Mem::Allocator* _allocator, Device* _parent, const SwapChainInfo& info)
+void SwapChain::init(const SwapChainInfo& info)
 {
-    DeviceObject::init(_allocator, _parent);
-    gpu_device = info.gpu_device;
+    allocator = info.allocator;
+    device = info.device;
     present_queue = info.present_queue;
     window = info.window;
     surface_format = info.surface_format;
     present_mode = GPU::PresentMode::VSync;
 
     swap_chain = GPU::SwapChainID::invalid();
-    images = Array<ImageInfo>::with_size(allocator, 3);
+    images = Array<ImageInfo>::with_size(info.allocator, 3);
     is_valid_swap_chain = false;
     pending_rebuild = true;
 
@@ -30,7 +30,6 @@ void SwapChain::destroy()
     {
         GPU::swap_chain_destroy(swap_chain);
     }
-    DeviceObject::destroy();
 }
 
 void SwapChain::resize()
@@ -38,7 +37,7 @@ void SwapChain::resize()
     _try_rebuild();
 }
 
-bool SwapChain::acquire_image(u32* image_index, Graphics::Semaphore* present_complete)
+bool SwapChain::acquire_image(u32* image_index, GPU::SemaphoreID present_complete)
 {
     if(pending_rebuild)
     {
@@ -55,7 +54,7 @@ bool SwapChain::acquire_image(u32* image_index, Graphics::Semaphore* present_com
         swap_chain,
         {
             .timeout = MaxValue<u64>,
-            .semaphore = present_complete->gpu_semaphore,
+            .semaphore = present_complete,
             .fence = GPU::FenceID::invalid(),
         }, 
         &int_index
@@ -76,23 +75,17 @@ bool SwapChain::acquire_image(u32* image_index, Graphics::Semaphore* present_com
     return true;
 }
 
-bool SwapChain::present(Queue* present_queue, u32 image_index, const Slice<Semaphore*>& wait_semaphores)
+bool SwapChain::present(u32 image_index, const Slice<const GPU::SemaphoreID>& wait_semaphores)
 {
-    Slice<GPU::SemaphoreID> gpu_wait_semaphores = allocator->array<GPU::SemaphoreID>(wait_semaphores.len);
-    for(usize i = 0; i < gpu_wait_semaphores.len; i++)
-    {
-        gpu_wait_semaphores[i] = wait_semaphores[i]->gpu_semaphore;
-    }
-
-    GPU::AcquireResult result = present_queue->present(
+    GPU::AcquireResult result = GPU::queue_present(
+        present_queue,
         {
-            .wait_semaphores = gpu_wait_semaphores,
+            .wait_semaphores = wait_semaphores,
             .swapchains = Slice(&swap_chain, 1),
             .image_indices = Slice(&image_index, 1),
         }
     );
 
-    allocator->free(Mem::to_bytes(gpu_wait_semaphores));
     if(result == GPU::AcquireResult::Suboptimal || result == GPU::AcquireResult::OutOfDate)
     {
         return _try_rebuild();
@@ -130,7 +123,7 @@ void SwapChain::_free_images()
 
 void SwapChain::_rebuild()
 {
-    present_queue->wait_idle();
+    GPU::queue_wait_idle(present_queue);
 
     _free_images();
     
@@ -150,8 +143,8 @@ void SwapChain::_rebuild()
     }
 
     swap_chain = GPU::swap_chain_create(
+        device,
         {
-            .device = gpu_device,
             .surface = Display::window_get_surface(window),
             .present_mode = present_mode,
             .format = surface_format,

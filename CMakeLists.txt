@@ -39,24 +39,9 @@ file(GLOB ENGINE_SRC
 
     src/gpu/gpu.cpp
 
-    src/graphics/buffer.cpp
-    src/graphics/command_buffer.cpp
     src/graphics/command_pool.cpp
-    src/graphics/descriptor_pool.cpp
-    src/graphics/descriptor_set.cpp
-    src/graphics/device_object.cpp
-    src/graphics/device.cpp
-    src/graphics/fence.cpp
-    src/graphics/memory_heap.cpp
-    src/graphics/pipeline_layout.cpp
-    src/graphics/pipeline.cpp
-    src/graphics/queue.cpp
-    src/graphics/sampler.cpp
-    src/graphics/semaphore.cpp
     src/graphics/shader.cpp
     src/graphics/swap_chain.cpp
-    src/graphics/texture_view.cpp
-    src/graphics/texture.cpp
 
     src/input/input.cpp
     

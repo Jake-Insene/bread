@@ -1,28 +1,28 @@
 #include "renderer/framed_pool.h"
 
-#include "graphics/descriptor_pool.h"
-
 
 void FramedPool::init(const FramedPoolCreateInfo& info)
 {
     allocator = info.allocator;
-    graphics_device = info.graphics_device;
+    device = info.device;
 
-    pools = Array<Graphics::DescriptorPool*>::with_size(allocator, info.frame_count);
+    pools = Array<GPU::DescriptorPoolID>::with_size(allocator, info.frame_count);
     
     for(usize i = 0; i < info.frame_count; i++)
     {
-        (void)pools.add(graphics_device->create_descriptor_pool(info.max_sets, info.sizes));
+        (void)pools.add(GPU::descriptor_pool_create(device,
+            GPU::DescriptorPoolCreateInfo(info.max_sets, info.sizes))
+        );
     }
 }
 
 void FramedPool::destroy()
 {
-    (void)pools.iter().for_each([](Graphics::DescriptorPool* pool) { pool->destroy(); });
+    (void)pools.iter().for_each([](GPU::DescriptorPoolID pool) { GPU::descriptor_pool_destroy(pool); });
     pools.destroy();
 }
 
-Graphics::DescriptorPool* FramedPool::get_pool(usize frame_index)
+GPU::DescriptorPoolID FramedPool::get_pool(usize frame_index)
 {
     return pools.get(frame_index);
 }
