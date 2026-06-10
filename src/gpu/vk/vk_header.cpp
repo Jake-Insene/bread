@@ -140,6 +140,7 @@ void Vulkan::load_device_procs(DeviceVulkanTable& table, VkDevice device)
     // descriptors
     VK_DEVICE_REQUIRED_LOAD(table, device, vkCreateDescriptorPool);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkDestroyDescriptorPool);
+    VK_DEVICE_REQUIRED_LOAD(table, device, vkResetDescriptorPool);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkAllocateDescriptorSets);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkFreeDescriptorSets);
     VK_DEVICE_REQUIRED_LOAD(table, device, vkUpdateDescriptorSets);

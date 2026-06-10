@@ -1,6 +1,7 @@
 #pragma once
 #include "collections/array.h"
 #include "collections/string_view.h"
+#include "collections/hash_map.h"
 #include "gpu/gpu.h"
 #include "log/log.h"
 
@@ -53,9 +54,25 @@ struct ResourceAllocator
 	}
 };
 
+struct PoolTracker
+{
+	Array<GPU::DescriptorSetID> sets;
+
+	void init(Mem::Allocator* allocator)
+	{
+		sets = Array<GPU::DescriptorSetID>::with_allocator(allocator);
+	}
+
+	void destroy()
+	{
+		sets.destroy();
+	}
+};
+
 struct GPUDebugLayer
 {
 	Array<ResourceAllocator> resource_allocators;
+	HashMap<GPU::IntegralIDType, PoolTracker> pools;
 
 	static constexpr ResourceInfo infos[] =
 	{
@@ -235,6 +252,7 @@ struct GPUDebugLayer
 	void init(Mem::Allocator* allocator)
 	{
 		resource_allocators = Array<ResourceAllocator>::with_size(allocator, usize(GPU::ObjectType::ObjectCount) + 1);
+		pools = HashMap<GPU::IntegralIDType, PoolTracker>::with_size(allocator, 4);
 
 		for(usize i = 0; i < usize(GPU::ObjectType::ObjectCount) + 1; i++)
 		{
@@ -250,8 +268,13 @@ struct GPUDebugLayer
 		{
 			ra.destroy();
 		}
-
 		resource_allocators.destroy();
+
+		for(auto& pool : pools.iter())
+		{
+			pool.second.destroy();
+		}
+		pools.destroy();
 	}
 
 	template<typename ResourceID>
@@ -261,6 +284,13 @@ struct GPUDebugLayer
 		resource_allocators.get(
 			usize(GetObjectTypeByIDType<ResourceID>())
 		).add(as_integer);
+
+		if constexpr(IsSame<GPU::DescriptorPoolID, ResourceID>)
+		{
+			PoolTracker pool_tracker = {};
+			pool_tracker.init(pools.allocator);
+			(void)pools.insert(resource_id.integer(), pool_tracker);
+		}
 	}
 
 	template<typename ResourceID>
@@ -270,6 +300,38 @@ struct GPUDebugLayer
 		resource_allocators.get(
 			usize(GetObjectTypeByIDType<ResourceID>())
 		).remove(as_integer);
+
+		if constexpr(IsSame<GPU::DescriptorPoolID, ResourceID>)
+		{
+			pools.get(resource_id.integer()).destroy();
+			(void)pools.remove(resource_id.integer());
+		}
+	}
+
+	void pool_reset(GPU::DescriptorPoolID descriptor_pool)
+	{
+		GPU::IntegralIDType as_integer = GPU::IntegralIDType(descriptor_pool.integer());
+		GPUDebugInfo("Reseting GPU::DescriptorPoolID({})", as_integer);
+		for(GPU::DescriptorSetID descriptor_set : pools.get(as_integer).sets.iter())
+		{
+			GPUDebugInfo("\tImplicit destruction of GPU::DescriptorSetID({})", descriptor_set.integer());
+		}
+		pools.get(as_integer).sets.clear();
+	}
+
+	void allocate_descriptors(GPU::DescriptorPoolID descriptor_pool, const Slice<GPU::DescriptorSetID>& descriptor_sets)
+	{
+		GPU::IntegralIDType as_integer = GPU::IntegralIDType(descriptor_pool.integer());
+		pools.get(as_integer).sets.add_slice(descriptor_sets);
+	}
+
+	void free_descriptors(GPU::DescriptorPoolID descriptor_pool, const Slice<const GPU::DescriptorSetID>& descriptor_sets)
+	{
+		GPU::IntegralIDType as_integer = GPU::IntegralIDType(descriptor_pool.integer());
+		for(GPU::DescriptorSetID descriptor_set : descriptor_sets)
+		{
+			pools.get(as_integer).sets.remove(descriptor_set);
+		}
 	}
 };
 static inline GPUDebugLayer gpu_debug_layer;

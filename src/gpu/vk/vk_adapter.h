@@ -252,6 +252,8 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 
 		GPU::DeviceID device;
 		GPU::DescriptorPoolID descriptor_pool;
+
+		Array<GPU::DescriptorSetID> allocated_sets;
 	};
 
 	struct DescriptorSet
@@ -404,6 +406,7 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 
 	GPU::DescriptorPoolID descriptor_pool_create(GPU::DeviceID device, const GPU::DescriptorPoolCreateInfo& ci) override;
 	void descriptor_pool_destroy(GPU::DescriptorPoolID descriptor_pool) override;
+	void descriptor_pool_reset(GPU::DescriptorPoolID descriptor_pool) override;
 
 	void descriptor_set_allocate(GPU::DeviceID device, const GPU::DescriptorSetAllocateInfo& ci, Slice<GPU::DescriptorSetID> out_descriptor_sets) override;
 	void descriptor_set_free(GPU::DescriptorPoolID descriptor_pool, const Slice<const GPU::DescriptorSetID>& _descriptor_sets) override;

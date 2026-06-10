@@ -78,7 +78,7 @@ void Renderer2D::destroy()
     allocator->free(Mem::to_bytes(global_scene_set));
 
     GPU::descriptor_set_layout_destroy(global_set_layout);
-    GPU::descriptor_set_free(global_scene_pool, global_scene_set);
+    GPU::descriptor_pool_reset(global_scene_pool);
     GPU::descriptor_pool_destroy(global_scene_pool);
     GPU::pipeline_layout_destroy(global_scene_layout);
     scene_uniform_buffer.destroy();

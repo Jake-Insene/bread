@@ -1353,6 +1353,7 @@ GPU::DescriptorPoolID VulkanAdapter::descriptor_pool_create(GPU::DeviceID device
     descriptor_pool.vk_device = ld.vk_device;
     descriptor_pool.device = device;
     descriptor_pool.descriptor_pool = descriptor_pool_id;
+    descriptor_pool.allocated_sets = Array<GPU::DescriptorSetID>::with_allocator(get_allocator());
 
     Slice<VkDescriptorPoolSize> vk_pool_sizes = allocator->array<VkDescriptorPoolSize>(ci.sizes.len);
     for(usize i = 0; i < vk_pool_sizes.len; i++)
@@ -1386,8 +1387,21 @@ void VulkanAdapter::descriptor_pool_destroy(GPU::DescriptorPoolID descriptor_poo
     LogicalDevice& ld = _get_logical_device(pool.device);
 
     ld.vk.vkDestroyDescriptorPool(pool.vk_device, pool.vk_descriptor_pool, Vulkan::allocation_callbacks(this));
+    pool.allocated_sets.destroy();
 
     descriptor_pools.remove(descriptor_pool);
+}
+
+void VulkanAdapter::descriptor_pool_reset(GPU::DescriptorPoolID descriptor_pool)
+{
+    DescriptorPool& pool = descriptor_pools.get(descriptor_pool);
+    LogicalDevice& ld = _get_logical_device(pool.device);
+
+    ld.vk.vkResetDescriptorPool(pool.vk_device, pool.vk_descriptor_pool, VkDescriptorPoolResetFlags());
+    for(GPU::DescriptorSetID set : pool.allocated_sets.iter())
+    {
+        descriptor_sets.remove(set);
+    }
 }
 
 void VulkanAdapter::descriptor_set_allocate(GPU::DeviceID device, const GPU::DescriptorSetAllocateInfo& ci, Slice<GPU::DescriptorSetID> out_descriptor_sets)
@@ -1426,6 +1440,8 @@ void VulkanAdapter::descriptor_set_allocate(GPU::DeviceID device, const GPU::Des
         set.device = device;
         set.descriptor_set = out_descriptor_sets[i];
         set.descriptor_pool = ci.pool;
+
+        (void)pool.allocated_sets.add(out_descriptor_sets[i]);
     }
 }
 
@@ -1450,6 +1466,7 @@ void VulkanAdapter::descriptor_set_free(GPU::DescriptorPoolID descriptor_pool, c
     for(usize i = 0; i < vk_sets.len; i++)
     {
         descriptor_sets.remove(_descriptor_sets[i]);
+        pool.allocated_sets.remove(_descriptor_sets[i]);
     }
 }
 

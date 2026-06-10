@@ -67,6 +67,7 @@ struct GPUAdapter
 
 	virtual GPU::DescriptorPoolID descriptor_pool_create(GPU::DeviceID device, const GPU::DescriptorPoolCreateInfo& ci) = 0;
 	virtual void descriptor_pool_destroy(GPU::DescriptorPoolID descriptor_pool) = 0;
+	virtual void descriptor_pool_reset(GPU::DescriptorPoolID descriptor_pool) = 0;
 
 	virtual void descriptor_set_allocate(GPU::DeviceID device, const GPU::DescriptorSetAllocateInfo& ci, Slice<GPU::DescriptorSetID> out_descriptor_sets) = 0;
 	virtual void descriptor_set_free(GPU::DescriptorPoolID descriptor_pool, const Slice<const GPU::DescriptorSetID>& descriptor_sets) = 0;

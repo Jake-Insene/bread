@@ -773,7 +773,7 @@ namespace GPU
 
 	DescriptorPoolID descriptor_pool_create(DeviceID device, const DescriptorPoolCreateInfo& ci);
 	void descriptor_pool_destroy(DescriptorPoolID descriptor_pool);
-
+	void descriptor_pool_reset(DescriptorPoolID descriptor_pool);
 
 	/*
 	* Descriptor Set

@@ -125,6 +125,7 @@ struct DeviceVulkanTable
 
     PFN_vkCreateDescriptorPool vkCreateDescriptorPool;
     PFN_vkDestroyDescriptorPool vkDestroyDescriptorPool;
+    PFN_vkResetDescriptorPool vkResetDescriptorPool;
     PFN_vkAllocateDescriptorSets vkAllocateDescriptorSets;
     PFN_vkFreeDescriptorSets vkFreeDescriptorSets;
     PFN_vkUpdateDescriptorSets vkUpdateDescriptorSets;
