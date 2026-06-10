@@ -130,8 +130,8 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 	struct SwapChainImage
 	{
 		VkImage vk_image;
-		VkImageView vk_image_view;
 		GPU::TextureID texture;
+
 		GPU::TextureViewID texture_view;
 	};
 

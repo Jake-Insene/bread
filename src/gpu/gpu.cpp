@@ -337,6 +337,11 @@ GPU::TextureViewID GPU::texture_view_create(DeviceID device, const TextureViewCr
     GPUValidationCheck(ci.type == TextureViewType::Unknown, "invalid texture view type");
     GPUValidationCheck(ci.texture.is_valid() == false, "invalid texture");
     GPUValidationCheck(ci.format == TextureFormat::Unknown, "invalid texture format");
+    GPUValidationCheck(ci.components.r == ComponentSwizzle::Unknown, "invalid red component swizzle");
+    GPUValidationCheck(ci.components.g == ComponentSwizzle::Unknown, "invalid green component swizzle");
+    GPUValidationCheck(ci.components.b == ComponentSwizzle::Unknown, "invalid blue component swizzle");
+    GPUValidationCheck(ci.components.a == ComponentSwizzle::Unknown, "invalid alpha component swizzle");
+    GPUValidationCheck(ci.subresource_range.aspect == TextureAspect(), "invalid subresource aspect");
 	GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(current_adapter->texture_view_create(device, ci));
 }
 

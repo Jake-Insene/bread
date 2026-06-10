@@ -1,104 +1,226 @@
 #include "gpu/vk/vk_utils.h"
 
 
+static constexpr VkAttachmentLoadOp VkLoadOps[] =
+{
+    VkAttachmentLoadOp(), // Unknown
+    VK_ATTACHMENT_LOAD_OP_LOAD, // Load
+    VK_ATTACHMENT_LOAD_OP_CLEAR, // Clear
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE, // DontCare
+};
+
+static constexpr VkAttachmentStoreOp VkStoreOps[] =
+{
+    VkAttachmentStoreOp(), // Unknown
+    VK_ATTACHMENT_STORE_OP_STORE, // Store
+    VK_ATTACHMENT_STORE_OP_DONT_CARE, // DontCare
+};
+
+static constexpr VkCompareOp VkCompareOps[] =
+{
+    VkCompareOp(), // Unknown
+    VK_COMPARE_OP_NEVER, // Never
+    VK_COMPARE_OP_ALWAYS, // Always
+    VK_COMPARE_OP_EQUAL, // Equal
+    VK_COMPARE_OP_NOT_EQUAL, // NotEqual
+    VK_COMPARE_OP_LESS, // Less
+    VK_COMPARE_OP_LESS_OR_EQUAL, // LessOrEqual
+    VK_COMPARE_OP_GREATER, // Greater
+    VK_COMPARE_OP_GREATER_OR_EQUAL, // GreaterOrEqual
+};
+
+static constexpr VkPresentModeKHR VkPresentModes[] =
+{
+    VkPresentModeKHR(), // Unknown
+    VK_PRESENT_MODE_IMMEDIATE_KHR, // Immediate
+    VK_PRESENT_MODE_FIFO_KHR, // VSync
+};
+
+static constexpr VkMemoryPropertyFlags VkMemoryProperties[] =
+{
+    VkMemoryPropertyFlags(), // Unknown
+    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, // CPUExclusive
+    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, // GPUExclusive
+    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, // CPUGPUCoherent
+};
+
+static constexpr VkFilter VkFilters[] =
+{
+    VkFilter(), // Unknown
+    VK_FILTER_NEAREST, // Nearest
+    VK_FILTER_LINEAR, // Linear
+};
+
+static constexpr VkSamplerMipmapMode VkMipMapModes[] =
+{
+    VkSamplerMipmapMode(), // Unknown
+    VK_SAMPLER_MIPMAP_MODE_NEAREST, // Nearest
+    VK_SAMPLER_MIPMAP_MODE_LINEAR, // Linear
+};
+
+static constexpr VkSamplerAddressMode VkAddressModes[] =
+{
+    VkSamplerAddressMode(), // Unknown
+    VK_SAMPLER_ADDRESS_MODE_REPEAT,// Repeat
+    VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,// MirroredRepeat
+    VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,// ClampToEdge
+    VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,// ClampToBorder
+};
+
+static constexpr VkImageType VkImageTypes[] =
+{
+    VkImageType(), // Unknown
+    VK_IMAGE_TYPE_2D,// Texture2D
+};
+
+static constexpr VkImageViewType VkImageViewTypes[] =
+{
+    VkImageViewType(), // Unknown
+    VK_IMAGE_VIEW_TYPE_2D,// Texture2D
+};
+
+static constexpr VkComponentSwizzle VkComponentSwizzles[] =
+{
+    VkComponentSwizzle(), // Unknown
+	VK_COMPONENT_SWIZZLE_IDENTITY, // Identity
+	VK_COMPONENT_SWIZZLE_ZERO, // Zero
+	VK_COMPONENT_SWIZZLE_ONE, // One
+	VK_COMPONENT_SWIZZLE_R, // Red
+	VK_COMPONENT_SWIZZLE_G, // Green
+	VK_COMPONENT_SWIZZLE_B, // Blue
+	VK_COMPONENT_SWIZZLE_A, // Alpha
+};
+
+static constexpr VkFormat VkTextureFormats[] =
+{
+    VkFormat(), // Unknown
+	VK_FORMAT_R8G8B8A8_SRGB, // RGBA8Srgb
+	VK_FORMAT_R8G8B8_SRGB, // RGB8Srgb
+	VK_FORMAT_R8G8_SRGB, // RG8Srgb
+	VK_FORMAT_R8_SRGB, // R8Srgb
+	VK_FORMAT_R8G8B8A8_UNORM, // RGBA8Unorm
+	VK_FORMAT_R8G8B8_UNORM, // RGB8Unorm
+	VK_FORMAT_R8G8_UNORM, // RG8Unorm
+	VK_FORMAT_R8_UNORM, // R8Unorm
+	VK_FORMAT_B8G8R8A8_SRGB, // BGRA8Srgb
+	VK_FORMAT_B8G8R8A8_UNORM, // BGRA8Unorm
+};
+
+static constexpr VkImageTiling VkImageTilings[] =
+{
+    VkImageTiling(), // Unknown
+    VK_IMAGE_TILING_OPTIMAL, // Optimal
+	VK_IMAGE_TILING_LINEAR, // Linear
+};
+
+static constexpr VkDescriptorType VkDescriptorTypes[] =
+{
+    VkDescriptorType(), // Unknown
+    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, // UniformBuffer
+	VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, // StorageBuffer
+	VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, // CombinedTextureSampler
+};
+
+static constexpr VkImageLayout VkImageLayouts[] =
+{
+    VkImageLayout(), // Unknown
+	VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, // RenderAttachment
+	VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, // Present
+	VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, // ShaderReadOnly
+	VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, // TransferSource
+	VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, // TransferDestination
+};
+
+static constexpr VkVertexInputRate VkVertexInputRates[] =
+{
+    VkVertexInputRate(), // Unknown
+	VK_VERTEX_INPUT_RATE_VERTEX, // Vertex
+	VK_VERTEX_INPUT_RATE_INSTANCE, // Instance
+};
+
+static constexpr VkFormat VkVertexFormats[] =
+{
+    VkFormat(), // Unknown
+	VK_FORMAT_R32G32B32A32_SFLOAT, // RGBA32Float
+	VK_FORMAT_R32G32B32_SFLOAT, // RGB32Float
+	VK_FORMAT_R32G32_SFLOAT, // RG32Float
+	VK_FORMAT_R32_SFLOAT, // R32Float
+};
+
+static constexpr VkPrimitiveTopology VkPrimitiveTopologies[] =
+{
+    VkPrimitiveTopology(), // Unknown
+	VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, // TriangleList
+	VK_PRIMITIVE_TOPOLOGY_LINE_LIST, // LineList
+};
+
+static constexpr VkPolygonMode VkPolygonModes[] =
+{
+    VkPolygonMode(), // Unknown
+	VK_POLYGON_MODE_FILL, // Fill
+	VK_POLYGON_MODE_LINE, // Line
+	VK_POLYGON_MODE_POINT, // Point
+};
+
+static constexpr VkCullModeFlags VkCullModes[] =
+{
+    VkCullModeFlags(), // Unknown
+	VK_CULL_MODE_FRONT_BIT, // Front
+	VK_CULL_MODE_BACK_BIT, // Back
+	VK_CULL_MODE_FRONT_AND_BACK, // FrontAndBack
+};
+
+// Important: The vulkan backend flips the Y to allow positive up,
+// that changes the winding order so it needs to be flipped.
+static constexpr VkFrontFace VkFrontFaces[] =
+{
+    VkFrontFace(), // Unknown
+	VK_FRONT_FACE_CLOCKWISE, // CounterClockWise
+	VK_FRONT_FACE_COUNTER_CLOCKWISE, // ClockWise
+};
+
+static constexpr VkSampleCountFlagBits VkSampleCounts[] =
+{
+    VkSampleCountFlagBits(), // Unknown
+	VK_SAMPLE_COUNT_1_BIT, // Sample1
+	VK_SAMPLE_COUNT_2_BIT, // Sample2
+	VK_SAMPLE_COUNT_4_BIT, // Sample4
+	VK_SAMPLE_COUNT_8_BIT, // Sample8
+	VK_SAMPLE_COUNT_16_BIT, // Sample16
+	VK_SAMPLE_COUNT_32_BIT, // Sample32
+	VK_SAMPLE_COUNT_64_BIT, // Sample64
+};
+
+static constexpr VkPipelineBindPoint VkPipelineBindPoints[] =
+{
+    VkPipelineBindPoint(),// Unknown
+    VK_PIPELINE_BIND_POINT_GRAPHICS,// Graphics
+    VK_PIPELINE_BIND_POINT_COMPUTE,// Compute
+};
 
 VkAttachmentLoadOp VkUtils::_vk_get_load_op(GPU::LoadOp load_op)
 {
-    switch(load_op)
-    {
-    case GPU::LoadOp::Load:
-        return VK_ATTACHMENT_LOAD_OP_LOAD;
-    case GPU::LoadOp::Clear:
-        return VK_ATTACHMENT_LOAD_OP_CLEAR;
-    case GPU::LoadOp::DontCare:
-        return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    default:
-        break;
-    }
-
-    
-    VKFailOn(true, "invalid load op");
-    return VkAttachmentLoadOp(0);
+    return VkLoadOps[u32(load_op)];
 }
 
 VkAttachmentStoreOp VkUtils::_vk_get_store_op(GPU::StoreOp store_op)
 {
-    switch(store_op)
-    {
-    case GPU::StoreOp::Store:
-        return VK_ATTACHMENT_STORE_OP_STORE;
-    case GPU::StoreOp::DontCare:
-        return VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    default:
-        break;
-    }
-
-    
-    VKFailOn(true, "invalid store op");
-    return VkAttachmentStoreOp(0);
+    return VkStoreOps[u32(store_op)];
 }
 
 VkCompareOp VkUtils::_vk_get_compare_op(GPU::CompareOp compare_op)
 {
-    switch(compare_op)
-    {
-    case GPU::CompareOp::Never:
-        return VK_COMPARE_OP_NEVER;
-    case GPU::CompareOp::Always:
-        return VK_COMPARE_OP_ALWAYS;
-    case GPU::CompareOp::Equal:
-        return VK_COMPARE_OP_EQUAL;
-    case GPU::CompareOp::NotEqual:
-        return VK_COMPARE_OP_NOT_EQUAL;
-    case GPU::CompareOp::Less:
-        return VK_COMPARE_OP_LESS;
-    case GPU::CompareOp::LessOrEqual:
-        return VK_COMPARE_OP_LESS_OR_EQUAL;
-    case GPU::CompareOp::Greater:
-        return VK_COMPARE_OP_GREATER;
-    case GPU::CompareOp::GreaterOrEqual:
-        return VK_COMPARE_OP_GREATER_OR_EQUAL;
-    default:
-        break;
-    }
-
-    
-    VKFailOn(true, "invalid compare op");
-    return VkCompareOp(0);
+    return VkCompareOps[u32(compare_op)];
 }
 
 VkPresentModeKHR VkUtils::_vk_get_present_mode(GPU::PresentMode present_mode)
 {
-    switch(present_mode)
-    {
-    case GPU::PresentMode::Immediate:
-        return VK_PRESENT_MODE_IMMEDIATE_KHR;
-        case GPU::PresentMode::VSync:
-        return VK_PRESENT_MODE_FIFO_KHR;
-    default:
-        break;
-    }
-
-    VKFailOn(true, "invalid present mode");
-    return VkPresentModeKHR(0);
+    return VkPresentModes[u32(present_mode)];
 }
 
 VkMemoryPropertyFlags VkUtils::_vk_get_memory_properties(GPU::HeapUsage heap_usage)
 {
-    switch(heap_usage)
-    {
-    case GPU::HeapUsage::CPUExclusive:
-        return VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-    case GPU::HeapUsage::GPUExclusive:
-        return VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-    case GPU::HeapUsage::CPUGPUCoherent:
-        return VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-    default:
-        break;
-    }
-
-    VKFailOn(true, "invalid heap usage");
-    return VkMemoryPropertyFlags(0);
+    return VkMemoryProperties[u32(heap_usage)];
 }
 
 VkBufferUsageFlags VkUtils::_vk_get_buffer_usage(GPU::BufferUsage buffer_usage)
@@ -131,130 +253,42 @@ VkBufferUsageFlags VkUtils::_vk_get_buffer_usage(GPU::BufferUsage buffer_usage)
 
 VkFilter VkUtils::_vk_get_filter(GPU::Filter filter)
 {
-    switch(filter)
-    {
-    case GPU::Filter::Nearest:
-        return VK_FILTER_NEAREST;
-    case GPU::Filter::Linear:
-        return VK_FILTER_LINEAR;
-    default:
-        break;
-    }
-
-    VKFailOn(true, "invalid filter type");
-    return VkFilter(0);
+    return VkFilters[u32(filter)];
 }
 
 VkSamplerMipmapMode VkUtils::_vk_get_mipmap_mode(GPU::SamplerMipMapMode mipmap_mode)
 {
-    switch(mipmap_mode)
-    {
-    case GPU::SamplerMipMapMode::Nearest:
-        return VK_SAMPLER_MIPMAP_MODE_NEAREST;
-    case GPU::SamplerMipMapMode::Linear:
-        return VK_SAMPLER_MIPMAP_MODE_LINEAR;
-    default:
-        break;
-    }
-
-    VKFailOn(true, "invalid mip map mode");
-    return VkSamplerMipmapMode(0);
+    return VkMipMapModes[u32(mipmap_mode)];
 }
 
 VkSamplerAddressMode VkUtils::_vk_get_address_mode(GPU::SamplerAddressMode address_mode)
 {
-    switch(address_mode)
-    {
-    case GPU::SamplerAddressMode::Repeat:
-        return VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    case GPU::SamplerAddressMode::MirroredRepeat:
-        return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
-    case GPU::SamplerAddressMode::ClampToEdge:
-        return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-    case GPU::SamplerAddressMode::ClampToBorder:
-        return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-    default:
-        break;
-    }
-
-    VKFailOn(true, "invalid sampler address mode");
-    return VkSamplerAddressMode(0);
+    return VkAddressModes[u32(address_mode)];
 }
 
 VkImageType VkUtils::_vk_get_image_type(GPU::TextureType texture_type)
 {
-    switch(texture_type)
-    {
-    case GPU::TextureType::Texture2D:
-        return VK_IMAGE_TYPE_2D;
-    default:
-        break;
-    }
-
-    VKFailOn(true, "invalid texture type");
-    return VkImageType(0);
+    return VkImageTypes[u32(texture_type)];
 }
 
 VkImageViewType VkUtils::_vk_get_image_view_type(GPU::TextureViewType texture_view_type)
 {
-    switch(texture_view_type)
-    {
-    case GPU::TextureViewType::Texture2D:
-        return VK_IMAGE_VIEW_TYPE_2D;
-    default:
-        break;
-    }
+    return VkImageViewTypes[u32(texture_view_type)];
+}
 
-    VKFailOn(true, "invalid texture type");
-    return VkImageViewType(0);
+VkComponentSwizzle VkUtils::_vk_get_component_swizzle(GPU::ComponentSwizzle component_swizzle)
+{
+    return VkComponentSwizzles[u32(component_swizzle)];
 }
 
 VkFormat VkUtils::_vk_get_texture_format(GPU::TextureFormat texture_format)
 {
-    switch(texture_format)
-    {
-    case GPU::TextureFormat::RGBA8Srgb:
-        return VK_FORMAT_R8G8B8A8_SRGB;
-    case GPU::TextureFormat::RGB8Srgb:
-        return VK_FORMAT_R8G8B8_SRGB;
-    case GPU::TextureFormat::RG8Srgb:
-        return VK_FORMAT_R8G8_SRGB;
-    case GPU::TextureFormat::R8Srgb:
-        return VK_FORMAT_R8_SRGB;
-    case GPU::TextureFormat::RGBA8Unorm:
-        return VK_FORMAT_R8G8B8A8_UNORM;
-    case GPU::TextureFormat::RGB8Unorm:
-        return VK_FORMAT_R8G8B8_UNORM;
-    case GPU::TextureFormat::RG8Unorm:
-        return VK_FORMAT_R8G8_UNORM;
-    case GPU::TextureFormat::R8Unorm:
-        return VK_FORMAT_R8_UNORM;
-    case GPU::TextureFormat::BGRA8Srgb:
-        return VK_FORMAT_B8G8R8A8_SRGB;
-    case GPU::TextureFormat::BGRA8Unorm:
-        return VK_FORMAT_B8G8R8A8_UNORM;
-    default:
-        break;
-    }
-
-    VKFailOn(true, "invalid texture format");
-    return VK_FORMAT_UNDEFINED;
+    return VkTextureFormats[u32(texture_format)];
 }
 
 VkImageTiling VkUtils::_vk_get_tiling(GPU::TextureTiling texture_tiling)
 {
-    switch(texture_tiling)
-    {
-    case GPU::TextureTiling::Optimal:
-        return VK_IMAGE_TILING_OPTIMAL;
-    case GPU::TextureTiling::Linear:
-        return VK_IMAGE_TILING_LINEAR;
-    default:
-        break;
-    }
-
-    VKFailOn(true, "invalid texture tiling");
-    return VkImageTiling(0);
+    return VkImageTilings[u32(texture_tiling)];
 }
 
 VkImageUsageFlags VkUtils::_vk_get_texture_usage(GPU::TextureUsage texture_usage)
@@ -286,20 +320,7 @@ VkImageUsageFlags VkUtils::_vk_get_texture_usage(GPU::TextureUsage texture_usage
 
 VkDescriptorType VkUtils::_vk_get_descriptor_type(GPU::DescriptorType descriptor_type)
 {
-    switch(descriptor_type)
-    {
-    case GPU::DescriptorType::UniformBuffer:
-        return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    case GPU::DescriptorType::StorageBuffer:
-        return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    case GPU::DescriptorType::CombinedTextureSampler:
-        return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    default:
-        break;
-    }
-
-    VKFailOn(true, "invalid descriptor type");
-    return VkDescriptorType(0);
+    return VkDescriptorTypes[u32(descriptor_type)];
 }
 
 VkPipelineStageFlags VkUtils::_vk_get_pipeline_stages(GPU::PipelineStages stages)
@@ -404,26 +425,7 @@ VkAccessFlags VkUtils::_vk_get_access_masks(GPU::AccessMasks access_masks)
 
 VkImageLayout VkUtils::_vk_get_image_layout(GPU::TextureLayout texture_layout)
 {
-    switch (texture_layout)
-    {
-    case GPU::TextureLayout::Unknown:
-        return VK_IMAGE_LAYOUT_UNDEFINED;
-    case GPU::TextureLayout::RenderAttachment:
-        return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    case GPU::TextureLayout::Present:
-        return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-    case GPU::TextureLayout::ShaderReadOnly:
-        return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    case GPU::TextureLayout::TransferSource:
-        return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-    case GPU::TextureLayout::TransferDestination:
-        return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    default:
-        break;
-    }
-
-    VKFailOn(true, "invalid texture layout");
-    return VK_IMAGE_LAYOUT_UNDEFINED;
+    return VkImageLayouts[u32(texture_layout)];
 }
 
 VkShaderStageFlags VkUtils::_vk_get_shader_stage(GPU::ShaderStage shader_stage)
@@ -445,144 +447,40 @@ VkShaderStageFlags VkUtils::_vk_get_shader_stage(GPU::ShaderStage shader_stage)
 
 VkVertexInputRate VkUtils::_vk_get_input_rate(GPU::InputRate input_rate)
 {
-    switch(input_rate)
-    {
-    case GPU::InputRate::Vertex:
-        return VK_VERTEX_INPUT_RATE_VERTEX;
-    case GPU::InputRate::Instance:
-        return VK_VERTEX_INPUT_RATE_INSTANCE;
-    default:
-        break;
-    };
-
-    VKFailOn(true, "invalid input rate");
-    return VkVertexInputRate();
+    return VkVertexInputRates[u32(input_rate)];
 }
 
 VkFormat VkUtils::_vk_get_vertex_format(GPU::VertexFormat vertex_format)
 {
-    switch(vertex_format)
-    {
-    case GPU::VertexFormat::RGBA32Float:
-        return VK_FORMAT_R32G32B32A32_SFLOAT;
-    case GPU::VertexFormat::RGB32Float:
-        return VK_FORMAT_R32G32B32_SFLOAT;
-    case GPU::VertexFormat::RG32Float:
-        return VK_FORMAT_R32G32_SFLOAT;
-    case GPU::VertexFormat::R32Float:
-        return VK_FORMAT_R32_SFLOAT;
-    default:
-        break;
-    };
-
-    VKFailOn(true, "invalid vertex format");
-    return VkFormat();
+    return VkVertexFormats[u32(vertex_format)];
 }
 
 VkPrimitiveTopology VkUtils::_vk_get_topology(GPU::PrimitiveTopology primitive_topology)
 {
-    switch(primitive_topology)
-    {
-    case GPU::PrimitiveTopology::TriangleList:
-        return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-    case GPU::PrimitiveTopology::LineList:
-        return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
-    default:
-        break;
-    };
-
-    VKFailOn(true, "invalid primitive topology");
-    return VkPrimitiveTopology();
+    return VkPrimitiveTopologies[u32(primitive_topology)];
 }
 
 VkPolygonMode VkUtils::_vk_get_polygon_mode(GPU::PolygonMode polygon_mode)
 {
-    switch(polygon_mode)
-    {
-    case GPU::PolygonMode::Fill:
-        return VK_POLYGON_MODE_FILL;
-    case GPU::PolygonMode::Line:
-        return VK_POLYGON_MODE_LINE;
-    case GPU::PolygonMode::Point:
-        return VK_POLYGON_MODE_POINT;
-    default:
-        break;
-    };
-
-    VKFailOn(true, "invalid polygon mode");
-    return VkPolygonMode();
+    return VkPolygonModes[u32(polygon_mode)];
 }
 
 VkCullModeFlags VkUtils::_vk_get_cull_mode(GPU::CullMode cull_mode)
 {
-    switch(cull_mode)
-    {
-    case GPU::CullMode::Front:
-        return VK_CULL_MODE_FRONT_BIT;
-    case GPU::CullMode::Back:
-        return VK_CULL_MODE_BACK_BIT;
-    case GPU::CullMode::FrontAndBack:
-        return VK_CULL_MODE_FRONT_AND_BACK;
-    default:
-        break;
-    };
-
-    VKFailOn(true, "invalid cull mode");
-    return VkCullModeFlags();
+    return VkCullModes[u32(cull_mode)];
 }
 
 VkFrontFace VkUtils::_vk_get_front_face(GPU::FrontFace front_face)
 {
-    // Important: The vulkan backend flips the Y to allow positive up,
-    // that changes the winding order so it needs to be flipped.
-    switch(front_face)
-    {
-    case GPU::FrontFace::CounterClockWise:
-        return VK_FRONT_FACE_CLOCKWISE;
-    case GPU::FrontFace::ClockWise:
-        return VK_FRONT_FACE_COUNTER_CLOCKWISE;
-    default:
-        break;
-    };
-
-    VKFailOn(true, "invalid front face");
-    return VkFrontFace();
+    return VkFrontFaces[u32(front_face)];
 }
 
 VkSampleCountFlagBits VkUtils::_vk_get_samples(GPU::SampleCount sample_count)
 {
-    switch(sample_count)
-    {
-    case GPU::SampleCount::Sample1:
-        return VK_SAMPLE_COUNT_1_BIT;
-    case GPU::SampleCount::Sample2:
-        return VK_SAMPLE_COUNT_2_BIT;
-    case GPU::SampleCount::Sample4:
-        return VK_SAMPLE_COUNT_4_BIT;
-    case GPU::SampleCount::Sample8:
-        return VK_SAMPLE_COUNT_8_BIT;
-    case GPU::SampleCount::Sample16:
-        return VK_SAMPLE_COUNT_16_BIT;
-    case GPU::SampleCount::Sample32:
-        return VK_SAMPLE_COUNT_32_BIT;
-    default:
-        break;
-    }
-    
-    VKFailOn(true, "invalid sample count");
-    return VkSampleCountFlagBits();
+    return VkSampleCounts[u32(sample_count)];
 }
 
 VkPipelineBindPoint VkUtils::_vk_get_bind_point(GPU::PipelineBindPoint bind_point)
 {
-    switch(bind_point)
-    {
-    case GPU::PipelineBindPoint::Graphics:
-        return VK_PIPELINE_BIND_POINT_GRAPHICS;
-    default:
-        break;
-    }
-
-    VKFailOn(true, "invalid bind point");
-    return VkPipelineBindPoint();
+    return VkPipelineBindPoints[u32(bind_point)];
 }

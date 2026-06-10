@@ -61,6 +61,7 @@ GPUTextureID GPUResourceManager::create_texture(const TextureAllocateInfo& alloc
             .type = GPU::TextureViewType::Texture2D,
             .format = alloc_info.format,
             .texture = texture,
+            .components = GPU::ComponentMapping::identity(),
             .subresource_range = GPU::TextureSubresourceRange::color(0, 1, 0, 1),
         })
     );

@@ -1,5 +1,4 @@
 #pragma once
-#include "core/header.h"
 #include "collections/string_view.h"
 #include "debug/fail.h"
 #include "gpu/vk/vk_vtable.h"

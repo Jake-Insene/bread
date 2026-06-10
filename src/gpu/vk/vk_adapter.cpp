@@ -552,45 +552,7 @@ GPU::SwapChainID VulkanAdapter::swap_chain_create(GPU::DeviceID device, const GP
         for (u32 i = 0; i < swap_chain.image_count; i++)
         {
             swap_chain.images[i].vk_image = vk_images[i];
-        }
-    }
 
-    {
-        // image views
-        VkImageViewCreateInfo vk_image_view_info =
-        {
-            .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = 0,
-            .image = VK_NULL_HANDLE,
-            .viewType = VK_IMAGE_VIEW_TYPE_2D,
-            .format = vk_swapchain_format,
-            .components =
-            {
-                .r = VK_COMPONENT_SWIZZLE_IDENTITY,
-                .g = VK_COMPONENT_SWIZZLE_IDENTITY,
-                .b = VK_COMPONENT_SWIZZLE_IDENTITY,
-                .a = VK_COMPONENT_SWIZZLE_IDENTITY,
-            },
-            .subresourceRange = 
-            {
-                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                .baseMipLevel  = 0,
-                .levelCount = 1,
-                .baseArrayLayer = 0,
-                .layerCount = 1,
-            },
-        };
-
-        for(u32 i = 0; i < swap_chain.image_count; i++)
-        {
-            vk_image_view_info.image = swap_chain.images[i].vk_image;
-            ld.vk.vkCreateImageView(ld.vk_device, &vk_image_view_info, Vulkan::allocation_callbacks(this), &swap_chain.images[i].vk_image_view);
-        }
-
-        // texture object
-        for (u32 i = 0; i < swap_chain.image_count; i++)
-        {
             swap_chain.images[i].texture = textures.add(Texture());
             Texture& tex = _get_texture(swap_chain.images[i].texture);
             tex.vk_device = swap_chain.vk_device;
@@ -598,13 +560,18 @@ GPU::SwapChainID VulkanAdapter::swap_chain_create(GPU::DeviceID device, const GP
 		    tex.format = ci.format;
 		    tex.extent = Vector3U(vk_swap_chain_extent.width, vk_swap_chain_extent.height, 1);
             tex.device = swap_chain.device;
+        }
+    }
 
-            swap_chain.images[i].texture_view = texture_views.add(TextureView());
-            TextureView& tex_view = _get_texture_view(swap_chain.images[i].texture_view);
-            tex_view.vk_device = swap_chain.vk_device;
-            tex_view.vk_image_view = swap_chain.images[i].vk_image_view;
-		    tex_view.format = ci.format;
-            tex_view.device = swap_chain.device;
+    {
+        // texture object
+        for (u32 i = 0; i < swap_chain.image_count; i++)
+        {
+            swap_chain.images[i].texture_view = texture_view_create(device, 
+                GPU::TextureViewCreateInfo::create(GPU::TextureViewType::Texture2D,
+                    ci.format, swap_chain.images[i].texture, GPU::ComponentMapping::identity(),
+                    GPU::TextureSubresourceRange::color(0, 1, 0, 1))
+            );
         }
     }
 
@@ -618,8 +585,9 @@ void VulkanAdapter::swap_chain_destroy(GPU::SwapChainID swap_chain)
 
     for(u32 i = 0; i < sc.image_count; i++)
     {
-        ld.vk.vkDestroyImageView(sc.vk_device, sc.images[i].vk_image_view, Vulkan::allocation_callbacks(this));
-        texture_views.remove(sc.images[i].texture_view);
+        texture_view_destroy(sc.images[i].texture_view);
+        
+        textures.remove(sc.images[i].texture);
     }
     get_allocator()->free(Mem::to_bytes(sc.images));
     
@@ -1292,7 +1260,13 @@ GPU::TextureViewID VulkanAdapter::texture_view_create(GPU::DeviceID device, cons
         .image = tex.vk_image,
         .viewType = VkUtils::_vk_get_image_view_type(ci.type),
         .format = VkUtils::_vk_get_texture_format(ci.format),
-        .components = {},
+        .components =
+        {
+            .r = VkUtils::_vk_get_component_swizzle(ci.components.r),
+            .g = VkUtils::_vk_get_component_swizzle(ci.components.g),
+            .b = VkUtils::_vk_get_component_swizzle(ci.components.b),
+            .a = VkUtils::_vk_get_component_swizzle(ci.components.a),
+        },
         .subresourceRange =
         {
             // TODO: check if format is depth or stencil

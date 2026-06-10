@@ -663,21 +663,54 @@ namespace GPU
 		Texture2D,
 	};
 
+	enum class ComponentSwizzle
+	{
+		Unknown = 0,
+		Identity,
+		Zero,
+		One,
+		Red,
+		Green,
+		Blue,
+		Alpha,
+	};
+
+	struct ComponentMapping
+	{
+		ComponentSwizzle r;
+		ComponentSwizzle g;
+		ComponentSwizzle b;
+		ComponentSwizzle a;
+
+		static constexpr ComponentMapping identity()
+		{
+			return ComponentMapping
+			{
+				.r = ComponentSwizzle::Identity,
+				.g = ComponentSwizzle::Identity,
+				.b = ComponentSwizzle::Identity,
+				.a = ComponentSwizzle::Identity,
+			};
+		}
+	};
+
 	struct TextureViewCreateInfo
 	{
 		TextureViewType type;
 		TextureFormat format;
 		TextureID texture;
+		ComponentMapping components;
 		TextureSubresourceRange subresource_range;
 
 		static constexpr TextureViewCreateInfo create(TextureViewType type, TextureFormat format,
-			TextureID texture, TextureSubresourceRange subresource_range)
+			TextureID texture, ComponentMapping components, TextureSubresourceRange subresource_range)
 		{
 			return TextureViewCreateInfo
 			{
 				.type = type,
 				.format = format,
 				.texture = texture,
+				.components = components,
 				.subresource_range = subresource_range,
 			};
 		}
@@ -824,6 +857,7 @@ namespace GPU
 	{
 		Unknown = 0,
 		Graphics,
+		Compute,
 	};
 
 	enum class PrimitiveTopology
