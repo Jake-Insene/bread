@@ -18,7 +18,7 @@ thread_local usize StdoutBufferCounter = 0;
 
 Slice<u8> File::read_all(Mem::Allocator* allocator, StringView path)
 {
-    Slice<char> tmp = allocator->array<char>(path.len + 1);
+    Slice tmp = allocator->array<char>(path.len + 1);
     Mem::copy(tmp, path);
     
     AAsset* asset = AAssetManager_open(AndroidEngine::data.asset_manager, tmp.ptr(), AASSET_MODE_UNKNOWN);
@@ -27,7 +27,7 @@ Slice<u8> File::read_all(Mem::Allocator* allocator, StringView path)
 
     allocator->free(Mem::to_bytes(tmp));
     
-    Slice<u8> bytes = allocator->alloc(length, alignof(usize));
+    Slice bytes = allocator->alloc(length, alignof(usize));
     Mem::copy(bytes, Slice(reinterpret_cast<const u8*>(buffer), length));
     
     AAsset_close(asset);
@@ -52,7 +52,7 @@ File File::get_stdin()
 
 File File::open(Mem::Allocator* allocator, StringView path, OpenMode)
 {
-    Slice<char> tmp = allocator->array<char>(path.len + 1);
+    Slice tmp = allocator->array<char>(path.len + 1);
     Mem::copy(tmp, path);
 
     allocator->free(Mem::to_bytes(tmp));
@@ -62,7 +62,7 @@ File File::open(Mem::Allocator* allocator, StringView path, OpenMode)
 
 bool File::exists(Mem::Allocator* allocator, StringView path)
 {
-    Slice<char> tmp = allocator->array<char>(path.len + 1);
+    Slice tmp = allocator->array<char>(path.len + 1);
     Mem::copy(tmp, path);
 
     AAsset* asset = AAssetManager_open(AndroidEngine::data.asset_manager, tmp.ptr(), AASSET_MODE_UNKNOWN);
@@ -92,14 +92,14 @@ void File::write(const Slice<const u8> bytes)
 
     if(handle == StderrHandle)
     {
-        Slice<u8> buffer = Slice(StderrBuffer);
+        Slice buffer = Slice(StderrBuffer);
         buffer = buffer.add(StderrBufferCounter);
         Mem::copy(buffer, bytes);
         StderrBufferCounter += bytes.len;
     }
     else if(handle == StdoutHandle)
     {
-        Slice<u8> buffer = Slice(StdoutBuffer);
+        Slice buffer = Slice(StdoutBuffer);
         buffer = buffer.add(StdoutBufferCounter);
         Mem::copy(buffer, bytes);
         StdoutBufferCounter += bytes.len;
@@ -124,14 +124,14 @@ void File::flush()
     {
         __android_log_print(ANDROID_LOG_ERROR, "Bread", "%.*s", (int)StderrBufferCounter, reinterpret_cast<char*>(StderrBuffer));
         StderrBufferCounter = 0;
-        Slice<u8> buffer = Slice(StderrBuffer);
+        Slice buffer = Slice(StderrBuffer);
         Mem::set<u8>(buffer, 0);
     }
     else if(handle == StdoutHandle)
     {
         __android_log_print(ANDROID_LOG_INFO, "Bread", "%.*s", (int)StdoutBufferCounter, reinterpret_cast<char*>(StdoutBuffer));
         StdoutBufferCounter = 0;
-        Slice<u8> buffer = Slice(StdoutBuffer);
+        Slice buffer = Slice(StdoutBuffer);
         Mem::set<u8>(buffer, 0);
     }
 }

@@ -85,7 +85,7 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
         }
         else
         {
-            Slice<Page> new_pages = Mem::from_bytes<Page>(internal_allocator.alloc(sizeof(Page) * new_size, alignof(Page)));
+            Slice new_pages = Mem::from_bytes<Page>(internal_allocator.alloc(sizeof(Page) * new_size, alignof(Page)));
             Mem::copy(new_pages, allocated_pages);
             internal_allocator.free(Mem::to_bytes(allocated_pages));
             allocated_pages = new_pages;
@@ -105,7 +105,7 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
 
         index++;
         allocated_mem->index = index;
-        return Slice<u8>
+        return Slice
         {
             base,
             size
@@ -151,7 +151,7 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
     index++;
     allocation_header->index = index;
 
-    return Slice<u8>
+    return Slice
     {
         aligned_mem,
         size,

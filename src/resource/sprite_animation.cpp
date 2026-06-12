@@ -18,7 +18,6 @@ void SpriteAnimation::destroy()
 	Resource::destroy();
 }
 
-
 void SpriteAnimation::add_animation(StringView anim_name, Slice<SpriteFrame> frames, bool loop)
 {
 	Animation& anim = animations.insert(anim_name, Animation());

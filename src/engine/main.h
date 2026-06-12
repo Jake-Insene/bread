@@ -11,7 +11,7 @@ static inline SystemInfo _system_infos[] =
 
 Slice<SystemInfo> __get_requested_systems__()
 {
-	Slice<SystemInfo> requested_systems = _system_infos;
+	Slice requested_systems = _system_infos;
 
 	return requested_systems.len == 1 ? Slice<SystemInfo>()
 		: requested_systems.slice(requested_systems.len - 1);

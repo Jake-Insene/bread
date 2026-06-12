@@ -31,24 +31,24 @@ void ResourceManager::initialize(const ResourceManagerCreateInfo& info)
 
 void ResourceManager::shutdown()
 {
-    for(auto& it : resources.iter())
-    {
-        RMDebugInfo("Destroying the resource '{}'", it.first);
-        it.second.destroy(it.second.resource);
-        allocator->free(
-            Mem::to_bytes(Slice<Resource>(it.second.resource, 1))
-        );
-    }
-    
     for(auto& [image, texture] : cached_images.iter())
     {
         if(texture != nullptr)
         {
             texture->destroy();
             allocator->free(
-                Mem::to_bytes(Slice<Texture>(texture, 1))
+                Mem::to_bytes(Slice(texture, 1))
             );
         }
+    }
+    
+    for(auto& it : resources.iter())
+    {
+        RMDebugInfo("Destroying the resource '{}'", it.first);
+        it.second.destroy(it.second.resource);
+        allocator->free(
+            Mem::to_bytes(Slice(it.second.resource, 1))
+        );
     }
 
     resources.destroy();

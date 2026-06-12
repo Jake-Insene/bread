@@ -1,28 +1,26 @@
 #pragma once
 #include "gpu/gpu.h"
-#include "graphics/device_object.h"
 
-
-struct ResourceTableLineLayout
-{
-    Slice<const GPU::DescriptorBinding> bindings;
-};
 
 struct ResourceTableCreateInfo
 {
     Mem::Allocator* allocator;
-    Graphics::Device* graphics_device;
-    u32 max_frames_in_flight;
-    Slice<ResourceTableLineLayout> lines;
+    GPU::DeviceID device;
+    u32 max_sets;
+    Slice<const GPU::DescriptorPoolSize> sizes;
 };
 
 struct ResourceTable
 {
     Mem::Allocator* allocator;
 
-    Graphics::Device* device;
-    Graphics::DescriptorPool* pool;
+    GPU::DeviceID device;
+    GPU::DescriptorPoolID descriptor_pool;
 
-    void init(const ResourceTableCreateInfo& info);
+    static ResourceTable create(const ResourceTableCreateInfo& info);
+    
     void destroy();
+
+    void reset();
+    GPU::DescriptorSetID allocate(GPU::DescriptorSetLayoutID set_layout);
 };

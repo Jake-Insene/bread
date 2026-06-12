@@ -18,8 +18,17 @@ void FramedPool::init(const FramedPoolCreateInfo& info)
 
 void FramedPool::destroy()
 {
-    (void)pools.iter().for_each([](GPU::DescriptorPoolID pool) { GPU::descriptor_pool_destroy(pool); });
+    (void)pools.iter().for_each([](GPU::DescriptorPoolID pool)
+    {
+        GPU::descriptor_pool_reset(pool);
+        GPU::descriptor_pool_destroy(pool);
+    });
     pools.destroy();
+}
+
+void FramedPool::reset_pool(usize frame_index)
+{
+    GPU::descriptor_pool_reset(pools.get(frame_index));
 }
 
 GPU::DescriptorPoolID FramedPool::get_pool(usize frame_index)

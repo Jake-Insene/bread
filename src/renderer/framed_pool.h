@@ -9,9 +9,9 @@ struct FramedPoolCreateInfo
     Mem::Allocator* allocator;
     GPU::DeviceID device;
 
-    Slice<GPU::DescriptorPoolSize> sizes;
-    u32 max_sets;
     u32 frame_count;
+    u32 max_sets;
+    Slice<const GPU::DescriptorPoolSize> sizes;
 };
 
 struct FramedPool
@@ -24,5 +24,6 @@ struct FramedPool
     void init(const FramedPoolCreateInfo& info);
     void destroy();
 
+    void reset_pool(usize frame_index);
     GPU::DescriptorPoolID get_pool(usize frame_index); 
 };

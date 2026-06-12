@@ -18,7 +18,7 @@ struct SwapChainInfo
 
 struct SwapChain
 {
-    static constexpr GPU::TextureFormat DefaultSurfaceFormat = GPU::TextureFormat::RGBA8Unorm;
+    static constexpr GPU::TextureFormat DefaultSurfaceFormat = GPU::TextureFormat::RGBA8Srgb;
     static constexpr usize DefaultMinImageCount = 3;
 
     struct ImageInfo

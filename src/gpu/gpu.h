@@ -515,6 +515,29 @@ namespace GPU
 		CompareOp compare_op;
 		f32 min_lod;
 		f32 max_lod;
+
+		static constexpr SamplerCreateInfo create(Filter min_filter, Filter mag_filter,
+			SamplerMipMapMode mipmap_mode, SamplerAddressMode address_mode_u, SamplerAddressMode address_mode_v,
+			SamplerAddressMode address_mode_w, f32 mip_lod_bias, bool anisotropy_enable, f32 max_anisotropy,
+			bool compare_enable, CompareOp compare_op, f32 min_lod, f32 max_lod)
+		{
+			return SamplerCreateInfo
+			{
+				.min_filter = min_filter,
+				.mag_filter = mag_filter,
+				.mipmap_mode = mipmap_mode,
+				.address_mode_u = address_mode_u,
+				.address_mode_v = address_mode_v,
+				.address_mode_w = address_mode_w,
+				.mip_lod_bias = mip_lod_bias,
+				.anisotropy_enable = anisotropy_enable,
+				.max_anisotropy = max_anisotropy,
+				.compare_enable = compare_enable,
+				.compare_op = compare_op,
+				.min_lod = min_lod,
+				.max_lod = max_lod,
+			};
+		}
 	};
 
 	SamplerID sampler_create(DeviceID device, const SamplerCreateInfo& ci);
@@ -728,6 +751,39 @@ namespace GPU
 		u32 binding;
 		u32 count;
 		ShaderStage stages;
+
+		static constexpr DescriptorBinding uniform(u32 binding, u32 count, ShaderStage stages)
+		{
+			return DescriptorBinding
+			{
+				.type = DescriptorType::UniformBuffer,
+				.binding = binding,
+				.count = count,
+				.stages = stages,
+			};
+		}
+
+		static constexpr DescriptorBinding storage_buffer(u32 binding, u32 count, ShaderStage stages)
+		{
+			return DescriptorBinding
+			{
+				.type = DescriptorType::StorageBuffer,
+				.binding = binding,
+				.count = count,
+				.stages = stages,
+			};
+		}
+
+		static constexpr DescriptorBinding combined_texture_sampler(u32 binding, u32 count, ShaderStage stages)
+		{
+			return DescriptorBinding
+			{
+				.type = DescriptorType::CombinedTextureSampler,
+				.binding = binding,
+				.count = count,
+				.stages = stages,
+			};
+		}
 	};
 
 	struct DescriptorSetLayoutCreateInfo
@@ -754,6 +810,33 @@ namespace GPU
 	{
 		DescriptorType type;
 		u32 count;
+
+		static constexpr DescriptorPoolSize uniform(u32 count)
+		{
+			return DescriptorPoolSize
+			{
+				.type = DescriptorType::UniformBuffer,
+				.count = count,
+			};
+		};
+
+		static constexpr DescriptorPoolSize storage(u32 count)
+		{
+			return DescriptorPoolSize
+			{
+				.type = DescriptorType::StorageBuffer,
+				.count = count,
+			};
+		};
+
+		static constexpr DescriptorPoolSize combined_texture_sampler(u32 count)
+		{
+			return DescriptorPoolSize
+			{
+				.type = DescriptorType::CombinedTextureSampler,
+				.count = count,
+			};
+		};
 	};
 	
 	struct DescriptorPoolCreateInfo
@@ -807,6 +890,48 @@ namespace GPU
 		DescriptorType type;
 		Slice<const DescriptorBufferInfo> buffers;
 		Slice<const DescriptorTextureInfo> textures;
+
+		static constexpr WriteDescriptorInfo uniform(DescriptorSetID descriptor_set, u32 binding,
+			u32 array_element, const Slice<const DescriptorBufferInfo>& buffers)
+		{
+			return WriteDescriptorInfo
+			{
+				.descriptor_set = descriptor_set,
+				.binding = binding,
+				.array_element = array_element,
+				.type = DescriptorType::UniformBuffer,
+				.buffers = buffers,
+				.textures = {},
+			};
+		}
+
+		static constexpr WriteDescriptorInfo storage(DescriptorSetID descriptor_set, u32 binding,
+			u32 array_element, const Slice<const DescriptorBufferInfo>& buffers)
+		{
+			return WriteDescriptorInfo
+			{
+				.descriptor_set = descriptor_set,
+				.binding = binding,
+				.array_element = array_element,
+				.type = DescriptorType::StorageBuffer,
+				.buffers = buffers,
+				.textures = {},
+			};
+		}
+
+		static constexpr WriteDescriptorInfo combined_texture_sampler(DescriptorSetID descriptor_set, u32 binding,
+			u32 array_element, const Slice<const DescriptorTextureInfo>& textures)
+		{
+			return WriteDescriptorInfo
+			{
+				.descriptor_set = descriptor_set,
+				.binding = binding,
+				.array_element = array_element,
+				.type = DescriptorType::CombinedTextureSampler,
+				.buffers = {},
+				.textures = textures,
+			};
+		}
 	};
 
 	struct UpdateDescriptorInfo
@@ -1269,6 +1394,20 @@ namespace GPU
 		f32 height;
 		f32 min_depth;
 		f32 max_depth;
+
+		static constexpr Viewport create(f32 x, f32 y, f32 width, f32 height,
+			f32 min_depth, f32 max_depth)
+		{
+			return Viewport
+			{
+				.x = x,
+				.y = y,
+				.width = width,
+				.height = height,
+				.min_depth = min_depth,
+				.max_depth = max_depth,
+			};
+		}
 
 		static constexpr Viewport extent(f32 width, f32 height)
 		{

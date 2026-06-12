@@ -12,12 +12,12 @@ static void flip_atlas_vertical(Mem::Allocator* allocator, const Slice<u8>& pixe
 {
     const i32 row_size = size.width; // R8
 
-    Slice<u8> tmp = allocator->alloc(row_size, 16);
+    Slice tmp = allocator->alloc(row_size, 16);
 
     for (i32 y = 0; y < size.height / 2; ++y)
     {
-        Slice<u8> row_top    = pixels.add(isize(y * row_size));
-        Slice<u8> row_bottom = pixels.add(isize((size.height - 1 - y) * row_size));
+        Slice row_top    = pixels.add(isize(y * row_size));
+        Slice row_bottom = pixels.add(isize((size.height - 1 - y) * row_size));
 
         Mem::copy(tmp, row_top.slice(row_size));
         Mem::copy(row_top, row_bottom.slice(row_size));
@@ -37,7 +37,7 @@ static void load_theme(Mem::Allocator* allocator, const Slice<u8>& font_file_con
     i32 width = 512;
     while(success)
     {
-        Slice<u8> pixels = allocator->alloc(i64(width * width), 16);
+        Slice pixels = allocator->alloc(i64(width * width), 16);
 
         stbtt_PackBegin(&pack_context, pixels.ptr(), width, width, width, 0, 0);
 
@@ -139,7 +139,7 @@ Error Font::load(StringView file_path)
 
     path.set(file_path);
 
-    Slice<u8> content = IO::File::read_all(allocator, file_path);
+    Slice content = IO::File::read_all(allocator, file_path);
 
     stbtt_fontinfo font;
     stbtt_InitFont(&font, content.ptr(), stbtt_GetFontOffsetForIndex(content.ptr(), 0));
@@ -171,7 +171,7 @@ const Font::FontTheme& Font::get_font_theme(i32 font_size)
 
 const Font::FontTheme& Font::_theme_with_size(i32 font_size)
 {
-    Slice<u8> content = IO::File::read_all(allocator, path.view());
+    Slice content = IO::File::read_all(allocator, path.view());
 
     stbtt_fontinfo font;
     stbtt_InitFont(&font, content.ptr(), stbtt_GetFontOffsetForIndex(content.ptr(), 0));

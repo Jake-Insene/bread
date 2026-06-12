@@ -111,7 +111,7 @@ struct [[nodiscard]] BaseHashMap
             if(entry != nullptr)
             {
                 entry->destroy(allocator);
-                allocator->free(Mem::to_bytes(Slice<MapEntry>(entry, 1)));
+                allocator->free(Mem::to_bytes(Slice(entry, 1)));
             }
         }
         allocator->free(Mem::to_bytes(entries));
@@ -134,7 +134,7 @@ struct [[nodiscard]] BaseHashMap
             return;
         }
         
-        Slice<MapEntry*> new_entries = allocator->array<MapEntry*>(new_size);
+        Slice new_entries = allocator->array<MapEntry*>(new_size);
 
         for (MapEntry* entry = first; entry != nullptr; entry = entry->next)
         {

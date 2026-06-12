@@ -10,7 +10,7 @@ namespace IO
 
 Slice<u8> File::read_all(Mem::Allocator* allocator, StringView path)
 {
-	Slice<char> tmp = allocator->array<char>(path.len + 1);
+	Slice tmp = allocator->array<char>(path.len + 1);
 	Mem::copy(tmp, path);
 
 	HANDLE file = CreateFileA(tmp.ptr(), GENERIC_READ, FILE_SHARE_READ, 
@@ -25,7 +25,7 @@ Slice<u8> File::read_all(Mem::Allocator* allocator, StringView path)
 	}
 
 	usize length = GetFileSize(file, nullptr);
-    Slice<u8> bytes = allocator->alloc(length, sizeof(usize));
+    Slice bytes = allocator->alloc(length, sizeof(usize));
 	(void)ReadFile(file, bytes.ptr(), DWORD(length), nullptr, nullptr);
 
 	CloseHandle(file);
@@ -62,7 +62,7 @@ File File::get_stdin()
 
 File File::open(Mem::Allocator* allocator, StringView path, OpenMode mode)
 {
-	Slice<char> tmp = allocator->array<char>(path.len + 1);
+	Slice tmp = allocator->array<char>(path.len + 1);
 	Mem::copy(tmp, path);
 	UINT access = 0;
 
@@ -99,7 +99,7 @@ File File::open(Mem::Allocator* allocator, StringView path, OpenMode mode)
 
 bool File::exists(Mem::Allocator* allocator, StringView path)
 {
-	Slice<char> tmp = allocator->array<char>(path.len + 1);
+	Slice tmp = allocator->array<char>(path.len + 1);
 	Mem::copy(tmp, path);
 
 	HANDLE file = CreateFileA(tmp.ptr(), 0, 0, nullptr, 

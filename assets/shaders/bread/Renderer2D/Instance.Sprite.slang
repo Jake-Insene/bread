@@ -1,7 +1,7 @@
 #define INSTANCE_SPRITE
 #include "bread/Renderer2D/Renderer2D.Header.slang"
 
-DECLARE_SCENE_UNIFORM(SceneUniform, Scene);
+layout(set = 0, binding = 0) ConstantBuffer<SceneUniform> Scene;
 layout(set = 1, binding = 0) Sampler2D BindTextures[16];
 
 [shader("vertex")]

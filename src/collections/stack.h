@@ -60,7 +60,7 @@ struct [[nodiscard]] Stack
 
 		if (!allocator->realloc(Mem::to_bytes(items), sizeof(Type) * new_cap, alignof(Type)))
 		{
-			Slice<Type> new_items = allocator->array<Type>(new_cap);
+			Slice new_items = allocator->array<Type>(new_cap);
 			if (items.ptr())
 			{
 				Mem::copy(new_items, items);
@@ -72,7 +72,7 @@ struct [[nodiscard]] Stack
 		else
 		{
 			items.len = new_cap;
-			Slice<Type> items_to_construct = items.add(sp);
+			Slice items_to_construct = items.add(sp);
 			ConstructArray(items_to_construct.ptr(), items_to_construct.len);
 		}
 	}

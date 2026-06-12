@@ -17,7 +17,8 @@ struct GPUMemoryAllocatorCreateInfo
 struct GPUMemoryAllocator
 {
     // 4mb
-    static constexpr usize StagingHeapInitialSize = 1024 * 1024 * 4;
+    // TODO: Make staging incremental
+    static constexpr usize StagingHeapInitialSize = 1024 * 1024 * 46;
 
     enum class AllocationTag
     {

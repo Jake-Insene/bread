@@ -77,7 +77,7 @@ struct [[nodiscard]] StaticArray
             .count = items.len,
         };
 
-        Slice<Type> dest = Slice(array.items, N);
+        Slice dest = Slice(array.items, N);
         Mem::copy(dest, items);
         return array;
     }
@@ -94,7 +94,7 @@ struct [[nodiscard]] StaticArray
         };
 
         const Type list_array[] = { list... };
-        Slice<Type> dest = Slice(array.items, N);
+        Slice dest = Slice(array.items, N);
         Mem::copy(dest, Slice(list_array, ListLen));
 
         return array;
@@ -130,7 +130,7 @@ struct [[nodiscard]] StaticArray
     {
 		DebugAssert(count + new_items.len <= N, "StaticArray is full, cannot add more items");
         usize _count = count;
-        Slice<Type> dest = items.add(_count);
+        Slice dest = items.add(_count);
         Mem::copy(dest, new_items);
         count += new_items.len;
     }
@@ -138,7 +138,7 @@ struct [[nodiscard]] StaticArray
     constexpr void replace(Slice<Type> new_items)
     {
 		DebugAssert(new_items.len <= N, "StaticArray is too small for the provided items");
-        Slice<Type> dest = Slice(items, N);
+        Slice dest = Slice(items, N);
         Mem::copy(dest, new_items);
     }
 
@@ -154,8 +154,8 @@ struct [[nodiscard]] StaticArray
         }
 
         count--;
-        Slice<Type> dest = Slice(items, N);
-        Slice<Type> src = Slice(items, N);
+        Slice dest = Slice(items, N);
+        Slice src = Slice(items, N);
         Mem::copy(dest.add(index), src.add(index + 1));
     }
 

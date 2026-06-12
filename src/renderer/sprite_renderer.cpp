@@ -88,8 +88,8 @@ void SpriteRenderer::init(const SpriteRendererCreateInfo& info)
             .allocator = allocator,
             .device = reneder_device->get_device(),
             .gpu_memory_allocator = info.gpu_memory_allocator,
-            .buffer_size = instance_buffer_size,
             .frame_count = info.max_frames_in_flight,
+            .buffer_size = instance_buffer_size,
             .usage = GPU::BufferUsage::VertexBuffer,
         }
     );

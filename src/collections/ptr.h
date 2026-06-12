@@ -91,7 +91,7 @@ struct Ptr
 
         DestructObject(*memory);
 
-        allocator->free(Mem::to_bytes(Slice<T>(memory, 1)));
+        allocator->free(Mem::to_bytes(Slice(memory, 1)));
         memory = nullptr;
     }
 

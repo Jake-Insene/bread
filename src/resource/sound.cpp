@@ -16,14 +16,14 @@ static inline void* dr_realloc(void* mem, size_t new_size, void* user_data)
 {
     Unused(user_data);
  
-    Slice<u8> old_mem = Slice(reinterpret_cast<u8*>(mem), 1);
+    Slice old_mem = Slice(reinterpret_cast<u8*>(mem), 1);
     Mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
     if (allocator->realloc(old_mem, new_size, 16))
     {
         return mem;
     }
 
-    Slice<u8> new_mem = allocator->alloc(new_size, 16);
+    Slice new_mem = allocator->alloc(new_size, 16);
     if (mem != nullptr)
     {
         allocator->free(old_mem);
@@ -78,7 +78,7 @@ Error Sound::load(StringView file_path)
     
     path.set(file_path);
 
-    Slice<u8> content = IO::File::read_all(allocator, file_path);
+    Slice content = IO::File::read_all(allocator, file_path);
 
     drwav wav = {};
     drwav_init_memory(&wav, content.ptr(), content.len, &alloc_callbacks);

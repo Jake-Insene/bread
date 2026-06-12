@@ -3,16 +3,28 @@
 #include "graphics/shader.h"
 
 
+struct RenderLayout
+{
+    Mem::Allocator* allocator;
+    Slice<GPU::DescriptorSetLayoutID> set_layouts;
+    GPU::PipelineLayoutID pipeline_layout;
+
+    static RenderLayout create(Mem::Allocator* allocator, GPU::DeviceID device,
+        const Slice<const GPU::ConstantBlock>& constant_blocks,
+        const Slice<const GPU::DescriptorSetLayoutCreateInfo>& set_layout_cis);
+
+    void destroy();
+}; 
 
 struct RenderPipeline
 {
     Mem::Allocator* allocator;
+    RenderLayout render_layout;
     GPU::PipelineID pipeline;
-    GPU::PipelineLayoutID pipeline_layout;
 
     static RenderPipeline create(Mem::Allocator* allocator, GPU::DeviceID device,
-        Graphics::Shader* shader, GPU::VertexInput vertex_input, GPU::PrimitiveTopology topology,
-        const GPU::RenderingInfo& rendering_info);
+        RenderLayout render_layout, Graphics::Shader* shader, GPU::VertexInput vertex_input,
+        GPU::PrimitiveTopology topology, const GPU::RenderingInfo& rendering_info);
 
     void destroy();
 };

@@ -70,21 +70,21 @@ struct [[nodiscard]] Slice
 
     [[nodiscard]] constexpr bool null() const { return items == nullptr; }
 
-    constexpr Slice<T> add(const usize offset) const
+    constexpr Slice add(const usize offset) const
     {
         DebugAssert(ptr() && ((len - offset) > 0 || (len - offset) <= len), "invalid offset");
         return Slice(items + offset, len - offset);
     }
 
-    constexpr Slice<T> sub(const usize offset) const
+    constexpr Slice sub(const usize offset) const
     {
         DebugAssert(ptr() && ((len + offset) >= len), "invalid offset");
         return Slice(items - offset, len + offset);
     }
 
-    constexpr Slice<T> slice(usize count) const
+    constexpr Slice slice(usize count) const
     {
         DebugAssert(count <= len, "items out of range");
-        return Slice<T>(items, count);
+        return Slice(items, count);
     }
 };

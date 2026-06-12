@@ -138,7 +138,7 @@ void CommandPool::wait_for_all()
         return;
     }
 
-    Slice<GPU::FenceID> fences = allocator->array<GPU::FenceID>(work_submited.count);
+    Slice fences = allocator->array<GPU::FenceID>(work_submited.count);
     for(usize i = 0; i < work_submited.count; i++)
     {
         fences[i] = work_submited.get(i).fence;

@@ -24,11 +24,11 @@ static inline void _audio_output_thread(Opaque* self)
         }
 
         u32 frame_count = Audio::output_get_frame_count();
-        Slice<Audio::Frame> samples = audio_service->data.output_buffer.slice(frame_count);
+        Slice samples = audio_service->data.output_buffer.slice(frame_count);
 
         // getting enqueue plays
         audio_service->data.enqueue_mutex.lock();
-        Slice<AudioService::Mixer> mixers = audio_service->data.mixers.slice();
+        Slice mixers = audio_service->data.mixers.slice();
 
         for(usize frame_i = 0; frame_i < frame_count; frame_i++)
         {

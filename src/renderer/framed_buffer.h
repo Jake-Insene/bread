@@ -10,8 +10,8 @@ struct FramedBufferCreateInfo
     Mem::Allocator* allocator;
     GPU::DeviceID device;
     GPUMemoryAllocator* gpu_memory_allocator;
-    usize buffer_size;
     u32 frame_count;
+    usize buffer_size;
     GPU::BufferUsage usage;
 };
 
@@ -65,7 +65,7 @@ struct FramedMappedBuffer : FramedBuffer
     void init(const FramedBufferCreateInfo& info);
     void destroy();
 
-     Slice<u8> get_mapped(usize frame_index)
+    Slice<u8> get_mapped(usize frame_index)
     {
         return mapped.add(get_buffer_info(frame_index).offset);
     }

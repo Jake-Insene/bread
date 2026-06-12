@@ -40,6 +40,8 @@ file(GLOB ENGINE_SRC
     src/gpu/gpu.cpp
 
     src/graphics/command_pool.cpp
+    src/graphics/render_pipeline.cpp
+    src/graphics/resource_table.cpp
     src/graphics/shader.cpp
     src/graphics/swap_chain.cpp
 
@@ -97,6 +99,7 @@ file(GLOB ENGINE_SRC
     src/renderer/render_pipeline.cpp
     src/renderer/renderer_2d.cpp
     src/renderer/renderer.cpp
+    src/renderer/resource_table.cpp
     src/renderer/sprite_renderer.cpp
     
     src/resource/font.cpp

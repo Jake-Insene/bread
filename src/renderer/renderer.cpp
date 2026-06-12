@@ -43,10 +43,27 @@ void Renderer::init(const RendererCreateInfo& info)
     render_finished_semaphores = Array<GPU::SemaphoreID>::with_size(allocator, swap_chain.get_image_count());
     render_finished_semaphores.resize(max_frames_in_flight);
     (void)render_finished_semaphores.iter().transform([&](GPU::SemaphoreID){ return GPU::semaphore_create(render_device->get_device(), {}); });
+   
+    const GPU::DescriptorPoolSize pool_sizes[] =
+    {
+        GPU::DescriptorPoolSize::uniform(16),
+        GPU::DescriptorPoolSize::storage(16),
+        GPU::DescriptorPoolSize::combined_texture_sampler(16),
+    };
+    frame_pool.init(
+        {
+            .allocator = allocator,
+            .device = render_device->get_device(),
+            .frame_count = info.max_frames_in_flight,
+            .max_sets = 8,
+            .sizes = pool_sizes,
+        }
+    );
 }
 
 void Renderer::destroy()
 {
+    frame_pool.destroy();
     (void)render_finished_semaphores.iter().for_each([](GPU::SemaphoreID sem)
     {
         GPU::semaphore_destroy(sem);
@@ -70,6 +87,8 @@ Renderer::FrameInfo Renderer::begin_frame()
     {
         GPU::fence_wait_for(Slice(&frame.in_flight_fence, 1), true, MaxValue<u64>);
     }
+
+    frame_pool.reset_pool(frame_index);
 
     // Acquiring image
     GPU::PipelineStages wait_stages[] =
@@ -116,6 +135,7 @@ Renderer::FrameInfo Renderer::begin_frame()
         .image_index = image_index,
         .image = image,
         .image_view = image_view,
+        .pool = frame_pool.get_pool(frame_index),
     };
 }
 

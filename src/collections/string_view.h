@@ -52,7 +52,7 @@ struct [[nodiscard]] StringView : Slice<const char>
         return false;
     }
     
-    if(Mem::compare(Slice<const char>(items + (len - str.len), str.len), str))
+    if(Mem::compare(Slice(items + (len - str.len), str.len), str))
     {
         return true;
     }

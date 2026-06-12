@@ -13,13 +13,13 @@ static void* _realloc(void* ptr, usize old_size, usize new_size)
 {
     Mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
 
-    Slice<u8> old_mem = Slice<u8>(reinterpret_cast<u8*>(ptr), old_size);
+    Slice old_mem = Slice(reinterpret_cast<u8*>(ptr), old_size);
     if(ptr != nullptr && allocator->realloc(old_mem, new_size, alignof(usize)))
     {
         return ptr;
     }
     
-    Slice<u8> new_mem = allocator->alloc(new_size, alignof(usize));
+    Slice new_mem = allocator->alloc(new_size, alignof(usize));
     if (!new_mem.null() && ptr != nullptr && old_size != 0)
     {
         Mem::copy(new_mem, old_mem);
@@ -36,22 +36,22 @@ static void _free(void* ptr)
     if(ptr != nullptr)
     {
         allocator->free(
-            Slice<u8>(reinterpret_cast<u8*>(ptr), 1)
+            Slice(reinterpret_cast<u8*>(ptr), 1)
         );
     }
 }
 
 static void* __bread_memcpy(void* dest, const void* src, size_t len)
 {
-    Slice<u8> dest_items = Slice(reinterpret_cast<u8*>(dest), len);
-    Slice<const u8> src_items = Slice(reinterpret_cast<const u8*>(src), len);
+    Slice dest_items = Slice(reinterpret_cast<u8*>(dest), len);
+    Slice src_items = Slice(reinterpret_cast<const u8*>(src), len);
     Mem::copy(dest_items, src_items);
     return dest;
 }
 
 static void* __bread_memset(void* dest, int value, size_t len)
 {
-    Slice<u8> dest_items = Slice(reinterpret_cast<u8*>(dest), len);
+    Slice dest_items = Slice(reinterpret_cast<u8*>(dest), len);
     Mem::set(dest_items, u8(value));
     return dest;
 }

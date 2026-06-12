@@ -52,7 +52,7 @@ ObjectID ObjectPool::allocate_object(const StringView& name_tag)
     Block& block = blocks[tag_index];
     if(block.slot_index >= block.slot_count)
     {
-        Slice<u8> new_memory = allocator->alloc(ObjectPerBlock * block.metadata.object_size, block.metadata.alignment);
+        Slice new_memory = allocator->alloc(ObjectPerBlock * block.metadata.object_size, block.metadata.alignment);
         Mem::copy(new_memory, block.memory);
         allocator->free(block.memory);
 
@@ -88,14 +88,14 @@ void ObjectPool::_register_object(const BlockMetadata& object_metadata)
 {
     if(block_count == blocks.len)
     {
-        Slice<Block> new_blocks = allocator->array<Block>(blocks.len * 2);
+        Slice new_blocks = allocator->array<Block>(blocks.len * 2);
         Mem::copy(Mem::to_bytes(new_blocks), Mem::to_bytes(blocks));
         allocator->free(Mem::to_bytes(blocks));
 
         blocks = new_blocks;
     }
 
-    Slice<u8> memory = allocator->alloc(ObjectPerBlock * object_metadata.object_size, object_metadata.alignment);
+    Slice memory = allocator->alloc(ObjectPerBlock * object_metadata.object_size, object_metadata.alignment);
 
     blocks[block_count] = Block
     {

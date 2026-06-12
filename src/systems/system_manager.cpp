@@ -21,7 +21,7 @@ void SystemManager::allocate_systems(const Slice<SystemInfo>& requested_systems)
 {
     for(const SystemInfo& system_info : requested_systems)
     {
-        Slice<u8> instance_bytes = allocator->alloc(system_info.size_in_bytes, 16);
+        Slice instance_bytes = allocator->alloc(system_info.size_in_bytes, 16);
 
         SystemInstance instance =
         {

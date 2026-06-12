@@ -69,7 +69,7 @@ GPUTextureID GPUResourceManager::create_texture(const TextureAllocateInfo& alloc
     // Setting up the texture data
     {
         GPU::BufferID buffer = gpu_memory_allocator->begin_staging(alloc_info.pixels.len);
-        Slice<u8> mapped_buffer = gpu_memory_allocator->map_staging();
+        Slice mapped_buffer = gpu_memory_allocator->map_staging();
         Mem::copy(mapped_buffer, alloc_info.pixels);
         gpu_memory_allocator->unmap_staging(mapped_buffer);
 

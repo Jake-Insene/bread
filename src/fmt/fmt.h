@@ -167,7 +167,7 @@ void __format_single_argument(const IO::Writer& writer, T&& arg)
 	{
 		static constexpr StringView true_str = "true";
 		static constexpr StringView false_str = "false";
-		Slice<const u8> str = Mem::to_const_bytes(arg ? true_str : false_str);
+		Slice str = Mem::to_const_bytes(arg ? true_str : false_str);
 		writer.write(str);
 	}
 	else if constexpr (type == Format::FormatType::Signed || type == Format::FormatType::Unsigned)
@@ -260,7 +260,7 @@ void format(const IO::Writer& writer, const FormatString<TypeIdentity<TArgs>&&..
 	if constexpr (NewLine)
 	{
 		u8 _character = '\n';
-		Slice<const u8> new_line = { &_character, 1 };
+		Slice new_line = Slice(&_character, 1);
 		writer.write(new_line);
 	}
 }

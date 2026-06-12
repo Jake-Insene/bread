@@ -127,7 +127,7 @@ void EngineRuntime::shutdown()
     application->shutdown();
     application_state = ApplicationState::Destroyed;
 
-    allocator.free(Slice<u8>(reinterpret_cast<u8*>(application), 1));
+    allocator.free(Slice(reinterpret_cast<u8*>(application), 1));
 
     resource_manager.shutdown();
     render_device.shutdown();
@@ -253,43 +253,43 @@ void EngineRuntime::set_vsync(bool vsync)
 
 void EngineRuntime::_select_physical_device()
 {
-    Slice<GPU::PhysicalDeviceID> physical_devices = GPU::physical_devices_enumerate();
+    Slice physical_devices = GPU::physical_devices_enumerate();
 
     bool finded = false;
     GPU::PhysicalDeviceID integrated = GPU::PhysicalDeviceID();
     GPU::PhysicalDeviceID cpu = GPU::PhysicalDeviceID();
-    for(GPU::PhysicalDeviceID pd : physical_devices)
+    for(GPU::PhysicalDeviceID physical_device : physical_devices)
     {
         if(finded)
         {
             break;
         }
 
-        GPU::PhysicalDeviceInfo pd_info = GPU::physical_device_get_info(pd);
+        GPU::PhysicalDeviceInfo pd_info = GPU::physical_device_get_info(physical_device);
         if(pd_info.device_type == GPU::DeviceType::DiscreteGPU)
         {
-            physical_device = pd;
+            selected_physical_device = physical_device;
             finded = true;
             break;
         }
         
         if(pd_info.device_type == GPU::DeviceType::IntegratedGPU)
         {
-            integrated = pd;
+            integrated = physical_device;
         }
         else if(pd_info.device_type == GPU::DeviceType::Cpu)
         {
-            cpu = pd;
+            cpu = physical_device;
         }
     }
 
     if(!finded && integrated.is_valid())
     {
-        physical_device = integrated;
+        selected_physical_device = integrated;
     }
     else if(!finded && !integrated.is_valid())
     {
-        physical_device = cpu;
+        selected_physical_device = cpu;
     }
 }
 

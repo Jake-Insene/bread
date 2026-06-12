@@ -4,7 +4,7 @@
 #include "graphics/swap_chain.h"
 #include "render_device/core/gpu_memory_allocator.h"
 #include "render_device/render_device.h"
-#include "renderer/framed_buffer.h"
+#include "renderer/framed_pool.h"
 
 
 struct GPUMemoryAllocator;
@@ -35,6 +35,8 @@ struct Renderer
         u32 image_index;
         GPU::TextureID image;
         GPU::TextureViewID image_view;
+
+        GPU::DescriptorPoolID pool;
     };
 
     struct RenderFrame
@@ -54,6 +56,7 @@ struct Renderer
     
     Array<RenderFrame> frames;
     Array<GPU::SemaphoreID> render_finished_semaphores;
+    FramedPool frame_pool;
 
     void init(const RendererCreateInfo& info);
     void destroy();

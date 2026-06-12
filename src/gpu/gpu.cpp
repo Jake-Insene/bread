@@ -17,9 +17,9 @@ void GPU::initialize(Mem::Allocator* allocator)
 
 	current_adapter->initialize(allocator);
 
-#if defined(BREAD_ENABLE_GPU_DEBUG_LAYER)
-	gpu_debug_layer.init(allocator);
-#endif
+	GPU_DEBUG_LAYER_OPERATION(
+		gpu_debug_layer.init(allocator);
+	);
 }
 
 void GPU::initialize_from_adapter(InternalGPU::GPUAdapter* adapter)
@@ -31,9 +31,9 @@ void GPU::shutdown()
 {
 	current_adapter->shutdown();
 
-#if defined(BREAD_ENABLE_GPU_DEBUG_LAYER)
-	gpu_debug_layer.destroy();
-#endif
+	GPU_DEBUG_LAYER_OPERATION(
+		gpu_debug_layer.destroy();
+	)
 
 	// Only the process who calls GPU::initialize owns the memory of current_adapter.
 	if(adapter_allocator_owner != nullptr)
@@ -381,7 +381,9 @@ void GPU::descriptor_pool_reset(DescriptorPoolID descriptor_pool)
     GPUValidationCheck(descriptor_pool.is_valid() == false, "invalid descriptor pool");
 	current_adapter->descriptor_pool_reset(descriptor_pool);
 
-	gpu_debug_layer.pool_reset(descriptor_pool);
+	GPU_DEBUG_LAYER_OPERATION(
+		gpu_debug_layer.pool_reset(descriptor_pool);
+	);
 }
 
 void GPU::descriptor_set_allocate(DeviceID device, const DescriptorSetAllocateInfo& ci, Slice<DescriptorSetID> out_descriptor_sets)
@@ -395,7 +397,9 @@ void GPU::descriptor_set_allocate(DeviceID device, const DescriptorSetAllocateIn
 	}
 	
 	current_adapter->descriptor_set_allocate(device, ci, out_descriptor_sets);
-	gpu_debug_layer.allocate_descriptors(ci.pool, out_descriptor_sets);
+	GPU_DEBUG_LAYER_OPERATION(
+		gpu_debug_layer.allocate_descriptors(ci.pool, out_descriptor_sets);
+	);
 }
 
 void GPU::descriptor_set_free(DescriptorPoolID descriptor_pool, const Slice<const DescriptorSetID>& descriptor_sets)
@@ -408,7 +412,9 @@ void GPU::descriptor_set_free(DescriptorPoolID descriptor_pool, const Slice<cons
 	}
 
 	current_adapter->descriptor_set_free(descriptor_pool, descriptor_sets);
-	gpu_debug_layer.free_descriptors(descriptor_pool, descriptor_sets);
+	GPU_DEBUG_LAYER_OPERATION(
+		gpu_debug_layer.free_descriptors(descriptor_pool, descriptor_sets);
+	);
 }
 
 void GPU::descriptor_set_update_descriptors(DeviceID device, const UpdateDescriptorInfo& update_info)
@@ -431,12 +437,6 @@ void GPU::descriptor_set_update_descriptors(DeviceID device, const UpdateDescrip
 		);
 	}
 	current_adapter->descriptor_set_update_descriptors(device, update_info);
-
-	GPUDebugInfo("Updating Descriptor Sets #{}", update_info.write_infos.len);
-	for(const GPU::WriteDescriptorInfo& write_info : update_info.write_infos)
-	{
-		GPUDebugInfo("\tWriting to GPU::DescriptorSetID({})", write_info.descriptor_set.integer());
-	}
 }
 
 GPU::PipelineLayoutID GPU::pipeline_layout_create(DeviceID device, const PipelineLayoutCreateInfo &ci)

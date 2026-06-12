@@ -73,7 +73,7 @@ namespace Mem
 template<typename T>
 inline Slice<u8> to_bytes(const Slice<T>& items)
 {
-    return Slice<u8>
+    return Slice
     {
         reinterpret_cast<u8*>(items.items),
         items.len * sizeof(T)
@@ -83,7 +83,7 @@ inline Slice<u8> to_bytes(const Slice<T>& items)
 template<typename T>
 inline Slice<const u8> to_const_bytes(const Slice<T>& items)
 {
-    return Slice<const u8>
+    return Slice
     {
         reinterpret_cast<const u8*>(items.items),
         items.len * sizeof(T)
@@ -93,7 +93,7 @@ inline Slice<const u8> to_const_bytes(const Slice<T>& items)
 template<typename T>
 inline Slice<T> from_bytes(const Slice<u8>& bytes)
 {
-    return Slice<T>
+    return Slice
     {
         reinterpret_cast<T*>(bytes.items),
         bytes.len / sizeof(T),
@@ -128,7 +128,7 @@ constexpr void _copy_impl(Slice<T> dest, const Slice<const T>& src)
 #if BREAD_ENABLE_INTRISICS
     if !consteval
     {
-        Slice<u8> dest_bytes = to_bytes(dest);
+        Slice dest_bytes = to_bytes(dest);
         _copy(dest_bytes, to_const_bytes(src));
         return;
     }
@@ -158,7 +158,7 @@ constexpr void set(Slice<T> dest, const T value)
     {
         if(value == T(0)) // for floating point values it works
         {
-            Slice<u8> dest_bytes = to_bytes(dest);
+            Slice dest_bytes = to_bytes(dest);
             _set_zero(dest_bytes);
             return;
         }

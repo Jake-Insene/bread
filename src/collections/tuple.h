@@ -5,6 +5,9 @@
 template<typename... TArgs>
 struct Tuple {};
 
+template<typename... TArgs>
+Tuple(TArgs...) -> Tuple<TArgs...>;
+
 template<typename T>
 inline constexpr usize TupleSize = 0;
 

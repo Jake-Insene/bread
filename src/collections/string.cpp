@@ -55,7 +55,7 @@ void String::resize(usize new_size)
         return;
     }
 
-    if (!chars.ptr())
+    if (chars.null())
     {
         chars = Mem::from_bytes<char>(allocator->alloc(new_size, alignof(usize)));
         count = new_size;
@@ -64,7 +64,7 @@ void String::resize(usize new_size)
 
     if (!allocator->realloc(Mem::to_bytes(chars), new_size, alignof(usize)))
     {
-        Slice<char> new_chars = Mem::from_bytes<char>(allocator->alloc(new_size, alignof(usize)));
+        Slice new_chars = Mem::from_bytes<char>(allocator->alloc(new_size, alignof(usize)));
         Mem::copy(new_chars, chars);
         allocator->free(Mem::to_bytes(chars));
         chars = new_chars;
@@ -72,7 +72,7 @@ void String::resize(usize new_size)
     else
     {
         chars.len = new_size;
-        Slice<char> chars_to_construct = chars.add(count);
+        Slice chars_to_construct = chars.add(count);
         ConstructArray(chars_to_construct.ptr(), chars_to_construct.len);
     }
 

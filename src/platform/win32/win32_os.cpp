@@ -47,7 +47,7 @@ usize Win32OS::get_page_size()
 
 OS::Handle Win32OS::load_library(StringView lib_path)
 {
-    Slice<char> path = get_allocator()->array<char>(lib_path.len + 1);
+    Slice path = get_allocator()->array<char>(lib_path.len + 1);
     Mem::copy(path, lib_path);
 
     OS::Handle library = reinterpret_cast<OS::Handle>(LoadLibraryA(path.ptr()));
@@ -63,7 +63,7 @@ void Win32OS::unload_library(OS::Handle library)
 
 OS::VoidFunction Win32OS::get_proc_address(OS::Handle library, StringView symbol_name)
 {
-    Slice<char> symbol = get_allocator()->array<char>(symbol_name.len + 1);
+    Slice symbol = get_allocator()->array<char>(symbol_name.len + 1);
     Mem::copy(symbol, symbol_name);
     
     OS::VoidFunction func = reinterpret_cast<OS::VoidFunction>(
@@ -131,7 +131,7 @@ OS::QueryMemory Win32OS::query_memory(const Slice<u8>& memory)
 
 bool Win32OS::set_current_directory(StringView dir)
 {
-    Slice<char> path = get_allocator()->array<char>(dir.len + 1);
+    Slice path = get_allocator()->array<char>(dir.len + 1);
     Mem::copy(path, dir);
     bool result = SetCurrentDirectoryA(path.ptr()) == TRUE;
     get_allocator()->free(Mem::to_bytes(path));

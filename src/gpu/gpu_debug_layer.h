@@ -311,10 +311,9 @@ struct GPUDebugLayer
 	void pool_reset(GPU::DescriptorPoolID descriptor_pool)
 	{
 		GPU::IntegralIDType as_integer = GPU::IntegralIDType(descriptor_pool.integer());
-		GPUDebugInfo("Reseting GPU::DescriptorPoolID({})", as_integer);
 		for(GPU::DescriptorSetID descriptor_set : pools.get(as_integer).sets.iter())
 		{
-			GPUDebugInfo("\tImplicit destruction of GPU::DescriptorSetID({})", descriptor_set.integer());
+			remove(descriptor_set);
 		}
 		pools.get(as_integer).sets.clear();
 	}
@@ -323,6 +322,10 @@ struct GPUDebugLayer
 	{
 		GPU::IntegralIDType as_integer = GPU::IntegralIDType(descriptor_pool.integer());
 		pools.get(as_integer).sets.add_slice(descriptor_sets);
+		for(GPU::DescriptorSetID descriptor_set : descriptor_sets)
+		{
+			add(descriptor_set);
+		}
 	}
 
 	void free_descriptors(GPU::DescriptorPoolID descriptor_pool, const Slice<const GPU::DescriptorSetID>& descriptor_sets)
@@ -331,10 +334,14 @@ struct GPUDebugLayer
 		for(GPU::DescriptorSetID descriptor_set : descriptor_sets)
 		{
 			pools.get(as_integer).sets.remove(descriptor_set);
+			remove(descriptor_set);
 		}
 	}
 };
 static inline GPUDebugLayer gpu_debug_layer;
+
+#define GPU_DEBUG_LAYER_OPERATION(x) \
+	x
 
 #define GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(x) \
 	auto resource_id = x;\
@@ -345,6 +352,7 @@ static inline GPUDebugLayer gpu_debug_layer;
 	x;\
 	gpu_debug_layer.remove(id);
 #else
+#define GPU_DEBUG_LAYER_OPERATION(x)
 #define GPU_DEBUG_LAYER_HANDLE_RESOURCE_ALLOCATION(x) return x
 #define GPU_DEBUG_LAYER_HANDLE_RESOURCE_DEALLOCATION(id, x) x;
 #endif

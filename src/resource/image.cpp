@@ -33,7 +33,7 @@ Error Image::load(StringView file_path)
         return MakeError(ErrorCode::FileNotFound);
     }
 
-    Slice<u8> buffer = IO::File::read_all(allocator, file_path);
+    Slice buffer = IO::File::read_all(allocator, file_path);
     
     i32 channels = 0;
     data.pixels.items = reinterpret_cast<u8*>(stbi_load_from_memory(
