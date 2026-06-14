@@ -46,8 +46,8 @@ void Renderer::init(const RendererCreateInfo& info)
    
     const GPU::DescriptorPoolSize pool_sizes[] =
     {
-        GPU::DescriptorPoolSize::uniform(16),
-        GPU::DescriptorPoolSize::storage(16),
+        GPU::DescriptorPoolSize::uniform_buffer(16),
+        GPU::DescriptorPoolSize::storage_buffer(16),
         GPU::DescriptorPoolSize::combined_texture_sampler(16),
     };
     frame_pool.init(

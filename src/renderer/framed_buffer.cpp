@@ -39,14 +39,14 @@ void FramedDeviceBuffer::init(const FramedBufferCreateInfo& info)
     staging_allocation = info.gpu_memory_allocator->allocate(GPUMemoryAllocator::AllocationTag::Staging, GPU::buffer_get_memory_requirements(staging_buffer));
 
     GPU::buffer_bind_memory_heap(buffer, 
-        GPU::BindMemoryInfo::bind(
+        GPU::BindMemoryInfo::create(
             info.gpu_memory_allocator->allocation_get_heap(buffer_allocation),
             info.gpu_memory_allocator->allocation_get_offset(buffer_allocation)
         )
     );
 
     GPU::buffer_bind_memory_heap(staging_buffer, 
-        GPU::BindMemoryInfo::bind(
+        GPU::BindMemoryInfo::create(
             info.gpu_memory_allocator->allocation_get_heap(staging_allocation),
             info.gpu_memory_allocator->allocation_get_offset(staging_allocation)
         )
@@ -91,7 +91,7 @@ void FramedMappedBuffer::init(const FramedBufferCreateInfo& info)
 
     mapped_buffer_allocation = info.gpu_memory_allocator->allocate(GPUMemoryAllocator::AllocationTag::Staging, GPU::buffer_get_memory_requirements(mapped_buffer));
     GPU::buffer_bind_memory_heap(mapped_buffer, 
-        GPU::BindMemoryInfo::bind(
+        GPU::BindMemoryInfo::create(
             info.gpu_memory_allocator->allocation_get_heap(mapped_buffer_allocation),
             info.gpu_memory_allocator->allocation_get_offset(mapped_buffer_allocation)
         )

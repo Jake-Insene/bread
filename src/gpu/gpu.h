@@ -413,7 +413,7 @@ namespace GPU
 		MemoryHeapID memory_heap;
 		usize heap_offset;
 
-		static constexpr BindMemoryInfo bind(MemoryHeapID memory_heap, usize heap_offset)
+		static constexpr BindMemoryInfo create(MemoryHeapID memory_heap, usize heap_offset)
 		{
 			return BindMemoryInfo
 			{
@@ -605,35 +605,48 @@ namespace GPU
 		u32 base_array_layer;
 		u32 layer_count;
 
-		static constexpr TextureSubresourceRange color(u32 base_mip_level, u32 level_count, u32 base_array_layer, u32 layer_count)
+		static constexpr TextureSubresourceRange create(TextureAspect aspect, u32 base_mip_level,
+			u32 level_count, u32 base_array_layer, u32 layer_count)
 		{
 			return TextureSubresourceRange
 			{
-				.aspect = GPU::TextureAspect::Color,
+				.aspect = aspect,
 				.base_mip_level = base_mip_level,
 				.level_count = level_count,
 				.base_array_layer = base_array_layer,
 				.layer_count = layer_count,
 			};
 		}
+
+		static constexpr TextureSubresourceRange color(u32 base_mip_level, u32 level_count, u32 base_array_layer,
+			u32 layer_count)
+		{
+			return create(TextureAspect::Color, base_mip_level, level_count, base_array_layer, layer_count);
+		}
 	};
 
 	struct TextureSubresourceLayers
 	{
     	TextureAspect aspect;
-    	uint32_t mip_level;
-    	uint32_t base_array_layer;
-    	uint32_t layer_count;
+    	u32 mip_level;
+    	u32 base_array_layer;
+    	u32 layer_count;
 
-		static constexpr TextureSubresourceLayers color(u32 mip_level, u32 base_array_layer, u32 layer_count)
+		static constexpr TextureSubresourceLayers create(TextureAspect aspect, u32 mip_level,
+			u32 base_array_layer, u32 layer_count)
 		{
 			return TextureSubresourceLayers
 			{
-				.aspect = GPU::TextureAspect::Color,
+				.aspect = aspect,
 				.mip_level = mip_level,
 				.base_array_layer = base_array_layer,
 				.layer_count = layer_count,
 			};
+		}
+
+		static constexpr TextureSubresourceLayers color(u32 mip_level, u32 base_array_layer, u32 layer_count)
+		{
+			return create(GPU::TextureAspect::Color, mip_level, base_array_layer, layer_count);
 		}
 	};
 
@@ -752,37 +765,30 @@ namespace GPU
 		u32 count;
 		ShaderStage stages;
 
-		static constexpr DescriptorBinding uniform(u32 binding, u32 count, ShaderStage stages)
+		static constexpr DescriptorBinding create(DescriptorType type, u32 binding, u32 count, ShaderStage stages)
 		{
 			return DescriptorBinding
 			{
-				.type = DescriptorType::UniformBuffer,
+				.type = type,
 				.binding = binding,
 				.count = count,
 				.stages = stages,
 			};
+		}
+
+		static constexpr DescriptorBinding uniform(u32 binding, u32 count, ShaderStage stages)
+		{
+			return create(DescriptorType::UniformBuffer, binding, count, stages);
 		}
 
 		static constexpr DescriptorBinding storage_buffer(u32 binding, u32 count, ShaderStage stages)
 		{
-			return DescriptorBinding
-			{
-				.type = DescriptorType::StorageBuffer,
-				.binding = binding,
-				.count = count,
-				.stages = stages,
-			};
+			return create(DescriptorType::StorageBuffer, binding, count, stages);
 		}
 
 		static constexpr DescriptorBinding combined_texture_sampler(u32 binding, u32 count, ShaderStage stages)
 		{
-			return DescriptorBinding
-			{
-				.type = DescriptorType::CombinedTextureSampler,
-				.binding = binding,
-				.count = count,
-				.stages = stages,
-			};
+			return create(DescriptorType::CombinedTextureSampler, binding, count, stages);
 		}
 	};
 
@@ -811,31 +817,28 @@ namespace GPU
 		DescriptorType type;
 		u32 count;
 
-		static constexpr DescriptorPoolSize uniform(u32 count)
+		static constexpr DescriptorPoolSize create(DescriptorType type, u32 count)
 		{
 			return DescriptorPoolSize
 			{
-				.type = DescriptorType::UniformBuffer,
+				.type = type,
 				.count = count,
 			};
+		}
+
+		static constexpr DescriptorPoolSize uniform_buffer(u32 count)
+		{
+			return create(DescriptorType::UniformBuffer, count);
 		};
 
-		static constexpr DescriptorPoolSize storage(u32 count)
+		static constexpr DescriptorPoolSize storage_buffer(u32 count)
 		{
-			return DescriptorPoolSize
-			{
-				.type = DescriptorType::StorageBuffer,
-				.count = count,
-			};
+			return create(DescriptorType::StorageBuffer, count);
 		};
 
 		static constexpr DescriptorPoolSize combined_texture_sampler(u32 count)
 		{
-			return DescriptorPoolSize
-			{
-				.type = DescriptorType::CombinedTextureSampler,
-				.count = count,
-			};
+			return create(DescriptorType::CombinedTextureSampler, count);
 		};
 	};
 	
@@ -866,6 +869,16 @@ namespace GPU
 	{
 		DescriptorPoolID pool;
 		Slice<const DescriptorSetLayoutID> set_layouts;
+
+		static constexpr DescriptorSetAllocateInfo create(DescriptorPoolID pool,
+			const Slice<const DescriptorSetLayoutID>& set_layouts)
+		{
+			return DescriptorSetAllocateInfo
+			{
+				.pool = pool,
+				.set_layouts = set_layouts,
+			};
+		}
 	};
 
 	struct DescriptorBufferInfo
@@ -880,6 +893,17 @@ namespace GPU
 		TextureViewID texture_view;
 		TextureLayout layout;
 		SamplerID sampler;
+
+		static constexpr DescriptorTextureInfo create(TextureViewID texture_view,
+			TextureLayout layout, SamplerID sampler)
+		{
+			return DescriptorTextureInfo
+			{
+				.texture_view = texture_view,
+				.layout = layout,
+				.sampler = sampler,
+			};
+		}
 	};
 
 	struct WriteDescriptorInfo
@@ -891,46 +915,38 @@ namespace GPU
 		Slice<const DescriptorBufferInfo> buffers;
 		Slice<const DescriptorTextureInfo> textures;
 
-		static constexpr WriteDescriptorInfo uniform(DescriptorSetID descriptor_set, u32 binding,
-			u32 array_element, const Slice<const DescriptorBufferInfo>& buffers)
+		static constexpr WriteDescriptorInfo create(DescriptorSetID descriptor_set, u32 binding,
+			u32 array_element, DescriptorType type, const Slice<const DescriptorBufferInfo>& buffers,
+			const Slice<const DescriptorTextureInfo>& textures)
 		{
 			return WriteDescriptorInfo
 			{
 				.descriptor_set = descriptor_set,
 				.binding = binding,
 				.array_element = array_element,
-				.type = DescriptorType::UniformBuffer,
+				.type = type,
 				.buffers = buffers,
-				.textures = {},
+				.textures = textures,
 			};
 		}
 
-		static constexpr WriteDescriptorInfo storage(DescriptorSetID descriptor_set, u32 binding,
+		static constexpr WriteDescriptorInfo uniform_buffer(DescriptorSetID descriptor_set, u32 binding,
 			u32 array_element, const Slice<const DescriptorBufferInfo>& buffers)
 		{
-			return WriteDescriptorInfo
-			{
-				.descriptor_set = descriptor_set,
-				.binding = binding,
-				.array_element = array_element,
-				.type = DescriptorType::StorageBuffer,
-				.buffers = buffers,
-				.textures = {},
-			};
+			return create(descriptor_set, binding, array_element, DescriptorType::UniformBuffer, buffers, {});
+		}
+
+		static constexpr WriteDescriptorInfo storage_buffer(DescriptorSetID descriptor_set, u32 binding,
+			u32 array_element, const Slice<const DescriptorBufferInfo>& buffers)
+		{
+			return create(descriptor_set, binding, array_element, DescriptorType::StorageBuffer, buffers, {});
 		}
 
 		static constexpr WriteDescriptorInfo combined_texture_sampler(DescriptorSetID descriptor_set, u32 binding,
 			u32 array_element, const Slice<const DescriptorTextureInfo>& textures)
 		{
-			return WriteDescriptorInfo
-			{
-				.descriptor_set = descriptor_set,
-				.binding = binding,
-				.array_element = array_element,
-				.type = DescriptorType::CombinedTextureSampler,
-				.buffers = {},
-				.textures = textures,
-			};
+			return create(descriptor_set, binding, array_element,
+				DescriptorType::CombinedTextureSampler, {}, textures);
 		}
 	};
 
@@ -1058,7 +1074,7 @@ namespace GPU
 		Slice<const VertexBinding> bindings;
 		Slice<const VertexAttribute> attributes;
 
-		static constexpr VertexInput input(const Slice<const VertexBinding>& bindings,
+		static constexpr VertexInput create(const Slice<const VertexBinding>& bindings,
 			const Slice<const VertexAttribute>& attributes)
 		{
 			return VertexInput
@@ -1083,17 +1099,23 @@ namespace GPU
 		FrontFace front_face;
 		f32 line_width;
 
-		static constexpr RasterizerState state(PolygonMode polygon_mode, CullMode cull_mode, FrontFace front_face)
+		static constexpr RasterizerState create(bool depth_clamp_enable, bool rasterizer_discard_enable,
+			PolygonMode polygon_mode, CullMode cull_mode, FrontFace front_face, f32 line_width)
 		{
 			return RasterizerState
 			{
-				.depth_clamp_enable = false,
-				.rasterizer_discard_enable = false,
+				.depth_clamp_enable = depth_clamp_enable,
+				.rasterizer_discard_enable = rasterizer_discard_enable,
 				.polygon_mode = polygon_mode,
 				.cull_mode = cull_mode,
 				.front_face = front_face,
-				.line_width = 1.F,
+				.line_width = line_width,
 			};
+		}
+
+		static constexpr RasterizerState state(PolygonMode polygon_mode, CullMode cull_mode, FrontFace front_face)
+		{
+			return create(false, false, polygon_mode, cull_mode, front_face, 1.F);
 		}
 	};
 
@@ -1105,16 +1127,22 @@ namespace GPU
 		bool alpha_to_coverage_enable;
 		bool alpha_one_enable;
 
-		static constexpr MultisampleState disable()
+		static constexpr MultisampleState create(SampleCount sample_count, f32 min_sample_shading,
+			bool sample_shading_enable, bool alpha_to_coverage_enable, bool alpha_one_enable)
 		{
 			return MultisampleState
 			{
-				.sample_count = SampleCount::Sample1,
-				.min_sample_shading = 0.F,
-				.sample_shading_enable = false,
-				.alpha_to_coverage_enable = false,
-				.alpha_one_enable = false,
+				.sample_count = sample_count,
+				.min_sample_shading = min_sample_shading,
+				.sample_shading_enable = sample_shading_enable,
+				.alpha_to_coverage_enable = alpha_to_coverage_enable,
+				.alpha_one_enable = alpha_one_enable,
 			};
+		}
+
+		static constexpr MultisampleState disable()
+		{
+			return create(SampleCount::Sample1, 0.F, false, false, false);
 		}
 	};
 
@@ -1124,20 +1152,27 @@ namespace GPU
 		bool depth_write_enable;
 		bool depth_bounds_test_enable;
 		bool stencil_test_enable;
-		f32 min_depth_bounds;		
-		f32 max_depth_bounds;	
+		f32 min_depth_bounds;
+		f32 max_depth_bounds;
 		
-		static constexpr DepthStencilState depth_stencil_disable()
+		static constexpr DepthStencilState create(bool depth_test_enable, bool depth_write_enable,
+			bool depth_bounds_test_enable, bool stencil_test_enable, f32 min_depth_bounds,
+			f32 max_depth_bounds)
 		{
 			return DepthStencilState
 			{
-				.depth_test_enable = false,
-				.depth_write_enable = false,
-				.depth_bounds_test_enable = false,
-				.stencil_test_enable = false,
-				.min_depth_bounds = 0.F,
-				.max_depth_bounds = 1.F,
+				.depth_test_enable = depth_test_enable,
+				.depth_write_enable = depth_write_enable,
+				.depth_bounds_test_enable = depth_bounds_test_enable,
+				.stencil_test_enable = stencil_test_enable,
+				.min_depth_bounds = min_depth_bounds,
+				.max_depth_bounds = max_depth_bounds,
 			};
+		}
+
+		static constexpr DepthStencilState depth_stencil_disable()
+		{
+			return create(false, false, false, false, 0.F, 1.F);
 		}
 	};
 
@@ -1147,14 +1182,20 @@ namespace GPU
 		TextureFormat depth_attachment_format;
 		TextureFormat stencil_attachment_format;
 
-		static constexpr RenderingInfo render_attachments(const Slice<const TextureFormat>& render_attachment_formats)
+		static constexpr RenderingInfo create(const Slice<const TextureFormat>& render_attachment_formats,
+			TextureFormat depth_attachment_format, TextureFormat stencil_attachment_format)
 		{
 			return RenderingInfo
 			{
 				.render_attachment_formats = render_attachment_formats,
-				.depth_attachment_format = TextureFormat::Unknown,
-				.stencil_attachment_format = TextureFormat::Unknown,
+				.depth_attachment_format = depth_attachment_format,
+				.stencil_attachment_format = stencil_attachment_format,
 			};
+		}
+
+		static constexpr RenderingInfo render_attachments(const Slice<const TextureFormat>& render_attachment_formats)
+		{
+			return create(render_attachment_formats, TextureFormat::Unknown, TextureFormat::Unknown);
 		}
 	};
 
@@ -1169,6 +1210,26 @@ namespace GPU
 		DepthStencilState depth_stencil_state;
 		PipelineLayoutID pipeline_layout;
 		RenderingInfo rendering_info;
+
+		static constexpr PipelineCreateInfo create(PipelineBindPoint bind_point,
+			const Slice<const ShaderStageInfo>& shader_stages, VertexInput vertex_input,
+			InputAssembly input_assembly, RasterizerState rasterizer_state, MultisampleState multisample_state,
+			DepthStencilState depth_stencil_state, PipelineLayoutID pipeline_layout,
+			RenderingInfo rendering_info)
+		{
+			return PipelineCreateInfo
+			{
+				.bind_point = bind_point,
+				.shader_stages = shader_stages,
+				.vertex_input = vertex_input,
+				.input_assembly = input_assembly,
+				.rasterizer_state = rasterizer_state,
+				.multisample_state = multisample_state,
+				.depth_stencil_state = depth_stencil_state,
+				.pipeline_layout = pipeline_layout,
+				.rendering_info = rendering_info,
+			};
+		}
 	};
 
 	PipelineID pipeline_create(DeviceID device, const PipelineCreateInfo& ci);
@@ -1313,17 +1374,25 @@ namespace GPU
 		Slice<const PipelineBufferBarrier> buffer_barriers;
 		Slice<const PipelineTextureBarrier> texture_barriers;
 
-		static constexpr PipelineBarrier texture_barrier(PipelineStages src_stages, PipelineStages dest_stages,
-			const Slice<const PipelineTextureBarrier>& texture_barries)
+		static constexpr PipelineBarrier create(PipelineStages src_stages, PipelineStages dest_stages,
+			const Slice<const PipelineMemoryBarrier>& memory_barriers,
+			const Slice<const PipelineBufferBarrier>& buffer_barriers,
+			const Slice<const PipelineTextureBarrier>& texture_barriers)
 		{
 			return PipelineBarrier
 			{
 				.src_stages = src_stages,
 				.dest_stages = dest_stages,
-				.memory_barriers = {},
-				.buffer_barriers = {},
-				.texture_barriers = texture_barries,
+				.memory_barriers = memory_barriers,
+				.buffer_barriers = buffer_barriers,
+				.texture_barriers = texture_barriers,
 			};
+		}
+
+		static constexpr PipelineBarrier texture_barrier(PipelineStages src_stages, PipelineStages dest_stages,
+			const Slice<const PipelineTextureBarrier>& texture_barries)
+		{
+			return create(src_stages, dest_stages, {}, {}, texture_barries);
 		}
 	};
 
@@ -1343,19 +1412,26 @@ namespace GPU
 		Vector3I texture_offset;
 		Vector3U texture_extent;
 
-		static constexpr BufferTextureCopyRegion region(usize buffer_offset,
-			const TextureSubresourceLayers& texture_subresource_layer,
-			const Vector3I& texture_offset, const Vector3U& texture_extent)
+		static constexpr BufferTextureCopyRegion create(usize buffer_offset, u32 buffer_row_length,
+			u32 buffer_texture_height, const TextureSubresourceLayers& texture_subresource_layer,
+			Vector3I texture_offset, Vector3U texture_extent)
 		{
 			return BufferTextureCopyRegion
 			{
 				.buffer_offset = buffer_offset,
-				.buffer_row_length = 0,
-				.buffer_texture_height = 0,
+				.buffer_row_length = buffer_row_length,
+				.buffer_texture_height = buffer_texture_height,
 				.texture_subresource_layer = texture_subresource_layer,
 				.texture_offset = texture_offset,
 				.texture_extent = texture_extent,
 			};
+		}
+
+		static constexpr BufferTextureCopyRegion region(usize buffer_offset,
+			const TextureSubresourceLayers& texture_subresource_layer,
+			const Vector3I& texture_offset, const Vector3U& texture_extent)
+		{
+			return create(buffer_offset, 0, 0, texture_subresource_layer, texture_offset, texture_extent);
 		}
 	};
 	
@@ -1365,8 +1441,8 @@ namespace GPU
 		TextureID dest_texture;
 		TextureLayout dest_layout;
 		Slice<const BufferTextureCopyRegion> regions;
-		
-		static constexpr CopyBufferToTextureInfo copy(BufferID src_buffer, TextureID dest_texture,
+
+		static constexpr CopyBufferToTextureInfo create(BufferID src_buffer, TextureID dest_texture,
 			TextureLayout dest_layout, const Slice<const BufferTextureCopyRegion>& regions)
 		{
 			return CopyBufferToTextureInfo
@@ -1411,15 +1487,7 @@ namespace GPU
 
 		static constexpr Viewport extent(f32 width, f32 height)
 		{
-			return Viewport
-			{
-				.x = 0,
-				.y = 0,
-				.width = width,
-				.height = height,
-				.min_depth = 0.F,
-				.max_depth = 1.F,
-			};
+			return create(0, 0, width, height, 0.F, 1.F);
 		}
 	};
 
@@ -1430,18 +1498,7 @@ namespace GPU
 		u32 width;
 		u32 height;
 
-		static constexpr Scissor extent(u32 width, u32 height)
-		{
-			return Scissor
-			{
-				.x = 0,
-				.y = 0,
-				.width = width,
-				.height = height,
-			};
-		}
-
-		static constexpr Scissor scissor(i32 x, i32 y, u32 width, u32 height)
+		static constexpr Scissor create(i32 x, i32 y, u32 width, u32 height)
 		{
 			return Scissor
 			{
@@ -1450,6 +1507,11 @@ namespace GPU
 				.width = width,
 				.height = height,
 			};
+		}
+
+		static constexpr Scissor extent(u32 width, u32 height)
+		{
+			return create(0, 0, width, height);
 		}
 	};
 

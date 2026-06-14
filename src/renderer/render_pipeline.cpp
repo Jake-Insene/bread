@@ -32,7 +32,7 @@ void RenderLayout::destroy()
 }
 
 RenderPipeline RenderPipeline::create(Mem::Allocator* allocator, GPU::DeviceID device,
-    RenderLayout render_layout, Graphics::Shader* shader, GPU::VertexInput vertex_input,
+    RenderLayout render_layout, const Graphics::Shader* shader, GPU::VertexInput vertex_input,
     GPU::PrimitiveTopology topology, const GPU::RenderingInfo& rendering_info)
 {
     return RenderPipeline

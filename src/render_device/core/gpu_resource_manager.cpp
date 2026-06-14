@@ -48,7 +48,7 @@ GPUTextureID GPUResourceManager::create_texture(const TextureAllocateInfo& alloc
     );
 
     GPU::texture_bind_memory_heap(texture,
-        GPU::BindMemoryInfo::bind(
+        GPU::BindMemoryInfo::create(
             gpu_memory_allocator->allocation_get_heap(allocation),
             gpu_memory_allocator->allocation_get_offset(allocation)
         )
@@ -97,7 +97,7 @@ GPUTextureID GPUResourceManager::create_texture(const TextureAllocateInfo& alloc
                     Vector3I(), alloc_info.extent
                 );
                 GPU::command_buffer_copy_buffer_to_texture(cmd,
-                    GPU::CopyBufferToTextureInfo::copy(
+                    GPU::CopyBufferToTextureInfo::create(
                         buffer, texture,
                         GPU::TextureLayout::TransferDestination,
                         Slice(&region, 1)

@@ -68,7 +68,7 @@ void SpriteRenderer::init(const SpriteRendererCreateInfo& info)
     {
         .bind_point = GPU::PipelineBindPoint::Graphics,
         .shader_stages = shader_code.get_stages(),
-        .vertex_input = GPU::VertexInput::input(bindings, Slice(&attributes[0], StreamAttributeCount)),
+        .vertex_input = GPU::VertexInput::create(bindings, Slice(&attributes[0], StreamAttributeCount)),
         .input_assembly = { .topology = GPU::PrimitiveTopology::TriangleList },
         .rasterizer_state = GPU::RasterizerState::state(
             GPU::PolygonMode::Fill, GPU::CullMode::Front, GPU::FrontFace::ClockWise),

@@ -1,26 +1,47 @@
 #pragma once
+#include "collections/array.h"
 #include "gpu/gpu.h"
+#include "mem/stack_allocator.h"
 
 
 struct ResourceTableCreateInfo
 {
     Mem::Allocator* allocator;
     GPU::DeviceID device;
-    u32 max_sets;
-    Slice<const GPU::DescriptorPoolSize> sizes;
+    Slice<const GPU::DescriptorSetLayoutID> set_layouts;
 };
 
+/**
+* begin()/end() prepare the sets, but end doesn't deallocates sets
+*/
 struct ResourceTable
 {
-    Mem::Allocator* allocator;
+    struct BindedResource
+    {
+        GPU::DescriptorType descriptor_type;
+        u32 set;
+        u32 binding;
 
+        union
+        {
+            GPU::DescriptorBufferInfo buffer;
+            GPU::DescriptorTextureInfo texture;
+        };
+    };
+
+    Mem::Allocator* allocator;
     GPU::DeviceID device;
-    GPU::DescriptorPoolID descriptor_pool;
+    Slice<GPU::DescriptorSetLayoutID> set_layouts;
+    Slice<GPU::DescriptorSetID> sets;
+
+    Mem::StackAllocator tmp_allocator;
+    Array<GPU::WriteDescriptorInfo> gpu_write_infos;
 
     static ResourceTable create(const ResourceTableCreateInfo& info);
     
     void destroy();
 
-    void reset();
-    GPU::DescriptorSetID allocate(GPU::DescriptorSetLayoutID set_layout);
+    void begin(GPU::DescriptorPoolID pool);
+    void bind_combined_texture_sampler(u32 set, u32 binding, const GPU::DescriptorTextureInfo& texture);
+    void end(GPU::DescriptorPoolID pool);
 };

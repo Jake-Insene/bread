@@ -21,7 +21,7 @@ void GPUMemoryAllocator::init(const GPUMemoryAllocatorCreateInfo& info)
             GPU::HeapUsage::CPUGPUCoherent, StagingHeapInitialSize)
     );
 
-    GPU::buffer_bind_memory_heap(staging_buffer, GPU::BindMemoryInfo::bind(staging_heap, 0));
+    GPU::buffer_bind_memory_heap(staging_buffer, GPU::BindMemoryInfo::create(staging_heap, 0));
 
     staging_heap_current_size = StagingHeapInitialSize;
     mapped_staging_heap = GPU::memory_heap_map(staging_heap, 0, staging_heap_current_size);
