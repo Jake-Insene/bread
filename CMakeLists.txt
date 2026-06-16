@@ -97,7 +97,6 @@ file(GLOB ENGINE_SRC
     src/renderer/framed_pool.cpp
     src/renderer/render_pass.cpp
     src/renderer/render_pipeline.cpp
-    src/renderer/renderer_2d.cpp
     src/renderer/renderer.cpp
     src/renderer/resource_table.cpp
     src/renderer/sprite_renderer.cpp
@@ -111,8 +110,6 @@ file(GLOB ENGINE_SRC
     src/resource/sprite_animation.cpp
     src/resource/texture.cpp
     src/resource/tile_set.cpp
-
-    src/systems/system_manager.cpp
 )
 
 file(GLOB VULKAN_ADAPTER_SRC

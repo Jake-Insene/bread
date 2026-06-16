@@ -21,7 +21,7 @@ void ObjectPool::destroy()
     for(usize i = 0; i < blocks.len; i++)
     {
         Block& block = blocks[i];
-        if(block.memory.ptr())
+        if(!block.memory.null())
         {
             allocator->free(block.memory);
         }

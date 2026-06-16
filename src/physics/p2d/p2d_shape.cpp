@@ -39,10 +39,7 @@ P2DShape P2DShape::copy() const
 void P2DShape::set_from_shape_2d(const Shape2D& shape)
 {
     vertices.resize(shape.vertices.count);
-    for(usize i = 0; i < shape.vertices.count; i++)
-    {
-        vertices.get(i) = shape.vertices.get(i);
-    }
+    Mem::copy(vertices.slice(), shape.vertices.slice());
 
     normals.resize(vertices.count);
 
@@ -60,11 +57,8 @@ void P2DShape::set_from_shape(const P2DShape& other_shape)
     centroid = other_shape.centroid;
     aabb = other_shape.aabb;
 
-    for(usize i = 0; i < other_shape.vertices.count; i++)
-    {
-        vertices.get(i) = other_shape.vertices.get(i);
-        normals.get(i) = other_shape.normals.get(i);
-    }
+    Mem::copy(vertices.slice(), other_shape.vertices.slice());
+    Mem::copy(normals.slice(), other_shape.normals.slice());
 }
 
 

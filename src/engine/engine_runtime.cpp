@@ -5,6 +5,7 @@
 #include "display/display.h"
 #include "engine/engine.h"
 #include "gpu/gpu.h"
+#include "input/input.h"
 #include "log/log.h"
 #include "os/os.h"
 #include "physics/physics_2d.h"
@@ -49,9 +50,6 @@ void EngineRuntime::initialize()
     // To use thread and mutexes.
     OS::initialize(&allocator);
 
-    // Initializing systems manager
-    system_manager.initialize(&allocator);
-
     main_queue = JobQueue::with_size(&allocator, DefaultMainQueueSize);
 
     // Going to the assets folder, crash is intended for now
@@ -88,8 +86,6 @@ void EngineRuntime::initialize()
         }
     );
 
-    system_manager.allocate_systems(__get_requested_systems__());
-    
     main_window.set_size(get_application_info().viewport_size);
     
     set_vsync(get_application_info().vsync);
@@ -133,8 +129,6 @@ void EngineRuntime::shutdown()
     render_device.shutdown();
     audio_service.shutdown();
 
-    system_manager.deallocate_systems();
-
     Physics2D::shutdown();
     Audio::shutdown();
     
@@ -146,8 +140,6 @@ void EngineRuntime::shutdown()
     main_queue.destroy();
 
     OS::shutdown();
-
-    system_manager.shutdown();
 
     allocator.destroy();
 }
@@ -210,7 +202,6 @@ void EngineRuntime::step()
         fps_accum++;
     }
 
-    system_manager.tick();
     main_queue.run();
 }
 

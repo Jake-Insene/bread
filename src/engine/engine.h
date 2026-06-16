@@ -1,8 +1,6 @@
 #pragma once
 #include "engine/application.h"
-#include "concurrency/job_queue.h"
 #include "display/window.h"
-#include "engine/configuration.h"
 #include "engine/engine_runtime.h"
 
 
@@ -37,11 +35,6 @@ struct Engine
     static ResourceManager* get_resource_manager()
     {
         return local_data.engine_runtime->get_resource_manager();
-    }
-
-    static SystemManager* get_system_manager()
-    {
-        return local_data.engine_runtime->get_system_manager();
     }
 
     static GPU::PhysicalDeviceID get_selected_gpu_device()

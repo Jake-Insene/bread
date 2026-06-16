@@ -8,16 +8,11 @@
 #include "render_device/render_device.h"
 #include "resource/texture.h"
 #include "resource/resource_manager.h"
-#include "resource/sprite_animation.h"
-#include "resource/tile_set.h"
-#include "resource/material.h"
-#include "systems/system_manager.h"
 
 
 struct Event;
 
 extern ApplicationInfo __get_application_info__();
-extern Slice<SystemInfo> __get_requested_systems__();
 
 struct EngineRuntime
 {
@@ -40,8 +35,6 @@ struct EngineRuntime
     RenderDevice render_device;
     ResourceManager resource_manager;
     
-    SystemManager system_manager;
-
     GPU::PhysicalDeviceID selected_physical_device;
 
     JobQueue main_queue;
@@ -82,8 +75,6 @@ struct EngineRuntime
     AudioService* get_audio_service() { return &audio_service; }
     RenderDevice* get_render_device() { return &render_device; }
     ResourceManager* get_resource_manager() { return &resource_manager; }
-
-    SystemManager* get_system_manager() { return &system_manager; }
 
     GPU::PhysicalDeviceID get_selected_gpu_device() const { return selected_physical_device; }
 
