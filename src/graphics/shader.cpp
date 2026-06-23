@@ -6,31 +6,31 @@
 namespace Graphics
 {
 
-void Shader::init(Mem::Allocator* _allocator, const ShaderInfo& info)
+void Shader::init(Mem::Allocator* allocator, const ShaderInfo& info)
 {
-    allocator = _allocator;
+    data.allocator = allocator;
 
-    shader_info = info;
-    shader_code = IO::File::read_all(allocator, info.file_path);
+    data.shader_info = info;
+    data.shader_code = IO::File::read_all(data.allocator, info.file_path);
 
-    shader_stages[0] = GPU::ShaderStageInfo
+    data.shader_stages[0] = GPU::ShaderStageInfo
     {
         .stage = GPU::ShaderStage::Vertex,
-        .code = shader_code,
+        .code = data.shader_code,
         .name = info.vertex_name,
     };
 
-    shader_stages[1] = GPU::ShaderStageInfo
+    data.shader_stages[1] = GPU::ShaderStageInfo
     {
         .stage = GPU::ShaderStage::Fragment,
-        .code = shader_code,
+        .code = data.shader_code,
         .name = info.fragment_name,
     };
 }
 
 void Shader::destroy()
 {
-    allocator->free(shader_code);
+    data.allocator->free(data.shader_code);
 }
 
 }

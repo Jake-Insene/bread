@@ -34,11 +34,14 @@ struct GPUResourceManager
         GPUMemoryAllocationID allocation;
     };
 
-    Mem::Allocator* allocator;
-    RenderDevice* render_device;
-    GPUMemoryAllocator* gpu_memory_allocator;  
+    struct InternalData
+    {
+        Mem::Allocator* allocator;
+        RenderDevice* render_device;
+        GPUMemoryAllocator* gpu_memory_allocator;  
 
-    FreeList<TextureData, GPUTextureID> textures;
+        FreeList<TextureData, GPUTextureID> textures;
+    } data;
 
     void init(const GPUResourceManagerCreateInfo& info);
     void destroy();

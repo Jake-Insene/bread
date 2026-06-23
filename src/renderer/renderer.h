@@ -45,21 +45,26 @@ struct Renderer
         GPU::FenceID in_flight_fence;
     };
 
-    Mem::Allocator* allocator;
-    RenderDevice* render_device;
-    Graphics::CommandPool command_pool;
-    Graphics::SwapChain swap_chain;
+    struct InternalData
+    {
+        Mem::Allocator* allocator;
+        RenderDevice* render_device;
+        Graphics::CommandPool command_pool;
+        Graphics::SwapChain swap_chain;
 
-    u32 max_frames_in_flight;
-    u32 frame_index;
-    FrameInfo current_frame_info;
-    
-    Array<RenderFrame> frames;
-    Array<GPU::SemaphoreID> render_finished_semaphores;
-    FramedPool frame_pool;
+        u32 max_frames_in_flight;
+        u32 frame_index;
+        FrameInfo current_frame_info;
+        
+        Array<RenderFrame> frames;
+        Array<GPU::SemaphoreID> render_finished_semaphores;
+        FramedPool frame_pool;
+    } data;
 
     void init(const RendererCreateInfo& info);
     void destroy();
+
+    [[nodiscard]] RenderDevice* get_render_device() const { return data.render_device; }
 
     FrameInfo begin_frame();
     void end_frame();

@@ -26,19 +26,22 @@ struct SwapChain
         GPU::TextureID image;
         GPU::TextureViewID image_view;
     };
-    
-    Mem::Allocator* allocator;
-    GPU::DeviceID device;
-    GPU::QueueID present_queue;
-    Display::WindowID window;
-    GPU::TextureFormat surface_format;
-    GPU::PresentMode present_mode;
-    
-    GPU::SwapChainID swap_chain;
-    Array<ImageInfo> images;
 
-    bool is_valid_swap_chain;
-    bool pending_rebuild;
+    struct InternalData
+    {
+        Mem::Allocator* allocator;
+        GPU::DeviceID device;
+        GPU::QueueID present_queue;
+        Display::WindowID window;
+        GPU::TextureFormat surface_format;
+        GPU::PresentMode present_mode;
+        
+        GPU::SwapChainID swap_chain;
+        Array<ImageInfo> images;
+
+        bool is_valid_swap_chain;
+        bool pending_rebuild;
+    } data;
 
     void init(const SwapChainInfo& info);
     void destroy();
@@ -49,10 +52,10 @@ struct SwapChain
     bool present(u32 image_index, const Slice<const GPU::SemaphoreID>& wait_semaphores);
 
     void set_present_mode(GPU::PresentMode new_present_mode);
-    [[nodiscard]] GPU::PresentMode get_present_mode() const { return present_mode; }
+    [[nodiscard]] GPU::PresentMode get_present_mode() const { return data.present_mode; }
 
-    usize get_image_count() const { return images.count; }
-    ImageInfo& get_image(u32 image_index) { return images.get(image_index); }
+    usize get_image_count() const { return data.images.count; }
+    ImageInfo& get_image(u32 image_index) { return data.images.get(image_index); }
 
     void _init_images();
     void _free_images();

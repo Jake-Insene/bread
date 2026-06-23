@@ -6,64 +6,64 @@ namespace Graphics
 
 void CommandPool::init(const CommandPoolInfo& info)
 {
-    allocator = info.allocator;
-    device = info.device;
-    queue_usage = info.queue_usage;
+    data.allocator = info.allocator;
+    data.device = info.device;
+    data.queue_usage = info.queue_usage;
 
-    gpu_command_pool = GPU::command_pool_create(
-        device,
+    data.gpu_command_pool = GPU::command_pool_create(
+        data.device,
         {
-            .usage = queue_usage,
+            .usage = data.queue_usage,
         }
     );
 
-    command_buffers = Array<GPU::CommandBufferID>::with_size(allocator, 4);
-    gpu_work_fences = Array<GPU::FenceID>::with_size(allocator, 4);
-    work_submited = Array<WorkSubmit>::with_size(allocator, 4);
+    data.command_buffers = Array<GPU::CommandBufferID>::with_size(data.allocator, 4);
+    data.gpu_work_fences = Array<GPU::FenceID>::with_size(data.allocator, 4);
+    data.work_submited = Array<WorkSubmit>::with_size(data.allocator, 4);
 
-    gpu_free_fences = Stack<GPU::FenceID>::with_size(allocator, 4);
-    free_command_buffers = Stack<GPU::CommandBufferID>::with_size(allocator, 4);
+    data.gpu_free_fences = Stack<GPU::FenceID>::with_size(data.allocator, 4);
+    data.free_command_buffers = Stack<GPU::CommandBufferID>::with_size(data.allocator, 4);
 }
 
 void CommandPool::destroy()
 {
-    for(GPU::CommandBufferID command_buffer : command_buffers.iter())
+    for(GPU::CommandBufferID command_buffer : data.command_buffers.iter())
     {
         GPU::command_buffer_free(command_buffer);
     }
 
-    for(GPU::FenceID fence : gpu_work_fences.iter())
+    for(GPU::FenceID fence : data.gpu_work_fences.iter())
     {
         GPU::fence_destroy(fence);
     }
-    command_buffers.destroy();
-    gpu_work_fences.destroy();
-    work_submited.destroy();
+    data.command_buffers.destroy();
+    data.gpu_work_fences.destroy();
+    data.work_submited.destroy();
 
-    gpu_free_fences.destroy();
-    free_command_buffers.destroy();
+    data.gpu_free_fences.destroy();
+    data.free_command_buffers.destroy();
 
-    GPU::command_pool_destroy(gpu_command_pool);
+    GPU::command_pool_destroy(data.gpu_command_pool);
 }
 
 GPU::CommandBufferID CommandPool::acquire_command_buffer()
 {
-    if(!free_command_buffers.is_empty())
+    if(!data.free_command_buffers.is_empty())
     {
-        return free_command_buffers.pop();
+        return data.free_command_buffers.pop();
     }
 
-    GPU::CommandBufferID command_buffer = GPU::command_buffer_allocate(device, {.pool = gpu_command_pool});
-    return command_buffers.add(command_buffer);
+    GPU::CommandBufferID command_buffer = GPU::command_buffer_allocate(data.device, {.pool = data.gpu_command_pool});
+    return data.command_buffers.add(command_buffer);
 }
 
 GPU::FenceID CommandPool::execute(GPU::QueueID queue, const CommandPoolExecuteInfo& info)
 {
     // check for free command buffers
     GPU::FenceID fence = GPU::FenceID::invalid();
-    if(!gpu_free_fences.is_empty())
+    if(!data.gpu_free_fences.is_empty())
     {
-        fence = gpu_free_fences.pop();
+        fence = data.gpu_free_fences.pop();
         GPU::fence_reset(Slice(&fence, 1));
     }
     else
@@ -82,7 +82,7 @@ GPU::FenceID CommandPool::execute(GPU::QueueID queue, const CommandPoolExecuteIn
         }
     );
 
-    (void)work_submited.add(
+    (void)data.work_submited.add(
         WorkSubmit
         {
             .fence = fence,
@@ -98,9 +98,9 @@ GPU::FenceID CommandPool::execute_empty(GPU::QueueID queue, const CommandPoolExe
 {
     // check for free command buffers
     GPU::FenceID fence = GPU::FenceID::invalid();
-    if(!gpu_free_fences.is_empty())
+    if(!data.gpu_free_fences.is_empty())
     {
-        fence = gpu_free_fences.pop();
+        fence = data.gpu_free_fences.pop();
         GPU::fence_reset(Slice(&fence, 1));
     }
     else
@@ -119,7 +119,7 @@ GPU::FenceID CommandPool::execute_empty(GPU::QueueID queue, const CommandPoolExe
         }
     );
     
-    (void)work_submited.add(
+    (void)data.work_submited.add(
         WorkSubmit
         {
             .fence = fence,
@@ -133,65 +133,66 @@ GPU::FenceID CommandPool::execute_empty(GPU::QueueID queue, const CommandPoolExe
 
 void CommandPool::wait_for_all()
 {
-    if(work_submited.count == 0)
+    if(data.work_submited.count == 0)
     {
         return;
     }
 
-    Slice fences = allocator->array<GPU::FenceID>(work_submited.count);
-    for(usize i = 0; i < work_submited.count; i++)
+    Slice fences = data.allocator->array<GPU::FenceID>(data.work_submited.count);
+    for(usize i = 0; i < data.work_submited.count; i++)
     {
-        fences[i] = work_submited.get(i).fence;
+        fences[i] = data.work_submited.get(i).fence;
     }
 
     GPU::fence_wait_for(fences, true, MaxValue<u64>);
+    data.allocator->free(Mem::to_bytes(fences));
     _remove_finished_work();
 }
 
 void CommandPool::release_fence(GPU::FenceID fence)
 {
-    for(usize i = 0; i < work_submited.count; i++)
+    for(usize i = 0; i < data.work_submited.count; i++)
     {
-        WorkSubmit& work_data = work_submited.get(i);
+        WorkSubmit& work_data = data.work_submited.get(i);
         if(work_data.fence != fence)
         {
             continue;
         }
 
         GPU::fence_reset(Slice(&work_data.fence, 1));
-        gpu_free_fences.push(work_data.fence);
+        data.gpu_free_fences.push(work_data.fence);
         if(!work_data.empty)
         {
-            free_command_buffers.push(work_data.command_buffer);
+            data.free_command_buffers.push(work_data.command_buffer);
         }
-        work_submited.remove_at(i);
+        data.work_submited.remove_at(i);
         break;
     }
 }
 
 GPU::FenceID CommandPool::_alloc_new_fence()
 {
-    GPU::FenceID fence = GPU::fence_create(device, {.signaled = false});
-    (void)gpu_work_fences.add(fence);
+    GPU::FenceID fence = GPU::fence_create(data.device, {.signaled = false});
+    (void)data.gpu_work_fences.add(fence);
     return fence;
 }
 
 void CommandPool::_remove_finished_work()
 {
-    for(usize i = 0; i < work_submited.count; i++)
+    for(usize i = 0; i < data.work_submited.count; i++)
     {
-        WorkSubmit& work_data = work_submited.get(i);
+        WorkSubmit& work_data = data.work_submited.get(i);
         if(!GPU::fence_get_state(work_data.fence))
         {
             continue;
         }
 
-        gpu_free_fences.push(work_data.fence);
+        data.gpu_free_fences.push(work_data.fence);
         if(!work_data.empty)
         {
-            free_command_buffers.push(work_data.command_buffer);
+            data.free_command_buffers.push(work_data.command_buffer);
         }
-        work_submited.remove_at(i);
+        data.work_submited.remove_at(i);
         i--;
     }
 }

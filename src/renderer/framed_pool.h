@@ -16,10 +16,13 @@ struct FramedPoolCreateInfo
 
 struct FramedPool
 {
-    Mem::Allocator* allocator;
-    GPU::DeviceID device;
+    struct InternalData
+    {
+        Mem::Allocator* allocator;
+        GPU::DeviceID device;
 
-    Array<GPU::DescriptorPoolID> pools;
+        Array<GPU::DescriptorPoolID> pools;
+    } data;
 
     void init(const FramedPoolCreateInfo& info);
     void destroy();

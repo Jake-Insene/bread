@@ -53,15 +53,18 @@ struct GPUMemoryAllocator
         GPUMemoryAllocationID first_allocation;
     };
 
-    Mem::Allocator* allocator;
-    RenderDevice* render_device;
+    struct InternalData
+    {
+        Mem::Allocator* allocator;
+        RenderDevice* render_device;
 
-    Array<Heap> heaps;
-    FreeList<Allocation, GPUMemoryAllocationID> allocations;
-    GPU::MemoryHeapID staging_heap;
-    GPU::BufferID staging_buffer;
-    usize staging_heap_current_size;
-    Slice<u8> mapped_staging_heap;
+        Array<Heap> heaps;
+        FreeList<Allocation, GPUMemoryAllocationID> allocations;
+        GPU::MemoryHeapID staging_heap;
+        GPU::BufferID staging_buffer;
+        usize staging_heap_current_size;
+        Slice<u8> mapped_staging_heap;
+    } data;
 
     void init(const GPUMemoryAllocatorCreateInfo& info);
     void destroy();
