@@ -1,7 +1,7 @@
 #pragma once
 #include "gpu/gpu.h"
-#include "render_device/core/gpu_memory_allocator.h"
-#include "render_device/core/gpu_resource_manager.h"
+#include "graphics/gpu_memory_allocator.h"
+#include "graphics/gpu_resource_manager.h"
 
 
 

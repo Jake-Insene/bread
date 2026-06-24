@@ -1,13 +1,14 @@
-#include "render_device/core/gpu_resource_manager.h"
+#include "graphics/gpu_resource_manager.h"
 
-#include "render_device/core/gpu_memory_allocator.h"
-#include "render_device/render_device.h"
+#include "graphics/gpu_memory_allocator.h"
 
 
 void GPUResourceManager::init(const GPUResourceManagerCreateInfo& info)
 {
     data.allocator = info.allocator;
-    data.render_device = info.render_device;
+    data.device = info.device;
+    data.graphics_queue = info.graphics_queue;
+    data.copy_queue = info.copy_queue;
     data.gpu_memory_allocator = info.gpu_memory_allocator;
 
     data.textures = FreeList<TextureData, GPUTextureID>::with_size(data.allocator, 4);
@@ -21,7 +22,7 @@ void GPUResourceManager::destroy()
 GPUTextureID GPUResourceManager::create_texture(const TextureAllocateInfo& alloc_info)
 {
     GPU::TextureID texture = GPU::texture_create(
-        data.render_device->get_device(),
+        data.device,
         {
             .type = alloc_info.type,
             .format = alloc_info.format,
@@ -54,7 +55,7 @@ GPUTextureID GPUResourceManager::create_texture(const TextureAllocateInfo& alloc
         )
     );
 
-    GPU::TextureViewID texture_view = GPU::texture_view_create(data.render_device->get_device(),
+    GPU::TextureViewID texture_view = GPU::texture_view_create(data.device,
         GPU::TextureViewCreateInfo(
         {
             // TODO: Assumming type
@@ -74,7 +75,7 @@ GPUTextureID GPUResourceManager::create_texture(const TextureAllocateInfo& alloc
         data.gpu_memory_allocator->unmap_staging(mapped_buffer);
 
         submit_and_wait(
-            data.render_device->get_graphics_queue(), GPU::QueueUsage::Graphics, [&](GPU::CommandBufferID cmd)
+            data.graphics_queue, GPU::QueueUsage::Graphics, [&](GPU::CommandBufferID cmd)
             {
                 const GPU::PipelineTextureBarrier begin_barrier =
                 {
@@ -157,14 +158,14 @@ GPU::TextureViewID GPUResourceManager::texture_get_texture_view(GPUTextureID tex
 void GPUResourceManager::_submit_and_wait(GPU::QueueID queue, GPU::QueueUsage usage, void* arg, SubmitFn recorder)
 {
     GPU::CommandPoolID pool = GPU::command_pool_create(
-        data.render_device->get_device(),
+        data.device,
         {
             .usage = usage,
         }
     );
 
     GPU::CommandBufferID cmd = GPU::command_buffer_allocate(
-        data.render_device->get_device(),
+        data.device,
         {
             .pool = pool,
         }

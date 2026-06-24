@@ -3,7 +3,7 @@
 #include "collections/free_list.h"
 #include "gpu/gpu.h"
 #include "mem/allocator.h"
-#include "render_device/core/gpu_memory_allocator_types.h"
+#include "graphics/gpu_memory_allocator_types.h"
 
 
 struct RenderDevice;
@@ -11,7 +11,9 @@ struct RenderDevice;
 struct GPUMemoryAllocatorCreateInfo
 {
     Mem::Allocator* allocator;
-    RenderDevice* render_device;
+    GPU::DeviceID device;
+    GPU::QueueID graphics_queue;
+    GPU::QueueID copy_queue;
 };
 
 struct GPUMemoryAllocator
@@ -56,7 +58,9 @@ struct GPUMemoryAllocator
     struct InternalData
     {
         Mem::Allocator* allocator;
-        RenderDevice* render_device;
+        GPU::DeviceID device;
+        GPU::QueueID graphics_queue;
+        GPU::QueueID copy_queue;
 
         Array<Heap> heaps;
         FreeList<Allocation, GPUMemoryAllocationID> allocations;

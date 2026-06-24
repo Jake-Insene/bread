@@ -2,8 +2,7 @@
 #include "display/window.h"
 #include "graphics/command_pool.h"
 #include "graphics/swap_chain.h"
-#include "render_device/core/gpu_memory_allocator.h"
-#include "render_device/render_device.h"
+#include "graphics/render_device.h"
 #include "renderer/framed_pool.h"
 
 

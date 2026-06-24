@@ -124,7 +124,7 @@ endif()
 function(bread_project)
     set(options)
     set(oneValueArgs NAME)
-    set(multiValueArgs SYSTEMS SOURCES)
+    set(multiValueArgs PACKAGES SOURCES)
 
     cmake_parse_arguments(PROJECT
         "${options}"
@@ -161,11 +161,6 @@ function(bread_project)
 
     target_compile_definitions(${PROJECT_NAME} PUBLIC ${BREAD_BUILD_DEFINITIONS} BREAD_PROJECT_COMPILATION)
 
-    foreach(enabled_system IN LISTS PROJECT_SYSTEMS)
-        string(TOUPPER ${enabled_system} upper_system)
-        target_compile_definitions(${PROJECT_NAME} PUBLIC "BREAD_SYSTEM_${upper_system}")
-    endforeach()
-
     target_compile_options(${PROJECT_NAME} PUBLIC ${BREAD_COMPILE_OPTIONS} ${BREAD_EXE_BUILD_OPTIONS})
     target_link_options(${PROJECT_NAME} PUBLIC ${BREAD_EXE_LINK_OPTIONS})
 
@@ -177,30 +172,37 @@ function(bread_project)
         "${CMAKE_SOURCE_DIR}"
     )
 
-    target_link_libraries(${PROJECT_NAME} "bread" ${PROJECT_SUBMODULES})
+    target_link_libraries(${PROJECT_NAME} "bread" ${PROJECT_SUBMODULES} ${PROJECT_PACKAGES})
 endfunction()
 
-function(bread_submodule)
+function(bread_package)
     set(options)
     set(oneValueArgs NAME)
     set(multiValueArgs SOURCES)
 
-    cmake_parse_arguments(SUBMODULE
+    cmake_parse_arguments(PACKAGE
         "${options}"
         "${oneValueArgs}"
         "${multiValueArgs}"
         ${ARGN}
     )
 
-    add_library(${SUBMODULE_NAME} SHARED ${SUBMODULE_SOURCES})
-    
-    target_compile_definitions(${SUBMODULE_NAME} PUBLIC ${BREAD_BUILD_DEFINITIONS} BREAD_MODULE_COMPILATION)
-    target_compile_options(${SUBMODULE_NAME} PUBLIC ${BREAD_COMPILE_OPTIONS} ${BREAD_EXE_BUILD_OPTIONS})
-    target_link_options(${SUBMODULE_NAME} PUBLIC ${BREAD_EXE_LINK_OPTIONS})
+    add_library(${PACKAGE_NAME} STATIC ${PACKAGE_SOURCES})
+
+    add_custom_command(
+        TARGET ${PACKAGE_NAME}
+        PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/assets ${CMAKE_SOURCE_DIR}/assets
+    )
+
+    target_compile_definitions(${PACKAGE_NAME} PUBLIC ${BREAD_BUILD_DEFINITIONS} BREAD_MODULE_COMPILATION)
+    target_compile_options(${PACKAGE_NAME} PUBLIC ${BREAD_COMPILE_OPTIONS} ${BREAD_EXE_BUILD_OPTIONS})
+    target_link_options(${PACKAGE_NAME} PUBLIC ${BREAD_EXE_LINK_OPTIONS})
     target_include_directories(
-        ${SUBMODULE_NAME}
+        ${PACKAGE_NAME}
         PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}"
         "${CMAKE_PROJECT_SOURCE_DIR}/bread/src"
     )
 endfunction()
+

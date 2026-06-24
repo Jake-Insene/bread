@@ -1,8 +1,8 @@
 #pragma once
 #include "collections/free_list.h"
 #include "gpu/gpu.h"
-#include "render_device/resource/gpu_resource_types.h"
-#include "render_device/core/gpu_memory_allocator_types.h"
+#include "graphics/gpu_resource_types.h"
+#include "graphics/gpu_memory_allocator_types.h"
 
 
 struct RenderDevice;
@@ -11,7 +11,9 @@ struct GPUMemoryAllocator;
 struct GPUResourceManagerCreateInfo
 {
     Mem::Allocator* allocator;
-    RenderDevice* render_device;
+    GPU::DeviceID device;
+    GPU::QueueID graphics_queue;
+    GPU::QueueID copy_queue;
     GPUMemoryAllocator* gpu_memory_allocator;   
 };
 
@@ -37,7 +39,10 @@ struct GPUResourceManager
     struct InternalData
     {
         Mem::Allocator* allocator;
-        RenderDevice* render_device;
+        GPU::DeviceID device;
+        GPU::QueueID graphics_queue;
+        GPU::QueueID copy_queue;
+
         GPUMemoryAllocator* gpu_memory_allocator;  
 
         FreeList<TextureData, GPUTextureID> textures;

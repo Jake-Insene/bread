@@ -1,7 +1,7 @@
 #include "resource/texture.h"
 
 #include "engine/engine.h"
-#include "render_device/render_device.h"
+#include "graphics/render_device.h"
 
 
 void Texture::init(const ResourceCreateInfo& info)

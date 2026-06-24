@@ -40,8 +40,9 @@ file(GLOB ENGINE_SRC
     src/gpu/gpu.cpp
 
     src/graphics/command_pool.cpp
-    src/graphics/render_pipeline.cpp
-    src/graphics/resource_table.cpp
+    src/graphics/gpu_memory_allocator.cpp
+    src/graphics/gpu_resource_manager.cpp
+    src/graphics/render_device.cpp
     src/graphics/shader.cpp
     src/graphics/swap_chain.cpp
 
@@ -65,17 +66,6 @@ file(GLOB ENGINE_SRC
     src/os/semaphore.cpp
     src/os/thread.cpp
 
-    src/object/object.cpp
-
-    src/modifier/2d/world_transform.cpp
-
-    src/object/object_pool.cpp
-
-    src/object/2d/camera.cpp
-
-    src/object/core/audio_player.cpp
-    src/object/core/timer.cpp
-
     src/physics/physics_2d.cpp
     src/physics/shape_2d.cpp
 
@@ -87,11 +77,6 @@ file(GLOB ENGINE_SRC
     src/physics/p2d/p2d_shape.cpp
     
     src/platform/intrinsics.cpp
-
-    src/render_device/render_device.cpp
-    src/render_device/core/gpu_material_manager.cpp
-    src/render_device/core/gpu_memory_allocator.cpp
-    src/render_device/core/gpu_resource_manager.cpp
 
     src/renderer/framed_buffer.cpp
     src/renderer/framed_pool.cpp

@@ -1,6 +1,6 @@
 #pragma once
+#include "graphics/gpu_resource_types.h"
 #include "resource/resource.h"
-#include "render_device/resource/gpu_resource_types.h"
 #include "math/vec2.h"
 
 

@@ -4,8 +4,8 @@
 #include "display/window.h"
 #include "engine/application.h"
 #include "engine/configuration.h"
+#include "graphics/render_device.h"
 #include "mem/generic_allocator.h"
-#include "render_device/render_device.h"
 #include "resource/texture.h"
 #include "resource/resource_manager.h"
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "collections/array.h"
 #include "collections/error.h"
-#include "render_device/resource/gpu_resource_types.h"
+#include "graphics/gpu_resource_types.h"
 #include "resource/resource.h"
 #include "math/rect_2d.h"
 

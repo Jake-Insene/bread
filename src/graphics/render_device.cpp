@@ -1,4 +1,4 @@
-#include "render_device/render_device.h"
+#include "graphics/render_device.h"
 
 #include "engine/engine.h"
 
@@ -47,13 +47,17 @@ void RenderDevice::initialize(const RenderDeviceCreateInfo& info)
     data.gpu_memory_allocator.init(
         {
             .allocator = data.allocator,
-            .render_device = this,
+            .device = get_device(),
+            .graphics_queue = get_graphics_queue(),
+            .copy_queue = get_copy_queue(),
         }
     );
     data.gpu_resource_manager.init(
         {
             .allocator = data.allocator,
-            .render_device = this,
+            .device = get_device(),
+            .graphics_queue = get_graphics_queue(),
+            .copy_queue = get_copy_queue(),
             .gpu_memory_allocator = get_gpu_memory_allocator(),
         }
     );

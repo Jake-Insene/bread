@@ -1,22 +1,23 @@
-#include "render_device/core/gpu_memory_allocator.h"
+#include "graphics/gpu_memory_allocator.h"
 
 #include "debug/fail.h"
-#include "render_device/render_device.h"
 
 
 void GPUMemoryAllocator::init(const GPUMemoryAllocatorCreateInfo& info)
 {
     data.allocator = info.allocator;
-    data.render_device = info.render_device;
+    data.device = info.device;
+    data.graphics_queue = info.graphics_queue;
+    data.copy_queue = info.copy_queue;
 
     data.heaps = Array<Heap>::with_size(data.allocator, 4);
     data.allocations = FreeList<Allocation, GPUMemoryAllocationID>::with_size(data.allocator, 4);
 
-    data.staging_buffer = GPU::buffer_create(data.render_device->get_device(),
+    data.staging_buffer = GPU::buffer_create(data.device,
         GPU::BufferCreateInfo::create(GPU::BufferUsage::TransferSource, StagingHeapInitialSize)
     );
 
-    data.staging_heap = GPU::memory_heap_create(data.render_device->get_device(),
+    data.staging_heap = GPU::memory_heap_create(data.device,
         GPU::MemoryHeapCreateInfo::create(
             GPU::HeapUsage::CPUGPUCoherent, StagingHeapInitialSize)
     );
@@ -159,7 +160,7 @@ GPUMemoryAllocator::Heap& GPUMemoryAllocator::_create_heap(AllocationTag tag, us
 
     Heap new_heap =
     {
-        .heap = GPU::memory_heap_create(data.render_device->get_device(),
+        .heap = GPU::memory_heap_create(data.device,
             GPU::MemoryHeapCreateInfo::create(required_heap_usage, heap_size)),
         .heap_size = heap_size,
         .heap_usage = required_heap_usage,

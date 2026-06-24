@@ -1,6 +1,6 @@
 #pragma once
-#include "render_device/core/gpu_memory_allocator.h"
-#include "render_device/core/gpu_memory_allocator_types.h"
+#include "graphics/gpu_memory_allocator.h"
+#include "graphics/gpu_memory_allocator_types.h"
 
 
 struct GPUMemoryAllocator;

@@ -1,8 +1,6 @@
 #include "resource/font.h"
 
 #include "engine/engine.h"
-#include "render_device/render_device.h"
-#include "resource/resource_manager.h"
 #include "resource/resource_manager_internal.h"
 
 #include <external/stb_truetype.h>
