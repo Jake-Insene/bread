@@ -84,7 +84,6 @@ file(GLOB ENGINE_SRC
     src/renderer/render_pipeline.cpp
     src/renderer/renderer.cpp
     src/renderer/resource_table.cpp
-    src/renderer/sprite_renderer.cpp
     
     src/resource/font.cpp
     src/resource/image.cpp

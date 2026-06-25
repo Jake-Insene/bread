@@ -11,7 +11,7 @@ struct GPUMemoryAllocator;
 struct RendererCreateInfo
 {
     Mem::Allocator* allocator;
-    RenderDevice* render_device;
+    Graphics::RenderDevice* render_device;
     GPUMemoryAllocator* gpu_memory_allocator;
     u32 max_frames_in_flight;
     Window* target_window;
@@ -47,7 +47,7 @@ struct Renderer
     struct InternalData
     {
         Mem::Allocator* allocator;
-        RenderDevice* render_device;
+        Graphics::RenderDevice* render_device;
         Graphics::CommandPool command_pool;
         Graphics::SwapChain swap_chain;
 
@@ -63,7 +63,7 @@ struct Renderer
     void init(const RendererCreateInfo& info);
     void destroy();
 
-    [[nodiscard]] RenderDevice* get_render_device() const { return data.render_device; }
+    [[nodiscard]] Graphics::RenderDevice* get_render_device() const { return data.render_device; }
 
     FrameInfo begin_frame();
     void end_frame();

@@ -5,7 +5,6 @@
 #include "graphics/gpu_memory_allocator_types.h"
 
 
-struct RenderDevice;
 struct GPUMemoryAllocator;
 
 struct GPUResourceManagerCreateInfo

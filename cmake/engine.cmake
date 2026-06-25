@@ -177,8 +177,8 @@ endfunction()
 
 function(bread_package)
     set(options)
-    set(oneValueArgs NAME)
-    set(multiValueArgs SOURCES)
+    set(oneValueArgs NAME ASSETS)
+    set(multiValueArgs INCLUDES SOURCES)
 
     cmake_parse_arguments(PACKAGE
         "${options}"
@@ -189,10 +189,14 @@ function(bread_package)
 
     add_library(${PACKAGE_NAME} STATIC ${PACKAGE_SOURCES})
 
+    if("${PACKAGE_ASSETS}" STREQUAL "")
+        set(PACKAGE_ASSETS ${CMAKE_SOURCE_DIR}/assets)
+    endif()
+    
     add_custom_command(
         TARGET ${PACKAGE_NAME}
         PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/assets ${CMAKE_SOURCE_DIR}/assets
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/assets ${PACKAGE_ASSETS}
     )
 
     target_compile_definitions(${PACKAGE_NAME} PUBLIC ${BREAD_BUILD_DEFINITIONS} BREAD_MODULE_COMPILATION)
@@ -201,6 +205,7 @@ function(bread_package)
     target_include_directories(
         ${PACKAGE_NAME}
         PUBLIC
+        "${PACKAGE_INCLUDES}"
         "${CMAKE_CURRENT_SOURCE_DIR}"
         "${CMAKE_PROJECT_SOURCE_DIR}/bread/src"
     )

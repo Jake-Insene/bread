@@ -32,7 +32,7 @@ struct EngineRuntime
     ApplicationState application_state;
 
     AudioService audio_service;
-    RenderDevice render_device;
+    Graphics::RenderDevice render_device;
     ResourceManager resource_manager;
     
     GPU::PhysicalDeviceID selected_physical_device;
@@ -73,7 +73,7 @@ struct EngineRuntime
 
     // Utility functions
     AudioService* get_audio_service() { return &audio_service; }
-    RenderDevice* get_render_device() { return &render_device; }
+    Graphics::RenderDevice* get_render_device() { return &render_device; }
     ResourceManager* get_resource_manager() { return &resource_manager; }
 
     GPU::PhysicalDeviceID get_selected_gpu_device() const { return selected_physical_device; }

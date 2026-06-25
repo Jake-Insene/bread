@@ -5,7 +5,10 @@
 
 
 struct AudioService;
+namespace Graphics
+{
 struct RenderDevice;
+}
 struct ResourceManager;
 struct SystemManager;
 
@@ -27,7 +30,7 @@ struct Engine
         return local_data.engine_runtime->get_audio_service();
     }
 
-    static RenderDevice* get_render_device()
+    static Graphics::RenderDevice* get_render_device()
     {
         return local_data.engine_runtime->get_render_device();
     }

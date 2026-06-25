@@ -108,9 +108,19 @@ void EngineRuntime::initialize()
             get_application_info().alignment
         ).ptr()
     );
-    get_application_info().constructor(Opaque::from(*application));
+    get_application_info().constructor(Opaque::from(*application),
+        {
+            .allocator = &allocator,
+            .render_device = get_render_device(),
+            .window = get_main_window()->window_id,
+        }
+    );
 
-    application->initialize(&allocator);
+    application->initialize(
+        {
+            .allocator = &allocator,
+        }
+    );
     application_state = ApplicationState::Initialized;
 
     application->load_resources();
@@ -121,6 +131,7 @@ void EngineRuntime::shutdown()
     application->unload_resources();
     
     application->shutdown();
+    DestructObject(*application);
     application_state = ApplicationState::Destroyed;
 
     allocator.free(Slice(reinterpret_cast<u8*>(application), 1));

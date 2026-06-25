@@ -3,6 +3,9 @@
 #include "engine/engine.h"
 
 
+namespace Graphics
+{
+
 void RenderDevice::initialize(const RenderDeviceCreateInfo& info)
 {
     data.allocator = info.allocator;
@@ -76,3 +79,4 @@ void RenderDevice::shutdown()
     GPU::device_destroy(data.device);
 }
 
+}

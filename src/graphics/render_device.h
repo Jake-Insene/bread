@@ -4,6 +4,8 @@
 #include "graphics/gpu_resource_manager.h"
 
 
+namespace Graphics
+{
 
 struct RenderDeviceCreateInfo
 {
@@ -45,3 +47,4 @@ struct RenderDevice
     GPUResourceManager* get_gpu_resource_manager() { return &data.gpu_resource_manager; }
 };
 
+}
