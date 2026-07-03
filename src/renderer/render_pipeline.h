@@ -14,8 +14,6 @@ struct RenderLayout
         const Slice<const GPU::DescriptorSetLayoutCreateInfo>& set_layout_cis);
 
     void destroy();
-
-    
 }; 
 
 struct RenderPipeline

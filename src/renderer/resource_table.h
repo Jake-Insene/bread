@@ -43,5 +43,6 @@ struct ResourceTable
 
     void begin(GPU::DescriptorPoolID pool);
     void bind_combined_texture_sampler(u32 set, u32 binding, const GPU::DescriptorTextureInfo& texture);
+    void bind_uniform_buffer(u32 set, u32 binding, const GPU::DescriptorBufferInfo& buffer);
     void end(GPU::DescriptorPoolID pool);
 };

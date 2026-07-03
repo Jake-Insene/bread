@@ -53,6 +53,22 @@ void ResourceTable::bind_combined_texture_sampler(u32 set, u32 binding, const GP
     );
 }
 
+void ResourceTable::bind_uniform_buffer(u32 set, u32 binding, const GPU::DescriptorBufferInfo& buffer)
+{
+    Slice buffers = tmp_allocator.array<GPU::DescriptorBufferInfo>(1);
+    buffers[0] = buffer;
+    (void)gpu_write_infos.add(
+        {
+            .descriptor_set = sets[set],
+            .binding = binding,
+            .array_element = 0,
+            .type = GPU::DescriptorType::UniformBuffer,
+            .buffers = buffers,
+            .textures = {},
+        }
+    );
+}
+
 void ResourceTable::end(GPU::DescriptorPoolID)
 {
     GPU::descriptor_set_update_descriptors(device, {.write_infos = gpu_write_infos.slice()});

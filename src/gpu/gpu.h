@@ -886,6 +886,17 @@ namespace GPU
 		BufferID buffer;
 		usize offset;
 		usize range;
+
+		static constexpr DescriptorBufferInfo create(BufferID buffer,
+			usize offset, usize range)
+		{
+			return DescriptorBufferInfo
+			{
+				.buffer = buffer,
+				.offset = offset,
+				.range = range,
+			};
+		}
 	};
 
 	struct DescriptorTextureInfo
