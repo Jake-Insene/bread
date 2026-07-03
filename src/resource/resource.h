@@ -25,17 +25,18 @@ struct ResourceTypeSpecification
     StringView Extensions = "";
 };
 
-enum
+enum class ResourceFlags : u32
 {
     NoResourceFlags = 0,
     LoadFromAssets = 1,
 };
+EnableBitOp(ResourceFlags)
 
-static constexpr ResourceTypeSpecification _construct_from_flags(usize flags, StringView extensions)
+static constexpr ResourceTypeSpecification _construct_from_flags(ResourceFlags flags, StringView extensions)
 {
     return ResourceTypeSpecification
     {
-        .LoadFromAssets = bool(flags & LoadFromAssets),
+        .LoadFromAssets = HasValue(flags & ResourceFlags::LoadFromAssets),
         .Extensions = extensions,
     };
 }
@@ -54,7 +55,7 @@ struct Resource
 {
     RESOURCE(
         RESOURCE_UNKNOWN,
-        NoResourceFlags, 
+        ResourceFlags::NoResourceFlags, 
         ResourceExtensions(""))
 
     struct ResourceCreateInfo

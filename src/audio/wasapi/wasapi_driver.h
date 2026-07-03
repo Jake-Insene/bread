@@ -3,7 +3,7 @@
 #include "audio/audio.h"
 #include "debug/debug.h"
 #include "debug/fail.h"
-#include "log/log.h"
+#include "debug/log.h"
 #include "platform/platform_header.h"
 
 

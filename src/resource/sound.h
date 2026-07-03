@@ -8,7 +8,7 @@
 
 struct Sound : Resource
 {
-    RESOURCE(RESOURCE_SOUND, LoadFromAssets, ResourceExtensions("wav"))
+    RESOURCE(RESOURCE_SOUND, ResourceFlags::LoadFromAssets, ResourceExtensions("wav"))
 
     struct InternalData
     {

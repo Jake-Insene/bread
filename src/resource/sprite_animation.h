@@ -7,7 +7,7 @@
 
 struct SpriteAnimation : Resource
 {
-	RESOURCE(RESOURCE_SPRITE_ANIMATION, NoResourceFlags, ResourceExtensions(""))
+	RESOURCE(RESOURCE_SPRITE_ANIMATION, ResourceFlags::NoResourceFlags, ResourceExtensions(""))
 
 	struct SpriteFrame
 	{

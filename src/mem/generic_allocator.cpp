@@ -1,7 +1,7 @@
 #include "mem/generic_allocator.h"
 
 #include "debug/fail.h"
-#include "log/log.h"
+#include "debug/log.h"
 #include "mem/utils.h"
 #include "os/os.h"
 

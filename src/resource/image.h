@@ -9,7 +9,7 @@
 */
 struct Image : Resource
 {
-    RESOURCE(RESOURCE_IMAGE, LoadFromAssets, ResourceExtensions("png"))
+    RESOURCE(RESOURCE_IMAGE, ResourceFlags::LoadFromAssets, ResourceExtensions("png"))
 
     enum class ImageFormat
     {

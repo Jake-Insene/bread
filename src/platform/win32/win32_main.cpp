@@ -1,7 +1,7 @@
 #include "platform/platform_header.h"
 
 #include "engine/engine.h"
-#include "log/log.h"
+#include "debug/log.h"
 #include "platform/win32/win32_engine.h"
 
 

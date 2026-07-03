@@ -1,6 +1,6 @@
 #include "physics/p2d/p2d_driver.h"
 
-#include "log/log.h"
+#include "debug/log.h"
 #include "physics/physics_2d.h"
 #include "physics/p2d/p2d_types.h"
 #include "physics/p2d/p2d_collision.h"

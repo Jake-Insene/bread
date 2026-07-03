@@ -1,6 +1,6 @@
 #include "debug/debug.h"
 
-#include "log/log.h"
+#include "debug/log.h"
 
 
 void Debug::assert_info(const char* file_path, usize file_path_len,

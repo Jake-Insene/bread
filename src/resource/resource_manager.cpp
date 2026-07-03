@@ -206,7 +206,9 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
         
         Error load_result = image->load(path);
         if (!load_result)
+        {
             return load_result;
+        }
     }
     
     Texture2D* tex = nullptr;

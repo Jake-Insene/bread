@@ -5,7 +5,7 @@
 
 struct Material : Resource
 {
-    RESOURCE(RESOURCE_MATERIAL, LoadFromAssets, ResourceExtensions("shader"))
+    RESOURCE(RESOURCE_MATERIAL, ResourceFlags::LoadFromAssets, ResourceExtensions("shader"))
 
     Error load_from_file(StringView file_path, StringView defines);
 };

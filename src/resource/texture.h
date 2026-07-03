@@ -7,7 +7,7 @@
 // A group of pixels allocated in the gpu.
 struct Texture : Resource
 {
-    RESOURCE(RESOURCE_TEXTURE, LoadFromAssets, ResourceExtensions("png"))
+    RESOURCE(RESOURCE_TEXTURE, ResourceFlags::LoadFromAssets, ResourceExtensions("png"))
 
     GPUTextureID texture_ref;
     Vector2I size;
@@ -21,6 +21,6 @@ struct Texture : Resource
 // Same as Texture but specialized for 2D.
 struct Texture2D : Texture
 {
-    RESOURCE(RESOURCE_TEXTURE_2D, LoadFromAssets, ResourceExtensions("png"))
+    RESOURCE(RESOURCE_TEXTURE_2D, ResourceFlags::LoadFromAssets, ResourceExtensions("png"))
 };
 

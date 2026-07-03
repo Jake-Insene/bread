@@ -30,6 +30,7 @@ file(GLOB ENGINE_SRC
     src/concurrency/job_queue.cpp
 
     src/debug/debug.cpp
+    src/log/log.cpp
     
     src/display/display.cpp
     src/display/window.cpp
@@ -50,8 +51,6 @@ file(GLOB ENGINE_SRC
     
     src/io/file.cpp
     src/io/writer.cpp
-
-    src/log/log.cpp
 
     src/math/transform_2d.cpp
     src/math/vec2.cpp

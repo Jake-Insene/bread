@@ -3,7 +3,7 @@
 #include "collections/string_view.h"
 #include "collections/hash_map.h"
 #include "gpu/gpu.h"
-#include "log/log.h"
+#include "debug/log.h"
 
 
 #define GPUDebugInfo(...) Log::debug("[GPU]: " __VA_ARGS__)

@@ -6,7 +6,7 @@
 #include "engine/engine.h"
 #include "gpu/gpu.h"
 #include "input/input.h"
-#include "log/log.h"
+#include "debug/log.h"
 #include "os/os.h"
 #include "physics/physics_2d.h"
 #include "resource/resource_manager.h"
