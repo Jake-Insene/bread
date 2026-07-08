@@ -69,7 +69,6 @@ struct ResourceManager
     [[nodiscard]] Result<Resource*, Error> _load_texture_2d(StringView path, const TextureLoadInfo& load_info);
     [[nodiscard]] Result<Resource*, Error> _load_sound(StringView path);
     [[nodiscard]] Result<Resource*, Error> _load_font(StringView path);
-    [[nodiscard]] Result<Resource*, Error> _load_material(StringView path);
 };
 
 

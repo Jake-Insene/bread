@@ -16,10 +16,6 @@ struct GPUMemoryAllocatorCreateInfo
 
 struct GPUMemoryAllocator
 {
-    // 4mb
-    // TODO: Make staging incremental
-    static constexpr usize StagingHeapInitialSize = 1024 * 1024 * 46;
-
     enum class AllocationTag
     {
         Staging,
@@ -53,6 +49,21 @@ struct GPUMemoryAllocator
         GPUMemoryAllocationID first_allocation;
     };
 
+    enum class StagingFlags
+    {
+        Mapped = Bit(0),
+        Allocated = Bit(1),
+    };
+
+    struct StagingHeap
+    {
+        GPU::MemoryHeapID heap;
+        StagingFlags flags;
+        usize heap_size;
+        GPU::BufferID buffer;
+        Slice<u8> mapped_buffer;
+    };
+
     struct InternalData
     {
         Mem::Allocator* allocator;
@@ -62,10 +73,7 @@ struct GPUMemoryAllocator
 
         Array<Heap> heaps;
         FreeList<Allocation, GPUMemoryAllocationID> allocations;
-        GPU::MemoryHeapID staging_heap;
-        GPU::BufferID staging_buffer;
-        usize staging_heap_current_size;
-        Slice<u8> mapped_staging_heap;
+        Array<StagingHeap> staging_heaps;
     } data;
 
     void init(const GPUMemoryAllocatorCreateInfo& info);
@@ -76,8 +84,9 @@ struct GPUMemoryAllocator
 
     GPU::BufferID begin_staging(usize size);
     void end_staging(GPU::BufferID staging_buffer);
-    Slice<u8> map_staging();
-    void unmap_staging(const Slice<u8>& memory);
+
+    Slice<u8> map_staging(GPU::BufferID staging_buffer);
+    void unmap_staging(GPU::BufferID staging_buffer, const Slice<u8>& memory);
 
     GPU::MemoryHeapID allocation_get_heap(GPUMemoryAllocationID allocation);
     [[nodiscard]] usize allocation_get_offset(GPUMemoryAllocationID allocation);
@@ -85,3 +94,5 @@ struct GPUMemoryAllocator
     Heap& _request_heap_for(AllocationTag tag, usize size, GPU::HeapUsage heap_usage);
     Heap& _create_heap(AllocationTag tag, usize size, GPU::HeapUsage heap_usage);
 };
+
+EnableBitOp(GPUMemoryAllocator::StagingFlags);

@@ -49,7 +49,6 @@ bool SwapChain::acquire_image(u32* image_index, GPU::SemaphoreID present_complet
         return false;
     }
 
-    u32 int_index = MaxValue<u32>;
     GPU::AcquireResult result = GPU::swap_chain_acquire_next_image(
         data.swap_chain,
         {
@@ -57,7 +56,7 @@ bool SwapChain::acquire_image(u32* image_index, GPU::SemaphoreID present_complet
             .semaphore = present_complete,
             .fence = GPU::FenceID::invalid(),
         }, 
-        &int_index
+        image_index
     );
 
     if(result == GPU::AcquireResult::Suboptimal)
@@ -71,7 +70,6 @@ bool SwapChain::acquire_image(u32* image_index, GPU::SemaphoreID present_complet
         return false;
     }
 
-    *image_index = int_index;
     return true;
 }
 

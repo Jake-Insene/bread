@@ -86,7 +86,6 @@ file(GLOB ENGINE_SRC
     
     src/resource/font.cpp
     src/resource/image.cpp
-    src/resource/material.cpp
     src/resource/resource.cpp
     src/resource/resource_manager.cpp
     src/resource/sound.cpp

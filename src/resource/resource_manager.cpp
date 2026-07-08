@@ -5,7 +5,6 @@
 #include "resource/resource_manager_internal.h"
 #include "resource/font.h"
 #include "resource/image.h"
-#include "resource/material.h"
 #include "resource/texture.h"
 #include "resource/sound.h"
 #include "resource/sprite_animation.h"
@@ -88,11 +87,6 @@ Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
         return MakeError(ErrorCode::ResourceNotFound);
     }
     break;
-    case RESOURCE_MATERIAL:
-    {
-        return _load_material(path);
-    }
-        break;
     default:
         break;
     }
@@ -280,27 +274,5 @@ Result<Resource*, Error> ResourceManager::_load_font(StringView path)
         new_font
     );
     return new_font;
-}
-
-Result<Resource*, Error> ResourceManager::_load_material(StringView path)
-{
-    if (resources.has(path))
-    {
-        return reinterpret_cast<Material*>(resources.get(path).resource);
-    }
-
-    Material* new_material = _create_resource<Material>();
-    Error load_result = new_material->load_from_file(path, "");
-    if (!load_result)
-    {
-        return load_result;
-    }
-
-    (void)place_resource(
-        path,
-        [](Resource* resource){ reinterpret_cast<Material*>(resource)->destroy(); },
-        new_material
-    );
-    return new_material;
 }
 

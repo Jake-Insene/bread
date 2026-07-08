@@ -16,7 +16,6 @@ enum ResourceType
     RESOURCE_FONT,
     RESOURCE_SPRITE_ANIMATION,
     RESOURCE_TILE_SET,
-    RESOURCE_MATERIAL,
  };
 
 struct ResourceTypeSpecification
@@ -82,7 +81,6 @@ struct Resource
 
         return resource.error();
     };
-
 
     /*
     * Load the resource of the given type, can return nullptr.

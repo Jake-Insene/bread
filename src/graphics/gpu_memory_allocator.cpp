@@ -12,28 +12,21 @@ void GPUMemoryAllocator::init(const GPUMemoryAllocatorCreateInfo& info)
 
     data.heaps = Array<Heap>::with_size(data.allocator, 4);
     data.allocations = FreeList<Allocation, GPUMemoryAllocationID>::with_size(data.allocator, 4);
-
-    data.staging_buffer = GPU::buffer_create(data.device,
-        GPU::BufferCreateInfo::create(GPU::BufferUsage::TransferSource, StagingHeapInitialSize)
-    );
-
-    data.staging_heap = GPU::memory_heap_create(data.device,
-        GPU::MemoryHeapCreateInfo::create(
-            GPU::HeapUsage::CPUGPUCoherent, StagingHeapInitialSize)
-    );
-
-    GPU::buffer_bind_memory_heap(data.staging_buffer, GPU::BindMemoryInfo::create(data.staging_heap, 0));
-
-    data.staging_heap_current_size = StagingHeapInitialSize;
-    data.mapped_staging_heap = GPU::memory_heap_map(data.staging_heap, 0, data.staging_heap_current_size);
+    data.staging_heaps = Array<StagingHeap>::with_size(data.allocator, 4);
 }
 
 void GPUMemoryAllocator::destroy()
 {
-    GPU::buffer_destroy(data.staging_buffer);
-    GPU::memory_heap_unmap(data.staging_heap, data.mapped_staging_heap);
-    GPU::memory_heap_destroy(data.staging_heap);
-    
+    (void)data.staging_heaps.iter().for_each([](StagingHeap& staging_heap)
+    {
+        if(HasValue(staging_heap.flags & StagingFlags::Mapped))
+        {
+            GPU::memory_heap_unmap(staging_heap.heap, staging_heap.mapped_buffer);
+        }
+        GPU::buffer_destroy(staging_heap.buffer);
+        GPU::memory_heap_destroy(staging_heap.heap);
+    });
+
     (void)data.heaps.iter().for_each([](Heap& heap)
     {
         GPU::memory_heap_destroy(heap.heap);
@@ -42,6 +35,7 @@ void GPUMemoryAllocator::destroy()
 
     data.heaps.destroy();
     data.allocations.destroy();
+    data.staging_heaps.destroy();
 }
 
 GPUMemoryAllocationID GPUMemoryAllocator::allocate(AllocationTag tag, const GPU::MemoryRequirements& requirements)
@@ -104,23 +98,103 @@ void GPUMemoryAllocator::free(GPUMemoryAllocationID allocation)
 
 GPU::BufferID GPUMemoryAllocator::begin_staging(usize size)
 {
-    Unused(size);
-    return data.staging_buffer;
+    GPU::BufferID buffer = GPU::BufferID::invalid();
+    for(StagingHeap& staging_heap : data.staging_heaps.iter())
+    {
+        if(HasValue(staging_heap.flags & StagingFlags::Allocated))
+        {
+            continue;
+        }
+
+        if(staging_heap.heap_size < size)
+        {
+            continue;
+        }
+
+        staging_heap.flags |= StagingFlags::Allocated;
+        buffer = staging_heap.buffer;
+    }
+
+    if(buffer == GPU::BufferID::invalid())
+    {
+        buffer = GPU::buffer_create(data.device,
+            GPU::BufferCreateInfo::create(GPU::BufferUsage::TransferSource, size));
+
+        GPU::MemoryRequirements requirements = GPU::buffer_get_memory_requirements(buffer);
+        usize heap_size = Mem::align_up(requirements.size, requirements.alignment);
+
+        GPU::MemoryHeapID new_heap = GPU::memory_heap_create(
+            data.device,
+            {
+                .heap_usage = GPU::HeapUsage::CPUGPUCoherent,
+                .heap_size = heap_size,
+            }
+        );
+        GPU::buffer_bind_memory_heap(buffer, GPU::BindMemoryInfo::create(new_heap, 0));
+
+        (void)data.staging_heaps.add(
+            StagingHeap
+            {
+                .heap = new_heap,
+                .flags = StagingFlags(),
+                .heap_size = heap_size,
+                .buffer = buffer,
+                .mapped_buffer = Slice<u8>(),
+            }
+        );
+    }
+
+    return buffer;
 }
 
-void GPUMemoryAllocator::end_staging(GPU::BufferID)
+void GPUMemoryAllocator::end_staging(GPU::BufferID staging_buffer)
 {
-
+    for(StagingHeap& staging_heap : data.staging_heaps.iter())
+    {
+        if(staging_heap.buffer == staging_buffer)
+        {
+            staging_heap.flags ^= StagingFlags::Allocated;
+            return;
+        }
+    }
 }
 
-Slice<u8> GPUMemoryAllocator::map_staging()
+Slice<u8> GPUMemoryAllocator::map_staging(GPU::BufferID staging_buffer)
 {
-    return data.mapped_staging_heap;
+    for(StagingHeap& staging_heap : data.staging_heaps.iter())
+    {
+        if(staging_heap.buffer != staging_buffer)
+        {
+            continue;
+        }
+
+        if(!HasValue(staging_heap.flags & StagingFlags::Mapped))
+        {
+            staging_heap.mapped_buffer = GPU::memory_heap_map(staging_heap.heap, 0, staging_heap.heap_size);
+            staging_heap.flags |= StagingFlags::Mapped;
+        }
+
+        return staging_heap.mapped_buffer;
+    }
+
+    return Slice<u8>();
 }
 
-void GPUMemoryAllocator::unmap_staging(const Slice<u8>& memory)
+void GPUMemoryAllocator::unmap_staging(GPU::BufferID staging_buffer, const Slice<u8>& memory)
 {
-    Unused(memory);
+    for(StagingHeap& staging_heap : data.staging_heaps.iter())
+    {
+        if(staging_heap.buffer != staging_buffer)
+        {
+            continue;
+        }
+
+        if(HasValue(staging_heap.flags & StagingFlags::Mapped))
+        {
+            GPU::memory_heap_unmap(staging_heap.heap, memory);
+            staging_heap.flags ^= StagingFlags::Mapped;
+        }
+    }
 }
 
 GPU::MemoryHeapID GPUMemoryAllocator::allocation_get_heap(GPUMemoryAllocationID allocation)
@@ -150,8 +224,6 @@ GPUMemoryAllocator::Heap& GPUMemoryAllocator::_request_heap_for(AllocationTag ta
 
 GPUMemoryAllocator::Heap& GPUMemoryAllocator::_create_heap(AllocationTag tag, usize size, GPU::HeapUsage heap_usage)
 {
-    usize heap_size =  Mem::align_up(size, GPU::HeapAlignment);
-
     GPU::HeapUsage required_heap_usage = heap_usage;
     if(tag == AllocationTag::Staging && required_heap_usage == GPU::HeapUsage::GPUExclusive)
     {
@@ -161,8 +233,8 @@ GPUMemoryAllocator::Heap& GPUMemoryAllocator::_create_heap(AllocationTag tag, us
     Heap new_heap =
     {
         .heap = GPU::memory_heap_create(data.device,
-            GPU::MemoryHeapCreateInfo::create(required_heap_usage, heap_size)),
-        .heap_size = heap_size,
+            GPU::MemoryHeapCreateInfo::create(required_heap_usage, size)),
+        .heap_size = size,
         .heap_usage = required_heap_usage,
         .tag = tag,
         .heap_index = data.heaps.count,
