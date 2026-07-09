@@ -86,9 +86,7 @@ void EngineRuntime::initialize()
         }
     );
 
-    main_window.set_size(get_application_info().viewport_size);
-    
-    set_vsync(get_application_info().vsync);
+    main_window.set_size(get_application_info().initial_window_size);
     
     fps = 0;
     fps_counter = 0;
@@ -98,7 +96,6 @@ void EngineRuntime::initialize()
     time_accum = 0;
     delta_time = 0;
 
-    vsync_cache = __get_application_info__().vsync;
     can_tick = true;
 
     // Entry point for app

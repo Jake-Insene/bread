@@ -14,8 +14,7 @@ struct RendererCreateInfo
     Graphics::RenderDevice* render_device;
     GPUMemoryAllocator* gpu_memory_allocator;
     u32 max_frames_in_flight;
-    Window* target_window;
-    GPU::TextureFormat surface_format;
+    Graphics::SwapChain* swap_chain;
 };
 
 struct Renderer
@@ -49,7 +48,7 @@ struct Renderer
         Mem::Allocator* allocator;
         Graphics::RenderDevice* render_device;
         Graphics::CommandPool command_pool;
-        Graphics::SwapChain swap_chain;
+        Graphics::SwapChain* swap_chain;
 
         u32 max_frames_in_flight;
         u32 frame_index;

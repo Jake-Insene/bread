@@ -3,7 +3,7 @@
 
 void RenderPass::transition_to_render_attachment(GPU::CommandBufferID command_buffer, GPU::TextureID texture)
 {
-    GPU::PipelineTextureBarrier texture_barrier =
+    const GPU::PipelineTextureBarrier texture_barrier =
     {
         .src_masks = GPU::AccessMasks(),
         .dest_masks = GPU::AccessMasks::RenderAttachmentWrite,
@@ -23,7 +23,7 @@ void RenderPass::transition_to_render_attachment(GPU::CommandBufferID command_bu
 
 void RenderPass::transition_to_present(GPU::CommandBufferID command_buffer, GPU::TextureID texture)
 {
-    GPU::PipelineTextureBarrier texture_barrier =
+    const GPU::PipelineTextureBarrier texture_barrier =
     {
         .src_masks = GPU::AccessMasks::RenderAttachmentWrite,
         .dest_masks = GPU::AccessMasks(),
@@ -44,7 +44,7 @@ void RenderPass::transition_to_present(GPU::CommandBufferID command_buffer, GPU:
 void RenderPass::begin(GPU::CommandBufferID command_buffer, const Vector2U& extent, const GPU::Viewport& viewport,
     const GPU::Scissor& scissor, GPU::TextureViewID render_attachment_view, const GPU::ClearValue& clear_value)
 {
-    GPU::AttachmentInfo render_attachment =
+    const GPU::AttachmentInfo render_attachment =
     {
         .texture_view = render_attachment_view,
         .layout = GPU::TextureLayout::RenderAttachment,

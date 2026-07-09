@@ -3,7 +3,6 @@
 #include "concurrency/job_queue.h"
 #include "display/window.h"
 #include "engine/application.h"
-#include "engine/configuration.h"
 #include "graphics/render_device.h"
 #include "mem/generic_allocator.h"
 #include "resource/texture.h"

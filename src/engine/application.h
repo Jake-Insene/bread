@@ -19,9 +19,7 @@ struct ApplicationInfo
     usize size_in_bytes;
     usize alignment;
     void(*constructor)(Opaque*, const ApplicationAllocateInfo&);
-    Vector2I viewport_size;
-    bool vsync;
-    bool keep_viewport;
+    Vector2I initial_window_size;
     bool enable_debug_console;
 };
 
@@ -57,4 +55,6 @@ struct Application
     virtual void render();
 
     virtual void event(const Event& e);
+
+    [[nodiscard]] Graphics::SwapChain* get_swap_chain() { return &data.swap_chain; }
 };

@@ -57,6 +57,8 @@ struct SwapChain
     usize get_image_count() const { return data.images.count; }
     ImageInfo& get_image(u32 image_index) { return data.images.get(image_index); }
 
+    GPU::TextureFormat get_surface_format() const { return data.surface_format; }
+
     void _init_images();
     void _free_images();
     void _rebuild();

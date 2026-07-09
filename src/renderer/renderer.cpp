@@ -16,15 +16,7 @@ void Renderer::init(const RendererCreateInfo& info)
         }
     );
 
-    data.swap_chain.init(
-        {
-            .allocator = data.allocator,
-            .device = data.render_device->get_device(),
-            .present_queue = data.render_device->get_present_queue(),
-            .window = info.target_window->window_id,
-            .surface_format = info.surface_format,
-        }
-    );
+    data.swap_chain = info.swap_chain;
 
     data.max_frames_in_flight = info.max_frames_in_flight;
     data.frame_index = 0;
@@ -40,7 +32,7 @@ void Renderer::init(const RendererCreateInfo& info)
         };
     });
 
-    data.render_finished_semaphores = Array<GPU::SemaphoreID>::with_size(data.allocator, data.swap_chain.get_image_count());
+    data.render_finished_semaphores = Array<GPU::SemaphoreID>::with_size(data.allocator, data.swap_chain->get_image_count());
     data.render_finished_semaphores.resize(data.max_frames_in_flight);
     (void)data.render_finished_semaphores.iter().transform([&](GPU::SemaphoreID)
     {
@@ -79,7 +71,6 @@ void Renderer::destroy()
     data.frames.destroy();
 
     data.command_pool.destroy();
-    data.swap_chain.destroy();
 }
 
 Renderer::FrameInfo Renderer::begin_frame()
@@ -100,7 +91,7 @@ Renderer::FrameInfo Renderer::begin_frame()
     };
 
     u32 image_index = MaxValue<u32>;
-    bool image_acquired = data.swap_chain.acquire_image(
+    bool image_acquired = data.swap_chain->acquire_image(
         &image_index,
         frame.present_complete_semaphore
     );
@@ -127,8 +118,8 @@ Renderer::FrameInfo Renderer::begin_frame()
     else if(image_acquired && image_index != MaxValue<u32>)
     {
         frame_flags |= FrameFlags::Acquired;
-        image = data.swap_chain.get_image(image_index).image;    
-        image_view = data.swap_chain.get_image(image_index).image_view;    
+        image = data.swap_chain->get_image(image_index).image;    
+        image_view = data.swap_chain->get_image(image_index).image_view;    
     }
 
     return FrameInfo
@@ -169,7 +160,7 @@ void Renderer::submit_command_buffer(const FrameInfo& frame_info, const Slice<co
 
 void Renderer::present(const FrameInfo& frame_info)
 {
-    data.swap_chain.present(
+    data.swap_chain->present(
         frame_info.image_index,
         Slice(&data.render_finished_semaphores.get(frame_info.image_index), 1)
     );

@@ -60,16 +60,6 @@ struct Engine
         return local_data.engine_runtime->get_main_window();
     }
 
-    static void set_vsync(bool vsync)
-    {
-        local_data.engine_runtime->set_vsync(vsync);
-    }
-
-    static bool get_vsync()
-    {
-        return local_data.engine_runtime->get_vsync();
-    }
-
     template<typename Fn> 
     static void add_main_job(Fn fn)
     {
