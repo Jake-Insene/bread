@@ -978,6 +978,16 @@ namespace GPU
 		ShaderStage stages;
 		u32 offset;
 		u32 size;
+
+		static constexpr ConstantBlock create(ShaderStage stages, u32 offset, u32 size)
+		{
+			return ConstantBlock
+			{
+				.stages = stages,
+				.offset = offset,
+				.size = size,
+			};
+		}
 	};
 
 	struct PipelineLayoutCreateInfo
@@ -1070,6 +1080,16 @@ namespace GPU
 		u32 binding;
 		u32 stride;
 		InputRate input_rate;
+
+		static constexpr VertexBinding create(u32 binding, u32 stride, InputRate input_rate)
+		{
+			return VertexBinding
+			{
+				.binding = binding,
+				.stride = stride,
+				.input_rate = input_rate,
+			};
+		}
 	};
 
 	struct VertexAttribute
@@ -1078,6 +1098,17 @@ namespace GPU
 		u32 binding;
 		VertexFormat format;
 		u32 offset;
+
+		static constexpr VertexAttribute create(u32 location, u32 binding, VertexFormat format, u32 offset)
+		{
+			return VertexAttribute
+			{
+				.location = location,
+				.binding = binding,
+				.format = format,
+				.offset = offset,
+			};
+		}
 	};
 
 	struct VertexInput
@@ -1099,6 +1130,14 @@ namespace GPU
 	struct InputAssembly
 	{
 		PrimitiveTopology topology;
+
+		static constexpr InputAssembly create(PrimitiveTopology topology)
+		{
+			return InputAssembly
+			{
+				.topology = topology,
+			};
+		}
 	};
 
 	struct RasterizerState
@@ -1412,6 +1451,16 @@ namespace GPU
 		usize src_offset;
 		usize dest_offset;
 		usize size;
+
+		static constexpr BufferCopyRegion create(usize src_offset, usize dest_offset, usize size)
+		{
+			return BufferCopyRegion
+			{
+				.src_offset = src_offset,
+				.dest_offset = dest_offset,
+				.size = size,
+			};
+		}
 	};
 
 	struct BufferTextureCopyRegion
@@ -1471,6 +1520,17 @@ namespace GPU
 		BufferID src_buffer;
 		BufferID dest_buffer;
 		Slice<const BufferCopyRegion> copy_regions;
+
+		static constexpr CopyBufferInfo create(BufferID src_buffer, BufferID dest_buffer,
+			Slice<const BufferCopyRegion> copy_regions)
+		{
+			return CopyBufferInfo
+			{
+				.src_buffer = src_buffer,
+				.dest_buffer = dest_buffer,
+				.copy_regions = copy_regions,
+			};
+		}
 	};
 
 	struct Viewport

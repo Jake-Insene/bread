@@ -142,7 +142,7 @@ function(bread_project)
     # Copying the bread assets to the game assets folder by default
     add_custom_command(
         TARGET ${PROJECT_NAME}
-        PRE_BUILD
+        POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/bread/assets ${CMAKE_SOURCE_DIR}/assets
     )
 
@@ -191,11 +191,13 @@ function(bread_package)
 
     if("${PACKAGE_ASSETS}" STREQUAL "")
         set(PACKAGE_ASSETS ${CMAKE_SOURCE_DIR}/assets)
+    elseif(NOT IS_ABSOLUTE "${PACKAGE_ASSETS}")
+        set(PACKAGE_ASSETS ${CMAKE_SOURCE_DIR}/${PACKAGE_ASSETS})
     endif()
     
     add_custom_command(
         TARGET ${PACKAGE_NAME}
-        PRE_BUILD
+        POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/assets ${PACKAGE_ASSETS}
     )
 
