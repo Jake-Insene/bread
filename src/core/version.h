@@ -2,7 +2,9 @@
 #include "core/types.h"
 
 
-
+/**
+* Simple version utility.
+*/
 union Version
 {
     struct

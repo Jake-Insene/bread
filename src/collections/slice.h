@@ -4,11 +4,11 @@
 #include "debug/assertion.h"
 
 
-
-/*
+/**
 * Contains a linear collection of T elements.
-* T The type of the elements in the slice.
 * Read and Write are allowed.
+*
+* @tparam T The type of the elements in the slice.
 */
 template<typename T>
 struct [[nodiscard]] Slice

@@ -5,6 +5,9 @@
 #include "graphics/gpu_memory_allocator_types.h"
 
 
+namespace Graphics
+{
+
 struct GPUMemoryAllocator;
 
 struct GPUResourceManagerCreateInfo
@@ -42,7 +45,7 @@ struct GPUResourceManager
         GPU::QueueID graphics_queue;
         GPU::QueueID copy_queue;
 
-        GPUMemoryAllocator* gpu_memory_allocator;  
+        GPUMemoryAllocator* gpu_memory_allocator;
 
         FreeList<TextureData, GPUTextureID> textures;
     } data;
@@ -68,3 +71,5 @@ struct GPUResourceManager
 
     void _submit_and_wait(GPU::QueueID queue, GPU::QueueUsage usage, void* arg, SubmitFn recorder);
 };
+
+}

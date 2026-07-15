@@ -12,6 +12,13 @@ struct RenderDeviceCreateInfo
     Mem::Allocator* allocator;
 };
 
+/**
+* A Render Device is a collection of GPU resources and utilities.
+* * A GPU Device.
+* * Queues.
+* * GPU Memory Allocator
+* *
+*/
 struct RenderDevice
 {
     struct

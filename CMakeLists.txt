@@ -77,8 +77,6 @@ file(GLOB ENGINE_SRC
     
     src/platform/intrinsics.cpp
 
-    src/renderer/render_pass.cpp
-    
     src/resource/font.cpp
     src/resource/image.cpp
     src/resource/resource.cpp

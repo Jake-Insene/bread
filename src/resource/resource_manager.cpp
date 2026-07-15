@@ -216,7 +216,7 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, cons
         tex = _create_resource<Texture2D>();
         tex->path.set(path);
         
-        GPUResourceManager::TextureAllocateInfo create_info =
+        Graphics::GPUResourceManager::TextureAllocateInfo create_info =
         {
             .type = load_info.type,
             .format = image->get_format() == Image::ImageFormat::RGB8 ? GPU::TextureFormat::RGB8Srgb : GPU::TextureFormat::RGBA8Srgb,

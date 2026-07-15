@@ -113,7 +113,7 @@ void Font::destroy()
 {
     for (FontTheme& theme : data.themes.iter())
     {
-        if (theme.font_atlas == GPUTextureID::invalid())
+        if (theme.font_atlas == Graphics::GPUTextureID::invalid())
         {
             continue;
         }

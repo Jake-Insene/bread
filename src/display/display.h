@@ -18,13 +18,13 @@ struct Display
 
     struct VTable
     {
-        VTFunc(void, initialize, Mem::Allocator*);
-        VTFunc(void, shutdown);
+        void(*initialize)(Mem::Allocator*);
+        void(*shutdown)();
 
-        VTFunc(WindowID, window_create);
-        VTFunc(Vector2I, window_get_size, WindowID);
-        VTFunc(void, window_set_size, WindowID, const Vector2I&);
-        VTFunc(Opaque, window_get_native_handle, WindowID);
+        WindowID(*window_create)();
+        Vector2I(*window_get_size)(WindowID);
+        void(*window_set_size)(const Vector2I&);
+        Opaque(*window_get_native_handle)(WindowID);
     };
 
     static inline VTable vtable;

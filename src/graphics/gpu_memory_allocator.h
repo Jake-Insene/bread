@@ -6,6 +6,9 @@
 #include "graphics/gpu_memory_allocator_types.h"
 
 
+namespace Graphics
+{
+
 struct GPUMemoryAllocatorCreateInfo
 {
     Mem::Allocator* allocator;
@@ -109,4 +112,6 @@ struct GPUMemoryAllocator
     Heap& _create_heap(AllocationTag tag, usize size, GPU::HeapUsage heap_usage);
 };
 
-EnableBitOp(GPUMemoryAllocator::StagingFlags);
+}
+
+EnableBitOp(Graphics::GPUMemoryAllocator::StagingFlags);

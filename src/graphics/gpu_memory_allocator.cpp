@@ -3,6 +3,9 @@
 #include "debug/fail.h"
 
 
+namespace Graphics
+{
+
 void GPUMemoryAllocator::init(const GPUMemoryAllocatorCreateInfo& info)
 {
     data.allocator = info.allocator;
@@ -284,5 +287,4 @@ GPUMemoryAllocator::Heap& GPUMemoryAllocator::_create_heap(AllocationTag tag, us
     return data.heaps.add(new_heap);
 }
 
-
-
+}

@@ -228,7 +228,7 @@ namespace GPU
 	/**
 	* Destroy the given logical device.
 	* @warning Any resource allocated from this device must be destroyed before calling this function,
-	* ignore this will cause undefined behaviour.
+	* ignore this will cause undefine behaviour.
 	*/
 	void device_destroy(DeviceID device);
 
