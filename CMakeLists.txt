@@ -82,9 +82,7 @@ file(GLOB ENGINE_SRC
     src/resource/resource.cpp
     src/resource/resource_manager.cpp
     src/resource/sound.cpp
-    src/resource/sprite_animation.cpp
     src/resource/texture.cpp
-    src/resource/tile_set.cpp
 )
 
 file(GLOB VULKAN_ADAPTER_SRC

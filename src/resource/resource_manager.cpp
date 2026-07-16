@@ -7,8 +7,6 @@
 #include "resource/image.h"
 #include "resource/texture.h"
 #include "resource/sound.h"
-#include "resource/sprite_animation.h"
-#include "resource/tile_set.h"
 #include "graphics/render_device.h"
 
 #include <external/stb_image.h>
@@ -77,16 +75,7 @@ Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
         break;
     case RESOURCE_FONT:
         return _load_font(path);
-    case RESOURCE_SPRITE_ANIMATION:
-    case RESOURCE_TILE_SET:
-    {
-        if (resources.has(path))
-        {
-            return resources.get(path).resource;
-        }
-        return MakeError(ErrorCode::ResourceNotFound);
-    }
-    break;
+        break;
     default:
         break;
     }
@@ -110,45 +99,6 @@ bool ResourceManager::place_resource(StringView resource_name, DestroyResourceFn
         }
     );
     return true;
-}
-
-SpriteAnimation* ResourceManager::create_sprite_animation(StringView name)
-{
-    if (resources.has(name))
-    {
-        FailOn(true, "SpriteAnimation already create");
-        return nullptr;
-    }
-
-    SpriteAnimation* sprite_animation = _create_resource<SpriteAnimation>();
-    (void)place_resource(
-        name,
-        [](Resource* resource){ reinterpret_cast<SpriteAnimation*>(resource)->destroy(); },
-        sprite_animation
-    );
-
-    sprite_animation->path.set("local");
-    return sprite_animation;
-}
-
-TileSet* ResourceManager::create_tile_set(StringView name, Vector2I tile_size)
-{
-    if (resources.has(name))
-    {
-        FailOn(true, "TileSet already create");
-        return nullptr;
-    }
-
-    TileSet* tile_set = _create_resource<TileSet>();
-    (void)place_resource(
-        name,
-        [](Resource* resource){ reinterpret_cast<TileSet*>(resource)->destroy(); },
-        tile_set
-    );
-    
-    tile_set->path.set("local");
-    tile_set->set_tile_size(tile_size);
-    return tile_set;
 }
 
 Result<Resource*, Error> ResourceManager::_load_image(StringView path)
