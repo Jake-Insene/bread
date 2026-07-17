@@ -16,7 +16,6 @@ void ResourceManager::initialize(const ResourceManagerCreateInfo& info)
 {
     allocator = info.allocator;
 
-    stbi_set_flip_vertically_on_load(true);
     resources = StringMap<ResourceAllocation>::with_size(
         allocator, 128
     );
