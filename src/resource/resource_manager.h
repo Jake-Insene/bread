@@ -47,9 +47,6 @@ struct ResourceManager
 
     [[nodiscard]] bool place_resource(StringView resource_name, DestroyResourceFn destroy, Resource* resource);
 
-    [[nodiscard]] SpriteAnimation* create_sprite_animation(StringView name);
-    [[nodiscard]] TileSet* create_tile_set(StringView name, Vector2I tile_size);
-    
     // Implementation
     template<typename T>
     requires(!IsSame<Resource, T>)

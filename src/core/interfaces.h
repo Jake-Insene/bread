@@ -7,6 +7,9 @@ concept Iterable = requires(T&& it)
 {
 	{ it.begin() };
 	{ it.end() };
+	{ ++it };
+	{ --it };
+	{ *it };
 };
 
 // Default hash
@@ -20,7 +23,7 @@ struct HashOfType
 };
 
 template<typename T>
-concept Hashable = requires(T&& hashable1, T&& hashable2)
+concept Hashable = requires(T&& hashable1)
 {
     { HashOfType<T>::hashfunc(hashable1) } -> ConvertibleTo<HashCode>;
 };
@@ -35,6 +38,9 @@ struct Comparator
     }
 };
 
+/**
+* User to represent comparable values of type T.
+*/
 template<typename T>
 concept Comparable = requires(T&& value1, T&& value2)
 {

@@ -3,6 +3,9 @@
 #include "graphics/gpu_memory_allocator.h"
 
 
+namespace Graphics
+{
+
 void GPUResourceManager::init(const GPUResourceManagerCreateInfo& info)
 {
     data.allocator = info.allocator;
@@ -190,4 +193,6 @@ void GPUResourceManager::_submit_and_wait(GPU::QueueID queue, GPU::QueueUsage us
 
     GPU::command_buffer_free(cmd);
     GPU::command_pool_destroy(pool);
+}
+
 }

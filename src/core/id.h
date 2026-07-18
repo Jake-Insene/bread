@@ -3,10 +3,11 @@
 #include "core/values.h"
 
 
-/*
+/**
 * Use to create custom ID types.
 * 
-* @param Tag Specify a tag to make unique ID types
+* @tparam T The underlying ID type.
+* @tparam Tag Specify a tag to make unique ID types
 */
 template<typename T, typename Tag>
 struct [[nodiscard]] ID

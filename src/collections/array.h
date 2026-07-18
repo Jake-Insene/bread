@@ -7,7 +7,7 @@
 
 
 /*
-* Used to iterate over an array.
+* Use to iterate over an array.
 */
 template<typename T>
 struct [[nodiscard]] ArrayIterator : BaseIterator<T>
@@ -49,9 +49,10 @@ struct [[nodiscard]] ArrayIterator : BaseIterator<T>
 };
 
 
-/*
+/**
 * A collection of linear memory that contains items of type T.
 * You can add/remove/modify items.
+* @tparam T Element type, it must be trivialy constructible: T value = {};
 */
 template<typename T>
 struct [[nodiscard]] Array
@@ -153,7 +154,7 @@ struct [[nodiscard]] Array
                 Mem::copy(new_items, items);
                 allocator->free(Mem::to_bytes(items));
             }
-                
+            
             items = new_items;
         }
         else

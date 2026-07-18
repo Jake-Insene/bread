@@ -3,6 +3,9 @@
 #include "debug/fail.h"
 
 
+namespace Graphics
+{
+
 void GPUMemoryAllocator::init(const GPUMemoryAllocatorCreateInfo& info)
 {
     data.allocator = info.allocator;
@@ -75,7 +78,7 @@ GPUMemoryAllocationID GPUMemoryAllocator::allocate(AllocationTag tag, const GPU:
     Allocation new_allocation =
     {
         .heap_index = new_heap.heap_index,
-        .offset = 0,
+        .heap_offset = 0,
         .tag = tag,
         .size = new_heap.heap_size,
         .free = false,
@@ -200,13 +203,51 @@ void GPUMemoryAllocator::unmap_staging(GPU::BufferID staging_buffer, const Slice
 GPU::MemoryHeapID GPUMemoryAllocator::allocation_get_heap(GPUMemoryAllocationID allocation)
 {
     FailOn(allocation.is_valid() == false, "invalid allocation");
-    return data.heaps.get(data.allocations.get(allocation).heap_index).heap;
+    Allocation& allocation_data = data.allocations.get(allocation);
+    FailOn(allocation_data.free == true, "use after free");
+
+    return data.heaps.get(allocation_data.heap_index).heap;
 }
 
 [[nodiscard]] usize GPUMemoryAllocator::allocation_get_offset(GPUMemoryAllocationID allocation)
 {
     FailOn(allocation.is_valid() == false, "invalid allocation");
-    return data.allocations.get(allocation).offset;
+    Allocation& allocation_data = data.allocations.get(allocation);
+
+    FailOn(allocation_data.free == true, "use after free");
+    return allocation_data.heap_offset;
+}
+
+Slice<u8> GPUMemoryAllocator::allocation_map(GPUMemoryAllocationID allocation)
+{
+    FailOn(allocation.is_valid() == false, "invalid allocation");
+    Allocation& allocation_data = data.allocations.get(allocation);
+    Heap& heap = data.heaps.get(allocation_data.heap_index);
+    FailOn(heap.tag != AllocationTag::Staging, "can't map this kind of allocation");
+
+    heap.map_count++;
+    if(heap.mapped.null())
+    {
+        heap.mapped = GPU::memory_heap_map(heap.heap, 0, heap.heap_size);
+    }
+
+    return heap.mapped.add(allocation_data.heap_offset).slice(allocation_data.size);
+}
+
+void GPUMemoryAllocator::allocation_unmap(GPUMemoryAllocationID allocation, const Slice<u8>& mapped)
+{
+    Unused(mapped);
+
+    FailOn(allocation.is_valid() == false, "invalid allocation");
+    Allocation& allocation_data = data.allocations.get(allocation);
+    Heap& heap = data.heaps.get(allocation_data.heap_index);
+    FailOn(heap.tag != AllocationTag::Staging, "can't unmap this kind of allocation");  
+
+    heap.map_count--;
+    if(heap.map_count == 0)
+    {
+        GPU::memory_heap_unmap(heap.heap, heap.mapped);
+    }
 }
 
 GPUMemoryAllocator::Heap& GPUMemoryAllocator::_request_heap_for(AllocationTag tag, usize size, GPU::HeapUsage heap_usage)
@@ -238,11 +279,12 @@ GPUMemoryAllocator::Heap& GPUMemoryAllocator::_create_heap(AllocationTag tag, us
         .heap_usage = required_heap_usage,
         .tag = tag,
         .heap_index = data.heaps.count,
+        .map_count = 0,
+        .mapped = {},
         .first_allocation = GPUMemoryAllocationID::invalid(),
     };
 
     return data.heaps.add(new_heap);
 }
 
-
-
+}

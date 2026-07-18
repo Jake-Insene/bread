@@ -9,5 +9,4 @@
 #include "core/templates.h"
 #include "core/values.h"
 #include "core/version.h"
-#include "core/vtable.h"
 

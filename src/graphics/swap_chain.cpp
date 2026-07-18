@@ -32,11 +32,6 @@ void SwapChain::destroy()
     }
 }
 
-void SwapChain::resize()
-{
-    _try_rebuild();
-}
-
 bool SwapChain::acquire_image(u32* image_index, GPU::SemaphoreID present_complete)
 {
     if(data.pending_rebuild)
@@ -133,9 +128,9 @@ void SwapChain::_rebuild()
         data.swap_chain = GPU::SwapChainID::invalid();
     }
 
-    Vector2I window_size = Display::window_get_size(data.window);
-    if(window_size.x == 0 || window_size.y == 0
-        || window_size.x < 0 || window_size.y < 0)
+    data.image_size = Display::window_get_size(data.window);
+    if(data.image_size.x == 0 || data.image_size.y == 0
+        || data.image_size.x < 0 || data.image_size.y < 0)
     {
         return;
     }
@@ -147,7 +142,7 @@ void SwapChain::_rebuild()
             .present_mode = data.present_mode,
             .format = data.surface_format,
             .min_image_count = DefaultMinImageCount,
-            .size = Vector2U(window_size),
+            .size = Vector2U(data.image_size),
         }
     );
     data.is_valid_swap_chain = true;

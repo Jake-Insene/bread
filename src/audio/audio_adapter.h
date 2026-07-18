@@ -7,16 +7,16 @@ namespace InternalAudio
 
 struct AudioAdapter
 {
-    VTFunc(void, initialize, Mem::Allocator*);
-    VTFunc(void, shutdown);
+    void(*initialize)(Mem::Allocator*);
+    void(*shutdown)();
     
-    VTFunc(u32, output_get_samples_per_sec);
+    u32(*output_get_samples_per_sec)();
 
-    VTFunc(void, output_start);
-    VTFunc(void, output_stop);
-    VTFunc(bool, output_wait_for_event);
-    VTFunc(u32, output_get_frame_count, );
-    VTFunc(void, output_send_frames, const Slice<Audio::Frame>& frames);
+    void(*output_start)();
+    void(*output_stop)();
+    bool(*output_wait_for_event)();
+    u32(*output_get_frame_count)();
+    void(*output_send_frames)(const Slice<Audio::Frame>& frames);
 };
 
 }
