@@ -2,7 +2,6 @@
 #include "math/vec2.h"
 
 
-
 /*
 * Bottom Left rectangle.
 */
@@ -61,7 +60,7 @@ struct [[nodiscard]] Rect2DT
 
     constexpr VectorType center() const
     {
-        return VectorType(position.x + size.x/Type(2), position.y + size.y/Type(2));
+        return position + (size / Type(2));
     }
 
     constexpr void set_center(const VectorType& new_center)
@@ -69,7 +68,6 @@ struct [[nodiscard]] Rect2DT
         position.x = new_center.x - size.x/T(2);
         position.y = new_center.y - size.y/T(2);
     }
-
 };
 
 using Rect2D = Rect2DT<f32>;
