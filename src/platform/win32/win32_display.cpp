@@ -171,9 +171,12 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 	break;
 	case WM_MOUSEMOVE:
 	{
+		RECT client_rect;
+		GetClientRect(handle, &client_rect);
+
 		Vector2 screen_space_position = Vector2(
 			f32(GET_X_LPARAM(lparam)),
-			-f32(GET_Y_LPARAM(lparam))
+			(client_rect.bottom - client_rect.top) - f32(GET_Y_LPARAM(lparam))
 		);
 		Input::data.mouse_position = screen_space_position;
 		return 0;

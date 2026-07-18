@@ -37,11 +37,12 @@ static int32_t engine_handle_input(android_app*, AInputEvent* event)
                 InputEventTouch e = {};
 
                 // Y positive is up
+                // TODO: Fix coordinates.
                 e.type = EventType::Touch;
                 e.position = Vector2
                         (
                                 AMotionEvent_getX(event, p),
-                                -AMotionEvent_getY(event, p)
+                                AMotionEvent_getY(event, p)
                         );
                 e.pressed = (action == AMOTION_EVENT_ACTION_DOWN
                              || action == AMOTION_EVENT_ACTION_MOVE

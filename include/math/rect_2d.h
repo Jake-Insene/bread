@@ -23,12 +23,12 @@ struct [[nodiscard]] Rect2DT
     
     [[nodiscard]] constexpr bool contains(const VectorType& point)
     {
-        if(point.x < position.x || point.y > position.y)
+        if(point.x < position.x || point.y < position.y)
         {
             return false;
         }
         
-        if(point.x > (position.x + size.width) || point.y < (position.y + size.height))
+        if(point.x > (position.x + size.width) || point.y > (position.y + size.height))
         {
             return false;
         }
