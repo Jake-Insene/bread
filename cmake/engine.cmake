@@ -167,9 +167,8 @@ function(bread_project)
     target_include_directories(
         ${PROJECT_NAME}
         PUBLIC
-        "${CMAKE_SOURCE_DIR}/bread/"
-        "${CMAKE_SOURCE_DIR}/bread/src"
         "${CMAKE_SOURCE_DIR}"
+        "${CMAKE_SOURCE_DIR}/bread/include"
     )
 
     target_link_libraries(${PROJECT_NAME} "bread" ${PROJECT_SUBMODULES} ${PROJECT_PACKAGES})
@@ -209,7 +208,7 @@ function(bread_package)
         PUBLIC
         "${PACKAGE_INCLUDES}"
         "${CMAKE_CURRENT_SOURCE_DIR}"
-        "${CMAKE_PROJECT_SOURCE_DIR}/bread/src"
+        "${CMAKE_PROJECT_SOURCE_DIR}/bread/include"
     )
 endfunction()
 

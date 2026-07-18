@@ -52,18 +52,10 @@ file(GLOB ENGINE_SRC
     src/io/file.cpp
     src/io/writer.cpp
 
-    src/math/transform_2d.cpp
-    src/math/vec2.cpp
-    
     src/mem/utils.cpp
     src/mem/generic_allocator.cpp
     src/mem/page_allocator.cpp
     src/mem/stack_allocator.cpp
-
-    src/os/mutex.cpp
-    src/os/os.cpp
-    src/os/semaphore.cpp
-    src/os/thread.cpp
 
     src/physics/physics_2d.cpp
     src/physics/shape_2d.cpp
@@ -148,6 +140,7 @@ target_include_directories(
     "bread"
     PRIVATE
     "src"
+    "include"
     "."
     "external/freetype/include"
     ${ANDROID_NDK}/sources/android/native_app_glue

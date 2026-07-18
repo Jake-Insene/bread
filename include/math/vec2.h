@@ -1,6 +1,7 @@
 #pragma once
 #include "core/types.h"
 #include "debug/assertion.h"
+#include "fmt/fmt.h"
 #include "math/funcs.h"
 #include "platform/instrinsics.h"
 
@@ -9,18 +10,20 @@ template <typename T>
 requires(IsArithmetic<T>)
 union [[nodiscard]] Vector2T
 {
-    T comp[2];
+    using Type = T;
+
+    Type comp[2];
 
     struct
     {
-        T x;
-        T y;
+        Type x;
+        Type y;
     };
 
     struct
     {
-        T width;
-        T height;
+        Type width;
+        Type height;
     };
 
     static constexpr Vector2T zero() { return Vector2T(0); }
@@ -32,12 +35,12 @@ union [[nodiscard]] Vector2T
     static constexpr Vector2T right() { return Vector2T(1, 0); }
     static constexpr Vector2T left() { return Vector2T(-1, 0); }
 
-    static constexpr T cross(const Vector2T& v1, const Vector2T& v2)
+    static constexpr Type cross(const Vector2T& v1, const Vector2T& v2)
     {
 		return (v1.x * v2.y) - (v1.y * v2.x);
     }
 
-    static constexpr Vector2T rotate_around_point(const Vector2T& vertice, const Vector2T& point, const T rot)
+    static constexpr Vector2T rotate_around_point(const Vector2T& vertice, const Vector2T& point, const Type rot)
     {
         Vector2T rotated = Vector2T();
 
@@ -53,25 +56,25 @@ union [[nodiscard]] Vector2T
 		return rotated;
     }
 
-    static constexpr Vector2T lerp(const Vector2T& v0, const Vector2T& v1, const T& t)
+    static constexpr Vector2T lerp(const Vector2T& v0, const Vector2T& v1, const Type& t)
     {
         return Math::lerp<Vector2T>(v0, v1, t);
     }
     
-    constexpr Vector2T() : x(T(0)), y(T(0)) {};
-    constexpr explicit Vector2T(const T _x, const T _y) : x(_x), y(_y) {}
-    constexpr explicit Vector2T(const T v) : x(v), y(v) {}
+    constexpr Vector2T() : x(Type(0)), y(Type(0)) {};
+    constexpr explicit Vector2T(const Type _x, const Type _y) : x(_x), y(_y) {}
+    constexpr explicit Vector2T(const Type v) : x(v), y(v) {}
     
     template<typename T2>
-    constexpr explicit Vector2T(const Vector2T<T2>& v) : x(T(v.x)), y(T(v.y)) {}
+    constexpr explicit Vector2T(const Vector2T<T2>& v) : x(Type(v.x)), y(Type(v.y)) {}
 
-    [[nodiscard]] constexpr T& operator[](const usize index)
+    [[nodiscard]] constexpr Type& operator[](const usize index)
     {
         DebugAssert(index < 2, "index can only be 0 or 1");
         return comp[index];
     }
 
-    [[nodiscard]] constexpr const T& operator[](const usize index) const
+    [[nodiscard]] constexpr const Type& operator[](const usize index) const
     {
         DebugAssert(index < 2, "index can only be 0 or 1");
         return comp[index];
@@ -83,7 +86,7 @@ union [[nodiscard]] Vector2T
         return Vector2T{x + v.x, y + v.y};
     }
     
-    constexpr Vector2T operator+(T v) const
+    constexpr Vector2T operator+(Type v) const
     {
         return Vector2T{x + v, y + v};
     }
@@ -93,7 +96,7 @@ union [[nodiscard]] Vector2T
         return Vector2T{x - v.x, y - v.y};
     }
     
-    constexpr Vector2T operator-(T v) const
+    constexpr Vector2T operator-(Type v) const
     {
         return Vector2T{x - v, y - v};
     }
@@ -103,7 +106,7 @@ union [[nodiscard]] Vector2T
         return Vector2T{x * v.x, y * v.y};
     }
 
-    constexpr Vector2T operator*(T v) const
+    constexpr Vector2T operator*(Type v) const
     {
         return Vector2T{x * v, y * v};
     }
@@ -113,7 +116,7 @@ union [[nodiscard]] Vector2T
         return Vector2T{x / v.x, y / v.y};
     }
 
-    constexpr Vector2T operator/(T v) const
+    constexpr Vector2T operator/(Type v) const
     {
         return Vector2T{x / v, y / v};
     }
@@ -139,7 +142,7 @@ union [[nodiscard]] Vector2T
         return *this;
     }
 
-    constexpr Vector2T& operator*=(T v)
+    constexpr Vector2T& operator*=(Type v)
     {
         x *= v;
         y *= v;
@@ -153,7 +156,7 @@ union [[nodiscard]] Vector2T
         return *this;
     }
 
-    constexpr Vector2T& operator/=(T v)
+    constexpr Vector2T& operator/=(Type v)
     {
         x /= v;
         y /= v;
@@ -165,7 +168,7 @@ union [[nodiscard]] Vector2T
 		return x == v.x && y == v.y;
     }
     
-    constexpr T length() const
+    constexpr Type length() const
     {
         return Math::sqrt(dot(*this));
     }
@@ -188,14 +191,14 @@ union [[nodiscard]] Vector2T
 #if BREAD_ENABLE_INTRISICS
         if !consteval
         {
-            T x1 = x;
-            T y1 = y;
+            Type x1 = x;
+            Type y1 = y;
             PlatformIntricics::vecnormalize(x1, y1);
             return Vector2T(x1, y1);
         }
 #endif
         Vector2T v = *this;
-        const T len = length();
+        const Type len = length();
         if(len)
         {
             v.x /= len;
@@ -218,7 +221,7 @@ union [[nodiscard]] Vector2T
             return;
         }
 #endif
-        const T len = length();
+        const Type len = length();
         if(len)
         {
             x /= len;
@@ -226,7 +229,7 @@ union [[nodiscard]] Vector2T
         }
     }
 
-    constexpr T dot(const Vector2T& v) const
+    constexpr Type dot(const Vector2T& v) const
     {
         return (x * v.x) + (y * v.y);
     }
@@ -241,22 +244,17 @@ using Vector2 = Vector2T<f32>;
 using Vector2I = Vector2T<i32>;
 using Vector2U = Vector2T<u32>;
 
-namespace IO
-{
-struct Writer;
-}
-
 namespace Format
 {
 
 template<typename T>
-void format_custom(const IO::Writer& writer, const T& v);
-
-template<>
-void format_custom<Vector2>(const IO::Writer& writer, const Vector2& v);
-
-template<>
-void format_custom<Vector2I>(const IO::Writer& writer, const Vector2I& v);
+struct Formatter<Vector2T<T>>
+{
+	static void format_custom(const IO::Writer& writer, Vector2T<T>&& vec)
+    {
+        format<false>(writer, "({}, {})", vec.x, vec.y);
+    }
+};
 
 }
 

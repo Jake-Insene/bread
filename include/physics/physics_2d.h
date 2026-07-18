@@ -10,7 +10,6 @@
 
 struct Object;
 struct Object2D;
-struct Transform2D;
 
 namespace InternalPhysics2D
 {

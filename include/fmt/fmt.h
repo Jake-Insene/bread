@@ -157,7 +157,10 @@ inline void __format_floating_point(const IO::Writer& writer, T arg, i32 decimal
 }
 
 template<typename T>
-void format_custom(const IO::Writer& writer, const T& arg);
+struct Formatter
+{
+	static void format_custom(const IO::Writer& writer, T&& arg);
+};
 
 template<typename T>
 void __format_single_argument(const IO::Writer& writer, T&& arg)
@@ -215,7 +218,7 @@ void __format_single_argument(const IO::Writer& writer, T&& arg)
 	}
 	else
 	{
-		format_custom<T>(writer, arg);
+		Formatter<T>::format_custom(writer, Forward<T>(arg));
 	}
 }
 
