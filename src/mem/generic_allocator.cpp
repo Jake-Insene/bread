@@ -32,7 +32,7 @@ void GenericAllocator::destroy()
         accumulator += page.bytes.len;
     }
     
-    Log::debug("[Memory]: Allocated pages {}, total memory usage of {} MB",
+    Log::debug("[Memory]: Allocated pages {}, total memory usage of {} MiB",
         page_count, f32(accumulator) / MiB(1));
   
     for(usize i = 0; i < page_count; i++)
