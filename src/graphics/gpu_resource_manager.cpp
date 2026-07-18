@@ -65,7 +65,10 @@ GPUTextureID GPUResourceManager::create_texture(const TextureAllocateInfo& alloc
             .type = GPU::TextureViewType::Texture2D,
             .format = alloc_info.format,
             .texture = texture,
-            .components = GPU::ComponentMapping::identity(),
+            .components = HasValue(alloc_info.flags & TextureAllocateFlags::ViewR8One) ?
+                GPU::ComponentMapping(GPU::ComponentSwizzle::Red,
+                    GPU::ComponentSwizzle::One, GPU::ComponentSwizzle::One, GPU::ComponentSwizzle::One)
+                : GPU::ComponentMapping::identity(),
             .subresource_range = GPU::TextureSubresourceRange::color(0, 1, 0, 1),
         })
     );

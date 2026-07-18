@@ -82,6 +82,7 @@ Error Texture2D::load_from_raw(Image::ImageFormat image_format, const Vector2I& 
         .format = image_format == Image::ImageFormat::RGB8 ? GPU::TextureFormat::RGB8Srgb : GPU::TextureFormat::RGBA8Srgb,
         .extent = Vector3U(image_size.width, image_size.height, 1),
         .pixels = pixels,
+        .flags = Graphics::TextureAllocateFlags(),
     };
     
     texture_ref = Engine::get_render_device()->get_gpu_resource_manager()->create_texture(create_info);

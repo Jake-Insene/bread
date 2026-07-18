@@ -19,6 +19,11 @@ struct GPUResourceManagerCreateInfo
     GPUMemoryAllocator* gpu_memory_allocator;   
 };
 
+enum class TextureAllocateFlags : u32
+{
+    ViewR8One = Bit(0),
+};
+
 struct GPUResourceManager
 {
     using SubmitFn = void(*)(void* arg, GPU::CommandBufferID);
@@ -29,6 +34,7 @@ struct GPUResourceManager
         GPU::TextureFormat format;
         Vector3U extent;
         Slice<u8> pixels;
+        TextureAllocateFlags flags;
     };
 
     struct TextureData
@@ -73,3 +79,5 @@ struct GPUResourceManager
 };
 
 }
+
+EnableBitOp(Graphics::TextureAllocateFlags);

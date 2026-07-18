@@ -718,6 +718,17 @@ namespace GPU
 		ComponentSwizzle b;
 		ComponentSwizzle a;
 
+		static constexpr ComponentMapping create(ComponentSwizzle r, ComponentSwizzle g, ComponentSwizzle b, ComponentSwizzle a)
+		{
+			return ComponentMapping
+			{
+				.r = r,
+				.g = g,
+				.b = b,
+				.a = a,
+			};
+		}
+
 		static constexpr ComponentMapping identity()
 		{
 			return ComponentMapping

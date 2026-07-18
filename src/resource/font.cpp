@@ -6,25 +6,6 @@
 #include <external/stb_truetype.h>
 
 
-static void flip_atlas_vertical(Mem::Allocator* allocator, const Slice<u8>& pixels, const Vector2I& size)
-{
-    const i32 row_size = size.width; // R8
-
-    Slice tmp = allocator->alloc(row_size, 16);
-
-    for (i32 y = 0; y < size.height / 2; ++y)
-    {
-        Slice row_top    = pixels.add(isize(y * row_size));
-        Slice row_bottom = pixels.add(isize((size.height - 1 - y) * row_size));
-
-        Mem::copy(tmp, row_top.slice(row_size));
-        Mem::copy(row_top, row_bottom.slice(row_size));
-        Mem::copy(row_bottom, tmp.slice(row_size));
-    }
-
-    allocator->free(tmp);
-}
-
 static void load_theme(Mem::Allocator* allocator, const Slice<u8>& font_file_content,
     stbtt_fontinfo* font, Font::FontTheme& theme)
 {
@@ -33,7 +14,7 @@ static void load_theme(Mem::Allocator* allocator, const Slice<u8>& font_file_con
     
     bool success = false;
     i32 width = 512;
-    while(success)
+    while(success == false)
     {
         Slice pixels = allocator->alloc(i64(width * width), 16);
 
@@ -52,7 +33,7 @@ static void load_theme(Mem::Allocator* allocator, const Slice<u8>& font_file_con
             continue;
         }
 
-        success = true;  
+        success = true;
 
         for (u32 glyph_index = 0; glyph_index < Font::MinimumGlyphCount; glyph_index++)
         {
@@ -77,23 +58,20 @@ static void load_theme(Mem::Allocator* allocator, const Slice<u8>& font_file_con
             f32 glyph_width = u1 - u0;
             f32 glyph_height = v1 - v0;
 
-            // Conversion of the top-left coordinate system to bottom-left coordinate system
-            f32 glyph_atlas_pos_x = u0;
-            f32 glyph_atlas_pos_y = f32(width) - v0 - glyph_height;
-
+            // top-left rect
             glyph.src_rect = Rect2D(
-                Vector2(glyph_atlas_pos_x, glyph_atlas_pos_y),
+                Vector2(u0, v0),
                 Vector2(glyph_width, glyph_height)
             );
         }
 
-        flip_atlas_vertical(allocator, pixels, Vector2I(width, width));
         theme.font_atlas = Engine::get_render_device()->get_gpu_resource_manager()->create_texture(
             {
                 .type = GPU::TextureType::Texture2D,
-                .format = GPU::TextureFormat::R8Srgb,
+                .format = GPU::TextureFormat::R8Unorm,
                 .extent = Vector3U(width, width, 1),
                 .pixels = pixels,
+                .flags = Graphics::TextureAllocateFlags::ViewR8One,
             }
         );
 
@@ -113,14 +91,14 @@ void Font::destroy()
 {
     for (FontTheme& theme : data.themes.iter())
     {
+        theme.glyphs.destroy();
+
         if (theme.font_atlas == Graphics::GPUTextureID::invalid())
         {
             continue;
         }
     
-        Engine::get_render_device()->get_gpu_resource_manager()->destroy_texture(theme.font_atlas);
-        
-        theme.glyphs.destroy();
+        Engine::get_render_device()->get_gpu_resource_manager()->destroy_texture(theme.font_atlas);        
     }
 
     data.themes.destroy();
