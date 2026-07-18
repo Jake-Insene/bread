@@ -28,7 +28,7 @@ struct Image : Resource
     void init(const ResourceCreateInfo& info);
     void destroy();
     
-    Error load(StringView file_path);
+    Error load_from_path(StringView file_path);
     void unload();
 
     Slice<u8> get_raw_pixels() const { return data.pixels; }

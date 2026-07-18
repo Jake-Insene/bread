@@ -7,7 +7,6 @@
 #include "resource/image.h"
 #include "resource/texture.h"
 #include "resource/sound.h"
-#include "graphics/render_device.h"
 
 #include <external/stb_image.h>
 
@@ -20,24 +19,22 @@ void ResourceManager::initialize(const ResourceManagerCreateInfo& info)
         allocator, 128
     );
     
-    cached_images = HashMap<Image*, Texture*>::with_size(
-        allocator, 128
+    // default resources
+
+    u32 white = 0xFFFFFFFF;
+    Texture2D* white_texture = _create_resource<Texture2D>();
+    white_texture->path.set("default:white_texture");
+    (void)white_texture->load_from_raw(Image::ImageFormat::RGBA8, Vector2I(1, 1), Mem::to_bytes(Slice(&white, 1)));
+
+    (void)place_resource(
+        "default:white_texture",
+        [](Resource* resource){ reinterpret_cast<Texture2D*>(resource)->destroy(); },
+        white_texture
     );
 }
 
 void ResourceManager::shutdown()
 {
-    for(auto& [image, texture] : cached_images.iter())
-    {
-        if(texture != nullptr)
-        {
-            texture->destroy();
-            allocator->free(
-                Mem::to_bytes(Slice(texture, 1))
-            );
-        }
-    }
-    
     for(auto& it : resources.iter())
     {
         RMDebugInfo("Destroying the resource '{}'", it.first);
@@ -48,7 +45,6 @@ void ResourceManager::shutdown()
     }
 
     resources.destroy();
-    cached_images.destroy();
 }
 
 Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
@@ -61,13 +57,7 @@ Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
     case RESOURCE_TEXTURE:
         break;
     case RESOURCE_TEXTURE_2D:
-        return _load_texture_2d(
-            path,
-            TextureLoadInfo
-            {
-                .type = GPU::TextureType::Texture2D,
-            }
-        );
+        return _load_texture_2d(path);
         break;
     case RESOURCE_SOUND:
         return _load_sound(path);
@@ -111,7 +101,7 @@ Result<Resource*, Error> ResourceManager::_load_image(StringView path)
     {
         image = _create_resource<Image>();
 
-        Error load_result = image->load(path);
+        Error load_result = image->load_from_path(path);
         if (!load_result)
         {
             get_allocator()->free(Mem::to_bytes(Slice(image, 1)));
@@ -130,52 +120,31 @@ Result<Resource*, Error> ResourceManager::_load_image(StringView path)
 }
 
 
-Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path, const TextureLoadInfo& load_info)
+Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path)
 {
-    Image* image = nullptr;
+    Texture2D* tex = nullptr;
     if(resources.has(path))
     {
-        image = reinterpret_cast<Image*>(resources.get(path).resource);
-    }
-    else
-    {
-        image = _create_resource<Image>();
-        image->path.set(path);
-        (void)place_resource(
-            path,
-            [](Resource* resource){ reinterpret_cast<Image*>(resource)->destroy(); },
-            image
-        );
-        
-        Error load_result = image->load(path);
-        if (!load_result)
-        {
-            return load_result;
-        }
-    }
-    
-    Texture2D* tex = nullptr;
-    if(cached_images.has(image))
-    {
-        tex = reinterpret_cast<Texture2D*>(cached_images.get(image));
+        tex = reinterpret_cast<Texture2D*>(resources.get(path).resource);
     }
     else
     {
         RMDebugInfo("Loading texture '{}'...", path);
         tex = _create_resource<Texture2D>();
-        tex->path.set(path);
         
-        Graphics::GPUResourceManager::TextureAllocateInfo create_info =
+        Error load_result = tex->load_from_path(path);
+        if (!load_result)
         {
-            .type = load_info.type,
-            .format = image->get_format() == Image::ImageFormat::RGB8 ? GPU::TextureFormat::RGB8Srgb : GPU::TextureFormat::RGBA8Srgb,
-            .extent = Vector3U(image->get_size().width, image->get_size().height, 1),
-            .pixels = image->get_raw_pixels(),
-        };
-        
-        tex->texture_ref = Engine::get_render_device()->get_gpu_resource_manager()->create_texture(create_info);
-        tex->size = image->get_size();
-        cached_images.insert(image, tex);
+            get_allocator()->free(Mem::to_bytes(Slice(tex, 1)));
+            return load_result;
+        }
+
+        tex->path.set(path);
+        (void)place_resource(
+            path,
+            [](Resource* resource){ reinterpret_cast<Texture2D*>(resource)->destroy(); },
+            tex
+        );
     }
     
     return tex;

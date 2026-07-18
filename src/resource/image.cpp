@@ -25,7 +25,7 @@ void Image::destroy()
     Resource::destroy();
 }
 
-Error Image::load(StringView file_path)
+Error Image::load_from_path(StringView file_path)
 {
     if (!IO::File::exists(allocator, file_path))
     {

@@ -2,7 +2,6 @@
 #include "collections/error.h"
 #include "collections/hash_map.h"
 #include "collections/string_map.h"
-#include "gpu/gpu.h"
 #include "resource/resource.h"
 
 
@@ -21,11 +20,6 @@ struct ResourceManager
 {
     static constexpr usize DefaultFontSize = 32;
     
-    struct TextureLoadInfo
-    {
-        GPU::TextureType type;
-    };
-      
     using DestroyResourceFn = void(*)(Resource*);
     struct ResourceAllocation
     {
@@ -35,7 +29,6 @@ struct ResourceManager
 
     Mem::Allocator* allocator;
     StringMap<ResourceAllocation> resources;
-    HashMap<Image*, Texture*> cached_images;
 
     [[nodiscard]] Mem::Allocator* get_allocator() const { return allocator; }
 
@@ -63,7 +56,7 @@ struct ResourceManager
     }
 
     [[nodiscard]] Result<Resource*, Error> _load_image(StringView path);
-    [[nodiscard]] Result<Resource*, Error> _load_texture_2d(StringView path, const TextureLoadInfo& load_info);
+    [[nodiscard]] Result<Resource*, Error> _load_texture_2d(StringView path);
     [[nodiscard]] Result<Resource*, Error> _load_sound(StringView path);
     [[nodiscard]] Result<Resource*, Error> _load_font(StringView path);
 };

@@ -40,8 +40,6 @@ struct EngineRuntime
     
     Window main_window;
 
-    Texture* white_texture;
-
     struct
     {
         f64 internal_update_time;
