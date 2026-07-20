@@ -27,6 +27,7 @@ struct Font : Resource
 	{
 		Array<Glyph> glyphs;
 		i32 font_size;
+		Vector2 atlas_size;
 		Graphics::GPUTextureID font_atlas;
 	};
 

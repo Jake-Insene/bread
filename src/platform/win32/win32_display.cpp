@@ -42,9 +42,9 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 	case WM_CANCELMODE:
 	case WM_MOUSELEAVE:
 	{
-		Input::data.mouse_buttons[i32(MouseButton::Left)] = false;
-		Input::data.mouse_buttons[i32(MouseButton::Middle)] = false;
-		Input::data.mouse_buttons[i32(MouseButton::Right)] = false;
+		Input::update_mouse_button(MouseButton::Left, false);
+		Input::update_mouse_button(MouseButton::Middle, false);
+		Input::update_mouse_button(MouseButton::Right, false);
 
 		MouseButton buttons[] = {MouseButton::Left, MouseButton::Middle, MouseButton::Right};
 		for(MouseButton btn : buttons)
@@ -53,7 +53,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 
 			InputEventMouseButton event = {};
 			event.type = EventType::MouseButton;
-			event.position = Input::data.mouse_position;
+			event.position = Input::get_mouse_position();
 			event.pressed = false;
 			event.button = btn;
 			Engine::local_data.engine_runtime->handle_event(event);
@@ -77,12 +77,12 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 			button = MouseButton::Right;
 		}
 
-		Input::data.mouse_buttons[i32(button)] =
+		Input::update_mouse_button(button,
 			msg == WM_LBUTTONDOWN
 			|| msg == WM_RBUTTONDOWN
-			|| msg == WM_MBUTTONDOWN;
+			|| msg == WM_MBUTTONDOWN);
 
-		if(Input::data.mouse_buttons[i32(button)])
+		if(Input::get_mouse_state(button))
 		{
 			Win32Display::WindowData& window_data = _get_window_data(window_id);
 
@@ -109,7 +109,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		InputEventMouseButton event = {};
 		event.type = EventType::MouseButton;
 		event.position = pos;
-		event.pressed = Input::data.mouse_buttons[i32(button)];
+		event.pressed = Input::get_mouse_state(button);
 		event.button = button;
 		Engine::local_data.engine_runtime->handle_event(event);
 		return 0;
@@ -122,7 +122,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		//u16 repeat_count = lparam & 0xFFFF;
 		u8 scan_code = (lparam >> 16) & 0xFF;
 
-		if (Input::data.keys[wparam] == KeyState::RequestNewState
+		if (Input::get_key_state(Key(wparam)) == KeyState::RequestNewState
 			&& (msg == WM_SYSKEYDOWN || msg == WM_KEYDOWN))
 		{
 			return 0;
@@ -139,12 +139,12 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 			real_vk = MapVirtualKeyExA(scan_code, MAPVK_VSC_TO_VK_EX, GetKeyboardLayout(0));
 		}
 
-		Input::data.keys[real_vk] = new_key_state;
-		Input::data.keys[wparam] = new_key_state;
+		Input::update_key_state(Key(real_vk), new_key_state);
+		Input::update_key_state(Key(wparam), new_key_state);
 
 		InputEventKey event = {};
 		event.type = EventType::KeyPress;
-		event.pressed = Input::data.keys[wparam] == KeyState::Pressed;
+		event.pressed = Input::get_key_state(Key(wparam)) == KeyState::Pressed;
 		event.key = static_cast<Key>(wparam);
 
 		Engine::local_data.engine_runtime->handle_event(event);

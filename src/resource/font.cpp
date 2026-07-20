@@ -65,13 +65,14 @@ static void load_theme(Mem::Allocator* allocator, const Slice<u8>& font_file_con
             );
         }
 
+        theme.atlas_size = Vector2(width, width);
         theme.font_atlas = Engine::get_render_device()->get_gpu_resource_manager()->create_texture(
             {
                 .type = GPU::TextureType::Texture2D,
                 .format = GPU::TextureFormat::R8Unorm,
                 .extent = Vector3U(width, width, 1),
                 .pixels = pixels,
-                .flags = Graphics::TextureAllocateFlags::ViewR8One,
+                .flags = Graphics::TextureAllocateFlags::ViewR8All,
             }
         );
 

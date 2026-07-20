@@ -21,7 +21,7 @@ struct GPUResourceManagerCreateInfo
 
 enum class TextureAllocateFlags : u32
 {
-    ViewR8One = Bit(0),
+    ViewR8All = Bit(0),
 };
 
 struct GPUResourceManager

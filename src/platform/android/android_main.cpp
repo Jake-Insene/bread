@@ -66,14 +66,9 @@ static int32_t engine_handle_input(android_app*, AInputEvent* event)
 		event.pressed = action == AKEY_EVENT_ACTION_DOWN;
 		event.key = MappedKeycodes[keycode];
 
-        if(action == AKEY_EVENT_ACTION_DOWN)
-        {
-            Input::data.keys[i32(MappedKeycodes[keycode])] = KeyState::Pressed;
-        }
-        else
-        {
-            Input::data.keys[i32(MappedKeycodes[keycode])] = KeyState::Released;
-        }
+        Input::update_key_state(i32(MappedKeycodes[keycode]),
+            action == AKEY_EVENT_ACTION_DOWN ? KeyState::Pressed : KeyState::Released
+        );
     }
     default:
         break;
@@ -142,6 +137,8 @@ void android_loop(android_app* app)
     Log::debug("Obb path: {}", obb_path);
 
     while (!app->destroyRequested) {
+        engine.pre_step();
+
         android_poll_source *source = nullptr;
         auto result = ALooper_pollOnce(0, nullptr, nullptr, reinterpret_cast<void **>(&source));
         if (result == ALOOPER_POLL_ERROR)

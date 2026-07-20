@@ -151,14 +151,22 @@ struct Input
 {
     struct InternalData
     {
+        KeyState keys_prev[0x1000];
         KeyState keys[0x1000];
+        bool mouse_buttons_prev[3];
         bool mouse_buttons[3];
         Vector2 mouse_position;
     };
 
     static inline InternalData data = {};
 
+    static void update();
+
+    static void update_key_state(Key k, KeyState new_state);
+    static void update_mouse_button(MouseButton button, bool state);
+
     [[nodiscard]] static KeyState get_key_state(Key k);
+    [[nodiscard]] static bool get_mouse_state(MouseButton button);
 
     [[nodiscard]] static bool is_key_down(Key k);
     [[nodiscard]] static bool is_key_just_down(Key k);

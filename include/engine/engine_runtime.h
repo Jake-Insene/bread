@@ -63,6 +63,7 @@ struct EngineRuntime
     void initialize();
     void shutdown();
     
+    void pre_step();
     void step();
     void handle_event(const Event& event);
 

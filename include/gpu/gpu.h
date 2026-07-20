@@ -731,13 +731,8 @@ namespace GPU
 
 		static constexpr ComponentMapping identity()
 		{
-			return ComponentMapping
-			{
-				.r = ComponentSwizzle::Identity,
-				.g = ComponentSwizzle::Identity,
-				.b = ComponentSwizzle::Identity,
-				.a = ComponentSwizzle::Identity,
-			};
+			return create(ComponentSwizzle::Identity, ComponentSwizzle::Identity,
+				ComponentSwizzle::Identity, ComponentSwizzle::Identity);
 		}
 	};
 

@@ -152,6 +152,11 @@ void EngineRuntime::shutdown()
     allocator.destroy();
 }
 
+void EngineRuntime::pre_step()
+{
+    Input::update();
+}
+
 void EngineRuntime::step()
 {
     if(!can_tick)

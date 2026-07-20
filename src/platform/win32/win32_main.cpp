@@ -167,17 +167,26 @@ void engine_loop()
 	Engine::local_data.engine_runtime = &engine;
 	engine.initialize();
 
-	while (true)
+	bool quit = false;
+	while(quit == false)
 	{
 		MSG msg;
-		if (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE) != 0)
+
+		engine.pre_step();
+		while(PeekMessageA(&msg, 0, 0, 0, PM_REMOVE) != 0)
 		{
 			TranslateMessage(&msg);
 			DispatchMessageA(&msg);
 			if (msg.message == WM_QUIT)
 			{
+				quit = true;
 				break;
 			}
+		}
+
+		if(quit)
+		{
+			break;
 		}
 
 		engine.step();
