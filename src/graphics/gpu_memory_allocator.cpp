@@ -64,13 +64,26 @@ GPUMemoryAllocationID GPUMemoryAllocator::allocate(AllocationTag tag, const GPU:
                 alloc_current_id = allocation.next;
                 continue;
             }
+
+            // not compatible heap.
+            if(allocation.tag != tag)
+            {
+                continue;
+            }
             
             if(allocation.size >= aligned_size)
             {
                 allocation_id = alloc_current_id;
                 break;
-            }        
+            }
         }
+    }
+
+    if(allocation_id != GPUMemoryAllocationID::invalid())
+    {
+        Allocation& allocation = data.allocations.get(allocation_id);
+        allocation.free = false;
+        return allocation_id;
     }
 
     // TODO: creating always a heap.
@@ -116,6 +129,7 @@ GPU::BufferID GPUMemoryAllocator::begin_staging(usize size)
 
         staging_heap.flags |= StagingFlags::Allocated;
         buffer = staging_heap.buffer;
+        break;
     }
 
     if(buffer == GPU::BufferID::invalid())

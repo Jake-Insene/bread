@@ -16,6 +16,10 @@ Slice<u8> PageAllocator::alloc(usize size, usize)
     ptr = OS::map_memory(aligned_size, OS::ReadWrite);
     ptr.len = aligned_size;
 
+#if defined(DEBUG)
+    Mem::set(ptr, u8(0xCD));
+#endif
+
     return ptr;
 }
 
@@ -34,7 +38,7 @@ bool PageAllocator::realloc(const Slice<u8>& ptr, usize new_size, usize)
     {
         u8* ptr_out = ptr.ptr() + aligned_new_size;
         Slice memory_to_free = Slice(ptr_out, aligned_ptr_size - aligned_new_size);
-        OS::unmap_memory(ptr);
+        OS::unmap_memory(memory_to_free);
         return true;
     }
 

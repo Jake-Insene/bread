@@ -6,6 +6,9 @@
 #include "os/os.h"
 
 
+// Free memory is filled with 0xDD
+// Allocated but not initialized with 0xCD
+
 namespace Mem
 {
     
@@ -105,6 +108,10 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
 
         index++;
         allocated_mem->index = index;
+
+#if defined(DEBUG)
+        Mem::set(Slice(base, size), u8(0xCD));
+#endif
         return Slice
         {
             base,
@@ -118,8 +125,9 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
     u8* base = new_page.bytes.ptr();
     u8* aligned_mem = reinterpret_cast<u8*>(Mem::align_up<usize>(usize(base) + sizeof(Header), alignment));
 
+    usize offset = aligned_mem - (new_page.bytes.ptr() + sizeof(Header));
     Header* allocation_header = reinterpret_cast<Header*>(aligned_mem - sizeof(Header));
-    allocation_header->len = new_page.bytes.len - sizeof(Header);
+    allocation_header->len = new_page.bytes.len - sizeof(Header) - offset;
     allocation_header->page_index = page_count - 1;
     allocation_header->tags = Allocated;
     allocation_header->prev = nullptr;
@@ -127,7 +135,7 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
     
     new_page.first_header = allocation_header;
 
-    // Trying to dividing the memory if the requested memory is too slow
+    // Trying to dividing the memory if the requested memory is too low
     if(allocation_header->len > aligned_size)
     {
         usize unused_size = allocation_header->len - aligned_size;
@@ -151,6 +159,9 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
     index++;
     allocation_header->index = index;
 
+#if defined(DEBUG)
+    Mem::set(Slice(aligned_mem, size), u8(0xCD));
+#endif
     return Slice
     {
         aligned_mem,
@@ -178,10 +189,13 @@ void GenericAllocator::free(const Slice<u8>& ptr)
     Header* header = get_header(ptr);
     DebugAssert(header->tags & Allocated, "the given block is already free.");
     
-    header->tags = HeaderTags(0);
+    header->tags = HeaderTags();
+#if defined(DEBUG)
+    Mem::set(Slice(ptr.ptr(), header->len), u8(0xDD));
+#endif
 
     // TODO: Investigate page corruption.
-    if(header != nullptr && header->prev != nullptr
+    while(header != nullptr && header->prev != nullptr
         && header->prev->tags == 0)
     {
         header->prev->len += header->len + sizeof(Header);
@@ -192,12 +206,14 @@ void GenericAllocator::free(const Slice<u8>& ptr)
         }
         header = header->prev;
     }
-    else if(header != nullptr && header->next != nullptr
+
+    while(header != nullptr && header->next != nullptr
         && header->next->tags == 0)
     {
         header->len += header->next->len + sizeof(Header);
         header->next = header->next->next;
-        if (header->next != nullptr)
+
+        if(header->next != nullptr)
         {
             header->next->prev = header;
         }

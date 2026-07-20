@@ -4,8 +4,7 @@
 
 
 /* 
-* TODO:
-* Thread safe by default
+* TODO: Thread safe by default
 */
 struct [[nodiscard]] JobQueue
 {
@@ -28,6 +27,7 @@ struct [[nodiscard]] JobQueue
 	template<typename Fn>
 	void add_job(Fn&& _job)
 	{
+		mutex.lock();
 		Fn* fn_mem = reinterpret_cast<Fn*>(
 			allocator->alloc(sizeof(Fn), alignof(usize)).ptr()
 		);
@@ -39,7 +39,6 @@ struct [[nodiscard]] JobQueue
 			.arg = reinterpret_cast<Opaque*>(fn_mem),
 		};
 
-		mutex.lock();
 		job_stack.push(job);
 		mutex.unlock();
 	}

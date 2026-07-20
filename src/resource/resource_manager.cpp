@@ -161,6 +161,7 @@ Result<Resource*, Error> ResourceManager::_load_sound(StringView path)
     Error load_result = new_sound->load(path);
     if (!load_result)
     {
+        get_allocator()->free(Mem::to_bytes(Slice(new_sound, 1)));
         return load_result;
     }
 
@@ -183,6 +184,7 @@ Result<Resource*, Error> ResourceManager::_load_font(StringView path)
     Error load_result = new_font->load(path);
     if (!load_result)
     {
+        get_allocator()->free(Mem::to_bytes(Slice(new_font, 1)));
         return load_result;
     }
 

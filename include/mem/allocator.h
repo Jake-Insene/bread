@@ -15,6 +15,11 @@ struct Allocator
     /*
     * Allocator API
     */
+
+    /*
+    * Allocates a slice of bytes of len size, the base address is aligned to alignment.
+    * The return slice is not garanted to be all zero.
+    */
     virtual Slice<u8> alloc(usize size, usize alignment) = 0;
     virtual bool realloc(const Slice<u8>& ptr, usize new_size, usize alignment) = 0;
     virtual void free(const Slice<u8>& ptr) = 0;

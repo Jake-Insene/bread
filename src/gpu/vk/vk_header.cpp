@@ -359,11 +359,10 @@ Vulkan::AdditionalExtensionSupport Vulkan::check_device_extensions(Mem::Allocato
         "the required extensions were not found"
     );
 
-    allocator->free(Mem::to_bytes(vk_device_extensions));
-
     AdditionalExtensionSupport additional_extension_support = {};
     additional_extension_support.has_dynamic_rendering = _has_extension(vk_device_extensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
-
+    
+    allocator->free(Mem::to_bytes(vk_device_extensions));
     return additional_extension_support;
 }
 
