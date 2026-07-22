@@ -100,15 +100,18 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 			}
 		}
 
-		// Y positive is up
-		Vector2 pos = Vector2(
+		// Getting bread screen space coordinates
+		RECT client_rect;
+		GetClientRect(handle, &client_rect);
+
+		Vector2 screen_space_position = Vector2(
 			f32(GET_X_LPARAM(lparam)),
-			-f32(GET_Y_LPARAM(lparam))
+			(client_rect.bottom - client_rect.top) - f32(GET_Y_LPARAM(lparam))
 		);
 
 		InputEventMouseButton event = {};
 		event.type = EventType::MouseButton;
-		event.position = pos;
+		event.position = screen_space_position;
 		event.pressed = Input::get_mouse_state(button);
 		event.button = button;
 		Engine::local_data.engine_runtime->handle_event(event);
@@ -179,6 +182,11 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 			(client_rect.bottom - client_rect.top) - f32(GET_Y_LPARAM(lparam))
 		);
 		Input::data.mouse_position = screen_space_position;
+
+		InputEventMouseMove event = {};
+		event.type = EventType::MouseMove;
+		event.position = screen_space_position;
+		Engine::local_data.engine_runtime->handle_event(event);
 		return 0;
 	}
 	break;

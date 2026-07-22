@@ -4,33 +4,33 @@
 
 
 template<typename Fn, bool UseInstance>
-struct EventStorage
+struct FunctionStorage
 {
 	Fn func;
 };
 
 template<typename RT, typename T, typename... TArgs>
-struct EventStorage<RT(T::*)(TArgs...), true>
+struct FunctionStorage<RT(T::*)(TArgs...), true>
 {
 	T* instance;
 	RT(T::*func)(TArgs...);
 };
 
 template<typename RT, typename T, typename... TArgs>
-struct EventStorage<RT(T::*)(TArgs...), false>
+struct FunctionStorage<RT(T::*)(TArgs...), false>
 {
 	RT(T::*func)(TArgs...);
 };
 
 template<typename RT, typename T, typename... TArgs>
-struct EventStorage<RT(T::*)(TArgs...) const, true>
+struct FunctionStorage<RT(T::*)(TArgs...) const, true>
 {
 	T* instance;
 	RT(T::*func)(TArgs...) const;
 };
 
 template<typename RT, typename T, typename... TArgs>
-struct EventStorage<RT(T::*)(TArgs...) const, false>
+struct FunctionStorage<RT(T::*)(TArgs...) const, false>
 {
 	RT(T::*func)(TArgs...) const;
 };
@@ -42,7 +42,7 @@ struct [[nodiscard]] Function
 	using Decomposed = FunctionDecomposed<Fn>;
 	using ReturnType = Decomposed::ReturnType;
 
-	EventStorage<Fn, UseInstance> storage;
+	FunctionStorage<Fn, UseInstance> storage;
 
 	template<typename T>
 	constexpr void bind(T func)

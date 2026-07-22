@@ -159,7 +159,7 @@ inline void __format_floating_point(const IO::Writer& writer, T arg, i32 decimal
 template<typename T>
 struct Formatter
 {
-	static void format_custom(const IO::Writer& writer, T&& arg);
+	static void format_custom(const IO::Writer& writer, const T& arg);
 };
 
 template<typename T>
@@ -218,7 +218,7 @@ void __format_single_argument(const IO::Writer& writer, T&& arg)
 	}
 	else
 	{
-		Formatter<T>::format_custom(writer, Forward<T>(arg));
+		Formatter<RemoveCVRef<T>>::format_custom(writer, Forward<T>(arg));
 	}
 }
 

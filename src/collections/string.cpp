@@ -89,7 +89,7 @@ bool String::ends_with(StringView str) const
     return StringView(chars.ptr(), count).ends_with(str);
 }
 
-StringView String::view()
+StringView String::view() const
 {
     return StringView(chars.ptr(), count);
 }

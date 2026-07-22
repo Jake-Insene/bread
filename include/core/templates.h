@@ -113,6 +113,9 @@ template<typename T>
 using RemoveReference = typename RemoveReferenceT<T>::Type;
 
 template<typename T>
+using RemoveCVRef = RemoveConstVolatile<RemoveReference<T>>;
+
+template<typename T>
 struct RemovePointerT
 {
     using Type = T;

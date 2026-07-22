@@ -1,5 +1,4 @@
 #pragma once
-#include "core/header.h"
 #include "collections/map_iterator.h"
 #include "collections/pair.h"
 #include "mem/allocator.h"

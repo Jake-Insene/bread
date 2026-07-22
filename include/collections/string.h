@@ -37,8 +37,8 @@ struct [[nodiscard]] String
     template<typename T>
     void set(T&& arg)
     {
-        using TypeNoCR = RemoveConst<RemoveReference<T>>;
-        if constexpr (IsSame<TypeNoCR, StringView>)
+        using Type = RemoveCVRef<T>;
+        if constexpr (IsSame<Type, StringView>)
         {
             _set_str_view(arg);
         }
@@ -46,15 +46,15 @@ struct [[nodiscard]] String
         {
             _set_str_view(arg);
         }
-        else if constexpr (IsInteger<TypeNoCR> && IsSigned<TypeNoCR>)
+        else if constexpr (IsInteger<Type> && IsSigned<Type>)
         {
             _set_from_signed(arg);
         }
-        else if constexpr (IsInteger<TypeNoCR> && IsUnsigned<TypeNoCR>)
+        else if constexpr (IsInteger<Type> && IsUnsigned<Type>)
         {
             _set_from_unsigned(arg);
         }
-        else if constexpr (IsFloatingPoint<TypeNoCR>)
+        else if constexpr (IsFloatingPoint<Type>)
         {
             _set_from_float(arg);
         }
@@ -93,7 +93,7 @@ struct [[nodiscard]] String
     [[nodiscard]] bool equals(StringView str) const;
     [[nodiscard]] bool ends_with(StringView str) const;
     
-    StringView view();
+    StringView view() const;
 
     IO::Writer writer();
 

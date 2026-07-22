@@ -250,7 +250,7 @@ namespace Format
 template<typename T>
 struct Formatter<Vector2T<T>>
 {
-	static void format_custom(const IO::Writer& writer, Vector2T<T>&& vec)
+	static void format_custom(const IO::Writer& writer, const Vector2T<T>& vec)
     {
         format<false>(writer, "({}, {})", vec.x, vec.y);
     }
