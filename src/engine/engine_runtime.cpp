@@ -163,6 +163,8 @@ void EngineRuntime::step()
     {
         return;
     }
+
+    audio_service.update();
     
     f32 current = f32(OS::get_time());
     delta_time = current - last_time;

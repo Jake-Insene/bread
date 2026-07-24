@@ -3,8 +3,6 @@
 #include "collections/error.h"
 #include "resource/resource.h"
 
-#include <external/dr_wav.h>
-
 
 struct Sound : Resource
 {

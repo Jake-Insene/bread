@@ -4,6 +4,8 @@
 #include "resource/resource_manager_internal.h"
 #include "engine/engine.h"
 
+#include <external/dr_wav.h>
+
 
 static inline void* dr_alloc(size_t size, void* user_data)
 {

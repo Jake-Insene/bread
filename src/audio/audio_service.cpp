@@ -5,73 +5,20 @@
 #include "resource/sound.h"
 
 
-static inline void _audio_output_thread(Opaque* self)
-{
-    AudioService* audio_service = self->cast<AudioService*>();
-
-    while(true)
-    {
-        bool destroy_requested = audio_service->data.request_destroy.load();
-        if(destroy_requested)
-        {
-            return;
-        }
-
-        bool waited = Audio::output_wait_for_event();
-        if(!waited)
-        {
-            continue;
-        }
-
-        u32 frame_count = Audio::output_get_frame_count();
-        Slice samples = audio_service->data.output_buffer.slice(frame_count);
-
-        // getting enqueue plays
-        audio_service->data.enqueue_mutex.lock();
-        Slice mixers = audio_service->data.mixers.slice();
-
-        for(usize frame_i = 0; frame_i < frame_count; frame_i++)
-        {
-            Audio::FrameF frame_f = Audio::FrameF();
-            for(AudioService::Mixer& mixer : mixers)
-            {
-                audio_service->_mixer_mix(&mixer, &frame_f);
-            }
-            
-            Audio::Frame final_frame = Audio::Frame(
-                i16(Math::clamp<f32>(frame_f.left, -32768.0F, 32767.0F)),
-                i16(Math::clamp<f32>(frame_f.right, -32768.0F, 32767.0F))
-            );
-
-            samples[frame_i] = final_frame;
-        }
-
-        audio_service->data.enqueue_mutex.unlock();
-        Audio::output_send_frames(samples);
-    }
-}
-
 void AudioService::initialize(const AudioServiceCreateInfo& info)
 {
     data.allocator = info.allocator;
     Audio::output_start();
 
-    data.enqueue_mutex = Mutex::create();
     data.mixers = Array<Mixer>::with_size(data.allocator, 4);
     mixer_create("Master");
 
-    data.request_destroy = Atomic<bool>::create();
-
     data.output_buffer = data.allocator->array<Audio::Frame>(Audio::output_get_samples_per_sec());
-    data.output_thread = Thread::create(&_audio_output_thread, Opaque::from(*this));
 }
 
 void AudioService::shutdown()
 {
-    data.request_destroy.increment();
-    data.output_thread.destroy();
     data.allocator->free(Mem::to_bytes(data.output_buffer));
-    data.enqueue_mutex.destroy();
 
     (void)data.mixers.iter().for_each([](Mixer& mixer)
     {
@@ -82,9 +29,40 @@ void AudioService::shutdown()
     Audio::output_stop();
 }
 
+void AudioService::update()
+{
+    u32 frame_count = Audio::output_get_frame_count();
+    if(frame_count == 0)
+    {
+        return;
+    }
+
+    Slice samples = data.output_buffer.slice(frame_count);
+
+    // getting enqueue plays
+    Slice mixers = data.mixers.slice();
+
+    for(usize frame_i = 0; frame_i < frame_count; frame_i++)
+    {
+        Audio::FrameF frame_f = Audio::FrameF();
+        for(AudioService::Mixer& mixer : mixers)
+        {
+            _mixer_mix(&mixer, &frame_f);
+        }
+        
+        Audio::Frame final_frame = Audio::Frame(
+            i16(Math::clamp<f32>(frame_f.left, -32768.0F, 32767.0F)),
+            i16(Math::clamp<f32>(frame_f.right, -32768.0F, 32767.0F))
+        );
+
+        samples[frame_i] = final_frame;
+    }
+
+    Audio::output_send_frames(samples);
+}
+
 u32 AudioService::mixer_create(StringView mixer_name)
 {
-    OSMutexAuto(&data.enqueue_mutex);
     Mixer new_mixer =
     {
         .name = String::from_chars(data.allocator, mixer_name),
@@ -98,7 +76,6 @@ u32 AudioService::mixer_create(StringView mixer_name)
 
 u32 AudioService::mixer_get_by_name(StringView mixer_name)
 {
-    OSMutexAuto(&data.enqueue_mutex);
     for(u32 i = 0; i < data.mixers.count; i++)
     {
         Mixer& mix = data.mixers.get(i);
@@ -113,25 +90,21 @@ u32 AudioService::mixer_get_by_name(StringView mixer_name)
 
 u32 AudioService::mixer_count()
 {
-    OSMutexAuto(&data.enqueue_mutex);
     return data.mixers.count;
 }
 
 f32 AudioService::mixer_get_volume(u32 mixer)
 {
-    OSMutexAuto(&data.enqueue_mutex);
     return data.mixers.get(mixer).volume;
 }
 
 void AudioService::mixer_set_volume(u32 mixer, f32 new_volume)
 {
-    OSMutexAuto(&data.enqueue_mutex);
     data.mixers.get(mixer).volume = new_volume;
 }
 
 void AudioService::mixer_play(u32 mixer, Sound* sound, const PlayInfo& play_info)
 {
-    OSMutexAuto(&data.enqueue_mutex);
     Mixer& mix = data.mixers.get(mixer);
 
     (void)mix.plays.add(
