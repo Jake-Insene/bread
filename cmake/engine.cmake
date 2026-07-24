@@ -140,11 +140,11 @@ function(bread_project)
     endif()
 
     # Copying the bread assets to the game assets folder by default
-    add_custom_command(
-        TARGET ${PROJECT_NAME}
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/bread/assets ${CMAKE_SOURCE_DIR}/assets
-    )
+    #add_custom_command(
+    #    TARGET ${PROJECT_NAME}
+    #    POST_BUILD
+    #    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/bread/assets ${CMAKE_SOURCE_DIR}/assets
+    #)
 
     if(MSVC)
         foreach(flag_var
