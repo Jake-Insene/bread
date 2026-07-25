@@ -1834,7 +1834,7 @@ GPU::PipelineID VulkanAdapter::pipeline_create(GPU::DeviceID device, const GPU::
         .pRasterizationState = &vk_rasterization_state,
         .pMultisampleState = &vk_multisample_state,
         .pDepthStencilState = &vk_depth_stencil_state,
-        .pColorBlendState = &vk_color_blend_state, // TODO: custom blend
+        .pColorBlendState = &vk_color_blend_state,
         .pDynamicState = &vk_dynamic_state,
         .layout = vk_pipeline_layout,
         .renderPass = ld.feature_level == FeatureLevel::Level1 ? nullptr : render_pass->vk_render_pass,
@@ -2704,10 +2704,11 @@ void VulkanAdapter::_get_render_pass_and_framebuffer_for(LogicalDevice& ld, cons
 
     // render attachment and depth + stencil
     VkFramebufferAttachmentImageInfoKHR vk_framebuffer_attachment_image_infos[GPU::MaxRenderAttachmentCount + 2] = {};
+    VkFormat view_formats[GPU::MaxRenderAttachmentCount + 2] = {};
     for(usize i = 0; i < begin_info.render_attachments.len; i++)
     {
         TextureView& tex = _get_texture_view(begin_info.render_attachments[i].texture_view);
-        VkFormat vk_format = VkUtils::_vk_get_texture_format(tex.format);
+        view_formats[i] = VkUtils::_vk_get_texture_format(tex.format);
 
         vk_framebuffer_attachment_image_infos[i] =
         {
@@ -2719,15 +2720,15 @@ void VulkanAdapter::_get_render_pass_and_framebuffer_for(LogicalDevice& ld, cons
             .height = begin_info.extent.y,
             .layerCount = begin_info.extent.z,
             .viewFormatCount = 1,
-            .pViewFormats = &vk_format,
+            .pViewFormats = &view_formats[i],
         };
     }
 
     if(has_depth)
     {
         TextureView& tex = _get_texture_view(begin_info.depth_attachment.texture_view);
-        VkFormat vk_format = VkUtils::_vk_get_texture_format(tex.format);
-        
+        view_formats[begin_info.render_attachments.len] = VkUtils::_vk_get_texture_format(tex.format);
+
         vk_framebuffer_attachment_image_infos[begin_info.render_attachments.len] =
         {
             .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENT_IMAGE_INFO_KHR,
@@ -2738,7 +2739,7 @@ void VulkanAdapter::_get_render_pass_and_framebuffer_for(LogicalDevice& ld, cons
             .height = begin_info.extent.y,
             .layerCount = begin_info.extent.z,
             .viewFormatCount = 1,
-            .pViewFormats = &vk_format,
+            .pViewFormats = &view_formats[begin_info.render_attachments.len],
         };
     }    
 
