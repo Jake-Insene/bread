@@ -3,6 +3,7 @@
 #include "mem/allocator.h"
 #include "math/vec2.h"
 #include "math/vec3.h"
+#include "math/vec4.h"
 
 
 namespace InternalGPU
@@ -1073,6 +1074,69 @@ namespace GPU
 		R32Float,
 	};
 
+	enum class LogicOp
+	{
+		Unknown = 0,
+		Clear,
+    	And,
+    	AndReverse,
+    	Copy,
+    	AndInverted,
+    	NoOp,
+    	XOr,
+    	Or,
+    	NOr,
+    	Equivalent,
+    	Invert,
+    	OrReverse,
+    	CopyInverted,
+    	OrInverted,
+    	Nand,
+    	Set,
+	};
+
+	enum class BlendFactor
+	{
+		Unknown = 0,
+		Zero,
+		One,
+		SrcColor,
+		OneMinusSrcColor,
+		DestColor,
+		OneMinusDestColor,
+		SrcAlpha,
+		OneMinusSrcAlpha,
+		DestAlpha,
+		OneMinusDestAlpha,
+		ConstantColor,
+		OneMinusConstantColor,
+		ConstantAlpha,
+		OneMinusConstantAlpha,
+		SrcAlphaSaturate,
+		Src1Color,
+		OneMinusSrc1Color,
+		Src1Alpha,
+		OneMinusSrc1Alpha,
+	};
+
+	enum class BlendOp
+	{
+		Unknown = 0,
+		Add,
+    	Subtract,
+    	ReverseSubtract,
+    	Min,
+    	Max,
+	};
+
+	enum class ColorComponentFlags
+	{
+		R = Bit(0),
+		G = Bit(1),
+		B = Bit(2),
+		A = Bit(3),
+	};
+
 	struct ShaderStageInfo
 	{
 		ShaderStage stage;
@@ -1231,6 +1295,62 @@ namespace GPU
 		}
 	};
 
+	struct ColorBlendAttachmentState
+	{
+		bool blend_enable;
+    	BlendFactor src_color_blend_factor;
+    	BlendFactor dest_color_blend_factor;
+    	BlendOp color_blend_op;
+    	BlendFactor src_alpha_blend_factor;
+    	BlendFactor dest_alpha_blend_factor;
+    	BlendOp alpha_blend_op;
+    	ColorComponentFlags color_write_mask;
+
+		static constexpr ColorBlendAttachmentState create(bool blend_enable, BlendFactor src_color_blend_factor,
+    		BlendFactor dest_color_blend_factor, BlendOp color_blend_op, BlendFactor src_alpha_blend_factor,
+			BlendFactor dest_alpha_blend_factor, BlendOp alpha_blend_op, ColorComponentFlags color_write_mask)
+		{
+			return ColorBlendAttachmentState
+			{
+				.blend_enable = blend_enable,
+				.src_color_blend_factor = src_color_blend_factor,
+				.dest_color_blend_factor = dest_color_blend_factor,
+				.color_blend_op = color_blend_op,
+				.src_alpha_blend_factor = src_alpha_blend_factor,
+				.dest_alpha_blend_factor = dest_alpha_blend_factor,
+				.alpha_blend_op = alpha_blend_op,
+				.color_write_mask = color_write_mask,
+			};
+		}
+
+		static constexpr ColorBlendAttachmentState disable()
+		{
+			return create(false, BlendFactor::One, BlendFactor::Zero, BlendOp::Add,
+				BlendFactor::One, BlendFactor::Zero, BlendOp::Add,
+				ColorComponentFlags(0xFF));
+		}
+	};
+
+	struct ColorBlendState
+	{
+		bool logic_op_enable;
+		LogicOp logic_op;
+		Slice<const ColorBlendAttachmentState> attachments;
+		Vector4 blend_constants;
+
+		static constexpr ColorBlendState create(bool logic_op_enable, LogicOp logic_op,
+			const Slice<const ColorBlendAttachmentState>& attachments, Vector4 blend_constants)
+		{
+			return ColorBlendState
+			{
+				.logic_op_enable = logic_op_enable,
+				.logic_op = logic_op,
+				.attachments = attachments,
+				.blend_constants = blend_constants,
+			};
+		}
+	};
+
 	struct RenderingInfo
 	{
 		Slice<const TextureFormat> render_attachment_formats;
@@ -1263,13 +1383,14 @@ namespace GPU
 		RasterizerState rasterizer_state;
 		MultisampleState multisample_state;
 		DepthStencilState depth_stencil_state;
+		ColorBlendState color_blend_state;
 		PipelineLayoutID pipeline_layout;
 		RenderingInfo rendering_info;
 
 		static constexpr PipelineCreateInfo create(PipelineBindPoint bind_point,
 			const Slice<const ShaderStageInfo>& shader_stages, VertexInput vertex_input,
 			InputAssembly input_assembly, RasterizerState rasterizer_state, MultisampleState multisample_state,
-			DepthStencilState depth_stencil_state, PipelineLayoutID pipeline_layout,
+			DepthStencilState depth_stencil_state, ColorBlendState color_blend_state, PipelineLayoutID pipeline_layout,
 			RenderingInfo rendering_info)
 		{
 			return PipelineCreateInfo
@@ -1281,6 +1402,7 @@ namespace GPU
 				.rasterizer_state = rasterizer_state,
 				.multisample_state = multisample_state,
 				.depth_stencil_state = depth_stencil_state,
+				.color_blend_state = color_blend_state,
 				.pipeline_layout = pipeline_layout,
 				.rendering_info = rendering_info,
 			};
@@ -1622,5 +1744,6 @@ EnableBitOp(GPU::TextureUsage);
 EnableBitOp(GPU::TextureAspect);
 EnableBitOp(GPU::ShaderStage);
 EnableBitOp(GPU::PipelineStages);
+EnableBitOp(GPU::ColorComponentFlags);
 EnableBitOp(GPU::AccessMasks);
 

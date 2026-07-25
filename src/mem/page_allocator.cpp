@@ -25,7 +25,7 @@ Slice<u8> PageAllocator::alloc(usize size, usize)
 
 bool PageAllocator::realloc(const Slice<u8>& ptr, usize new_size, usize)
 {
-    // TODO: check this code later may not work correctly
+    // TODO: check this code later, may not work correctly
     const usize aligned_new_size = Mem::align_up(new_size, OS::get_page_size());
 
     const usize aligned_ptr_size = Mem::align_up(ptr.len, OS::get_page_size());

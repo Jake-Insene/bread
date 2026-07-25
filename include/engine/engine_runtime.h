@@ -5,7 +5,6 @@
 #include "engine/application.h"
 #include "graphics/render_device.h"
 #include "mem/generic_allocator.h"
-#include "resource/texture.h"
 #include "resource/resource_manager.h"
 
 
@@ -57,7 +56,6 @@ struct EngineRuntime
     i32 fps_accum;
     f32 delta_time;
 
-    bool vsync_cache;
     bool can_tick;
 
     void initialize();
@@ -81,9 +79,6 @@ struct EngineRuntime
 	ApplicationInfo& get_application_info() { return application_info; }
 
     Window* get_main_window() { return &main_window; }
-
-    void set_vsync(bool vsync);
-    bool get_vsync() const { return vsync_cache; }
 
     template<typename Fn> 
     void add_main_job(Fn fn)

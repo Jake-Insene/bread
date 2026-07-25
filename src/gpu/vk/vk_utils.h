@@ -33,5 +33,9 @@ struct VkUtils
     static VkCullModeFlags _vk_get_cull_mode(GPU::CullMode cull_mode);
     static VkFrontFace _vk_get_front_face(GPU::FrontFace front_face);
     static VkSampleCountFlagBits _vk_get_samples(GPU::SampleCount sample_count);
+    static VkLogicOp _vk_get_logic_op(GPU::LogicOp logic_op);
+    static VkBlendFactor _vk_get_blend_factor(GPU::BlendFactor blend_factor);
+    static VkBlendOp _vk_get_blend_op(GPU::BlendOp blend_op);
+    static VkColorComponentFlags _vk_get_color_component_flags(GPU::ColorComponentFlags color_components);
     static VkPipelineBindPoint _vk_get_bind_point(GPU::PipelineBindPoint bind_point);
 };

@@ -191,6 +191,61 @@ static constexpr VkSampleCountFlagBits VkSampleCounts[] =
 	VK_SAMPLE_COUNT_64_BIT, // Sample64
 };
 
+static constexpr VkLogicOp VkLogicOps[] =
+{
+    VkLogicOp(), // Unknown
+	VK_LOGIC_OP_CLEAR, // Clear
+    VK_LOGIC_OP_AND, // And
+    VK_LOGIC_OP_AND_REVERSE, // AndReverse
+    VK_LOGIC_OP_COPY, // Copy
+    VK_LOGIC_OP_AND_INVERTED, // AndInverted
+    VK_LOGIC_OP_NO_OP, // NoOp
+    VK_LOGIC_OP_XOR, // XOr
+    VK_LOGIC_OP_OR, // Or
+    VK_LOGIC_OP_NOR, // NOr
+    VK_LOGIC_OP_EQUIVALENT, // Equivalent
+    VK_LOGIC_OP_INVERT, // Invert
+    VK_LOGIC_OP_OR_INVERTED, // OrReverse
+    VK_LOGIC_OP_COPY_INVERTED, // CopyInverted
+    VK_LOGIC_OP_OR_INVERTED, // OrInverted
+    VK_LOGIC_OP_NAND, // Nand
+    VK_LOGIC_OP_SET, // Set
+};
+
+static constexpr VkBlendFactor VkBlendFactors[] =
+{
+    VkBlendFactor(), // Unknown
+	VK_BLEND_FACTOR_ZERO, // Zero
+	VK_BLEND_FACTOR_ONE, // One
+	VK_BLEND_FACTOR_SRC_COLOR, // SrcColor
+	VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR, // OneMinusSrcColor
+	VK_BLEND_FACTOR_DST_COLOR, // DestColor
+	VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR, // OneMinusDestColor
+	VK_BLEND_FACTOR_SRC_ALPHA, // SrcAlpha
+	VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, // OneMinusSrcAlpha
+	VK_BLEND_FACTOR_DST_ALPHA, // DestAlpha
+	VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA, // OneMinusDestAlpha
+	VK_BLEND_FACTOR_CONSTANT_COLOR, // ConstantColor
+	VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR, // OneMinusConstantColor
+	VK_BLEND_FACTOR_CONSTANT_ALPHA, // ConstantAlpha
+	VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA, // OneMinusConstantAlpha
+	VK_BLEND_FACTOR_SRC_ALPHA_SATURATE, // SrcAlphaSaturate
+	VK_BLEND_FACTOR_SRC1_COLOR, // Src1Color
+	VK_BLEND_FACTOR_ONE_MINUS_SRC1_COLOR, // OneMinusSrc1Color
+	VK_BLEND_FACTOR_SRC1_ALPHA, // Src1AlphaSRC1_ALPHA,
+	VK_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA, // OneMinusSrc1Alpha
+};
+
+static constexpr VkBlendOp VkBlendOps[] =
+{
+    VkBlendOp(), // Unknown
+	VK_BLEND_OP_ADD, // Add
+    VK_BLEND_OP_SUBTRACT, // Subtract
+    VK_BLEND_OP_REVERSE_SUBTRACT, // ReverseSubtract
+    VK_BLEND_OP_MIN, // Min
+    VK_BLEND_OP_MAX, // Max
+};
+
 static constexpr VkPipelineBindPoint VkPipelineBindPoints[] =
 {
     VkPipelineBindPoint(),// Unknown
@@ -478,6 +533,48 @@ VkFrontFace VkUtils::_vk_get_front_face(GPU::FrontFace front_face)
 VkSampleCountFlagBits VkUtils::_vk_get_samples(GPU::SampleCount sample_count)
 {
     return VkSampleCounts[u32(sample_count)];
+}
+
+VkLogicOp VkUtils::_vk_get_logic_op(GPU::LogicOp logic_op)
+{
+    return VkLogicOps[u32(logic_op)];
+}
+
+VkBlendFactor VkUtils::_vk_get_blend_factor(GPU::BlendFactor blend_factor)
+{
+    return VkBlendFactors[u32(blend_factor)];
+}
+
+VkBlendOp VkUtils::_vk_get_blend_op(GPU::BlendOp blend_op)
+{
+    return VkBlendOps[u32(blend_op)];
+}
+
+VkColorComponentFlags VkUtils::_vk_get_color_component_flags(GPU::ColorComponentFlags color_components)
+{
+    VkColorComponentFlags vk_flags = 0;
+    
+    if(HasValue(color_components & GPU::ColorComponentFlags::R))
+    {
+        vk_flags |= VK_COLOR_COMPONENT_R_BIT;
+    }
+
+    if(HasValue(color_components & GPU::ColorComponentFlags::G))
+    {
+        vk_flags |= VK_COLOR_COMPONENT_G_BIT;
+    }
+
+    if(HasValue(color_components & GPU::ColorComponentFlags::B))
+    {
+        vk_flags |= VK_COLOR_COMPONENT_B_BIT;
+    }
+
+    if(HasValue(color_components & GPU::ColorComponentFlags::A))
+    {
+        vk_flags |= VK_COLOR_COMPONENT_A_BIT;
+    }
+
+    return vk_flags;
 }
 
 VkPipelineBindPoint VkUtils::_vk_get_bind_point(GPU::PipelineBindPoint bind_point)

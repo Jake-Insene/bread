@@ -1269,7 +1269,6 @@ GPU::TextureViewID VulkanAdapter::texture_view_create(GPU::DeviceID device, cons
         },
         .subresourceRange =
         {
-            // TODO: check if format is depth or stencil
             .aspectMask = VkUtils::_vk_get_aspect_masks(ci.subresource_range.aspect),
             .baseMipLevel = ci.subresource_range.base_mip_level,
             .levelCount = ci.subresource_range.level_count,
@@ -1754,30 +1753,31 @@ GPU::PipelineID VulkanAdapter::pipeline_create(GPU::DeviceID device, const GPU::
         .maxDepthBounds = ci.depth_stencil_state.max_depth_bounds,
     };
 
-    VkPipelineColorBlendAttachmentState vk_color_blend_attachment =
+    Slice vk_color_blend_attachments = allocator->array<VkPipelineColorBlendAttachmentState>(ci.color_blend_state.attachments.len);
+    for(usize i = 0; i < ci.color_blend_state.attachments.len; i++)
     {
-        .blendEnable = VK_TRUE,
-        .srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
-        .dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-        .colorBlendOp = VK_BLEND_OP_ADD,
-        .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
-        .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
-        .alphaBlendOp = VK_BLEND_OP_ADD,
-        .colorWriteMask = VK_COLOR_COMPONENT_R_BIT
-                        | VK_COLOR_COMPONENT_G_BIT
-                        | VK_COLOR_COMPONENT_B_BIT
-                        | VK_COLOR_COMPONENT_A_BIT,
-    };
+        vk_color_blend_attachments[i] =
+        {
+            .blendEnable = ci.color_blend_state.attachments[i].blend_enable ? VK_TRUE : VK_FALSE,
+            .srcColorBlendFactor = VkUtils::_vk_get_blend_factor(ci.color_blend_state.attachments[i].src_color_blend_factor),
+            .dstColorBlendFactor = VkUtils::_vk_get_blend_factor(ci.color_blend_state.attachments[i].dest_color_blend_factor),
+            .colorBlendOp = VkUtils::_vk_get_blend_op(ci.color_blend_state.attachments[i].color_blend_op),
+            .srcAlphaBlendFactor = VkUtils::_vk_get_blend_factor(ci.color_blend_state.attachments[i].src_alpha_blend_factor),
+            .dstAlphaBlendFactor = VkUtils::_vk_get_blend_factor(ci.color_blend_state.attachments[i].dest_alpha_blend_factor),
+            .alphaBlendOp = VkUtils::_vk_get_blend_op(ci.color_blend_state.attachments[i].alpha_blend_op),
+            .colorWriteMask = VkUtils::_vk_get_color_component_flags(ci.color_blend_state.attachments[i].color_write_mask),
+        };
+    }
 
     VkPipelineColorBlendStateCreateInfo vk_color_blend_state =
     {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
-        .logicOpEnable = VK_FALSE,
-        .logicOp = VK_LOGIC_OP_COPY,
-        .attachmentCount = 1,
-        .pAttachments = &vk_color_blend_attachment,
+        .logicOpEnable = ci.color_blend_state.logic_op_enable ? VK_TRUE : VK_FALSE,
+        .logicOp = VkUtils::_vk_get_logic_op(ci.color_blend_state.logic_op),
+        .attachmentCount = static_cast<uint32_t>(vk_color_blend_attachments.len),
+        .pAttachments = vk_color_blend_attachments.ptr(),
         .blendConstants = {},
     };
 
@@ -1833,12 +1833,12 @@ GPU::PipelineID VulkanAdapter::pipeline_create(GPU::DeviceID device, const GPU::
         .pViewportState = &vk_viewport_state,
         .pRasterizationState = &vk_rasterization_state,
         .pMultisampleState = &vk_multisample_state,
-        .pDepthStencilState = &vk_depth_stencil_state, // TODO: implement depth stencil
-        .pColorBlendState = &vk_color_blend_state,
+        .pDepthStencilState = &vk_depth_stencil_state,
+        .pColorBlendState = &vk_color_blend_state, // TODO: custom blend
         .pDynamicState = &vk_dynamic_state,
         .layout = vk_pipeline_layout,
         .renderPass = ld.feature_level == FeatureLevel::Level1 ? nullptr : render_pass->vk_render_pass,
-        .subpass = 0, // TODO: can change
+        .subpass = 0,
         .basePipelineHandle = VK_NULL_HANDLE,
         .basePipelineIndex = 0,
     };

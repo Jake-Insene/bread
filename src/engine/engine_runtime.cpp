@@ -243,18 +243,6 @@ void EngineRuntime::handle_event(const Event& event)
 
 void EngineRuntime::request_recreate_window()
 {
-    // TODO:
-}
-
-void EngineRuntime::set_vsync(bool vsync)
-{
-    if (vsync_cache == vsync)
-    {
-        return;
-    }
-
-    vsync_cache = vsync;
-    // TODO: Set VSync
 }
 
 void EngineRuntime::_select_physical_device()
