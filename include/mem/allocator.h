@@ -23,7 +23,6 @@ struct Allocator
     virtual Slice<u8> alloc(usize size, usize alignment) = 0;
     virtual bool realloc(const Slice<u8>& ptr, usize new_size, usize alignment) = 0;
     virtual void free(const Slice<u8>& ptr) = 0;
-    virtual usize get_size_of(const Slice<u8>& ptr) const = 0;
 
     template<typename T>
     Slice<T> array(usize count);

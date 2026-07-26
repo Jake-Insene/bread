@@ -25,18 +25,10 @@ extern "C"
 	#pragma function(memset)
 	void* __cdecl memset(void* dest, int c, size_t count)
 	{
-		if(c == 0)
-		{
-			PlatformIntricics::setzero(Slice(
-				reinterpret_cast<u8*>(dest), count)
-			);
-		}
-		else
-		{
-			Mem::set(
-				Slice(reinterpret_cast<u8*>(dest), count), u8(c)
-			);
-		}
+		PlatformIntricics::set(
+			Slice(reinterpret_cast<u8*>(dest), count),
+			static_cast<u8>(c)
+		);
 		return dest;
 	}
 

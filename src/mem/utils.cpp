@@ -12,9 +12,9 @@ void _copy(Slice<u8> dest, Slice<const u8> src)
 	PlatformIntricics::copy(dest, src);
 }
 
-void _set_zero(Slice<u8> dest)
+void _set(Slice<u8> dest, u8 value)
 {
-	PlatformIntricics::setzero(dest);
+	PlatformIntricics::set(dest, value);
 }
 
 }

@@ -50,9 +50,4 @@ void PageAllocator::free(const Slice<u8>& ptr)
     OS::unmap_memory(ptr);
 }
 
-usize PageAllocator::get_size_of(const Slice<u8>& ptr) const
-{
-    return OS::query_memory(ptr).region_size;
-}
-
 }

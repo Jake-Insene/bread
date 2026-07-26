@@ -46,10 +46,4 @@ void StackAllocator::free(const Slice<u8>& ptr)
     Unused(ptr);
 }
 
-usize StackAllocator::get_size_of(const Slice<u8>& ptr) const
-{
-    Unused(ptr);
-    return MaxValue<usize>;
-}
-
 }

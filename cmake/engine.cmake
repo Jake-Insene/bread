@@ -73,7 +73,10 @@ else()
     )
     if(BREAD_BUILD_TYPE STREQUAL "debugbuild")
         set(BREAD_COMPILE_OPTIONS ${BREAD_COMPILE_OPTIONS}
-            "-fsanitize=memory" "-fsanitize-trap=all"
+            "-fsanitize-trap=all"
+        )
+        set(BREAD_LINK_OPTIONS ${BREAD_COMPILE_OPTIONS}
+            "-fsanitize-trap=all"
         )
     endif()
     if(NOT ANDROID)

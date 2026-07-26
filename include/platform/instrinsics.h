@@ -3,6 +3,7 @@
 
 #if BREAD_X64
 #include <smmintrin.h>
+#include <emmintrin.h>
 #elif BREAD_ARM64
 #include <arm_neon.h>
 #endif
@@ -77,5 +78,5 @@ struct PlatformIntricics
 
 	static void copy(Slice<u8> dest, Slice<const u8> src);
 
-	static void setzero(Slice<u8> dest);
+	static void set(Slice<u8> dest, u8 value);
 };

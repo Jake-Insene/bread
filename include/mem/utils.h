@@ -148,7 +148,7 @@ constexpr void copy(Slice<T> dest, const Slice<U>& src)
     _copy_impl<T>(dest, Slice<const T>(src.items, src.len));
 }
 
-void _set_zero(Slice<u8> dest);
+void _set(Slice<u8> dest, u8 value);
 
 template<typename T>
 constexpr void set(Slice<T> dest, const T value)
@@ -156,10 +156,10 @@ constexpr void set(Slice<T> dest, const T value)
 #if BREAD_ENABLE_INTRISICS
     if !consteval
     {
-        if(value == T(0)) // for floating point values it works
+        if constexpr(IsSame<RemoveCVRef<T>, u8>) // for floating point values it works
         {
             Slice dest_bytes = to_bytes(dest);
-            _set_zero(dest_bytes);
+            _set(dest_bytes, value);
             return;
         }
     }
