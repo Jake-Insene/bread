@@ -74,6 +74,7 @@ void VulkanAdapter::initialize(Mem::Allocator* _allocator)
     VKDebugInfo("Initializing Vulkan Driver...");
     
     internal_allocator = _allocator;
+    allocator_mutex = Mutex::create();
 
     tmp_allocator.init(OS::map_memory(1024*1024, OS::ReadWrite));
 
@@ -189,6 +190,8 @@ void VulkanAdapter::shutdown()
     OS::unload_library(vk_lib);
 
     OS::unmap_memory(tmp_allocator.sp);
+
+    allocator_mutex.destroy();
 }
 
 Slice<GPU::PhysicalDeviceID> VulkanAdapter::physical_devices_enumerate()

@@ -48,9 +48,11 @@ struct GenericAllocator : Mem::Allocator
 
     virtual Slice<u8> alloc(usize size, usize alignment) override;
     virtual bool realloc(const Slice<u8>& ptr, usize new_size, usize alignment) override;
+    virtual Slice<u8> remap(const Slice<u8>& ptr, usize new_size, usize alignment) override;
     virtual void free(const Slice<u8>& ptr) override;
 
     Header* _search_for_available_space(usize aligned_size, usize alignment);
+    Header* _search_for_space_in_page(Page& page, usize aligned_size, usize alignment);
 
     Page& _allocate_new_page(usize size);
     void _check_integrity(Header* header);

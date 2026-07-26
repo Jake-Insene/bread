@@ -1,5 +1,6 @@
 #include "mem/page_allocator.h"
 
+#include "debug/fail.h"
 #include "mem/utils.h"
 #include "os/os.h"
 
@@ -43,6 +44,13 @@ bool PageAllocator::realloc(const Slice<u8>& ptr, usize new_size, usize)
     }
 
     return false;
+}
+
+Slice<u8> PageAllocator::remap(const Slice<u8>& ptr, usize new_size, usize alignment)
+{
+    Unused(ptr, new_size, alignment);
+    FailOn(true, "PageAllocator::remap is not implemented yet");
+    return {};
 }
 
 void PageAllocator::free(const Slice<u8>& ptr)

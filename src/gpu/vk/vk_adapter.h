@@ -6,6 +6,7 @@
 #include "math/hash.h"
 #include "mem/stack_allocator.h"
 #include "os/os.h"
+#include "os/mutex.h"
 
 
 struct VulkanAdapter;
@@ -303,6 +304,7 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 	};
 
 	Mem::Allocator* internal_allocator;
+	Mutex allocator_mutex;
 	Mem::StackAllocator tmp_allocator;
 
 	Slice<PhysicalDevice> physical_devices;
@@ -340,6 +342,7 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 	VkDebugUtilsMessengerEXT messenger;
 
     [[nodiscard]] Mem::Allocator* get_allocator() const { return internal_allocator; }
+	[[nodiscard]] Mutex& get_allocator_mutex() { return allocator_mutex; }
 	[[nodiscard]] Mem::StackAllocator* acquire_tmp_allocator()
 	{
 		tmp_allocator.reset();

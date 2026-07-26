@@ -41,6 +41,12 @@ bool StackAllocator::realloc(const Slice<u8>& ptr, usize new_size, usize alignme
     return false;
 }
 
+Slice<u8> StackAllocator::remap(const Slice<u8>& ptr, usize new_size, usize alignment)
+{
+    Unused(ptr, new_size, alignment);
+    return {};
+}
+
 void StackAllocator::free(const Slice<u8>& ptr)
 {
     Unused(ptr);

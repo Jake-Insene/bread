@@ -21,7 +21,22 @@ struct Allocator
     * The return slice is not garanted to be all zero.
     */
     virtual Slice<u8> alloc(usize size, usize alignment) = 0;
+    /*
+    * Try to expand the memory block, if it is expanded, the new memory is not garanted to be all zero.
+    * It will return whenever the memory block is expanded, otherwise it will return false.
+    */
     virtual bool realloc(const Slice<u8>& ptr, usize new_size, usize alignment) = 0;
+
+    /*
+    * Try to expand the memory block, if it is expanded, the new memory is not garanted to be all zero.
+    * otherwise it will allocate a new memory block and copy the old data to the new one, and free the old memory block.
+    * The return slice is not garanted to be all zero.
+    */
+    virtual Slice<u8> remap(const Slice<u8>& ptr, usize new_size, usize alignment) = 0;
+
+    /*
+    * Frees the memory block, the ptr must be allocated by this allocator.
+    */
     virtual void free(const Slice<u8>& ptr) = 0;
 
     template<typename T>

@@ -2,7 +2,6 @@
 
 #include "gpu/vk/vk_adapter.h"
 #include "gpu/vk/vk_vtable.h"
-#include "math/funcs.h"
 #include "mem/utils.h"
 #include "os/os.h"
 #include "platform/platform_header.h"
@@ -34,7 +33,7 @@ static inline VkAllocationCallbacks vk_allocation_callbacks =
 VkAllocationCallbacks* Vulkan::allocation_callbacks(VulkanAdapter* adapter)
 {
     vk_allocation_callbacks.pUserData = adapter;
-    return nullptr;
+    return &vk_allocation_callbacks;
 }
 
 void Vulkan::load_core_procs(OS::Handle vk_lib)
@@ -496,11 +495,6 @@ VkBool32 VKAPI_PTR Vulkan::_vk_debug_utils_callback(
  	return VK_FALSE;
 }
 
-struct VulkanAllocationHeader
-{
-    usize size;
-};
-
 void* VKAPI_PTR Vulkan::_vk_driver_allocate(void* pUserData, size_t size, size_t alignment, VkSystemAllocationScope allocationScope)
 {
 	Unused(allocationScope);
@@ -510,24 +504,12 @@ void* VKAPI_PTR Vulkan::_vk_driver_allocate(void* pUserData, size_t size, size_t
         return nullptr;
     }
 
-	Mem::Allocator* allocator = reinterpret_cast<VulkanAdapter*>(pUserData)->get_allocator();
+    VulkanAdapter* vulkan_adapter = reinterpret_cast<VulkanAdapter*>(pUserData);
+	Mem::Allocator* allocator = vulkan_adapter->get_allocator();
+	Mutex& mutex = vulkan_adapter->get_allocator_mutex();
+    OSMutexAuto(&mutex);
 
-    // NOTE: from godot vulkan driver
-	alignment = Math::max(alignment, sizeof(VulkanAllocationHeader));
-
-    const usize total_size = size + alignment;
-    Slice<u8> ret = allocator->alloc(total_size, alignment);
-    if(ret.ptr() == nullptr)
-    {
-        return nullptr;
-    }
-
-    // allocation header
-    VulkanAllocationHeader* header = reinterpret_cast<VulkanAllocationHeader*>(ret.ptr());
-    header->size = size;
-    *reinterpret_cast<usize*>(ret.ptr() + alignment - sizeof(usize)) = alignment;
-
-    return ret.ptr() + alignment;
+    return allocator->alloc(size, alignment).ptr();
 }
 
 void* VKAPI_PTR Vulkan::_vk_driver_reallocate(void* pUserData, void* pOriginal, size_t size, size_t alignment, VkSystemAllocationScope allocationScope)
@@ -539,35 +521,13 @@ void* VKAPI_PTR Vulkan::_vk_driver_reallocate(void* pUserData, void* pOriginal, 
         return _vk_driver_allocate(pUserData, size, alignment, allocationScope);
     }
 
-    Mem::Allocator* allocator = reinterpret_cast<VulkanAdapter*>(pUserData)->get_allocator();
+    VulkanAdapter* vulkan_adapter = reinterpret_cast<VulkanAdapter*>(pUserData);
+	Mem::Allocator* allocator = vulkan_adapter->get_allocator();
+	Mutex& mutex = vulkan_adapter->get_allocator_mutex();
+    OSMutexAuto(&mutex);
 
-    u8* mem = reinterpret_cast<u8*>(pOriginal);
-    usize stored_alignment = *reinterpret_cast<usize*>(mem - sizeof(usize));
-    alignment = Math::max(alignment, stored_alignment);
-    VulkanAllocationHeader* header = reinterpret_cast<VulkanAllocationHeader*>(mem - alignment);
-
-    const usize total_size = size + alignment;
-    if(allocator->realloc(Slice<u8>(reinterpret_cast<u8*>(header), header->size + alignment), total_size, alignment))
-    {
-        header->size = size;
-        return mem;
-    }
-
-    Slice<u8> new_mem = allocator->alloc(total_size, alignment);
-    if(new_mem.ptr() == nullptr)
-    {
-        return nullptr;
-    }
-
-    const usize copy_size = Math::min(header->size, size);
-    Mem::copy(Slice(new_mem.ptr() + alignment, copy_size), Slice(mem, copy_size));
-
-    VulkanAllocationHeader* new_header = reinterpret_cast<VulkanAllocationHeader*>(new_mem.ptr());
-    new_header->size = size;
-    *reinterpret_cast<usize*>(new_mem.ptr() + alignment - sizeof(usize)) = alignment;
-
-    allocator->free(Slice<u8>(reinterpret_cast<u8*>(header), header->size + alignment));
-    return new_mem.ptr() + alignment;
+    Slice new_mem = allocator->remap(Slice<u8>(reinterpret_cast<u8*>(pOriginal), 1), size, alignment);
+    return new_mem.ptr();
 }
 
 void VKAPI_PTR Vulkan::_vk_driver_free(void* pUserData, void* pMemory)
@@ -579,12 +539,12 @@ void VKAPI_PTR Vulkan::_vk_driver_free(void* pUserData, void* pMemory)
         return;
     }
 
-	Mem::Allocator* allocator = reinterpret_cast<VulkanAdapter*>(pUserData)->get_allocator();
+    VulkanAdapter* vulkan_adapter = reinterpret_cast<VulkanAdapter*>(pUserData);
+	Mem::Allocator* allocator = vulkan_adapter->get_allocator();
+	Mutex& mutex = vulkan_adapter->get_allocator_mutex();
+    OSMutexAuto(&mutex);
 
-    u8* mem = reinterpret_cast<u8*>(pMemory);
-    usize alignment = *reinterpret_cast<usize*>(mem - sizeof(usize));
-    VulkanAllocationHeader* header = reinterpret_cast<VulkanAllocationHeader*>(mem - alignment);
-    allocator->free(Slice<u8>(reinterpret_cast<u8*>(header), header->size + alignment));
+    allocator->free(Slice<u8>(reinterpret_cast<u8*>(pMemory), 1));
 }
 
 void VKAPI_PTR Vulkan::_vk_driver_internal_allocate(void* pUserData, size_t size, VkInternalAllocationType allocationType, VkSystemAllocationScope allocationScope)
