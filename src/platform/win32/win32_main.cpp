@@ -199,7 +199,7 @@ void engine_loop()
 // Default for Windows
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-	AddVectoredExceptionHandler(1, &_exception_handler);
+	SetUnhandledExceptionFilter(&_exception_handler);
 	engine_loop();
 	ExitProcess(0);
 }
