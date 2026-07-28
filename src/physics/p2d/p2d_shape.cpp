@@ -38,9 +38,7 @@ P2DShape P2DShape::copy() const
 
 void P2DShape::set_from_shape_2d(const Shape2D& shape)
 {
-    vertices.resize(shape.vertices.count);
-    Mem::copy(vertices.slice(), shape.vertices.slice());
-
+    vertices.replace(shape.vertices.slice());
     normals.resize(vertices.count);
 
     _calc_aabb();
@@ -69,7 +67,8 @@ void P2DShape::apply_transform(const Transform2D& transform)
         return;
     }
 
-    (void)vertices.iter().transform([&](const Vector2& vertice) -> Vector2 { return transform * vertice; });
+    (void)vertices.iter().transform([transform](const Vector2& vertice)
+        -> Vector2 { return transform * vertice; });
 
     centroid = transform * centroid;
 
@@ -85,7 +84,8 @@ void P2DShape::translate(const Vector2& translation)
         return;
     }
 
-    (void)vertices.iter().transform([&](const Vector2& vertice) -> Vector2 { return vertice + translation; });
+    (void)vertices.iter().transform([translation](const Vector2& vertice)
+        -> Vector2 { return vertice + translation; });
 
     centroid += translation;
  

@@ -1,77 +1,11 @@
 #include "physics/p2d/p2d_driver.h"
 
-#include "debug/log.h"
 #include "physics/physics_2d.h"
 #include "physics/p2d/p2d_types.h"
 #include "physics/p2d/p2d_collision.h"
 #include "physics/p2d/p2d_body.h"
 #include "physics/p2d/p2d_shape.h"
 
-
-
-InternalPhysics2D::Adapter P2DDriver::get_vtable()
-{
-    return InternalPhysics2D::Adapter
-    {
-        .initialize = &P2DDriver::initialize,
-        .shutdown = &P2DDriver::shutdown,
-
-        .step = &P2DDriver::step,
-
-        .body_create = &P2DDriver::body_create,
-        .body_destroy = &P2DDriver::body_destroy,
-        .area_create = &P2DDriver::area_create,
-        .area_destroy = &P2DDriver::area_destroy,
-
-        .body_set_shape = &P2DDriver::body_set_shape,
-        .body_get_shape = &P2DDriver::body_get_shape,
-
-        .body_set_user_data = &P2DDriver::body_set_user_data,
-        .body_get_user_data = &P2DDriver::body_get_user_data,
-        .body_set_transform = &P2DDriver::body_set_transform,
-        .body_get_transform = &P2DDriver::body_get_transform,
-        .body_set_type = &P2DDriver::body_set_type,
-        .body_set_velocity = &P2DDriver::body_set_velocity,
-        .body_get_velocity = &P2DDriver::body_get_velocity,
-        .body_set_angular_velocity = &P2DDriver::body_set_angular_velocity,
-        .body_get_angular_velocity = &P2DDriver::body_get_angular_velocity,
-        .body_set_mass = &P2DDriver::body_set_mass,
-        .body_get_mass = &P2DDriver::body_get_mass,
-        .body_set_friction = &P2DDriver::body_set_friction,
-        .body_get_friction = &P2DDriver::body_get_friction,
-        .body_set_air_friction = &P2DDriver::body_set_air_friction,
-        .body_get_air_friction = &P2DDriver::body_get_air_friction,
-        .body_set_restitution = &P2DDriver::body_set_restitution,
-        .body_get_restitution = &P2DDriver::body_get_restitution,
-        .body_apply_force = &P2DDriver::body_apply_force,
-        .body_apply_impulse = &P2DDriver::body_apply_impulse,
-        .body_set_fixed_rotation = &P2DDriver::body_set_fixed_rotation,
-
-        .body_is_on_floor = &P2DDriver::body_is_on_floor,
-        .body_is_on_ceil = &P2DDriver::body_is_on_ceil,
-        
-        .body_set_residence_mask = &P2DDriver::body_set_residence_mask,
-        .body_get_residence_mask = &P2DDriver::body_get_residence_mask,
-        .body_set_collision_mask = &P2DDriver::body_set_collision_mask,
-        .body_get_collision_mask = &P2DDriver::body_get_collision_mask,
-        .body_set_on_collide = &P2DDriver::body_set_on_collide,
-
-        .area_set_shape = &P2DDriver::area_set_shape,
-        .area_get_shape = &P2DDriver::area_get_shape,
-
-        .area_set_user_data = &P2DDriver::area_set_user_data,
-        .area_get_user_data = &P2DDriver::area_get_user_data,
-        .area_set_transform = &P2DDriver::area_set_transform,
-        .area_get_transform = &P2DDriver::area_get_transform,
-        .area_set_residence_mask = &P2DDriver::area_set_residence_mask,
-        .area_get_residence_mask = &P2DDriver::area_get_residence_mask,
-
-        .area_set_on_body_enter = &P2DDriver::area_set_on_body_enter,
-        .area_set_on_body_exit = &P2DDriver::area_set_on_body_exit,
-
-        .property_change = &P2DDriver::property_change,
-    };
-}
 
 void P2DDriver::initialize(Mem::Allocator* allocator)
 {

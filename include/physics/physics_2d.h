@@ -1,5 +1,4 @@
 #pragma once
-#include "core/header.h"
 #include "collections/function.h"
 #include "collections/property.h"
 #include "collections/string_map.h"
@@ -76,64 +75,68 @@ struct Physics2D
 
     static inline InternalData data = {};
 
-    static void initialize(Mem::Allocator* allocator, DriverType driver);
+    static InternalPhysics2D::Adapter* get_adapter();
+    
+    static void initialize(Mem::Allocator* allocator, DriverType driver_type);
     static void initialize_from_adapter(InternalPhysics2D::Adapter* adapter);
     static void shutdown();
-    
-    static InternalPhysics2D::Adapter* get_adapter();
 
     static void step(f32 dt);
 
-    static BodyID body_create(Opaque* user_data);
-    static void body_destroy(BodyID body_id);
-    static AreaID area_create(Opaque* user_data);
-    static void area_destroy(AreaID area_id);
+    static Physics2D::BodyID body_create(Opaque* user_data);
+    static void body_destroy(Physics2D::BodyID body);
 
-    static void body_set_shape(BodyID body_id, const Shape2D& shape);
-    static Shape2D body_get_shape(BodyID body_id);
+    // Body
+    static void body_set_shape(Physics2D::BodyID body, const Shape2D& new_shape);
+    static Shape2D body_get_shape(Physics2D::BodyID body);
 
-    static void body_set_user_data(BodyID body_id, Opaque* user_data);
-    static Opaque* body_get_user_data(BodyID body_id);
-    static void body_set_transform(BodyID body_id, const Transform2D& transform);
-    static Transform2D body_get_transform(BodyID body_id);
-    static void body_set_type(BodyID body_id, BodyType type);
-    static void body_set_velocity(BodyID body_id, const Vector2& velocity);
-    static Vector2 body_get_velocity(BodyID body_id);
-    static void body_set_angular_velocity(BodyID body_id, f32 angular_velocity);
-    static f32 body_get_angular_velocity(BodyID body_id);
-    static void body_set_mass(BodyID body_id, f32 mass);
-    static f32 body_get_mass(BodyID body_id);
-    static void body_set_friction(BodyID body_id, f32 friction);
-    static f32 body_get_friction(BodyID body_id);
-    static void body_set_air_friction(BodyID body_id, f32 air_friction);
-    static f32 body_get_air_friction(BodyID body_id);
-    static void body_set_restitution(BodyID body_id, f32 new_restitution);
-    static f32 body_get_restitution(BodyID body_id);
-    static void body_apply_force(BodyID body_id, const Vector2& force, const Vector2& point);
-    static void body_apply_impulse(BodyID body_id, const Vector2& impulse, const Vector2& point);
-    static void body_set_fixed_rotation(BodyID body_id, bool fixed_rotation);
-    static bool body_is_on_floor(BodyID body_id);
-    static bool body_is_on_ceil(BodyID body_id);
-    static void body_set_residence_mask(BodyID body_id, CollisionMask mask);
-    static CollisionMask body_get_residence_mask(BodyID body_id);
-    static void body_set_collision_mask(BodyID body_id, CollisionMask mask);
-    static CollisionMask body_get_collision_mask(BodyID body_id);
-    static void body_set_on_collide(BodyID body_id, EventOnCollide event);
+    static void body_set_user_data(Physics2D::BodyID body, Opaque* new_user_data);
+    static Opaque* body_get_user_data(Physics2D::BodyID body);
+    static void body_set_transform(Physics2D::BodyID body, const Transform2D& new_transform);
+    static Transform2D body_get_transform(Physics2D::BodyID body);
+    static void body_set_type(Physics2D::BodyID body, Physics2D::BodyType new_type);
+    static void body_set_velocity(Physics2D::BodyID body, const Vector2& new_velocity);
+    static Vector2 body_get_velocity(Physics2D::BodyID body);
+    static void body_set_angular_velocity(Physics2D::BodyID body, f32 angular_velocity);
+    static f32 body_get_angular_velocity(Physics2D::BodyID body);
+    static void body_set_mass(Physics2D::BodyID body, f32 new_mass);
+    static f32 body_get_mass(Physics2D::BodyID body);
+    static void body_set_friction(Physics2D::BodyID body, f32 new_friction);
+    static f32 body_get_friction(Physics2D::BodyID body);
+    static void body_set_air_friction(Physics2D::BodyID body, f32 new_air_friction);
+    static f32 body_get_air_friction(Physics2D::BodyID body);
+    static void body_set_restitution(Physics2D::BodyID body, f32 new_restitution);
+    static f32 body_get_restitution(Physics2D::BodyID body);
+    static void body_apply_force(Physics2D::BodyID body, const Vector2& force, const Vector2& point);
+    static void body_apply_impulse(Physics2D::BodyID body, const Vector2& impulse, const Vector2& point);
+    static void body_set_fixed_rotation(Physics2D::BodyID body, bool enable);
+    static bool body_is_on_floor(Physics2D::BodyID body);
+    static bool body_is_on_ceil(Physics2D::BodyID body);
 
-    static void area_set_shape(AreaID area_id, const Shape2D& shape);
-    static Shape2D area_get_shape(AreaID area_id);
+    static void body_set_residence_mask(Physics2D::BodyID body_id, Physics2D::CollisionMask mask);
+    static Physics2D::CollisionMask body_get_residence_mask(Physics2D::BodyID body_id);
+    static void body_set_collision_mask(Physics2D::BodyID body_id, Physics2D::CollisionMask mask);
+    static Physics2D::CollisionMask body_get_collision_mask(Physics2D::BodyID body_id);
+    static void body_set_on_collide(Physics2D::BodyID body_id, Physics2D::EventOnCollide on_collide);
 
-    static void area_set_user_data(AreaID area_id, Opaque* user_data);
-    static Opaque* area_get_user_data(AreaID area_id);
-    static void area_set_transform(AreaID area_id, const Transform2D& transform);
-    static Transform2D area_get_transform(AreaID area_id);
-    static void area_set_residence_mask(AreaID area_id, CollisionMask mask);
-    static CollisionMask area_get_residence_mask(AreaID area_id);
-    static void area_set_on_body_enter(AreaID area_id, EventOnBodyEnter event);
-    static void area_set_on_body_exit(AreaID area_id, EventOnBodyExit event);
+    // Area
+    static Physics2D::AreaID area_create(Opaque* user_data);
+    static void area_destroy(Physics2D::AreaID area);
+    
+    static void area_set_shape(Physics2D::AreaID area, const Shape2D& new_shape);
+    static Shape2D area_get_shape(Physics2D::AreaID area);
+
+    static void area_set_user_data(Physics2D::AreaID area, Opaque* new_user_data);
+    static Opaque* area_get_user_data(Physics2D::AreaID area);
+    static void area_set_transform(Physics2D::AreaID area, const Transform2D& new_transform);
+    static Transform2D area_get_transform(Physics2D::AreaID area);
+    static void area_set_residence_mask(Physics2D::AreaID area, Physics2D::CollisionMask mask);
+    static Physics2D::CollisionMask area_get_residence_mask(Physics2D::AreaID area);
+
+    static void area_set_on_body_enter(Physics2D::AreaID area, Physics2D::EventOnBodyEnter on_body_enter);
+    static void area_set_on_body_exit(Physics2D::AreaID area, Physics2D::EventOnBodyExit on_body_exit);
 
     // Properties
-
     static void set_property(StringView property_name, PropertyValue new_value);
     static PropertyValue get_property(StringView property_name);
 };

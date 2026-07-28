@@ -201,7 +201,7 @@ struct [[nodiscard]] Array
         Mem::copy(dest, new_items);
     }
 
-    void replace(Slice<Type> new_items)
+    void replace(const Slice<Type>& new_items)
     {
         resize(new_items.len);
         Mem::copy(items, new_items);
