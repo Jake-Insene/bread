@@ -5,6 +5,7 @@
 
 
 static inline InternalPhysics2D::Adapter* physics2d_current_adapter;
+static inline Mem::Allocator* adapter_allocator_owner = nullptr;
 
 void Physics2D::initialize(Mem::Allocator* allocator, Physics2D::DriverType)
 {
@@ -20,7 +21,9 @@ void Physics2D::initialize(Mem::Allocator* allocator, Physics2D::DriverType)
     data.properties.insert("/tile_size", Property::Integer(64));
     data.properties.insert("/fixed_step", Property::Float(1.0f / 60.0f));
 
+    adapter_allocator_owner = allocator;
     physics2d_current_adapter = allocator->object<P2DDriver>();
+
     physics2d_current_adapter->initialize(allocator);
 }
 
@@ -37,6 +40,12 @@ InternalPhysics2D::Adapter* Physics2D::get_adapter()
 void Physics2D::shutdown()
 {
     physics2d_current_adapter->shutdown();
+
+	// Only the process who calls Physics2D::initialize owns the memory of current_adapter.
+    if(adapter_allocator_owner != nullptr)
+	{
+		adapter_allocator_owner->free(Slice(reinterpret_cast<u8*>(physics2d_current_adapter), 1));
+	}    
 
     data.properties.destroy();
 }
@@ -270,4 +279,9 @@ void Physics2D::set_property(StringView property_name, PropertyValue new_value)
 PropertyValue Physics2D::get_property(StringView property_name)
 {
     return data.properties.get(property_name);
+}
+
+void Physics2D::set_draw_debug_line(DrawDebugLine fn)
+{
+    physics2d_current_adapter->set_draw_debug_line(fn);
 }

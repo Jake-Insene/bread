@@ -33,7 +33,7 @@ static inline VkAllocationCallbacks vk_allocation_callbacks =
 VkAllocationCallbacks* Vulkan::allocation_callbacks(VulkanAdapter* adapter)
 {
     vk_allocation_callbacks.pUserData = adapter;
-    return &vk_allocation_callbacks;
+    return nullptr;
 }
 
 void Vulkan::load_core_procs(OS::Handle vk_lib)
@@ -327,7 +327,7 @@ VkSurfaceKHR Vulkan::create_surface(VulkanAdapter* adapter, VkInstance instance,
         .window = reinterpret_cast<ANativeWindow*>(native_handle),
     };
 
-    VkResult result = vk.vkCreateAndroidSurfaceKHR(instance, &vk_surface_info, allocation_callbacks(), &vk_surface);
+    VkResult result = vk.vkCreateAndroidSurfaceKHR(instance, &vk_surface_info, allocation_callbacks(adapter), &vk_surface);
 #endif
 
     VKFailOn(result != VK_SUCCESS, "vkCreateSurfaceKHR({})", Vulkan::result_as_string(result));
@@ -509,7 +509,8 @@ void* VKAPI_PTR Vulkan::_vk_driver_allocate(void* pUserData, size_t size, size_t
 	Mutex& mutex = vulkan_adapter->get_allocator_mutex();
     OSMutexAuto(&mutex);
 
-    return allocator->alloc(size, alignment).ptr();
+    Slice bytes = allocator->alloc(size, alignment);
+    return bytes.ptr();
 }
 
 void* VKAPI_PTR Vulkan::_vk_driver_reallocate(void* pUserData, void* pOriginal, size_t size, size_t alignment, VkSystemAllocationScope allocationScope)
@@ -519,6 +520,12 @@ void* VKAPI_PTR Vulkan::_vk_driver_reallocate(void* pUserData, void* pOriginal, 
     if(pOriginal == nullptr)
     {
         return _vk_driver_allocate(pUserData, size, alignment, allocationScope);
+    }
+
+    if(size == 0)
+    {
+        _vk_driver_free(pUserData, pOriginal);
+        return nullptr;
     }
 
     VulkanAdapter* vulkan_adapter = reinterpret_cast<VulkanAdapter*>(pUserData);

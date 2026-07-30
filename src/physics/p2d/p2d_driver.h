@@ -48,6 +48,8 @@ struct P2DDriver : InternalPhysics2D::Adapter
 
         f32 fixed_step;
         f32 accumulator;
+
+        Physics2D::DrawDebugLine draw_debug_line;
     };
 
     InternalData data;
@@ -130,6 +132,8 @@ struct P2DDriver : InternalPhysics2D::Adapter
 
     // Property
     void property_change(StringView property_name, PropertyValue new_value) override;
+
+    void set_draw_debug_line(Physics2D::DrawDebugLine fn) override;
 
     // P2D Internal
     void _step_fixed(f32 dt);

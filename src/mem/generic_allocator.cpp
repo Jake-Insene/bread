@@ -52,6 +52,7 @@ void GenericAllocator::destroy()
         while(header != nullptr)
         {
             header_count++;
+            DebugAssert((header->tags & Allocated) == 0, "forget to call free.");
             header = header->next;
         }
 
@@ -182,6 +183,7 @@ bool GenericAllocator::realloc(const Slice<u8>& ptr, usize new_size, usize align
 Slice<u8> GenericAllocator::remap(const Slice<u8>& ptr, usize new_size, usize alignment)
 {
     DebugAssert(alignment == Mem::align_up<usize>(alignment, 2), "alignment must be a power of 2");
+    DebugAssert(new_size != 0, "new size can't be zero");
     DebugAssert(ptr.ptr(), "invalid pointer");
 
     Header* header = get_header(ptr);

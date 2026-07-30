@@ -462,6 +462,11 @@ void P2DDriver::property_change(StringView property_name, PropertyValue new_valu
     }
 }
 
+void P2DDriver::set_draw_debug_line(Physics2D::DrawDebugLine fn)
+{
+    data.draw_debug_line = fn;
+}
+
 void P2DDriver::_step_fixed(f32 dt)
 {
     for (Physics2D::AreaID area_id : data.active_areas.iter())
@@ -499,14 +504,46 @@ void P2DDriver::_handle_debug_draw_body(P2DBody& body)
 {
     Unused(body);
     if (data.debug_draw == false)
+    {
         return;
+    }
+
+    if(!data.draw_debug_line.has_func())
+    {
+        return;
+    }
+
+    const P2DShape& shape = body.get_shape_transformed();
+    for(usize i = 0; i < shape.vertices.count; i++)
+    {
+        data.draw_debug_line.call(
+            shape.vertices.get(i),
+            shape.vertices.get((i + 1) % shape.vertices.count)
+        );
+    }
 }
 
 void P2DDriver::_handle_debug_draw_area(P2DArea& area)
 {
     Unused(area);
     if (data.debug_draw == false)
+    {
         return;
+    }
+
+    if(!data.draw_debug_line.has_func())
+    {
+        return;
+    }
+
+    const P2DShape& shape = area.get_shape_transformed();
+    for(usize i = 0; i < shape.vertices.count; i++)
+    {
+        data.draw_debug_line.call(
+            shape.vertices.get(i),
+            shape.vertices.get((i + 1) % shape.vertices.count)
+        );
+    }
 }
 
 void P2DDriver::_move_body(P2DBody& body, f32 dt)

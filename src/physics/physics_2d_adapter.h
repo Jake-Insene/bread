@@ -67,6 +67,8 @@ struct Adapter
 
     // Internal
     virtual void property_change(StringView property_name, PropertyValue new_value) = 0;
+
+    virtual void set_draw_debug_line(Physics2D::DrawDebugLine fn) = 0;
 };
 
 }

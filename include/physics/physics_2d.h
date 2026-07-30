@@ -65,6 +65,7 @@ struct Physics2D
     using EventOnCollide = Function<void(*)(BodyID, BodyID)>;
     using EventOnBodyEnter = Function<void(*)(AreaID, BodyID)>;
     using EventOnBodyExit = Function<void(*)(AreaID, BodyID)>;
+    using DrawDebugLine = Function<void(*)(const Vector2&, const Vector2&)>;
 
     struct InternalData
     {
@@ -139,4 +140,6 @@ struct Physics2D
     // Properties
     static void set_property(StringView property_name, PropertyValue new_value);
     static PropertyValue get_property(StringView property_name);
+    
+    static void set_draw_debug_line(DrawDebugLine fn);
 };
