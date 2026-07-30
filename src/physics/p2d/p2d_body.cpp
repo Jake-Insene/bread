@@ -144,6 +144,7 @@ void P2DBody::step(f32 dt)
 	data.angular_velocity *= (1 - (data.air_friction * dt));
 
 	data.force_accumulator = Vector2();
+	data.torque_accumulator = 0;
 	
 	// Simple sleep based on velocity
 	const f32 rest_threshold = 0.001F;
@@ -185,7 +186,7 @@ void P2DBody::_semi_implicit_euler(f32 dt)
 
 	// Angular acceleration
 	const f32 angular_acceleration = data.torque_accumulator * data.inv_inertia;
-	data.angular_velocity += angular_acceleration;
+	data.angular_velocity += angular_acceleration * dt;
 
 	// Angular Velocity
 	if (!fixed_rotation)

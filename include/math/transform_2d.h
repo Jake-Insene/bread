@@ -73,8 +73,8 @@ struct [[nodiscard]] Transform2DT
                 (rows[0][0] * transform[0][1]) + (rows[0][1] * transform[1][1])
             ),
             VectorType(
-                (rows[1][0] * transform[0][1]) + (rows[1][1] * transform[1][1]),
-                (rows[1][0] * transform[0][0]) + (rows[1][1] * transform[1][0])
+                (rows[1][0] * transform[0][0]) + (rows[1][1] * transform[1][0]),
+                (rows[1][0] * transform[0][1]) + (rows[1][1] * transform[1][1])
             ),
             new_pos
         );
