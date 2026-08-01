@@ -5,7 +5,6 @@
 
 /*
 * Use to represent the a shape that forms a body.
-* Only 4 vertices for now(Quads).
 */
 struct [[nodiscard]] Shape2D
 {
