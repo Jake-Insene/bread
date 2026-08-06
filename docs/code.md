@@ -18,7 +18,7 @@ Implementing the C++ runtime is required; errors are common during this stage.
     ```
     
 ## C++(Engine):
-* Constructors are only used for primitive types. Instantiable systems/services use initialize/shutdown, while classes use init/destroy.
+* Constructors are only used for primitive types. A class can only have a unique constructor.
 * OOP is avoided in the engine, we use a more explicit approach where paths can be easily drawn. The engine will still provide collections that let you use OOP easily.
 
 ## C++(Client):
