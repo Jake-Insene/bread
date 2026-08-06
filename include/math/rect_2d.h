@@ -21,6 +21,11 @@ struct [[nodiscard]] Rect2DT
     constexpr explicit Rect2DT(const Type x, const Type y, const Type w, const Type h) : position(x, y), size(w, h) {}
     constexpr explicit Rect2DT(const VectorType& pos, const VectorType& sz) : position(pos), size(sz) {}
     
+    [[nodiscard]] constexpr bool operator==(const Rect2DT& other) const
+    {
+		return position == other.position && size == other.size;
+    }
+
     [[nodiscard]] constexpr bool contains(const VectorType& point)
     {
         if(point.x < position.x || point.y < position.y)
