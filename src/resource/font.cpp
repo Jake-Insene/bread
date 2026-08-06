@@ -135,6 +135,8 @@ Error Font::load(StringView file_path)
 
 const Font::FontTheme& Font::get_font_theme(i32 font_size)
 {
+    DebugAssert(font_size != 0, "invalid font size");
+
     for (FontTheme& theme : data.themes.iter())
     {
         if (theme.font_size == font_size)
