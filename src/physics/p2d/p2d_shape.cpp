@@ -121,7 +121,7 @@ Vector2 P2DShape::get_centroid() const
 f32 P2DShape::calculate_inertia(f32 mass) const
 {
     f32 inertia = 0.F;
-    const f32 mass_per_triangle_face = mass / 4.F;
+    const f32 mass_per_triangle_face = mass / vertices.count;
     for(usize i = 0; i < vertices.count; i++)
     {
         const Vector2 center_to_vertice = vertices.get(i) - centroid;
