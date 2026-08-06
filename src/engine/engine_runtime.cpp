@@ -8,7 +8,6 @@
 #include "input/input.h"
 #include "debug/log.h"
 #include "os/os.h"
-#include "physics/physics_2d.h"
 #include "resource/resource_manager.h"
 
 
@@ -65,7 +64,6 @@ void EngineRuntime::initialize()
     main_window = Window(Display::window_create());
 
     Audio::initialize(&allocator, Audio::DriverType::Default);
-    Physics2D::initialize(&allocator, Physics2D::DriverType::Default);
 
     // Initialize subsystems first
     audio_service.initialize(
@@ -137,7 +135,6 @@ void EngineRuntime::shutdown()
     render_device.shutdown();
     audio_service.shutdown();
 
-    Physics2D::shutdown();
     Audio::shutdown();
     
     main_window.destroy();
@@ -180,11 +177,10 @@ void EngineRuntime::step()
             "\tAvg Frame Time: {}\n"
             "\tInternal Update Time: {}\n"
             "\tUpdate Time: {}\n"
-            "\tPhysics 2D Time: {}\n"
             "\tRender Time: {}\n"
             "\tPresent Time: {}",
             fps_counter, delta_time, debug_time.internal_update_time,
-            debug_time.update_time, debug_time.physics_2d_time, 
+            debug_time.update_time, 
             debug_time.render_time,
             debug_time.present_time
         );
@@ -199,13 +195,6 @@ void EngineRuntime::step()
         );
 
         application->update(delta_time);
-    }
-
-    {
-        PROFILE_SCOPE(
-            debug_time.physics_2d_time = duration;
-        );
-        Physics2D::step(delta_time);
     }
 
     {

@@ -43,7 +43,6 @@ struct EngineRuntime
     {
         f64 internal_update_time;
         f64 update_time;
-        f64 physics_2d_time;
         f64 render_time;
         f64 present_time;
     } debug_time;

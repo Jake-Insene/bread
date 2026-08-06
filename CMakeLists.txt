@@ -57,16 +57,6 @@ file(GLOB ENGINE_SRC
     src/mem/page_allocator.cpp
     src/mem/stack_allocator.cpp
 
-    src/physics/physics_2d.cpp
-    src/physics/shape_2d.cpp
-
-    # Default 2d physics driver
-    src/physics/p2d/p2d_area.cpp
-    src/physics/p2d/p2d_body.cpp
-    src/physics/p2d/p2d_collision.cpp
-    src/physics/p2d/p2d_driver.cpp
-    src/physics/p2d/p2d_shape.cpp
-    
     src/platform/intrinsics.cpp
 
     src/resource/font.cpp
