@@ -34,17 +34,17 @@ struct [[nodiscard]] FreeList
     SlotID last_free_element;
     usize count;
 
-    static FreeList with_allocator(Mem::Allocator* allocator)
+    static FreeList with_allocator(Mem::Allocator& allocator)
     {
         return FreeList(allocator, 0);
     }
 
-    static FreeList with_size(Mem::Allocator* allocator, usize size)
+    static FreeList with_size(Mem::Allocator& allocator, usize size)
     {
         return FreeList(allocator, size);
     }
 
-    FreeList(Mem::Allocator* allocator, usize initial_size)
+    FreeList(Mem::Allocator& allocator, usize initial_size)
     : array(allocator, initial_size, {}), last_free_element(InvalidSlot), count()
     {}
 

@@ -11,7 +11,7 @@
 #include <external/stb_image.h>
 
 
-ResourceManager::ResourceManager(Mem::Allocator* allocator)
+ResourceManager::ResourceManager(Mem::Allocator& allocator)
 : allocator(allocator), resources(allocator, 4)
 {
     // default resources
@@ -33,7 +33,7 @@ ResourceManager::~ResourceManager()
     {
         RMDebugInfo("Destroying the resource '{}'", it.first);
         DestructObject(*it.second.resource);
-        allocator->free(
+        allocator.free(
             Mem::to_bytes(Slice(it.second.resource, 1))
         );
     }
@@ -95,7 +95,7 @@ Result<Resource*, Error> ResourceManager::_load_image(StringView path)
         Error load_result = image->load_from_path(path);
         if (!load_result)
         {
-            get_allocator()->free(Mem::to_bytes(Slice(image, 1)));
+            get_allocator().free(Mem::to_bytes(Slice(image, 1)));
             return load_result;
         }
 
@@ -125,7 +125,7 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path)
         Error load_result = tex->load_from_path(path);
         if (!load_result)
         {
-            get_allocator()->free(Mem::to_bytes(Slice(tex, 1)));
+            get_allocator().free(Mem::to_bytes(Slice(tex, 1)));
             return load_result;
         }
 
@@ -150,7 +150,7 @@ Result<Resource*, Error> ResourceManager::_load_sound(StringView path)
     Error load_result = new_sound->load(path);
     if (!load_result)
     {
-        get_allocator()->free(Mem::to_bytes(Slice(new_sound, 1)));
+        get_allocator().free(Mem::to_bytes(Slice(new_sound, 1)));
         return load_result;
     }
 
@@ -172,7 +172,7 @@ Result<Resource*, Error> ResourceManager::_load_font(StringView path)
     Error load_result = new_font->load(path);
     if (!load_result)
     {
-        get_allocator()->free(Mem::to_bytes(Slice(new_font, 1)));
+        get_allocator().free(Mem::to_bytes(Slice(new_font, 1)));
         return load_result;
     }
 

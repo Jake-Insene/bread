@@ -33,7 +33,7 @@ void operator delete[](void*)
     FailOn(true, "avoid 'delete' statements!");
 }
 
-EngineRuntime::EngineRuntime(Mem::Allocator* allocator)
+EngineRuntime::EngineRuntime(Mem::Allocator& allocator)
 : allocator(allocator),
 audio_service(allocator), render_device(allocator),
 gpu_memory_allocator(
@@ -86,7 +86,7 @@ main_queue(allocator, DefaultMainQueueSize)
 
     // Entry point for app
     application = reinterpret_cast<Application*>(
-        allocator->alloc(
+        allocator.alloc(
             get_application_info().size_in_bytes,
             get_application_info().alignment
         ).ptr()
@@ -117,7 +117,7 @@ EngineRuntime::~EngineRuntime()
     DestructObject(*application);
     application_state = ApplicationState::Destroyed;
 
-    allocator->free(Slice(reinterpret_cast<u8*>(application), 1));
+    allocator.free(Slice(reinterpret_cast<u8*>(application), 1));
 
     main_window.destroy();
 }
@@ -263,7 +263,7 @@ void EngineRuntime::_select_physical_device()
 namespace Main
 {
 
-void runtime_begin(Mem::Allocator* allocator)
+void runtime_begin(Mem::Allocator& allocator)
 {
     OS::initialize(allocator);
     Display::initialize(allocator);

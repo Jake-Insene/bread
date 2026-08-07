@@ -12,7 +12,7 @@ struct GPUMemoryAllocator;
 
 struct GPUResourceManagerCreateInfo
 {
-    Mem::Allocator* allocator;
+    Mem::Allocator& allocator;
     GPU::DeviceID device;
     GPU::QueueID graphics_queue;
     GPU::QueueID copy_queue;
@@ -44,7 +44,7 @@ struct GPUResourceManager
         GPUMemoryAllocationID allocation;
     };
 
-    Mem::Allocator* allocator;
+    Mem::Allocator& allocator;
     GPU::DeviceID device;
     GPU::QueueID graphics_queue;
     GPU::QueueID copy_queue;

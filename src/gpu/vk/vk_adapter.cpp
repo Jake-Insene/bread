@@ -69,7 +69,7 @@ VkDriverRenderPassKey VkDriverRenderPassKey::from_render_pass_begin_info(VulkanA
 	return key;
 }
 
-VulkanAdapter::VulkanAdapter(Mem::Allocator* _allocator)
+VulkanAdapter::VulkanAdapter(Mem::Allocator& _allocator)
 : internal_allocator(_allocator), allocator_mutex(Mutex::create()),
 tmp_allocator(OS::map_memory(1024*1024, OS::ReadWrite)),
 surfaces(_allocator, 4),
@@ -153,8 +153,8 @@ VulkanAdapter::~VulkanAdapter()
 {
     vk.vkDestroySurfaceKHR(instance, dummy_surface, Vulkan::allocation_callbacks(this));
 
-    get_allocator()->free(Mem::to_bytes(physical_device_ids));
-    get_allocator()->free(Mem::to_bytes(physical_devices));
+    get_allocator().free(Mem::to_bytes(physical_device_ids));
+    get_allocator().free(Mem::to_bytes(physical_devices));
 
 #if defined(BREAD_SHOW_DEBUG_INFO) && defined(BREAD_WIN32)
     vk.vkDestroyDebugUtilsMessengerEXT(
@@ -222,7 +222,7 @@ GPU::DeviceID VulkanAdapter::device_create(GPU::PhysicalDeviceID physical_device
     Unused(ci);
 
     PhysicalDevice& pd = physical_devices[physical_device.integer()];
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
     
     GPU::DeviceID device_id = devices.emplace(allocator);
     LogicalDevice& ld = _get_logical_device(device_id);
@@ -231,7 +231,7 @@ GPU::DeviceID VulkanAdapter::device_create(GPU::PhysicalDeviceID physical_device
     u32 property_count;
     vk.vkEnumerateDeviceExtensionProperties(pd.vk_physical_device, nullptr, &property_count, nullptr);
     
-    Slice device_extensions = allocator->array<VkExtensionProperties>(property_count);
+    Slice device_extensions = allocator.array<VkExtensionProperties>(property_count);
     vk.vkEnumerateDeviceExtensionProperties(pd.vk_physical_device, nullptr, &property_count, device_extensions.ptr());
     
     VKDebugInfo("Device Extensions");
@@ -247,8 +247,8 @@ GPU::DeviceID VulkanAdapter::device_create(GPU::PhysicalDeviceID physical_device
     u32 vk_family_count;
     vk.vkGetPhysicalDeviceQueueFamilyProperties2(pd.vk_physical_device, &vk_family_count, nullptr);
 
-    Slice vk_families = allocator->array<VkQueueFamilyProperties2>(vk_family_count);
-    Slice vk_acquired = allocator->array<u32>(vk_family_count);
+    Slice vk_families = allocator.array<VkQueueFamilyProperties2>(vk_family_count);
+    Slice vk_acquired = allocator.array<u32>(vk_family_count);
     for(VkQueueFamilyProperties2& vk_family : vk_families)
     {
         vk_family.sType = VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2;
@@ -405,8 +405,8 @@ GPU::DeviceID VulkanAdapter::device_create(GPU::PhysicalDeviceID physical_device
             continue;
         }
 
-        family.vk_queues = get_allocator()->array<VkQueue>(vk_families[vk_family_indices[i]].queueFamilyProperties.queueCount);
-        family.queue_ids = get_allocator()->array<GPU::QueueID>(vk_families[vk_family_indices[i]].queueFamilyProperties.queueCount);
+        family.vk_queues = get_allocator().array<VkQueue>(vk_families[vk_family_indices[i]].queueFamilyProperties.queueCount);
+        family.queue_ids = get_allocator().array<GPU::QueueID>(vk_families[vk_family_indices[i]].queueFamilyProperties.queueCount);
         for(uint32_t queue_i = 0; queue_i < family.vk_queues.len; queue_i++)
         {
             ld.vk.vkGetDeviceQueue(ld.vk_device, family.vk_family_index, queue_i, &family.vk_queues[queue_i]);
@@ -451,8 +451,8 @@ void VulkanAdapter::device_destroy(GPU::DeviceID device)
             continue;
         }
 
-        get_allocator()->free(Mem::to_bytes(queue_family.vk_queues));
-        get_allocator()->free(Mem::to_bytes(queue_family.queue_ids));
+        get_allocator().free(Mem::to_bytes(queue_family.vk_queues));
+        get_allocator().free(Mem::to_bytes(queue_family.queue_ids));
     }
     
     for(RenderPassEntry& it : ld.render_pass_cache.iter())
@@ -471,7 +471,7 @@ void VulkanAdapter::device_destroy(GPU::DeviceID device)
 GPU::SwapChainID VulkanAdapter::swap_chain_create(GPU::DeviceID device, const GPU::SwapChainCreateInfo& ci)
 {
     LogicalDevice& ld = _get_logical_device(device);
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
 
     GPU::SwapChainID sc_id = swap_chains.add(SwapChain());
     SwapChain& swap_chain = _get_swap_chain(sc_id);
@@ -521,10 +521,10 @@ GPU::SwapChainID VulkanAdapter::swap_chain_create(GPU::DeviceID device, const GP
         // images
         ld.vk.vkGetSwapchainImagesKHR(ld.vk_device, swap_chain.vk_swapchain, &swap_chain.image_count, nullptr);
 
-        Slice vk_images = allocator->array<VkImage>(swap_chain.image_count);
+        Slice vk_images = allocator.array<VkImage>(swap_chain.image_count);
         ld.vk.vkGetSwapchainImagesKHR(ld.vk_device, swap_chain.vk_swapchain, &swap_chain.image_count, vk_images.ptr());
         
-        swap_chain.images = get_allocator()->array<SwapChainImage>(swap_chain.image_count);
+        swap_chain.images = get_allocator().array<SwapChainImage>(swap_chain.image_count);
         for (u32 i = 0; i < swap_chain.image_count; i++)
         {
             swap_chain.images[i].vk_image = vk_images[i];
@@ -565,7 +565,7 @@ void VulkanAdapter::swap_chain_destroy(GPU::SwapChainID swap_chain)
         
         textures.remove(sc.images[i].texture);
     }
-    get_allocator()->free(Mem::to_bytes(sc.images));
+    get_allocator().free(Mem::to_bytes(sc.images));
     
     ld.vk.vkDestroySwapchainKHR(ld.vk_device, sc.vk_swapchain, Vulkan::allocation_callbacks(this));
 
@@ -672,9 +672,9 @@ void VulkanAdapter::fence_reset(Slice<GPU::FenceID> fences)
 {
     GPU::DeviceID first_device = _get_fence(fences[0]).device;
     LogicalDevice& ld = _get_logical_device(first_device);
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
 
-    Slice vk_fences = allocator->array<VkFence>(fences.len);
+    Slice vk_fences = allocator.array<VkFence>(fences.len);
 
     for(usize i = 0; i < fences.len; i++)
     {
@@ -692,9 +692,9 @@ void VulkanAdapter::fence_wait_for(Slice<GPU::FenceID> fences, bool wait_for_all
 {
     GPU::DeviceID first_device = _get_fence(fences[0]).device;
     LogicalDevice& ld = _get_logical_device(first_device);
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
     
-    Slice vk_fences = allocator->array<VkFence>(fences.len);
+    Slice vk_fences = allocator.array<VkFence>(fences.len);
     for(usize i = 0; i < fences.len; i++)
     {
         Fence& fence = _get_fence(fences[i]);
@@ -764,10 +764,10 @@ void VulkanAdapter::queue_execute_command_buffer(GPU::QueueID queue, const GPU::
 {
     Queue& q = _get_queue(queue);
     LogicalDevice& ld = _get_logical_device(q.device);
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
 
-    Slice vk_wait_semaphores = allocator->array<VkSemaphore>(execute_info.wait_semaphores.len);
-    Slice vk_wait_stages = allocator->array<VkPipelineStageFlags>(execute_info.wait_stages.len);
+    Slice vk_wait_semaphores = allocator.array<VkSemaphore>(execute_info.wait_semaphores.len);
+    Slice vk_wait_stages = allocator.array<VkPipelineStageFlags>(execute_info.wait_stages.len);
     for(usize i = 0; i < execute_info.wait_semaphores.len; i++)
     {
         Semaphore& semaphore = _get_semaphore(execute_info.wait_semaphores[i]);
@@ -775,14 +775,14 @@ void VulkanAdapter::queue_execute_command_buffer(GPU::QueueID queue, const GPU::
         vk_wait_stages[i] = VkUtils::_vk_get_pipeline_stages(execute_info.wait_stages[i]);
     }
 
-    Slice vk_signal_semaphores = allocator->array<VkSemaphore>(execute_info.signal_semaphores.len);
+    Slice vk_signal_semaphores = allocator.array<VkSemaphore>(execute_info.signal_semaphores.len);
     for(usize i = 0; i < execute_info.signal_semaphores.len; i++)
     {
         Semaphore& sem = _get_semaphore(execute_info.signal_semaphores[i]);
         vk_signal_semaphores[i] = sem.vk_semaphore;
     }
 
-    Slice vk_command_buffers = allocator->array<VkCommandBuffer>(execute_info.command_buffers.len);
+    Slice vk_command_buffers = allocator.array<VkCommandBuffer>(execute_info.command_buffers.len);
     for(usize i = 0; i < execute_info.command_buffers.len; i++)
     {
         CommandBuffer& cmd_buffer = _get_command_buffer(execute_info.command_buffers[i]);
@@ -817,16 +817,16 @@ GPU::AcquireResult VulkanAdapter::queue_present(GPU::QueueID queue, const GPU::Q
 {
     Queue& q = _get_queue(queue);
     LogicalDevice& ld = _get_logical_device(q.device);
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
 
-    Slice vk_wait_semaphores = allocator->array<VkSemaphore>(present_info.wait_semaphores.len);
+    Slice vk_wait_semaphores = allocator.array<VkSemaphore>(present_info.wait_semaphores.len);
     for(usize i = 0; i < present_info.wait_semaphores.len; i++)
     {
         Semaphore& sem = _get_semaphore(present_info.wait_semaphores[i]);
         vk_wait_semaphores[i] = sem.vk_semaphore;
     }
 
-    Slice vk_swapchains = allocator->array<VkSwapchainKHR>(present_info.swapchains.len);
+    Slice vk_swapchains = allocator.array<VkSwapchainKHR>(present_info.swapchains.len);
     for(usize i = 0; i < present_info.swapchains.len; i++)
     {
         SwapChain& sc = _get_swap_chain(present_info.swapchains[i]);
@@ -1274,13 +1274,13 @@ GPU::DescriptorSetLayoutID VulkanAdapter::descriptor_set_layout_create(GPU::Devi
     GPU::DescriptorSetLayoutID descriptor_set_layout_id = descriptor_set_layouts.add(DescriptorSetLayout());
     DescriptorSetLayout& layout = _get_descriptor_set_layout(descriptor_set_layout_id);
     LogicalDevice& ld = _get_logical_device(device);
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
 
     layout.vk_device = ld.vk_device;
     layout.device = device;
     layout.descriptor_set_layout = descriptor_set_layout_id;
 
-    Slice vk_bindings = allocator->array<VkDescriptorSetLayoutBinding>(ci.bindings.len);
+    Slice vk_bindings = allocator.array<VkDescriptorSetLayoutBinding>(ci.bindings.len);
     for(usize i = 0; i < ci.bindings.len; i++)
     {
         vk_bindings[i] =
@@ -1323,13 +1323,13 @@ GPU::DescriptorPoolID VulkanAdapter::descriptor_pool_create(GPU::DeviceID device
     GPU::DescriptorPoolID descriptor_pool_id = descriptor_pools.emplace(get_allocator());
     DescriptorPool& descriptor_pool = descriptor_pools.get(descriptor_pool_id);
     LogicalDevice& ld = _get_logical_device(device);
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
 
     descriptor_pool.vk_device = ld.vk_device;
     descriptor_pool.device = device;
     descriptor_pool.descriptor_pool = descriptor_pool_id;
 
-    Slice vk_pool_sizes = allocator->array<VkDescriptorPoolSize>(ci.sizes.len);
+    Slice vk_pool_sizes = allocator.array<VkDescriptorPoolSize>(ci.sizes.len);
     for(usize i = 0; i < vk_pool_sizes.len; i++)
     {
         vk_pool_sizes[i] =
@@ -1382,10 +1382,10 @@ void VulkanAdapter::descriptor_set_allocate(GPU::DeviceID device, const GPU::Des
 {
     DescriptorPool& pool = _get_descriptor_pool(ci.pool);
     LogicalDevice& ld = _get_logical_device(device);
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
 
-    Slice vk_set_layouts = allocator->array<VkDescriptorSetLayout>(ci.set_layouts.len);
-    Slice vk_sets = allocator->array<VkDescriptorSet>(ci.set_layouts.len);
+    Slice vk_set_layouts = allocator.array<VkDescriptorSetLayout>(ci.set_layouts.len);
+    Slice vk_sets = allocator.array<VkDescriptorSet>(ci.set_layouts.len);
     for(usize i = 0; i < vk_set_layouts.len; i++)
     {
         vk_set_layouts[i] = _get_descriptor_set_layout(ci.set_layouts[i]).vk_set_layout;
@@ -1423,9 +1423,9 @@ void VulkanAdapter::descriptor_set_free(GPU::DescriptorPoolID descriptor_pool, c
 {
     DescriptorPool& pool = _get_descriptor_pool(descriptor_pool);
     LogicalDevice& ld = _get_logical_device(pool.device);
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
 
-    Slice vk_sets = allocator->array<VkDescriptorSet>(_descriptor_sets.len);
+    Slice vk_sets = allocator.array<VkDescriptorSet>(_descriptor_sets.len);
     for(usize i = 0; i < vk_sets.len; i++)
     {
         vk_sets[i] = _get_descriptor_set(_descriptor_sets[i]).vk_descriptor_set;
@@ -1447,9 +1447,9 @@ void VulkanAdapter::descriptor_set_free(GPU::DescriptorPoolID descriptor_pool, c
 void VulkanAdapter::descriptor_set_update_descriptors(GPU::DeviceID device, const GPU::UpdateDescriptorInfo& update_info)
 {
     LogicalDevice& ld = _get_logical_device(device);
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
 
-    Slice vk_write_descriptor = allocator->array<VkWriteDescriptorSet>(update_info.write_infos.len);
+    Slice vk_write_descriptor = allocator.array<VkWriteDescriptorSet>(update_info.write_infos.len);
 
     usize total_buffer_infos = 0;
     usize total_image_infos = 0;
@@ -1466,8 +1466,8 @@ void VulkanAdapter::descriptor_set_update_descriptors(GPU::DeviceID device, cons
         }
     }
 
-    Slice vk_buffer_infos = allocator->array<VkDescriptorBufferInfo>(total_buffer_infos);
-    Slice vk_image_infos = allocator->array<VkDescriptorImageInfo>(total_image_infos);
+    Slice vk_buffer_infos = allocator.array<VkDescriptorBufferInfo>(total_buffer_infos);
+    Slice vk_image_infos = allocator.array<VkDescriptorImageInfo>(total_image_infos);
     usize vk_buffer_infos_index = 0;
     usize vk_image_infos_index = 0;
 
@@ -1542,7 +1542,7 @@ void VulkanAdapter::descriptor_set_update_descriptors(GPU::DeviceID device, cons
 GPU::PipelineLayoutID VulkanAdapter::pipeline_layout_create(GPU::DeviceID device, const GPU::PipelineLayoutCreateInfo& ci)
 {
     LogicalDevice& ld = _get_logical_device(device);
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
 
     GPU::PipelineLayoutID pipeline_layout_id = pipeline_layouts.add(PipelineLayout());
     PipelineLayout& pipe_layout = _get_pipeline_layout(pipeline_layout_id);
@@ -1550,7 +1550,7 @@ GPU::PipelineLayoutID VulkanAdapter::pipeline_layout_create(GPU::DeviceID device
     pipe_layout.device = device;
     pipe_layout.pipeline_layout = pipeline_layout_id;
 
-    Slice vk_push_ranges = allocator->array<VkPushConstantRange>(ci.constant_blocks.len);
+    Slice vk_push_ranges = allocator.array<VkPushConstantRange>(ci.constant_blocks.len);
     for(usize i = 0; i < ci.constant_blocks.len; i++)
     {
         vk_push_ranges[i] =
@@ -1561,7 +1561,7 @@ GPU::PipelineLayoutID VulkanAdapter::pipeline_layout_create(GPU::DeviceID device
         };
     }
 
-    Slice vk_set_layouts = allocator->array<VkDescriptorSetLayout>(ci.set_layouts.len);
+    Slice vk_set_layouts = allocator.array<VkDescriptorSetLayout>(ci.set_layouts.len);
     for(usize i = 0; i < ci.set_layouts.len; i++)
     {
         vk_set_layouts[i] = _get_descriptor_set_layout(ci.set_layouts[i]).vk_set_layout;
@@ -1597,7 +1597,7 @@ void VulkanAdapter::pipeline_layout_destroy(GPU::PipelineLayoutID pipeline_layou
 GPU::PipelineID VulkanAdapter::pipeline_create(GPU::DeviceID device, const GPU::PipelineCreateInfo& ci)
 {
     LogicalDevice& ld = _get_logical_device(device);
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
 
     GPU::PipelineID pipeline_id = pipelines.add(Pipeline());
     Pipeline& pipe = _get_pipeline(pipeline_id);
@@ -1605,11 +1605,11 @@ GPU::PipelineID VulkanAdapter::pipeline_create(GPU::DeviceID device, const GPU::
     pipe.device = device;
     pipe.pipeline = pipeline_id;
 
-    Slice vk_shader_stages = allocator->array<VkPipelineShaderStageCreateInfo>(ci.shader_stages.len);
+    Slice vk_shader_stages = allocator.array<VkPipelineShaderStageCreateInfo>(ci.shader_stages.len);
 
     for(usize i = 0; i < ci.shader_stages.len; i++)
     {
-        Slice null_terminated = allocator->array<char>(ci.shader_stages[i].name.len + 1);
+        Slice null_terminated = allocator.array<char>(ci.shader_stages[i].name.len + 1);
         Mem::copy(null_terminated, ci.shader_stages[i].name);
         null_terminated[null_terminated.len - 1] = '\0';
 
@@ -1625,8 +1625,8 @@ GPU::PipelineID VulkanAdapter::pipeline_create(GPU::DeviceID device, const GPU::
         };
     }
 
-    Slice vk_vertex_bindings = allocator->array<VkVertexInputBindingDescription>(ci.vertex_input.bindings.len);
-    Slice vk_vertex_attributes = allocator->array<VkVertexInputAttributeDescription>(ci.vertex_input.attributes.len);
+    Slice vk_vertex_bindings = allocator.array<VkVertexInputBindingDescription>(ci.vertex_input.bindings.len);
+    Slice vk_vertex_attributes = allocator.array<VkVertexInputAttributeDescription>(ci.vertex_input.attributes.len);
     
     for(usize i = 0; i < ci.vertex_input.bindings.len; i++)
     {
@@ -1726,7 +1726,7 @@ GPU::PipelineID VulkanAdapter::pipeline_create(GPU::DeviceID device, const GPU::
         .maxDepthBounds = ci.depth_stencil_state.max_depth_bounds,
     };
 
-    Slice vk_color_blend_attachments = allocator->array<VkPipelineColorBlendAttachmentState>(ci.color_blend_state.attachments.len);
+    Slice vk_color_blend_attachments = allocator.array<VkPipelineColorBlendAttachmentState>(ci.color_blend_state.attachments.len);
     for(usize i = 0; i < ci.color_blend_state.attachments.len; i++)
     {
         vk_color_blend_attachments[i] =
@@ -1768,7 +1768,7 @@ GPU::PipelineID VulkanAdapter::pipeline_create(GPU::DeviceID device, const GPU::
     // Creating the layout
     VkPipelineLayout vk_pipeline_layout = _get_pipeline_layout(ci.pipeline_layout).vk_pipeline_layout;
 
-    Slice vk_color_attachment_formats = allocator->array<VkFormat>(ci.rendering_info.render_attachment_formats.len);
+    Slice vk_color_attachment_formats = allocator.array<VkFormat>(ci.rendering_info.render_attachment_formats.len);
     for(usize i = 0; i < vk_color_attachment_formats.len; i++)
     {
         vk_color_attachment_formats[i] = VkUtils::_vk_get_texture_format(ci.rendering_info.render_attachment_formats[i]);
@@ -2130,12 +2130,12 @@ void VulkanAdapter::command_buffer_pipeline_barrier(GPU::CommandBufferID command
 {
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
 
     VkPipelineStageFlags vk_src_stages = VkUtils::_vk_get_pipeline_stages(pipeline_barrier.src_stages);
     VkPipelineStageFlags vk_dest_stages = VkUtils::_vk_get_pipeline_stages(pipeline_barrier.dest_stages);
 
-    Slice vk_memory_barries = allocator->array<VkMemoryBarrier>(pipeline_barrier.memory_barriers.len);
+    Slice vk_memory_barries = allocator.array<VkMemoryBarrier>(pipeline_barrier.memory_barriers.len);
     for(usize i = 0; i < vk_memory_barries.len; i++)
     {
         vk_memory_barries[i] =
@@ -2147,7 +2147,7 @@ void VulkanAdapter::command_buffer_pipeline_barrier(GPU::CommandBufferID command
         };
     }
 
-    Slice vk_buffer_barries = allocator->array<VkBufferMemoryBarrier>(pipeline_barrier.buffer_barriers.len);
+    Slice vk_buffer_barries = allocator.array<VkBufferMemoryBarrier>(pipeline_barrier.buffer_barriers.len);
     for(usize i = 0; i < vk_buffer_barries.len; i++)
     {
         Buffer& buffer = _get_buffer(pipeline_barrier.buffer_barriers[i].buffer);
@@ -2165,7 +2165,7 @@ void VulkanAdapter::command_buffer_pipeline_barrier(GPU::CommandBufferID command
         };
     }
 
-    Slice vk_image_barries = allocator->array<VkImageMemoryBarrier>(pipeline_barrier.texture_barriers.len);
+    Slice vk_image_barries = allocator.array<VkImageMemoryBarrier>(pipeline_barrier.texture_barriers.len);
     for(usize i = 0; i < vk_image_barries.len; i++)
     {
         Texture& tex = _get_texture(pipeline_barrier.texture_barriers[i].texture);
@@ -2203,12 +2203,12 @@ void VulkanAdapter::command_buffer_copy_buffer_to_texture(GPU::CommandBufferID c
 {
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
 
     Buffer& src_buffer = _get_buffer(copy_info.src_buffer);
     Texture& dest_texture = _get_texture(copy_info.dest_texture);
 
-    Slice vk_regions = allocator->array<VkBufferImageCopy>(copy_info.regions.len);
+    Slice vk_regions = allocator.array<VkBufferImageCopy>(copy_info.regions.len);
     for(usize i = 0; i < vk_regions.len; i++)
     {
         vk_regions[i] =
@@ -2250,12 +2250,12 @@ void VulkanAdapter::command_buffer_copy_buffer(GPU::CommandBufferID command_buff
 {
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
 
     Buffer& src_buffer = _get_buffer(copy_info.src_buffer);
     Buffer& dest_buffer = _get_buffer(copy_info.dest_buffer);
 
-    Slice vk_regions = allocator->array<VkBufferCopy>(copy_info.copy_regions.len);
+    Slice vk_regions = allocator.array<VkBufferCopy>(copy_info.copy_regions.len);
     for(usize i = 0; i < copy_info.copy_regions.len; i++)
     {
         vk_regions[i] =
@@ -2289,9 +2289,9 @@ void VulkanAdapter::command_buffer_bind_descriptor_sets(GPU::CommandBufferID com
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     PipelineLayout& pipe_layout = _get_pipeline_layout(pipeline_layout);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
 
-    Slice vk_descriptor_sets = allocator->array<VkDescriptorSet>(descriptor_sets.len);
+    Slice vk_descriptor_sets = allocator.array<VkDescriptorSet>(descriptor_sets.len);
     for(usize i = 0; i < descriptor_sets.len; i++)
     {
         vk_descriptor_sets[i] = _get_descriptor_set(descriptor_sets[i]).vk_descriptor_set;
@@ -2308,9 +2308,9 @@ void VulkanAdapter::command_buffer_bind_vertex_buffers(GPU::CommandBufferID comm
 {
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
 
-    Slice vk_buffers = allocator->array<VkBuffer>(buffers.len);
+    Slice vk_buffers = allocator.array<VkBuffer>(buffers.len);
     for(usize i = 0; i < buffers.len; i++)
     {
         vk_buffers[i] = _get_buffer(buffers[i]).vk_buffer;
@@ -2321,7 +2321,7 @@ void VulkanAdapter::command_buffer_bind_vertex_buffers(GPU::CommandBufferID comm
         static_cast<uint32_t>(vk_buffers.len), vk_buffers.ptr(), reinterpret_cast<const VkDeviceSize*>(offsets.ptr())
     );
 
-    allocator->free(Mem::to_bytes(vk_buffers));
+    allocator.free(Mem::to_bytes(vk_buffers));
 }
 
 void VulkanAdapter::command_buffer_constant_block(GPU::CommandBufferID command_buffer, GPU::PipelineLayoutID pipeline_layout,
@@ -2342,9 +2342,9 @@ void VulkanAdapter::command_buffer_set_viewports(GPU::CommandBufferID command_bu
 {
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
 
-    Slice vk_viewports = allocator->array<VkViewport>(viewports.len);
+    Slice vk_viewports = allocator.array<VkViewport>(viewports.len);
     for(usize i = 0; i < viewports.len; i++)
     {
         vk_viewports[i] =
@@ -2365,9 +2365,9 @@ void VulkanAdapter::command_buffer_set_scissors(GPU::CommandBufferID command_buf
 {
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
 
-    Slice vk_scissors = allocator->array<VkRect2D>(scissors.len);
+    Slice vk_scissors = allocator.array<VkRect2D>(scissors.len);
     for(usize i = 0; i < scissors.len; i++)
     {
         vk_scissors[i] =
@@ -2395,13 +2395,13 @@ void VulkanAdapter::_get_physical_devices()
         instance, &physical_device_count, nullptr
     );
 
-    Mem::Allocator* allocator = acquire_tmp_allocator();
+    Mem::Allocator& allocator = acquire_tmp_allocator();
 
-    physical_devices = get_allocator()->array<PhysicalDevice>(physical_device_count);
-    Slice vk_physical_devices = allocator->array<VkPhysicalDevice>(physical_device_count);
+    physical_devices = get_allocator().array<PhysicalDevice>(physical_device_count);
+    Slice vk_physical_devices = allocator.array<VkPhysicalDevice>(physical_device_count);
     vk.vkEnumeratePhysicalDevices(instance, &physical_device_count, vk_physical_devices.ptr());
 
-    physical_device_ids = get_allocator()->array<GPU::PhysicalDeviceID>(physical_devices.len);
+    physical_device_ids = get_allocator().array<GPU::PhysicalDeviceID>(physical_devices.len);
     for(usize i = 0; i < physical_device_ids.len; i++)
     {
         physical_device_ids[i] = GPU::PhysicalDeviceID(static_cast<u32>(i));

@@ -1,7 +1,7 @@
 #include "concurrency/job_queue.h"
 
 
-JobQueue::JobQueue(Mem::Allocator* allocator, usize initial_size)
+JobQueue::JobQueue(Mem::Allocator& allocator, usize initial_size)
 : allocator(allocator), job_stack(allocator, initial_size, {}),
 mutex(Mutex::create())
 {}
@@ -19,7 +19,7 @@ void JobQueue::run()
 	{
 		JobInfo job = job_stack.pop();
 		job.func(job.arg);
-		allocator->free(Slice(job.arg->cast<u8*>(), 1));
+		allocator.free(Slice(job.arg->cast<u8*>(), 1));
 	}
 
 	mutex.unlock();

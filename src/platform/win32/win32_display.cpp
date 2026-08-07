@@ -203,7 +203,7 @@ static inline Win32Display::WindowData& _get_window_data(Display::WindowID id)
 	return get_data().windows.get(id);
 }
 
-void Display::initialize(Mem::Allocator* allocator)
+void Display::initialize(Mem::Allocator& allocator)
 {
 	// Ensures constructors are call.
     ConstructObject(get_data(), allocator);

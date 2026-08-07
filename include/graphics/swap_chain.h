@@ -10,7 +10,7 @@ namespace Graphics
 struct SwapChainInfo
 {
     // Swap Chain allocator.
-    Mem::Allocator* allocator;
+    Mem::Allocator& allocator;
     // Prefered to allocate in.
     GPU::DeviceID device;
     // The prefered queue to present.
@@ -42,7 +42,7 @@ struct SwapChain
         GPU::TextureViewID image_view;
     };
 
-    Mem::Allocator* allocator;
+    Mem::Allocator& allocator;
     GPU::DeviceID device;
     GPU::QueueID present_queue;
     Display::WindowID window;

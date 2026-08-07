@@ -23,12 +23,12 @@ struct ResourceManager
         Resource* resource;
     };
 
-    Mem::Allocator* allocator;
+    Mem::Allocator& allocator;
     StringMap<ResourceAllocation> resources;
 
-    [[nodiscard]] Mem::Allocator* get_allocator() const { return allocator; }
+    [[nodiscard]] Mem::Allocator& get_allocator() const { return allocator; }
 
-    ResourceManager(Mem::Allocator* allocator);
+    ResourceManager(Mem::Allocator& allocator);
     ~ResourceManager();
 
     [[nodiscard]] Result<Resource*, Error> load_resource(ResourceType type,
@@ -41,7 +41,7 @@ struct ResourceManager
     requires(!IsSame<Resource, T>)
     [[nodiscard]] T* _create_resource()
     {
-        T* resource = get_allocator()->object<T>(
+        T* resource = get_allocator().object<T>(
             Resource::ResourceCreateInfo
             {
                 .allocator = get_allocator(),

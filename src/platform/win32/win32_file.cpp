@@ -8,16 +8,36 @@
 namespace IO
 {
 
-Slice<u8> File::read_all(Mem::Allocator* allocator, StringView path)
+static_assert(sizeof(File) == sizeof(HANDLE));
+
+File& File::get_stderr()
 {
-	Slice tmp = allocator->array<char>(path.len + 1);
+	static HANDLE handle = GetStdHandle(STD_ERROR_HANDLE);
+	return *reinterpret_cast<File*>(&handle);
+}
+
+File& File::get_stdout()
+{
+	static HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+	return *reinterpret_cast<File*>(&handle);
+}
+
+File& File::get_stdin()
+{
+	static HANDLE handle = GetStdHandle(STD_INPUT_HANDLE);
+	return *reinterpret_cast<File*>(&handle);
+}
+
+Slice<u8> File::read_all(Mem::Allocator& allocator, StringView path)
+{
+	Slice tmp = allocator.array<char>(path.len + 1);
 	Mem::copy(tmp, path);
 
 	HANDLE file = CreateFileA(tmp.ptr(), GENERIC_READ, FILE_SHARE_READ, 
         nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr
     );
 
-	allocator->free(Mem::to_bytes(tmp));
+	allocator.free(Mem::to_bytes(tmp));
 
 	if (file == INVALID_HANDLE_VALUE)
 	{
@@ -25,7 +45,7 @@ Slice<u8> File::read_all(Mem::Allocator* allocator, StringView path)
 	}
 
 	usize length = GetFileSize(file, nullptr);
-    Slice bytes = allocator->alloc(length, sizeof(usize));
+    Slice bytes = allocator.alloc(length, sizeof(usize));
 	(void)ReadFile(file, bytes.ptr(), DWORD(length), nullptr, nullptr);
 
 	CloseHandle(file);
@@ -33,36 +53,25 @@ Slice<u8> File::read_all(Mem::Allocator* allocator, StringView path)
     return bytes;
 }
 
-File File::get_stderr()
+bool File::exists(Mem::Allocator& allocator, StringView path)
 {
-	HANDLE handle = GetStdHandle(STD_ERROR_HANDLE);
-	return File
-	{
-		.handle = reinterpret_cast<OS::Handle>(handle),
-	};
+	Slice tmp = allocator.array<char>(path.len + 1);
+	Mem::copy(tmp, path);
+
+	HANDLE file = CreateFileA(tmp.ptr(), 0, 0, nullptr, 
+		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr
+	);
+
+	allocator.free(Mem::to_bytes(tmp));
+
+	bool finded = file != INVALID_HANDLE_VALUE;
+	CloseHandle(file);
+	return finded;
 }
 
-File File::get_stdout()
+File::File(Mem::Allocator& allocator, StringView path, OpenMode mode)
 {
-	HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
-	return File
-	{
-		.handle = reinterpret_cast<OS::Handle>(handle),
-	};
-}
-
-File File::get_stdin()
-{
-	HANDLE handle = GetStdHandle(STD_INPUT_HANDLE);
-	return File
-	{
-		.handle = reinterpret_cast<OS::Handle>(handle),
-	};
-}
-
-File File::open(Mem::Allocator* allocator, StringView path, OpenMode mode)
-{
-	Slice tmp = allocator->array<char>(path.len + 1);
+	Slice tmp = allocator.array<char>(path.len + 1);
 	Mem::copy(tmp, path);
 	UINT access = 0;
 
@@ -89,33 +98,17 @@ File File::open(Mem::Allocator* allocator, StringView path, OpenMode mode)
 		nullptr, open_or_create, FILE_ATTRIBUTE_NORMAL, nullptr
 	);
 
-	allocator->free(Mem::to_bytes(tmp));
+	allocator.free(Mem::to_bytes(tmp));
 
-	return File
-	{
-		.handle = reinterpret_cast<OS::Handle>(file),
-	};
+	handle = reinterpret_cast<OS::Handle>(file);
 }
 
-bool File::exists(Mem::Allocator* allocator, StringView path)
+File::~File()
 {
-	Slice tmp = allocator->array<char>(path.len + 1);
-	Mem::copy(tmp, path);
-
-	HANDLE file = CreateFileA(tmp.ptr(), 0, 0, nullptr, 
-		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr
-	);
-
-	allocator->free(Mem::to_bytes(tmp));
-
-	bool finded = file != INVALID_HANDLE_VALUE;
-	CloseHandle(file);
-	return finded;
-}
-
-void File::destroy()
-{
-	if (handle == 0) 
+	if (handle == 0
+		|| handle == GetStdHandle(STD_ERROR_HANDLE)
+		|| handle == GetStdHandle(STD_OUTPUT_HANDLE)
+		|| handle == GetStdHandle(STD_INPUT_HANDLE))
 	{
 		return;
 	}

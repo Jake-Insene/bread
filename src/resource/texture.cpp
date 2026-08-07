@@ -60,10 +60,10 @@ Error Texture2D::load_from_path(StringView file_path)
     }
     
     pixels.len = isize(size.width * size.height * channels);
-    allocator->free(buffer);
+    allocator.free(buffer);
 
     ErrorCode result = load_from_raw(image_format, size, pixels);
-    allocator->free(pixels);
+    allocator.free(pixels);
     
     return result;
 }

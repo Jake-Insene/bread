@@ -24,7 +24,7 @@ struct EngineRuntime
         Destroyed,
     };
     
-    Mem::Allocator* allocator;
+    Mem::Allocator& allocator;
     Version engine_version;
     ApplicationInfo application_info;
     Application* application;
@@ -60,7 +60,7 @@ struct EngineRuntime
 
     bool can_tick;
 
-    EngineRuntime(Mem::Allocator* allocator);
+    EngineRuntime(Mem::Allocator& allocator);
     ~EngineRuntime();
     
     void pre_step();
@@ -94,7 +94,7 @@ struct EngineRuntime
 namespace Main
 {
 
-void runtime_begin(Mem::Allocator* allocator);
+void runtime_begin(Mem::Allocator& allocator);
 void runtime_end();
 
 }

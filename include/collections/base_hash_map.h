@@ -17,7 +17,7 @@ struct BaseHashMapEntry
     BaseHashMapEntry* prev;
     BaseHashMapEntry* next;
 
-    BaseHashMapEntry(Mem::Allocator* allocator, HashType hash, const KeyValue& kv)
+    BaseHashMapEntry(Mem::Allocator& allocator, HashType hash, const KeyValue& kv)
     : hash(hash), kv(kv), prev(), next()
     {
         Unused(allocator);
@@ -69,17 +69,17 @@ struct [[nodiscard]] BaseHashMap
     static constexpr usize InvalidPos = MaxValue<usize>;
     static constexpr usize DefaultCapacity = 16;
 
-    Mem::Allocator* allocator;
+    Mem::Allocator& allocator;
     Slice<MapEntry*> entries;
     usize count;
     MapEntry* first;
     MapEntry* last;
 
-    BaseHashMap(Mem::Allocator* allocator, usize initial_size)
+    BaseHashMap(Mem::Allocator& allocator, usize initial_size)
     : allocator(allocator), entries(), count(), first(), last()
     {
         entries = Mem::from_bytes<MapEntry*>(
-            allocator->alloc(sizeof(MapEntry*) * initial_size, alignof(MapEntry*))
+            allocator.alloc(sizeof(MapEntry*) * initial_size, alignof(MapEntry*))
         );
         Mem::zero(entries);
     }
@@ -96,10 +96,10 @@ struct [[nodiscard]] BaseHashMap
         {
             if(entry != nullptr)
             {
-                allocator->free(Mem::to_bytes(Slice(entry, 1)));
+                allocator.free(Mem::to_bytes(Slice(entry, 1)));
             }
         }
-        allocator->free(Mem::to_bytes(entries));
+        allocator.free(Mem::to_bytes(entries));
         entries = {};
     }
 
@@ -110,7 +110,7 @@ struct [[nodiscard]] BaseHashMap
         if(entries.len == 0)
         {
             new_size = new_size > 0 ? new_size : DefaultCapacity;
-            entries = allocator->array<MapEntry*>(new_size);
+            entries = allocator.array<MapEntry*>(new_size);
             return;
         }
 
@@ -119,7 +119,7 @@ struct [[nodiscard]] BaseHashMap
             return;
         }
         
-        Slice new_entries = allocator->array<MapEntry*>(new_size);
+        Slice new_entries = allocator.array<MapEntry*>(new_size);
 
         for (MapEntry* entry = first; entry != nullptr; entry = entry->next)
         {
@@ -134,7 +134,7 @@ struct [[nodiscard]] BaseHashMap
 
         if (entries.ptr())
         {
-            allocator->free(Mem::to_bytes(entries));
+            allocator.free(Mem::to_bytes(entries));
         }
 
         entries = new_entries;
@@ -273,7 +273,7 @@ struct [[nodiscard]] BaseHashMap
             if(entries[index] == nullptr)
             {
                 MapEntry* entry = Mem::from_bytes<MapEntry>(
-                    allocator->alloc(sizeof(MapEntry), alignof(MapEntry))
+                    allocator.alloc(sizeof(MapEntry), alignof(MapEntry))
                 ).ptr();
                 ConstructObject(*entry, allocator, hash, KeyValue(key, value));
 

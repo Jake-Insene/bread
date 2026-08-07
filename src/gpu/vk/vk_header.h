@@ -54,12 +54,12 @@ struct Vulkan
 
     static VkSurfaceKHR create_surface(VulkanAdapter* adapter, VkInstance instance, MemoryAddress native_handle);
     
-    static AdditionalExtensionSupport check_device_extensions(Mem::Allocator* allocator, VkPhysicalDevice physical_device);
+    static AdditionalExtensionSupport check_device_extensions(Mem::Allocator& allocator, VkPhysicalDevice physical_device);
     static void check_device_features(VkPhysicalDevice physical_device);
 
-    static const char** get_device_extensions(Mem::Allocator* allocator, VkPhysicalDevice physical_device,
+    static const char** get_device_extensions(Mem::Allocator& allocator, VkPhysicalDevice physical_device,
         const AdditionalExtensionSupport& add_ext, uint32_t* extension_count);
-    static VkPhysicalDeviceFeatures2* get_device_features(Mem::Allocator* allocator, const AdditionalExtensionSupport& add_ext);
+    static VkPhysicalDeviceFeatures2* get_device_features(Mem::Allocator& allocator, const AdditionalExtensionSupport& add_ext);
 
     static bool _has_extension(const Slice<VkExtensionProperties>& vk_device_extensions, const char* ext_name);
 
@@ -110,6 +110,6 @@ struct Vulkan
         VkSystemAllocationScope allocationScope
     );
 
-    static void _check_instance_extensions(Mem::Allocator* allocator);
+    static void _check_instance_extensions(Mem::Allocator& allocator);
 };
 

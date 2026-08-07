@@ -16,18 +16,18 @@ thread_local u8 StdoutBuffer[4096] = {};
 thread_local usize StdoutBufferCounter = 0;
 
 
-Slice<u8> File::read_all(Mem::Allocator* allocator, StringView path)
+Slice<u8> File::read_all(Mem::Allocator& allocator, StringView path)
 {
-    Slice tmp = allocator->array<char>(path.len + 1);
+    Slice tmp = allocator.array<char>(path.len + 1);
     Mem::copy(tmp, path);
     
     AAsset* asset = AAssetManager_open(AndroidEngine::data.asset_manager, tmp.ptr(), AASSET_MODE_UNKNOWN);
     const void* buffer = AAsset_getBuffer(asset);
     usize length = AAsset_getLength64(asset);
 
-    allocator->free(Mem::to_bytes(tmp));
+    allocator.free(Mem::to_bytes(tmp));
     
-    Slice bytes = allocator->alloc(length, alignof(usize));
+    Slice bytes = allocator.alloc(length, alignof(usize));
     Mem::copy(bytes, Slice(reinterpret_cast<const u8*>(buffer), length));
     
     AAsset_close(asset);
@@ -50,24 +50,24 @@ File File::get_stdin()
     return File{ .handle = 0 };
 }
 
-File File::open(Mem::Allocator* allocator, StringView path, OpenMode)
+File File::open(Mem::Allocator& allocator, StringView path, OpenMode)
 {
-    Slice tmp = allocator->array<char>(path.len + 1);
+    Slice tmp = allocator.array<char>(path.len + 1);
     Mem::copy(tmp, path);
 
-    allocator->free(Mem::to_bytes(tmp));
+    allocator.free(Mem::to_bytes(tmp));
 
     return File{ .handle = 0 };
 }
 
-bool File::exists(Mem::Allocator* allocator, StringView path)
+bool File::exists(Mem::Allocator& allocator, StringView path)
 {
-    Slice tmp = allocator->array<char>(path.len + 1);
+    Slice tmp = allocator.array<char>(path.len + 1);
     Mem::copy(tmp, path);
 
     AAsset* asset = AAssetManager_open(AndroidEngine::data.asset_manager, tmp.ptr(), AASSET_MODE_UNKNOWN);
 
-    allocator->free(Mem::to_bytes(tmp));
+    allocator.free(Mem::to_bytes(tmp));
 
     if(asset)
     {

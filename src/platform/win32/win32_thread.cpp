@@ -29,7 +29,7 @@ Thread Thread::create(ThreadFn fn, Opaque* arg)
 {
     Thread thread = {};
 
-    Win32Thread* data = Win32OS::get_allocator()->object<Win32Thread>();
+    Win32Thread* data = Win32OS::get_allocator().object<Win32Thread>();
     data->thread = nullptr;
     data->srw = SRWLOCK_INIT;
     data->state = Win32Thread::ThreadState::Unknown;
@@ -54,7 +54,7 @@ void Thread::destroy() const
     WaitForSingleObjectEx(data->thread, INFINITE, FALSE);
     CloseHandle(data->thread);
 
-    Win32OS::get_allocator()->free(Mem::to_bytes(Slice(data, 1)));
+    Win32OS::get_allocator().free(Mem::to_bytes(Slice(data, 1)));
 }
 
 bool Thread::join() const

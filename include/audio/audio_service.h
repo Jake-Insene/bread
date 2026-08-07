@@ -33,15 +33,15 @@ struct AudioService
 
         Array<EnqueuePlay> plays;
 
-        Mixer(Mem::Allocator* allocator, StringView name);
+        Mixer(Mem::Allocator& allocator, StringView name);
     };
 
-    Mem::Allocator* allocator;
+    Mem::Allocator& allocator;
     
     Array<Mixer> mixers;
     Slice<Audio::Frame> output_buffer;
 
-    AudioService(Mem::Allocator* allocator);
+    AudioService(Mem::Allocator& allocator);
     ~AudioService();
 
     void update();

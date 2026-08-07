@@ -30,20 +30,22 @@ struct WASAPIDriver
 
     struct InternalData
     {
-        Mem::Allocator* allocator;
+        Mem::Allocator& allocator;
 
         IMMDeviceEnumerator* enumerator;
         WASAPIDevice output_device;
         WASAPIDevice input_device;
 
         HANDLE event_handle;
-    };
 
-    static inline InternalData data;
+        InternalData(Mem::Allocator& allocator)
+        : allocator(allocator)
+        {}
+    };
 
     static InternalAudio::AudioAdapter get_vtable();
 
-    static void initialize(Mem::Allocator* allocator);
+    static void initialize(Mem::Allocator& allocator);
     static void shutdown();
 
     static u32 output_get_samples_per_sec();

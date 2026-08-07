@@ -4,31 +4,6 @@
 #include "mem/utils.h"
 
 
-template<typename T>
-struct Ptr;
-
-template<typename T>
-struct ScopedData;
-
-template<typename T>
-struct ScopedData<Ptr<T>>
-{
-	using DestroyArgList = TypeList<Mem::Allocator*>;
-	
-	Mem::Allocator* allocator;
-
-	ScopedData() : allocator() {}
-
-	template<typename... TArgs>
-	ScopedData(Mem::Allocator* allocator, TArgs&&... args) : allocator(allocator)
-	{
-		Unused(args...);
-	}
-
-	auto as_tuple() const { return Tuple<Mem::Allocator*>(allocator); }
-};
-
-
 /*
 * Abstracts a pointer type, should be used only with Scoped<T>.
 * The structure OWNS the memory pointer and will manages its life time.
@@ -40,13 +15,13 @@ struct Ptr
 {
     T* memory;
 #if defined(DEBUG)
-    Mem::Allocator* allocator;
+    Mem::Allocator& allocator;
 #endif
 
     template<typename... TArgs>
-    static Ptr<T> create(Mem::Allocator* allocator, TArgs&&... args)
+    static Ptr<T> create(Mem::Allocator& allocator, TArgs&&... args)
     {
-        T* memory = allocator->object<T>(Forward<TArgs>(args)...);
+        T* memory = allocator.object<T>(Forward<TArgs>(args)...);
         
         return Ptr<T>
         {
@@ -58,7 +33,7 @@ struct Ptr
     }
 
     template<typename... TArgs>
-    static Ptr<T> from_memory(Mem::Allocator* allocator, T* memory)
+    static Ptr<T> from_memory(Mem::Allocator& allocator, T* memory)
     {
 #if defined(RELEASE)
         Unused(allocator);
@@ -84,14 +59,14 @@ struct Ptr
         };
     }
 
-    void destroy(Mem::Allocator* allocator)
+    void destroy(Mem::Allocator& allocator)
     {
         DebugAssert(allocator == allocator, "allocator mismatch");
         DebugAssert(memory != nullptr, "memory is null");
 
         DestructObject(*memory);
 
-        allocator->free(Mem::to_bytes(Slice(memory, 1)));
+        allocator.free(Mem::to_bytes(Slice(memory, 1)));
         memory = nullptr;
     }
 

@@ -17,7 +17,7 @@ struct RenderDevice
     DisableCopy(RenderDevice);
     DisableMove(RenderDevice);
 
-    Mem::Allocator* allocator;
+    Mem::Allocator& allocator;
 
     GPU::PhysicalDeviceID physical_device;
     GPU::DeviceID device;
@@ -30,7 +30,7 @@ struct RenderDevice
         GPU::QueueID present;
     } queues;
 
-    RenderDevice(Mem::Allocator* allocator);
+    RenderDevice(Mem::Allocator& allocator);
     ~RenderDevice();
 
     GPU::DeviceID get_device() const { return device; }

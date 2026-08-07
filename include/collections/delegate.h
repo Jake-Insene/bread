@@ -9,12 +9,12 @@ struct Delegate;
 template<typename T, typename... TArgs>
 struct Delegate<T(TArgs...)>
 {
-    Mem::Allocator* allocator;
+    Mem::Allocator& allocator;
 
     T(*func)(Opaque*, TArgs&&...);
     Slice<u8> reserved;
 
-    static Delegate create(Mem::Allocator* allocator)
+    static Delegate create(Mem::Allocator& allocator)
     {
         return Delegate
         {
@@ -24,7 +24,7 @@ struct Delegate<T(TArgs...)>
         };
     }
 
-    Delegate(Mem::Allocator* allocator)
+    Delegate(Mem::Allocator& allocator)
     : allocator(allocator), func(nullptr), reserved()
     {}
 
@@ -32,7 +32,7 @@ struct Delegate<T(TArgs...)>
     {
         if(reserved.ptr())
         {
-            allocator->free(reserved);
+            allocator.free(reserved);
         }
     }
 
@@ -63,9 +63,9 @@ struct Delegate<T(TArgs...)>
 
         if(reserved.len < size && !reserved.null())
         {
-            allocator->free(reserved);
+            allocator.free(reserved);
         }
 
-        reserved = allocator->array<u8>(size);
+        reserved = allocator.array<u8>(size);
     }
 };

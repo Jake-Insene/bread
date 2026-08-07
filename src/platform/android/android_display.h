@@ -7,7 +7,7 @@ struct AndroidDisplay
 {
     struct InternalData
     {
-        Mem::Allocator* allocator;
+        Mem::Allocator& allocator;
 
         GPU::SurfaceID window_surface;
         Vector2I window_size;

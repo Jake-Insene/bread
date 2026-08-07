@@ -19,6 +19,9 @@ struct Writer;
 
 struct File
 {
+    DisableCopy(File);
+    DisableMove(File);
+
     enum OpenMode
     {
         Read = Bit(0),
@@ -28,16 +31,15 @@ struct File
 
     OS::Handle handle;
 
-    static Slice<u8> read_all(Mem::Allocator* allocator, StringView path);
+    static File& get_stderr();
+    static File& get_stdout();
+    static File& get_stdin();
 
-    static File get_stderr();
-    static File get_stdout();
-    static File get_stdin();
+    static Slice<u8> read_all(Mem::Allocator& allocator, StringView path);
+    static bool exists(Mem::Allocator& allocator, StringView path);
 
-    static File open(Mem::Allocator* allocator, StringView path, OpenMode mode);
-    static bool exists(Mem::Allocator* allocator, StringView path);
-
-    void destroy();
+    File(Mem::Allocator& allocator, StringView path, OpenMode mode);
+    ~File();
 
     void write(const Slice<const u8>& bytes);
     void put(u8 value);

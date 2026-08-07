@@ -6,7 +6,7 @@
 namespace Graphics
 {
 
-Shader::Shader(Mem::Allocator* allocator, const ShaderInfo& info)
+Shader::Shader(Mem::Allocator& allocator, const ShaderInfo& info)
 : allocator(allocator), shader_info(info), shader_code(), shader_stages()
 {
     shader_info = info;
@@ -29,7 +29,7 @@ Shader::Shader(Mem::Allocator* allocator, const ShaderInfo& info)
 
 Shader::~Shader()
 {
-    allocator->free(shader_code);
+    allocator.free(shader_code);
 }
 
 }

@@ -10,8 +10,8 @@
 static inline void* dr_alloc(size_t size, void* user_data)
 {
     Unused(user_data);
-    Mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
-    return allocator->alloc(size, 16).items;
+    Mem::Allocator& allocator = Engine::get_resource_manager()->get_allocator();
+    return allocator.alloc(size, 16).items;
 }
 
 static inline void* dr_realloc(void* mem, size_t new_size, void* user_data)
@@ -19,16 +19,16 @@ static inline void* dr_realloc(void* mem, size_t new_size, void* user_data)
     Unused(user_data);
  
     Slice old_mem = Slice(reinterpret_cast<u8*>(mem), 1);
-    Mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
-    if (allocator->realloc(old_mem, new_size, 16))
+    Mem::Allocator& allocator = Engine::get_resource_manager()->get_allocator();
+    if (allocator.realloc(old_mem, new_size, 16))
     {
         return mem;
     }
 
-    Slice new_mem = allocator->alloc(new_size, 16);
+    Slice new_mem = allocator.alloc(new_size, 16);
     if (mem != nullptr)
     {
-        allocator->free(old_mem);
+        allocator.free(old_mem);
     }
 
     return new_mem.items;
@@ -38,8 +38,8 @@ static inline void dr_free(void* mem, void* user_data)
 {
     Unused(user_data);
 
-    Mem::Allocator* allocator = Engine::get_resource_manager()->get_allocator();
-    allocator->free(
+    Mem::Allocator& allocator = Engine::get_resource_manager()->get_allocator();
+    allocator.free(
         Slice(reinterpret_cast<u8*>(mem), 1)
     );
 }
@@ -63,7 +63,7 @@ Sound::~Sound()
 {
     if(!data.samples.null())
     {
-        allocator->free(Mem::to_bytes(data.samples));
+        allocator.free(Mem::to_bytes(data.samples));
     }
 }
 
@@ -91,13 +91,13 @@ Error Sound::load(StringView file_path)
 
     const usize total_samples = static_cast<usize>(wav.totalPCMFrameCount * wav.channels);
     data.mono = wav.channels == 1;
-    data.samples = allocator->array<i16>(total_samples);
+    data.samples = allocator.array<i16>(total_samples);
 
     // Always convert 
     (void)drwav_read_pcm_frames_s16(&wav, wav.totalPCMFrameCount, reinterpret_cast<drwav_int16*>(data.samples.ptr()));
 
     drwav_uninit(&wav);
-    allocator->free(content);
+    allocator.free(content);
 
     return ErrorCode::Ok;
 }

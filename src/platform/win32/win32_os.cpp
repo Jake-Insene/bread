@@ -4,34 +4,41 @@
 #include "debug/fail.h"
 
 
-void OS::initialize(Mem::Allocator* allocator)
+alignas(alignof(Win32OS::InternalData)) static u8 place_holder_memory[sizeof(Win32OS::InternalData)]{};
+static Win32OS::InternalData& get_data()
+{
+	return *reinterpret_cast<Win32OS::InternalData*>(place_holder_memory);
+}
+
+Mem::Allocator& Win32OS::get_allocator() { return get_data().allocator; }
+
+void OS::initialize(Mem::Allocator& allocator)
 {
     // Ensures constructors are call.
-    ConstructObject(Win32OS::data);
-    
-    Win32OS::data.allocator = allocator;
+    ConstructObject(get_data(), allocator);
     
     // For get_time()
     LARGE_INTEGER platform_time;
-    QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&Win32OS::data.frequency));
+    QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&get_data().frequency));
     QueryPerformanceCounter(&platform_time);
 
-    Win32OS::data.program_start = f64(platform_time.QuadPart) / f64(Win32OS::data.frequency);
+    get_data().program_start = f64(platform_time.QuadPart) / f64(get_data().frequency);
 
     SYSTEM_INFO info;
     GetSystemInfo(&info);
-    Win32OS::data.page_size = static_cast<usize>(info.dwPageSize);
+    get_data().page_size = static_cast<usize>(info.dwPageSize);
 }
 
 void OS::shutdown()
 {
+    DestructObject(get_data());
 }
 
 f64 OS::get_time()
 {
     LARGE_INTEGER platform_time;
     QueryPerformanceCounter(&platform_time);
-    return (f64(platform_time.QuadPart) / f64(Win32OS::data.frequency)) - Win32OS::data.program_start;
+    return (f64(platform_time.QuadPart) / f64(get_data().frequency)) - get_data().program_start;
 }
 
 void OS::exit(u64 code)
@@ -41,16 +48,16 @@ void OS::exit(u64 code)
 
 usize OS::get_page_size()
 {
-    return Win32OS::data.page_size;
+    return get_data().page_size;
 }
 
 OS::Handle OS::load_library(StringView lib_path)
 {
-    Slice path = Win32OS::get_allocator()->array<char>(lib_path.len + 1);
+    Slice path = Win32OS::get_allocator().array<char>(lib_path.len + 1);
     Mem::copy(path, lib_path);
 
     OS::Handle library = reinterpret_cast<OS::Handle>(LoadLibraryA(path.ptr()));
-    Win32OS::get_allocator()->free(Mem::to_bytes(path));
+    Win32OS::get_allocator().free(Mem::to_bytes(path));
 
     return library;
 }
@@ -62,14 +69,14 @@ void OS::unload_library(OS::Handle library)
 
 OS::VoidFunction OS::get_proc_address(OS::Handle library, StringView symbol_name)
 {
-    Slice symbol = Win32OS::get_allocator()->array<char>(symbol_name.len + 1);
+    Slice symbol = Win32OS::get_allocator().array<char>(symbol_name.len + 1);
     Mem::copy(symbol, symbol_name);
     
     OS::VoidFunction func = reinterpret_cast<OS::VoidFunction>(
         GetProcAddress(reinterpret_cast<HMODULE>(library), symbol.ptr())
     );
     
-    Win32OS::get_allocator()->free(Mem::to_bytes(symbol));
+    Win32OS::get_allocator().free(Mem::to_bytes(symbol));
     return func;
 }
 
@@ -130,10 +137,10 @@ OS::QueryMemory OS::query_memory(const Slice<u8>& memory)
 
 bool OS::set_current_directory(StringView dir)
 {
-    Slice path = Win32OS::get_allocator()->array<char>(dir.len + 1);
+    Slice path = Win32OS::get_allocator().array<char>(dir.len + 1);
     Mem::copy(path, dir);
     bool result = SetCurrentDirectoryA(path.ptr()) == TRUE;
-    Win32OS::get_allocator()->free(Mem::to_bytes(path));
+    Win32OS::get_allocator().free(Mem::to_bytes(path));
 
     return result;
 }

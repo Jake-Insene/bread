@@ -9,7 +9,7 @@ namespace Graphics
 
 struct CommandPoolInfo
 {
-    Mem::Allocator* allocator;
+    Mem::Allocator& allocator;
     GPU::DeviceID device;
     GPU::QueueUsage queue_usage;
 };
@@ -38,7 +38,7 @@ struct CommandPool
         bool empty;
     };
 
-    Mem::Allocator* allocator;
+    Mem::Allocator& allocator;
     GPU::DeviceID device;
     GPU::QueueUsage queue_usage;
     GPU::CommandPoolID gpu_command_pool;

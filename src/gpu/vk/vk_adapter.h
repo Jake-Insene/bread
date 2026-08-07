@@ -127,7 +127,7 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 
 		GPU::DeviceID device;
 
-		LogicalDevice(Mem::Allocator* allocator)
+		LogicalDevice(Mem::Allocator& allocator)
 		: vk(), render_pass_cache(allocator, 4)
 		{}
 	};
@@ -260,7 +260,7 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 
 		Array<GPU::DescriptorSetID> allocated_sets;
 
-		DescriptorPool(Mem::Allocator* allocator)
+		DescriptorPool(Mem::Allocator& allocator)
 		: allocated_sets(allocator, 4, {}) {}
 	};
 
@@ -310,7 +310,7 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 		GPU::DeviceID device;
 	};
 
-	Mem::Allocator* internal_allocator;
+	Mem::Allocator& internal_allocator;
 	Mutex allocator_mutex;
 	Mem::StackAllocator tmp_allocator;
 
@@ -348,15 +348,15 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 	VkSurfaceKHR dummy_surface;
 	VkDebugUtilsMessengerEXT messenger;
 
-    [[nodiscard]] Mem::Allocator* get_allocator() const { return internal_allocator; }
+    [[nodiscard]] Mem::Allocator& get_allocator() const { return internal_allocator; }
 	[[nodiscard]] Mutex& get_allocator_mutex() { return allocator_mutex; }
-	[[nodiscard]] Mem::StackAllocator* acquire_tmp_allocator()
+	[[nodiscard]] Mem::Allocator& acquire_tmp_allocator()
 	{
 		tmp_allocator.reset();
-		return &tmp_allocator;
+		return tmp_allocator;
 	}
 
-    VulkanAdapter(Mem::Allocator* _allocator);
+    VulkanAdapter(Mem::Allocator& _allocator);
     virtual ~VulkanAdapter() override;
 
 	Slice<GPU::PhysicalDeviceID> physical_devices_enumerate() override;

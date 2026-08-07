@@ -11,7 +11,7 @@ namespace Graphics
 
 struct GPUMemoryAllocatorCreateInfo
 {
-    Mem::Allocator* allocator;
+    Mem::Allocator& allocator;
     GPU::DeviceID device;
     GPU::QueueID graphics_queue;
     GPU::QueueID copy_queue;
@@ -69,7 +69,7 @@ struct GPUMemoryAllocator
         Slice<u8> mapped_buffer;
     };
 
-    Mem::Allocator* allocator;
+    Mem::Allocator& allocator;
     GPU::DeviceID device;
     GPU::QueueID graphics_queue;
     GPU::QueueID copy_queue;

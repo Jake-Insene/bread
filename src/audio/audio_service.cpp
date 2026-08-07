@@ -5,22 +5,22 @@
 #include "resource/sound.h"
 
 
-AudioService::Mixer::Mixer(Mem::Allocator* allocator, StringView name)
+AudioService::Mixer::Mixer(Mem::Allocator& allocator, StringView name)
 : name(allocator, 0, name), volume(1.F), plays(allocator, 4, {})
 {}
 
-AudioService::AudioService(Mem::Allocator* allocator)
+AudioService::AudioService(Mem::Allocator& allocator)
 : allocator(allocator), mixers(allocator, 4, {}), output_buffer()
 {
     Audio::output_start();
     mixer_create("Master");
     
-    output_buffer = allocator->array<Audio::Frame>(Audio::output_get_samples_per_sec());
+    output_buffer = allocator.array<Audio::Frame>(Audio::output_get_samples_per_sec());
 }
 
 AudioService::~AudioService()
 {
-    allocator->free(Mem::to_bytes(output_buffer));
+    allocator.free(Mem::to_bytes(output_buffer));
     Audio::output_stop();
 }
 

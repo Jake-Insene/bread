@@ -18,12 +18,12 @@ struct StringHashMapEntry
     StringHashMapEntry* prev;
     StringHashMapEntry* next;
 
-    Mem::Allocator* allocator;
+    Mem::Allocator& allocator;
 
-    StringHashMapEntry(Mem::Allocator* allocator, HashCode hash, const KeyValue& new_kv)
+    StringHashMapEntry(Mem::Allocator& allocator, HashCode hash, const KeyValue& new_kv)
     : hash(hash), kv(), prev(), next(), allocator(allocator)
     {
-        Slice<char> new_chars = allocator->array<char>(new_kv.first.len);
+        Slice<char> new_chars = allocator.array<char>(new_kv.first.len);
         Mem::copy(new_chars, new_kv.first);
         kv.first = new_chars;
         kv.second = new_kv.second;
@@ -32,7 +32,7 @@ struct StringHashMapEntry
     ~StringHashMapEntry()
     {
         hash = MaxValue<HashCode>;
-        allocator->free(Slice(reinterpret_cast<u8*>(const_cast<char*>(kv.first.items)), 1));
+        allocator.free(Slice(reinterpret_cast<u8*>(const_cast<char*>(kv.first.items)), 1));
     }
 
     template<typename Self>

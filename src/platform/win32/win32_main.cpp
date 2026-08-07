@@ -146,7 +146,7 @@ static Win32Engine& get_engine()
 	return *reinterpret_cast<Win32Engine*>(place_holder_memory);
 }
 
-void engine_loop(Mem::Allocator* allocator)
+void engine_loop(Mem::Allocator& allocator)
 {
 	Engine::local_data.engine_runtime = &get_engine();
 	ConstructObject(get_engine(), allocator);
@@ -199,8 +199,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	{
 		Mem::GenericAllocator global_allocator;
-		Main::runtime_begin(&global_allocator);
-		engine_loop(&global_allocator);
+		Main::runtime_begin(global_allocator);
+		engine_loop(global_allocator);
 		Main::runtime_end();
 	}
 	CoUninitialize();

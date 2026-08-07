@@ -127,14 +127,14 @@ void CommandPool::wait_for_all()
         return;
     }
 
-    Slice fences = allocator->array<GPU::FenceID>(work_submited.count);
+    Slice fences = allocator.array<GPU::FenceID>(work_submited.count);
     for(usize i = 0; i < work_submited.count; i++)
     {
         fences[i] = work_submited.get(i).fence;
     }
 
     GPU::fence_wait_for(fences, true, MaxValue<u64>);
-    allocator->free(Mem::to_bytes(fences));
+    allocator.free(Mem::to_bytes(fences));
     _remove_finished_work();
 }
 

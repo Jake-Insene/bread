@@ -43,7 +43,7 @@ static RenderDevice::QueueList get_queue_list(GPU::DeviceID device)
     return queues;
 }
 
-RenderDevice::RenderDevice(Mem::Allocator* allocator)
+RenderDevice::RenderDevice(Mem::Allocator& allocator)
 : allocator(allocator),
 physical_device(Engine::get_selected_gpu_device()),
 device(GPU::device_create(physical_device, {})),

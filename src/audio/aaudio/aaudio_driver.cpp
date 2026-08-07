@@ -10,7 +10,7 @@ InternalAudio::AudioAdapter AAudioDriver::get_vtable()
     };
 }
 
-void AAudioDriver::initialize(Mem::Allocator* allocator)
+void AAudioDriver::initialize(Mem::Allocator& allocator)
 {
     AAudioDebugInfo("Initializing WASAPI Driver...");
 

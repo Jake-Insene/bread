@@ -60,7 +60,7 @@ struct Resource
 
     struct ResourceCreateInfo
     {
-        Mem::Allocator* allocator;
+        Mem::Allocator& allocator;
         ResourceType resource_type;
     };
 
@@ -93,7 +93,7 @@ struct Resource
         return reinterpret_cast<T*>(_load_resource(T::Type, T::Specification, path).value());
     };
     
-    Mem::Allocator* allocator;
+    Mem::Allocator& allocator;
     ResourceType type;
     String path;
     

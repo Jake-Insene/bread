@@ -30,7 +30,7 @@ struct Font : Resource
 		Vector2 atlas_size;
 		Graphics::GPUTextureID font_atlas;
 
-		FontTheme(Mem::Allocator* allocator);
+		FontTheme(Mem::Allocator& allocator);
 		~FontTheme();
 	};
 

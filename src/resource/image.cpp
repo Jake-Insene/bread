@@ -18,7 +18,7 @@ Image::~Image()
 {
     if(!data.pixels.null())
     {
-        allocator->free(data.pixels);
+        allocator.free(data.pixels);
     }
 }
 
@@ -56,7 +56,7 @@ Error Image::load_from_path(StringView file_path)
     }
     
     data.pixels.len = isize(data.size.width * data.size.height * channels);
-    allocator->free(buffer);
+    allocator.free(buffer);
     
     return ErrorCode::Ok;
 }
@@ -65,7 +65,7 @@ void Image::unload()
 {
     if (!data.pixels.null())
     {
-        allocator->free(data.pixels);
+        allocator.free(data.pixels);
         data.pixels = {};
         data.size = {};
         data.format = {};

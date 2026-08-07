@@ -7,7 +7,7 @@ namespace InternalAudio
 
 struct AudioAdapter
 {
-    void(*initialize)(Mem::Allocator*);
+    void(*initialize)(Mem::Allocator&);
     void(*shutdown)();
     
     u32(*output_get_samples_per_sec)();

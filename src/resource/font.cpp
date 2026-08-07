@@ -6,7 +6,7 @@
 #include <external/stb_truetype.h>
 
 
-static void load_theme(Mem::Allocator* allocator, const Slice<u8>& font_file_content,
+static void load_theme(Mem::Allocator& allocator, const Slice<u8>& font_file_content,
     stbtt_fontinfo* font, Font::FontTheme& theme)
 {
     stbtt_pack_context pack_context;
@@ -16,7 +16,7 @@ static void load_theme(Mem::Allocator* allocator, const Slice<u8>& font_file_con
     i32 width = 512;
     while(success == false)
     {
-        Slice pixels = allocator->alloc(i64(width * width), 16);
+        Slice pixels = allocator.alloc(i64(width * width), 16);
 
         stbtt_PackBegin(&pack_context, pixels.ptr(), width, width, width, 0, 0);
 
@@ -29,7 +29,7 @@ static void load_theme(Mem::Allocator* allocator, const Slice<u8>& font_file_con
         {
             width *= 2;
             stbtt_PackEnd(&pack_context);
-            allocator->free(pixels);
+            allocator.free(pixels);
             continue;
         }
 
@@ -77,11 +77,11 @@ static void load_theme(Mem::Allocator* allocator, const Slice<u8>& font_file_con
         );
 
         stbtt_PackEnd(&pack_context);
-        allocator->free(pixels);
+        allocator.free(pixels);
     }
 }
 
-Font::FontTheme::FontTheme(Mem::Allocator* allocator)
+Font::FontTheme::FontTheme(Mem::Allocator& allocator)
 : glyphs(allocator, 4, {})
 {}
 
@@ -121,7 +121,7 @@ Error Font::load(StringView file_path)
     default_theme.glyphs.resize(MinimumGlyphCount);
     load_theme(allocator, content, &font, default_theme);
     
-    allocator->free(content);
+    allocator.free(content);
 
     return ErrorCode::Ok;
 }
@@ -154,7 +154,7 @@ const Font::FontTheme& Font::_theme_with_size(i32 font_size)
     new_theme.glyphs.resize(MinimumGlyphCount);
     load_theme(allocator, content, &font, new_theme);
 
-    allocator->free(content);
+    allocator.free(content);
 
     return new_theme;
 }

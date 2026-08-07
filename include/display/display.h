@@ -18,7 +18,7 @@ struct Display
 
     struct VTable
     {
-        void(*initialize)(Mem::Allocator*);
+        void(*initialize)(Mem::Allocator&);
         void(*shutdown)();
 
         WindowID(*window_create)();
@@ -29,7 +29,7 @@ struct Display
 
     static inline VTable vtable;
 
-    static void initialize(Mem::Allocator* allocator);
+    static void initialize(Mem::Allocator& allocator);
     static void shutdown();
 
     static WindowID window_create();

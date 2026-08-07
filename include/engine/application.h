@@ -25,14 +25,14 @@ struct ApplicationInfo
 
 struct ApplicationAllocateInfo
 {
-    Mem::Allocator* allocator;
+    Mem::Allocator& allocator;
     Graphics::RenderDevice* render_device;
     Display::WindowID window;
 };
 
 struct ApplicationInitializeInfo
 {
-    Mem::Allocator* allocator;
+    Mem::Allocator& allocator;
 };
 
 struct Application
