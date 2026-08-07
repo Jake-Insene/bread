@@ -40,16 +40,21 @@ struct Engine
         return local_data.engine_runtime->get_resource_manager();
     }
 
+    static Graphics::GPUMemoryAllocator* get_gpu_memory_allocator()
+    {
+        return local_data.engine_runtime->get_gpu_memory_allocator();
+    }
+
+    static Graphics::GPUResourceManager* get_gpu_resource_manager()
+    {
+        return local_data.engine_runtime->get_gpu_resource_manager();
+    }
+
     static GPU::PhysicalDeviceID get_selected_gpu_device()
     {
         return local_data.engine_runtime->get_selected_gpu_device();
     }
     
-    static i32 get_fps()
-    {
-        return local_data.engine_runtime->get_fps();
-    }
-
 	static ApplicationInfo& get_configuration()
     {
         return local_data.engine_runtime->get_application_info();

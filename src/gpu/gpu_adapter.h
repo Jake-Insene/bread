@@ -7,8 +7,7 @@ namespace InternalGPU
 
 struct GPUAdapter
 {
-	virtual void initialize(Mem::Allocator* allocator) = 0;
-	virtual void shutdown() = 0;
+	virtual ~GPUAdapter() {}
 
 	virtual Slice<GPU::PhysicalDeviceID> physical_devices_enumerate() = 0;
 	virtual GPU::PhysicalDeviceInfo physical_device_get_info(GPU::PhysicalDeviceID physical_device) = 0;

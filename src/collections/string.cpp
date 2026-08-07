@@ -3,47 +3,37 @@
 #include "collections/string_view.h"
 #include "collections/string_utility.h"
 #include "io/writer.h"
+#include "math/funcs.h"
 #include "mem/utils.h"
 
 
-String String::with_allocator(Mem::Allocator* allocator)
+String::String(Mem::Allocator* allocator, usize initial_size, StringView initial_content)
+: allocator(allocator), chars(), count()
 {
-    return
-    {
-        .allocator = allocator,
-        .chars = {},
-        .count = 0,
-    };
+    usize initial_capacity = initial_size == 0 ? DefaultCapacity : initial_size;
+        if(initial_size == 0)
+        {
+            initial_capacity = Math::min(DefaultCapacity, initial_content.len);
+        }
+
+        chars = Mem::from_bytes<char>(
+            allocator->alloc(sizeof(char) * initial_capacity, alignof(char))
+        );
+        count = 0;
+
+        if(!initial_content.null())
+        {
+            Mem::copy(chars, initial_content);
+            count = initial_content.len;
+        }
 }
 
-String String::with_size(Mem::Allocator* allocator, usize size)
-{
-    return
-    {
-        .allocator = allocator,
-        .chars = Mem::from_bytes<char>(allocator->alloc(size, alignof(usize))),
-        .count = 0,
-    };
- }
-
-String String::from_chars(Mem::Allocator* allocator, StringView chars)
-{
-    String str = String::with_size(allocator, chars.len);
-    
-    if(chars.len != 0)
-    {
-        Mem::copy(str.chars, chars);
-        str.count = chars.len;
-    }
-    
-    return str;
-}
-
-void String::destroy()
+String::~String()
 {
     if(chars.ptr())
     {
         allocator->free(Mem::to_bytes(chars));
+        chars = {};
     }
 }
 

@@ -33,11 +33,29 @@ void operator delete[](void*)
     FailOn(true, "avoid 'delete' statements!");
 }
 
-void EngineRuntime::initialize()
-{
-    ConstructObject(allocator);
-    allocator.init();
-    
+EngineRuntime::EngineRuntime(Mem::Allocator* allocator)
+: allocator(allocator),
+audio_service(allocator), render_device(allocator),
+gpu_memory_allocator(
+    {
+        .allocator = allocator,
+        .device = render_device.get_device(),
+        .graphics_queue = render_device.get_graphics_queue(),
+        .copy_queue = render_device.get_copy_queue(),
+    }
+),
+gpu_resource_manager(
+    {
+        .allocator = allocator,
+        .device = render_device.get_device(),
+        .graphics_queue = render_device.get_graphics_queue(),
+        .copy_queue = render_device.get_copy_queue(),
+        .gpu_memory_allocator = &gpu_memory_allocator,
+    }
+),
+resource_manager(allocator),
+main_queue(allocator, DefaultMainQueueSize)
+{   
     engine_version = EngineVersion;
     application_info = __get_application_info__();
     application = nullptr;
@@ -46,44 +64,14 @@ void EngineRuntime::initialize()
     // Initilizing the core components
     Log::debug("[Engine]: Initializing...");
 
-    // To use thread and mutexes.
-    OS::initialize(&allocator);
-
-    main_queue = JobQueue::with_size(&allocator, DefaultMainQueueSize);
-
     // Going to the assets folder, crash is intended for now
     // TODO: Find a better way to handle this.
     FailOn(OS::set_current_directory("assets") == false, "assets directory not found")
-
-    GPU::initialize(&allocator);
-    Display::initialize(&allocator);
 
     _select_physical_device();
 
     // Allocating main window
     main_window = Window(Display::window_create());
-
-    Audio::initialize(&allocator, Audio::DriverType::Default);
-
-    // Initialize subsystems first
-    audio_service.initialize(
-        {
-            .allocator = &allocator,
-        }
-    );
-
-    render_device.initialize(
-        {
-            .allocator = &allocator,
-        }
-    );
-
-    resource_manager.initialize(
-        {
-            .allocator = &allocator,
-        }
-    );
-
     main_window.set_size(get_application_info().initial_window_size);
     
     fps = 0;
@@ -98,14 +86,14 @@ void EngineRuntime::initialize()
 
     // Entry point for app
     application = reinterpret_cast<Application*>(
-        allocator.alloc(
+        allocator->alloc(
             get_application_info().size_in_bytes,
             get_application_info().alignment
         ).ptr()
     );
     get_application_info().constructor(Opaque::from(*application),
         {
-            .allocator = &allocator,
+            .allocator = allocator,
             .render_device = get_render_device(),
             .window = get_main_window()->window_id,
         }
@@ -113,7 +101,7 @@ void EngineRuntime::initialize()
 
     application->initialize(
         {
-            .allocator = &allocator,
+            .allocator = allocator,
         }
     );
     application_state = ApplicationState::Initialized;
@@ -121,7 +109,7 @@ void EngineRuntime::initialize()
     application->load_resources();
 }
 
-void EngineRuntime::shutdown()
+EngineRuntime::~EngineRuntime()
 {
     application->unload_resources();
     
@@ -129,24 +117,9 @@ void EngineRuntime::shutdown()
     DestructObject(*application);
     application_state = ApplicationState::Destroyed;
 
-    allocator.free(Slice(reinterpret_cast<u8*>(application), 1));
+    allocator->free(Slice(reinterpret_cast<u8*>(application), 1));
 
-    resource_manager.shutdown();
-    render_device.shutdown();
-    audio_service.shutdown();
-
-    Audio::shutdown();
-    
     main_window.destroy();
-    
-    Display::shutdown();
-    GPU::shutdown();
-
-    main_queue.destroy();
-
-    OS::shutdown();
-
-    allocator.destroy();
 }
 
 void EngineRuntime::pre_step()
@@ -234,6 +207,16 @@ void EngineRuntime::request_recreate_window()
 {
 }
 
+GPU::PhysicalDeviceID EngineRuntime::get_selected_gpu_device()
+{
+    if(selected_physical_device == GPU::PhysicalDeviceID::invalid())
+    {
+        _select_physical_device();
+    }
+
+    return selected_physical_device;
+}
+
 void EngineRuntime::_select_physical_device()
 {
     Slice physical_devices = GPU::physical_devices_enumerate();
@@ -276,3 +259,24 @@ void EngineRuntime::_select_physical_device()
     }
 }
 
+
+namespace Main
+{
+
+void runtime_begin(Mem::Allocator* allocator)
+{
+    OS::initialize(allocator);
+    Display::initialize(allocator);
+    Audio::initialize(allocator, Audio::DriverType::Default);
+    GPU::initialize(allocator);
+}
+
+void runtime_end()
+{
+    GPU::shutdown();
+    Audio::shutdown();
+    Display::shutdown();
+    OS::shutdown();
+}
+
+}

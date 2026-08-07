@@ -37,10 +37,7 @@ struct ApplicationInitializeInfo
 
 struct Application
 {
-    struct InternalData
-    {
-        Graphics::SwapChain swap_chain;
-    } data;
+    Graphics::SwapChain swap_chain;
 
     Application(const ApplicationAllocateInfo& alloc_info);
     virtual ~Application();
@@ -56,5 +53,5 @@ struct Application
 
     virtual void event(const Event& e);
 
-    [[nodiscard]] Graphics::SwapChain* get_swap_chain() { return &data.swap_chain; }
+    [[nodiscard]] Graphics::SwapChain* get_swap_chain() { return &swap_chain; }
 };

@@ -11,14 +11,9 @@
 #include <external/stb_image.h>
 
 
-void ResourceManager::initialize(const ResourceManagerCreateInfo& info)
+ResourceManager::ResourceManager(Mem::Allocator* allocator)
+: allocator(allocator), resources(allocator, 4)
 {
-    allocator = info.allocator;
-
-    resources = StringMap<ResourceAllocation>::with_size(
-        allocator, 128
-    );
-    
     // default resources
 
     u32 white = 0xFFFFFFFF;
@@ -28,23 +23,20 @@ void ResourceManager::initialize(const ResourceManagerCreateInfo& info)
 
     (void)place_resource(
         "default:white_texture",
-        [](Resource* resource){ reinterpret_cast<Texture2D*>(resource)->destroy(); },
         white_texture
     );
 }
 
-void ResourceManager::shutdown()
+ResourceManager::~ResourceManager()
 {
     for(auto& it : resources.iter())
     {
         RMDebugInfo("Destroying the resource '{}'", it.first);
-        it.second.destroy(it.second.resource);
+        DestructObject(*it.second.resource);
         allocator->free(
             Mem::to_bytes(Slice(it.second.resource, 1))
         );
     }
-
-    resources.destroy();
 }
 
 Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
@@ -73,7 +65,7 @@ Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
 }
 
 
-bool ResourceManager::place_resource(StringView resource_name, DestroyResourceFn destroy, Resource* resource)
+bool ResourceManager::place_resource(StringView resource_name, Resource* resource)
 {
     if (resources.has(resource_name))
     {
@@ -83,7 +75,6 @@ bool ResourceManager::place_resource(StringView resource_name, DestroyResourceFn
     resources.insert(
         resource_name,
         {
-            .destroy = destroy,
             .resource = resource,
         }
     );
@@ -111,7 +102,6 @@ Result<Resource*, Error> ResourceManager::_load_image(StringView path)
         image->path.set(path);
         (void)place_resource(
             path,
-            [](Resource* resource){ reinterpret_cast<Image*>(resource)->destroy(); },
             image
         );
     }
@@ -142,7 +132,6 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path)
         tex->path.set(path);
         (void)place_resource(
             path,
-            [](Resource* resource){ reinterpret_cast<Texture2D*>(resource)->destroy(); },
             tex
         );
     }
@@ -167,7 +156,6 @@ Result<Resource*, Error> ResourceManager::_load_sound(StringView path)
 
     (void)place_resource(
         path,
-        [](Resource* resource){ reinterpret_cast<Sound*>(resource)->destroy(); },
         new_sound
     );
     return new_sound;
@@ -190,7 +178,6 @@ Result<Resource*, Error> ResourceManager::_load_font(StringView path)
 
     (void)place_resource(
         path,
-        [](Resource* resource){ reinterpret_cast<Font*>(resource)->destroy(); },
         new_font
     );
     return new_font;

@@ -22,7 +22,8 @@ struct [[nodiscard]] JobQueue
 
 	static JobQueue with_size(Mem::Allocator* allocator, usize initial_size);
 
-	void destroy();
+	JobQueue(Mem::Allocator* allocator, usize initial_size);
+	~JobQueue();
 
 	template<typename Fn>
 	void add_job(Fn&& _job)

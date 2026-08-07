@@ -4,7 +4,8 @@
 #include "display/window.h"
 #include "engine/application.h"
 #include "graphics/render_device.h"
-#include "mem/generic_allocator.h"
+#include "graphics/gpu_memory_allocator.h"
+#include "graphics/gpu_resource_manager.h"
 #include "resource/resource_manager.h"
 
 
@@ -23,7 +24,7 @@ struct EngineRuntime
         Destroyed,
     };
     
-    Mem::GenericAllocator allocator;
+    Mem::Allocator* allocator;
     Version engine_version;
     ApplicationInfo application_info;
     Application* application;
@@ -31,6 +32,8 @@ struct EngineRuntime
 
     AudioService audio_service;
     Graphics::RenderDevice render_device;
+    Graphics::GPUMemoryAllocator gpu_memory_allocator;
+    Graphics::GPUResourceManager gpu_resource_manager;
     ResourceManager resource_manager;
     
     GPU::PhysicalDeviceID selected_physical_device;
@@ -57,8 +60,8 @@ struct EngineRuntime
 
     bool can_tick;
 
-    void initialize();
-    void shutdown();
+    EngineRuntime(Mem::Allocator* allocator);
+    ~EngineRuntime();
     
     void pre_step();
     void step();
@@ -70,10 +73,10 @@ struct EngineRuntime
     AudioService* get_audio_service() { return &audio_service; }
     Graphics::RenderDevice* get_render_device() { return &render_device; }
     ResourceManager* get_resource_manager() { return &resource_manager; }
+    Graphics::GPUMemoryAllocator* get_gpu_memory_allocator() { return &gpu_memory_allocator; }
+    Graphics::GPUResourceManager* get_gpu_resource_manager() { return &gpu_resource_manager; }
 
-    GPU::PhysicalDeviceID get_selected_gpu_device() const { return selected_physical_device; }
-
-    i32 get_fps() const { return fps; }
+    GPU::PhysicalDeviceID get_selected_gpu_device();
 
 	ApplicationInfo& get_application_info() { return application_info; }
 
@@ -87,3 +90,11 @@ struct EngineRuntime
 
     void _select_physical_device();
 };
+
+namespace Main
+{
+
+void runtime_begin(Mem::Allocator* allocator);
+void runtime_end();
+
+}

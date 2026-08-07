@@ -6,23 +6,20 @@
 #include <external/stb_image.h>
 
 
-void Image::init(const ResourceCreateInfo& info)
+Image::Image(const ResourceCreateInfo& info)
+: Resource(info)
 {
-    Resource::init(info);
-
     data.pixels = {};
     data.size = {};
     data.format = {};
 }
 
-void Image::destroy()
+Image::~Image()
 {
     if(!data.pixels.null())
     {
         allocator->free(data.pixels);
     }
-
-    Resource::destroy();
 }
 
 Error Image::load_from_path(StringView file_path)

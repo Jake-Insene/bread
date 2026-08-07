@@ -9,14 +9,12 @@ Result<Resource*, Error> Resource::_load_resource(ResourceType type, ResourceTyp
     return Engine::get_resource_manager()->load_resource(type, spec, path);
 }
 
-void Resource::init(const ResourceCreateInfo& info)
+Resource::Resource(const ResourceCreateInfo& info)
+: allocator(info.allocator), type(info.resource_type), path(allocator, 0, {})
 {
     allocator = info.allocator;
     type = info.resource_type;
-    path = String::with_allocator(allocator);
 }
 
-void Resource::destroy()
-{
-    path.destroy();
-}
+Resource::~Resource()
+{}

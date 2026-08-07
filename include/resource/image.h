@@ -25,8 +25,8 @@ struct Image : Resource
         ImageFormat format;
     } data;
     
-    void init(const ResourceCreateInfo& info);
-    void destroy();
+    Image(const ResourceCreateInfo& info);
+    virtual ~Image() override;
     
     Error load_from_path(StringView file_path);
     void unload();

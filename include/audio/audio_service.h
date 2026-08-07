@@ -7,13 +7,11 @@
 
 struct Sound;
 
-struct AudioServiceCreateInfo
-{
-    Mem::Allocator* allocator;
-};
-
 struct AudioService
 {
+    DisableCopy(AudioService);
+    DisableMove(AudioService);
+
     struct PlayInfo
     {
         f32 volume;
@@ -34,18 +32,17 @@ struct AudioService
         f32 volume;
 
         Array<EnqueuePlay> plays;
+
+        Mixer(Mem::Allocator* allocator, StringView name);
     };
 
-    struct InternalData
-    {
-        Mem::Allocator* allocator;
-        
-        Array<Mixer> mixers;
-        Slice<Audio::Frame> output_buffer;
-    } data;
+    Mem::Allocator* allocator;
+    
+    Array<Mixer> mixers;
+    Slice<Audio::Frame> output_buffer;
 
-    void initialize(const AudioServiceCreateInfo& info);
-    void shutdown();
+    AudioService(Mem::Allocator* allocator);
+    ~AudioService();
 
     void update();
 

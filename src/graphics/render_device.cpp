@@ -6,77 +6,58 @@
 namespace Graphics
 {
 
-void RenderDevice::initialize(const RenderDeviceCreateInfo& info)
+static RenderDevice::QueueList get_queue_list(GPU::DeviceID device)
 {
-    data.allocator = info.allocator;
-
-    data.physical_device = Engine::get_selected_gpu_device();
-
-    data.device = GPU::device_create(
-        data.physical_device,
-        {}
-    );
+    RenderDevice::QueueList queues = {};
 
     // Garanted
-    data.queues.graphics = GPU::queue_get(data.device, {.usage = GPU::QueueUsage::Graphics, .index = 0});
+    queues.graphics = GPU::queue_get(device, {.usage = GPU::QueueUsage::Graphics, .index = 0});
 
-    if(GPU::queue_get_count(data.device, {.usage = GPU::QueueUsage::Compute}) > 0)
+    if(GPU::queue_get_count(device, {.usage = GPU::QueueUsage::Compute}) > 0)
     {
-        data.queues.compute = GPU::queue_get(data.device, {.usage = GPU::QueueUsage::Compute, .index = 0});
+        queues.compute = GPU::queue_get(device, {.usage = GPU::QueueUsage::Compute, .index = 0});
     }
     else
     {
-        data.queues.compute = data.queues.graphics;
+        queues.compute = queues.graphics;
     }
 
-    if(GPU::queue_get_count(data.device, {.usage = GPU::QueueUsage::Copy}) > 0)
+    if(GPU::queue_get_count(device, {.usage = GPU::QueueUsage::Copy}) > 0)
     {
-        data.queues.copy = GPU::queue_get(data.device, {.usage = GPU::QueueUsage::Copy, .index = 0});
+        queues.copy = GPU::queue_get(device, {.usage = GPU::QueueUsage::Copy, .index = 0});
     }
     else
     {
-        data.queues.copy = data.queues.compute;
+        queues.copy = queues.compute;
     }
 
-    if(GPU::queue_get_count(data.device, {.usage = GPU::QueueUsage::Present}) > 0)
+    if(GPU::queue_get_count(device, {.usage = GPU::QueueUsage::Present}) > 0)
     {
-        data.queues.present = GPU::queue_get(data.device, {.usage = GPU::QueueUsage::Present, .index = 0});
+        queues.present = GPU::queue_get(device, {.usage = GPU::QueueUsage::Present, .index = 0});
     }
     else
     {
-        data.queues.present = data.queues.graphics;
+        queues.present = queues.graphics;
     }
 
-    data.gpu_memory_allocator.init(
-        {
-            .allocator = data.allocator,
-            .device = get_device(),
-            .graphics_queue = get_graphics_queue(),
-            .copy_queue = get_copy_queue(),
-        }
-    );
-    data.gpu_resource_manager.init(
-        {
-            .allocator = data.allocator,
-            .device = get_device(),
-            .graphics_queue = get_graphics_queue(),
-            .copy_queue = get_copy_queue(),
-            .gpu_memory_allocator = get_gpu_memory_allocator(),
-        }
-    );
+    return queues;
 }
 
-void RenderDevice::shutdown()
+RenderDevice::RenderDevice(Mem::Allocator* allocator)
+: allocator(allocator),
+physical_device(Engine::get_selected_gpu_device()),
+device(GPU::device_create(physical_device, {})),
+queues(get_queue_list(device))
+{}
+
+RenderDevice::~RenderDevice()
 {
     GPU::queue_wait_idle(get_graphics_queue());
     GPU::queue_wait_idle(get_compute_queue());
     GPU::queue_wait_idle(get_copy_queue());
     GPU::queue_wait_idle(get_present_queue());
 
-    data.gpu_resource_manager.destroy();
-    data.gpu_memory_allocator.destroy();
-
-    GPU::device_destroy(data.device);
+    GPU::device_destroy(device);
 }
 
 }

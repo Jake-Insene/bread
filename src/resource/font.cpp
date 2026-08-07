@@ -66,7 +66,7 @@ static void load_theme(Mem::Allocator* allocator, const Slice<u8>& font_file_con
         }
 
         theme.atlas_size = Vector2(width, width);
-        theme.font_atlas = Engine::get_render_device()->get_gpu_resource_manager()->create_texture(
+        theme.font_atlas = Engine::get_gpu_resource_manager()->create_texture(
             {
                 .type = GPU::TextureType::Texture2D,
                 .format = GPU::TextureFormat::R8Unorm,
@@ -81,30 +81,24 @@ static void load_theme(Mem::Allocator* allocator, const Slice<u8>& font_file_con
     }
 }
 
-void Font::init(const ResourceCreateInfo& info)
-{
-    Resource::init(info);
+Font::FontTheme::FontTheme(Mem::Allocator* allocator)
+: glyphs(allocator, 4, {})
+{}
 
-    data.themes = Array<FontTheme>::with_allocator(allocator);
-}
-
-void Font::destroy()
+Font::FontTheme::~FontTheme()
 {
-    for (FontTheme& theme : data.themes.iter())
+    if (font_atlas != Graphics::GPUTextureID::invalid())
     {
-        theme.glyphs.destroy();
-
-        if (theme.font_atlas == Graphics::GPUTextureID::invalid())
-        {
-            continue;
-        }
-    
-        Engine::get_render_device()->get_gpu_resource_manager()->destroy_texture(theme.font_atlas);        
+        Engine::get_gpu_resource_manager()->destroy_texture(font_atlas);     
     }
-
-    data.themes.destroy();
-    Resource::destroy();
 }
+
+Font::Font(const ResourceCreateInfo& info)
+: Resource(info), themes(allocator, 4, {})
+{}
+
+Font::~Font()
+{}
 
 Error Font::load(StringView file_path)
 {
@@ -121,8 +115,7 @@ Error Font::load(StringView file_path)
     stbtt_fontinfo font;
     stbtt_InitFont(&font, content.ptr(), stbtt_GetFontOffsetForIndex(content.ptr(), 0));
 
-    FontTheme& default_theme = data.themes.add(FontTheme());
-    default_theme.glyphs = Array<Glyph>::with_allocator(allocator);
+    FontTheme& default_theme = themes.emplace(allocator);
     default_theme.font_size = DefaultFontSize;
 
     default_theme.glyphs.resize(MinimumGlyphCount);
@@ -137,7 +130,7 @@ const Font::FontTheme& Font::get_font_theme(i32 font_size)
 {
     DebugAssert(font_size != 0, "invalid font size");
 
-    for (FontTheme& theme : data.themes.iter())
+    for (FontTheme& theme : themes.iter())
     {
         if (theme.font_size == font_size)
         {
@@ -155,8 +148,7 @@ const Font::FontTheme& Font::_theme_with_size(i32 font_size)
     stbtt_fontinfo font;
     stbtt_InitFont(&font, content.ptr(), stbtt_GetFontOffsetForIndex(content.ptr(), 0));
 
-    FontTheme& new_theme = data.themes.add(FontTheme());
-    new_theme.glyphs = Array<Glyph>::with_allocator(allocator);
+    FontTheme& new_theme = themes.emplace(allocator);
     new_theme.font_size = font_size;
 
     new_theme.glyphs.resize(MinimumGlyphCount);

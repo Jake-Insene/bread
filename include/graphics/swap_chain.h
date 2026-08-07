@@ -42,26 +42,23 @@ struct SwapChain
         GPU::TextureViewID image_view;
     };
 
-    struct InternalData
-    {
-        Mem::Allocator* allocator;
-        GPU::DeviceID device;
-        GPU::QueueID present_queue;
-        Display::WindowID window;
-        GPU::TextureFormat surface_format;
-        GPU::PresentMode present_mode;
+    Mem::Allocator* allocator;
+    GPU::DeviceID device;
+    GPU::QueueID present_queue;
+    Display::WindowID window;
+    GPU::TextureFormat surface_format;
+    GPU::PresentMode present_mode;
 
-        Vector2I image_size;
+    Vector2I image_size;
         
-        GPU::SwapChainID swap_chain;
-        Array<ImageInfo> images;
+    GPU::SwapChainID swap_chain;
+    Array<ImageInfo> images;
 
-        bool is_valid_swap_chain;
-        bool pending_rebuild;
-    } data;
+    bool is_valid_swap_chain;
+    bool pending_rebuild;
 
-    void init(const SwapChainInfo& info);
-    void destroy();
+    SwapChain(const SwapChainInfo& info);
+    ~SwapChain();
 
     /**
     * It tries to acquire an image from the swap chain.
@@ -86,13 +83,13 @@ struct SwapChain
     * @param new_present_mode The new present mode.
     */
     void set_present_mode(GPU::PresentMode new_present_mode);
-    [[nodiscard]] GPU::PresentMode get_present_mode() const { return data.present_mode; }
+    [[nodiscard]] GPU::PresentMode get_present_mode() const { return present_mode; }
 
-    usize get_image_count() const { return data.images.count; }
-    ImageInfo& get_image(u32 image_index) const { return data.images.get(image_index); }
-    Vector2I get_image_size() const { return data.image_size; }
+    usize get_image_count() const { return images.count; }
+    ImageInfo& get_image(u32 image_index) const { return images.get(image_index); }
+    Vector2I get_image_size() const { return image_size; }
 
-    GPU::TextureFormat get_surface_format() const { return data.surface_format; }
+    GPU::TextureFormat get_surface_format() const { return surface_format; }
 
     void _init_images();
     void _free_images();

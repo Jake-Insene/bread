@@ -29,15 +29,15 @@ struct Font : Resource
 		i32 font_size;
 		Vector2 atlas_size;
 		Graphics::GPUTextureID font_atlas;
+
+		FontTheme(Mem::Allocator* allocator);
+		~FontTheme();
 	};
 
-	struct InternalData
-	{
-		Array<FontTheme> themes;
-	} data;
+	Array<FontTheme> themes;
 
-	void init(const ResourceCreateInfo& info);
-	void destroy();
+	Font(const ResourceCreateInfo& info);
+	virtual ~Font() override;
 
 	Error load(StringView file_path);
 

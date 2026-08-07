@@ -17,7 +17,7 @@ static inline GenericAllocator::Header* get_header(Slice<u8> ptr)
     return reinterpret_cast<GenericAllocator::Header*>(ptr.sub(sizeof(GenericAllocator::Header)).ptr());
 }
 
-void GenericAllocator::init()
+GenericAllocator::GenericAllocator()
 {
     ConstructObject(internal_allocator);
     allocated_pages = {};
@@ -26,7 +26,7 @@ void GenericAllocator::init()
     index = 0;
 }
     
-void GenericAllocator::destroy()
+GenericAllocator::~GenericAllocator()
 {
     usize accumulator = 0;
     for(usize i = 0; i < page_count; i++)

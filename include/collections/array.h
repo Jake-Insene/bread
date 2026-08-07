@@ -57,6 +57,9 @@ struct [[nodiscard]] ArrayIterator : BaseIterator<T>
 template<typename T>
 struct [[nodiscard]] Array
 {
+    DisableCopy(Array);
+    DisableMove(Array);
+
     static constexpr usize DefaultCapacity = 4;
 
     using Type = T;
@@ -68,59 +71,56 @@ struct [[nodiscard]] Array
 
     static Array with_allocator(Mem::Allocator* allocator)
     {
-        return
-        {
-            .allocator = allocator,
-            .items = allocator->array<Type>(DefaultCapacity),
-            .count = 0,
-        };
+        return Array(allocator, 0, {});
     }
 
     static Array with_size(Mem::Allocator* allocator, usize size)
     {
-        return
-        {
-            .allocator = allocator,
-            .items = allocator->array<Type>(size),
-            .count = 0,
-        };
+        return Array(allocator, size, {});
     }
 
     static Array from_items(Mem::Allocator* allocator, const Slice<Type>& items)
     {
-        Array array =
-        {
-            .allocator = allocator,
-            .items = allocator->array<Type>(items.len),
-            .count = items.len,
-        };
-
-        Mem::copy(array.items, items);
-        return array;
+        return Array(allocator, 0, items);
     }
 
     template<typename... TypeList>
     static constexpr Array from_list(Mem::Allocator* allocator, const TypeList... list)
     {
         static constexpr usize ListLen = sizeof...(list);
-        Array array =
-        {
-            .allocator = allocator,
-            .items = allocator->array<Type>(ListLen),
-            .count = ListLen,
-        };
-
         const Type list_array[] = { list... };
-        Mem::copy(array.items, Slice(list_array, ListLen));
-
-        return array;
+        return Array(allocator, ListLen, list_array);
     }
 
-    void destroy()
+    Array(Mem::Allocator* allocator, usize initial_size, const Slice<Type>& initial_content)
+    : allocator(allocator), items(), count()
     {
+        usize initial_capacity = initial_size == 0 ? DefaultCapacity : initial_size;
+        if(initial_size == 0)
+        {
+            initial_capacity = Math::min(DefaultCapacity, initial_content.len);
+        }
+
+        items = Mem::from_bytes<Type>(
+            allocator->alloc(sizeof(Type) * initial_capacity, alignof(Type))
+        );
+        count = 0;
+
+        if(!initial_content.null())
+        {
+            Mem::copy(items, initial_content);
+            count = initial_content.len;
+        }
+    }
+
+    ~Array()
+    {
+        _destruct_objects();
+
         if (items.ptr())
         {
             allocator->free(Mem::to_bytes(items));
+            items = {};
         }
     }
 
@@ -148,7 +148,10 @@ struct [[nodiscard]] Array
         
         if(!allocator->realloc(Mem::to_bytes(items), sizeof(Type) * new_cap, alignof(Type)))
         {
-            Slice new_items = allocator->array<Type>(new_cap);
+            Slice new_items = Mem::from_bytes<Type>(
+                allocator->alloc(sizeof(Type) * new_cap, alignof(Type))
+            );
+
             if(items.ptr())
             {
                 Mem::copy(new_items, items);
@@ -160,8 +163,6 @@ struct [[nodiscard]] Array
         else
         {
             items.len = new_cap;
-            Slice items_to_construct = items.add(count);
-            ConstructArray(items_to_construct.ptr(), items_to_construct.len);
         }
     }
 
@@ -190,6 +191,14 @@ struct [[nodiscard]] Array
     {
         ensure_capacity(count+1);
         items[count] = item;
+        return items[count++];
+    }
+
+    template<typename... TArgs>
+    [[nodiscard]] Type& emplace(TArgs&&... args)
+    {
+        ensure_capacity(count+1);
+        ConstructObject(items[count], Forward<TArgs>(args)...);
         return items[count++];
     }
 
@@ -241,6 +250,7 @@ struct [[nodiscard]] Array
     
     void clear()
     {
+        _destruct_objects();
         count = 0;
     }
     
@@ -250,6 +260,14 @@ struct [[nodiscard]] Array
     Array copy(Mem::Allocator* copy_allocator) const
     {
         return Array::from_items(copy_allocator, slice());
+    }
+
+    void _destruct_objects()
+    {
+        for(Type& item : iter())
+        {
+            DestructObject(item);
+        }
     }
 };
 

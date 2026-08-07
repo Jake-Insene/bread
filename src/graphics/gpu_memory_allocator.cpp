@@ -6,21 +6,17 @@
 namespace Graphics
 {
 
-void GPUMemoryAllocator::init(const GPUMemoryAllocatorCreateInfo& info)
-{
-    data.allocator = info.allocator;
-    data.device = info.device;
-    data.graphics_queue = info.graphics_queue;
-    data.copy_queue = info.copy_queue;
+GPUMemoryAllocator::GPUMemoryAllocator(const GPUMemoryAllocatorCreateInfo& info)
+: allocator(info.allocator), device(info.device), graphics_queue(info.graphics_queue),
+copy_queue(info.copy_queue),
+heaps(allocator, 4, {}),
+allocations(allocator, 4),
+staging_heaps(allocator, 4, {})
+{}
 
-    data.heaps = Array<Heap>::with_size(data.allocator, 4);
-    data.allocations = FreeList<Allocation, GPUMemoryAllocationID>::with_size(data.allocator, 4);
-    data.staging_heaps = Array<StagingHeap>::with_size(data.allocator, 4);
-}
-
-void GPUMemoryAllocator::destroy()
+GPUMemoryAllocator::~GPUMemoryAllocator()
 {
-    (void)data.staging_heaps.iter().for_each([](StagingHeap& staging_heap)
+    (void)staging_heaps.iter().for_each([](StagingHeap& staging_heap)
     {
         if(HasValue(staging_heap.flags & StagingFlags::Mapped))
         {
@@ -30,15 +26,11 @@ void GPUMemoryAllocator::destroy()
         GPU::memory_heap_destroy(staging_heap.heap);
     });
 
-    (void)data.heaps.iter().for_each([](Heap& heap)
+    (void)heaps.iter().for_each([](Heap& heap)
     {
         GPU::memory_heap_destroy(heap.heap);
 
     });
-
-    data.heaps.destroy();
-    data.allocations.destroy();
-    data.staging_heaps.destroy();
 }
 
 GPUMemoryAllocationID GPUMemoryAllocator::allocate(AllocationTag tag, const GPU::MemoryRequirements& requirements)
@@ -48,7 +40,7 @@ GPUMemoryAllocationID GPUMemoryAllocator::allocate(AllocationTag tag, const GPU:
     GPUMemoryAllocationID allocation_id = GPUMemoryAllocationID::invalid();
     
     // First step check in the current available heaps.
-    for(Heap& heap : data.heaps.iter())
+    for(Heap& heap : heaps.iter())
     {
         if(allocation_id != GPUMemoryAllocationID::invalid())
         {
@@ -58,7 +50,7 @@ GPUMemoryAllocationID GPUMemoryAllocator::allocate(AllocationTag tag, const GPU:
         GPUMemoryAllocationID alloc_current_id = heap.first_allocation;
         for(;alloc_current_id != GPUMemoryAllocationID::invalid();)
         {
-            Allocation& allocation = data.allocations.get(alloc_current_id);
+            Allocation& allocation = allocations.get(alloc_current_id);
             if(!allocation.free)
             {
                 alloc_current_id = allocation.next;
@@ -81,7 +73,7 @@ GPUMemoryAllocationID GPUMemoryAllocator::allocate(AllocationTag tag, const GPU:
 
     if(allocation_id != GPUMemoryAllocationID::invalid())
     {
-        Allocation& allocation = data.allocations.get(allocation_id);
+        Allocation& allocation = allocations.get(allocation_id);
         allocation.free = false;
         return allocation_id;
     }
@@ -98,7 +90,7 @@ GPUMemoryAllocationID GPUMemoryAllocator::allocate(AllocationTag tag, const GPU:
         .prev = GPUMemoryAllocationID::invalid(),
         .next = GPUMemoryAllocationID::invalid(),
     };
-    allocation_id = data.allocations.add(new_allocation);
+    allocation_id = allocations.add(new_allocation);
     new_heap.first_allocation = allocation_id;
 
     return allocation_id;
@@ -107,15 +99,15 @@ GPUMemoryAllocationID GPUMemoryAllocator::allocate(AllocationTag tag, const GPU:
 void GPUMemoryAllocator::free(GPUMemoryAllocationID allocation)
 {
     FailOn(allocation.is_valid() == false, "invalid allocation");
-    Allocation& alloc = data.allocations.get(allocation);
+    Allocation& alloc = allocations.get(allocation);
     alloc.free = true;
-    data.allocations.remove(allocation);
+    allocations.remove(allocation);
 }
 
 GPU::BufferID GPUMemoryAllocator::begin_staging(usize size)
 {
     GPU::BufferID buffer = GPU::BufferID::invalid();
-    for(StagingHeap& staging_heap : data.staging_heaps.iter())
+    for(StagingHeap& staging_heap : staging_heaps.iter())
     {
         if(HasValue(staging_heap.flags & StagingFlags::Allocated))
         {
@@ -134,14 +126,14 @@ GPU::BufferID GPUMemoryAllocator::begin_staging(usize size)
 
     if(buffer == GPU::BufferID::invalid())
     {
-        buffer = GPU::buffer_create(data.device,
+        buffer = GPU::buffer_create(device,
             GPU::BufferCreateInfo::create(GPU::BufferUsage::TransferSource, size));
 
         GPU::MemoryRequirements requirements = GPU::buffer_get_memory_requirements(buffer);
         usize heap_size = Mem::align_up(requirements.size, requirements.alignment);
 
         GPU::MemoryHeapID new_heap = GPU::memory_heap_create(
-            data.device,
+            device,
             {
                 .heap_usage = GPU::HeapUsage::CPUGPUCoherent,
                 .heap_size = heap_size,
@@ -149,7 +141,7 @@ GPU::BufferID GPUMemoryAllocator::begin_staging(usize size)
         );
         GPU::buffer_bind_memory_heap(buffer, GPU::BindMemoryInfo::create(new_heap, 0));
 
-        (void)data.staging_heaps.add(
+        (void)staging_heaps.add(
             StagingHeap
             {
                 .heap = new_heap,
@@ -166,7 +158,7 @@ GPU::BufferID GPUMemoryAllocator::begin_staging(usize size)
 
 void GPUMemoryAllocator::end_staging(GPU::BufferID staging_buffer)
 {
-    for(StagingHeap& staging_heap : data.staging_heaps.iter())
+    for(StagingHeap& staging_heap : staging_heaps.iter())
     {
         if(staging_heap.buffer == staging_buffer)
         {
@@ -178,7 +170,7 @@ void GPUMemoryAllocator::end_staging(GPU::BufferID staging_buffer)
 
 Slice<u8> GPUMemoryAllocator::map_staging(GPU::BufferID staging_buffer)
 {
-    for(StagingHeap& staging_heap : data.staging_heaps.iter())
+    for(StagingHeap& staging_heap : staging_heaps.iter())
     {
         if(staging_heap.buffer != staging_buffer)
         {
@@ -199,7 +191,7 @@ Slice<u8> GPUMemoryAllocator::map_staging(GPU::BufferID staging_buffer)
 
 void GPUMemoryAllocator::unmap_staging(GPU::BufferID staging_buffer, const Slice<u8>& memory)
 {
-    for(StagingHeap& staging_heap : data.staging_heaps.iter())
+    for(StagingHeap& staging_heap : staging_heaps.iter())
     {
         if(staging_heap.buffer != staging_buffer)
         {
@@ -217,16 +209,16 @@ void GPUMemoryAllocator::unmap_staging(GPU::BufferID staging_buffer, const Slice
 GPU::MemoryHeapID GPUMemoryAllocator::allocation_get_heap(GPUMemoryAllocationID allocation)
 {
     FailOn(allocation.is_valid() == false, "invalid allocation");
-    Allocation& allocation_data = data.allocations.get(allocation);
+    Allocation& allocation_data = allocations.get(allocation);
     FailOn(allocation_data.free == true, "use after free");
 
-    return data.heaps.get(allocation_data.heap_index).heap;
+    return heaps.get(allocation_data.heap_index).heap;
 }
 
 [[nodiscard]] usize GPUMemoryAllocator::allocation_get_offset(GPUMemoryAllocationID allocation)
 {
     FailOn(allocation.is_valid() == false, "invalid allocation");
-    Allocation& allocation_data = data.allocations.get(allocation);
+    Allocation& allocation_data = allocations.get(allocation);
 
     FailOn(allocation_data.free == true, "use after free");
     return allocation_data.heap_offset;
@@ -235,8 +227,8 @@ GPU::MemoryHeapID GPUMemoryAllocator::allocation_get_heap(GPUMemoryAllocationID 
 Slice<u8> GPUMemoryAllocator::allocation_map(GPUMemoryAllocationID allocation)
 {
     FailOn(allocation.is_valid() == false, "invalid allocation");
-    Allocation& allocation_data = data.allocations.get(allocation);
-    Heap& heap = data.heaps.get(allocation_data.heap_index);
+    Allocation& allocation_data = allocations.get(allocation);
+    Heap& heap = heaps.get(allocation_data.heap_index);
     FailOn(heap.tag != AllocationTag::Staging, "can't map this kind of allocation");
 
     heap.map_count++;
@@ -253,8 +245,8 @@ void GPUMemoryAllocator::allocation_unmap(GPUMemoryAllocationID allocation, cons
     Unused(mapped);
 
     FailOn(allocation.is_valid() == false, "invalid allocation");
-    Allocation& allocation_data = data.allocations.get(allocation);
-    Heap& heap = data.heaps.get(allocation_data.heap_index);
+    Allocation& allocation_data = allocations.get(allocation);
+    Heap& heap = heaps.get(allocation_data.heap_index);
     FailOn(heap.tag != AllocationTag::Staging, "can't unmap this kind of allocation");  
 
     heap.map_count--;
@@ -266,7 +258,7 @@ void GPUMemoryAllocator::allocation_unmap(GPUMemoryAllocationID allocation, cons
 
 GPUMemoryAllocator::Heap& GPUMemoryAllocator::_request_heap_for(AllocationTag tag, usize size, GPU::HeapUsage heap_usage)
 {
-    for(Heap& heap : data.heaps.iter())
+    for(Heap& heap : heaps.iter())
     {
         if(heap.tag == tag && heap.heap_usage == heap_usage)
         {
@@ -287,18 +279,18 @@ GPUMemoryAllocator::Heap& GPUMemoryAllocator::_create_heap(AllocationTag tag, us
 
     Heap new_heap =
     {
-        .heap = GPU::memory_heap_create(data.device,
+        .heap = GPU::memory_heap_create(device,
             GPU::MemoryHeapCreateInfo::create(required_heap_usage, size)),
         .heap_size = size,
         .heap_usage = required_heap_usage,
         .tag = tag,
-        .heap_index = data.heaps.count,
+        .heap_index = heaps.count,
         .map_count = 0,
         .mapped = {},
         .first_allocation = GPUMemoryAllocationID::invalid(),
     };
 
-    return data.heaps.add(new_heap);
+    return heaps.add(new_heap);
 }
 
 }

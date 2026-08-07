@@ -38,22 +38,19 @@ struct CommandPool
         bool empty;
     };
 
-    struct InternalData
-    {
-        Mem::Allocator* allocator;
-        GPU::DeviceID device;
-        GPU::QueueUsage queue_usage;
-        GPU::CommandPoolID gpu_command_pool;
-        Array<GPU::CommandBufferID> command_buffers;
-        Array<GPU::FenceID> gpu_work_fences;
-        Array<WorkSubmit> work_submited;
+    Mem::Allocator* allocator;
+    GPU::DeviceID device;
+    GPU::QueueUsage queue_usage;
+    GPU::CommandPoolID gpu_command_pool;
+    Array<GPU::CommandBufferID> command_buffers;
+    Array<GPU::FenceID> gpu_work_fences;
+    Array<WorkSubmit> work_submited;
         
-        Stack<GPU::FenceID> gpu_free_fences;
-        Stack<GPU::CommandBufferID> free_command_buffers;
-    } data;
+    Stack<GPU::FenceID> gpu_free_fences;
+    Stack<GPU::CommandBufferID> free_command_buffers;
 
-    void init(const CommandPoolInfo& info);
-    void destroy();
+    CommandPool(const CommandPoolInfo& info);
+    ~CommandPool();
 
     GPU::CommandBufferID acquire_command_buffer();
     GPU::FenceID execute(GPU::QueueID queue, const CommandPoolExecuteInfo& info);

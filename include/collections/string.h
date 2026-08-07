@@ -14,17 +14,27 @@ struct Writer;
 
 struct [[nodiscard]] String
 {
+    DisableCopy(String);
+    DisableMove(String);
+
+    static constexpr usize DefaultCapacity = 16;
+
     Mem::Allocator* allocator;
     Slice<char> chars;
     usize count;
+
+    static String with_allocator(Mem::Allocator* allocator)
+    {
+        return String(allocator, 0, {});
+    }
+
+    static String from_chars(Mem::Allocator* allocator, StringView chars)
+    {
+        return String(allocator, 0, chars);
+    }
     
-    static String with_allocator(Mem::Allocator* allocator);
-    
-    static String with_size(Mem::Allocator* allocator, usize size);
-    
-    static String from_chars(Mem::Allocator* allocator, StringView chars);
-    
-    void destroy();
+    String(Mem::Allocator* allocator, usize initial_size, StringView initial_content);
+    ~String();
     
     [[nodiscard]] char get(usize index) const
     {

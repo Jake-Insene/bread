@@ -7,17 +7,16 @@
 #include <external/stb_image.h>
 
 
-void Texture::init(const ResourceCreateInfo& info)
+Texture::Texture(const ResourceCreateInfo& info)
+: Resource(info)
 {
-    Resource::init(info);
     texture_ref = Graphics::GPUTextureID::invalid();
     size = Vector2I();
 }
 
-void Texture::destroy()
+Texture::~Texture()
 {
-    Engine::get_render_device()->get_gpu_resource_manager()->destroy_texture(texture_ref);
-    Resource::destroy();
+    Engine::get_gpu_resource_manager()->destroy_texture(texture_ref);
 }
 
 Vector2I Texture::get_size() const
@@ -85,7 +84,7 @@ Error Texture2D::load_from_raw(Image::ImageFormat image_format, const Vector2I& 
         .flags = Graphics::TextureAllocateFlags(),
     };
     
-    texture_ref = Engine::get_render_device()->get_gpu_resource_manager()->create_texture(create_info);
+    texture_ref = Engine::get_gpu_resource_manager()->create_texture(create_info);
     size = image_size;
 
     return ErrorCode::Ok;

@@ -24,7 +24,11 @@ struct Delegate<T(TArgs...)>
         };
     }
 
-    void destroy()
+    Delegate(Mem::Allocator* allocator)
+    : allocator(allocator), func(nullptr), reserved()
+    {}
+
+    ~Delegate()
     {
         if(reserved.ptr())
         {

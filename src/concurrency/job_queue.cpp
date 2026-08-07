@@ -1,29 +1,13 @@
 #include "concurrency/job_queue.h"
 
 
-JobQueue JobQueue::with_allocator(Mem::Allocator* allocator)
-{
-	return JobQueue
-	{
-		.allocator = allocator,
-		.job_stack = Stack<JobInfo>::with_allocator(allocator),
-		.mutex = Mutex::create(),
-	};
-}
+JobQueue::JobQueue(Mem::Allocator* allocator, usize initial_size)
+: allocator(allocator), job_stack(allocator, initial_size, {}),
+mutex(Mutex::create())
+{}
 
-JobQueue JobQueue::with_size(Mem::Allocator* allocator, usize initial_size)
+JobQueue::~JobQueue()
 {
-	return JobQueue
-	{
-		.allocator = allocator,
-		.job_stack = Stack<JobInfo>::with_size(allocator, initial_size),
-		.mutex = Mutex::create(),
-	};
-}
-
-void JobQueue::destroy()
-{
-	job_stack.destroy();
 	mutex.destroy();
 }
 

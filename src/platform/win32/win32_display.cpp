@@ -4,10 +4,7 @@
 #include "input/input.h"
 
 
-static inline Win32Display::WindowData& _get_window_data(Display::WindowID id)
-{
-	return Win32Display::data.windows.get(id);
-}
+static inline Win32Display::WindowData& _get_window_data(Display::WindowID id);
 
 static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -195,13 +192,21 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 	return DefWindowProcA(handle, msg, wparam, lparam);
 }
 
+alignas(alignof(Win32Display::InternalData)) static u8 place_holder_memory[sizeof(Win32Display::InternalData)]{};
+static Win32Display::InternalData& get_data()
+{
+	return *reinterpret_cast<Win32Display::InternalData*>(place_holder_memory);
+}
+
+static inline Win32Display::WindowData& _get_window_data(Display::WindowID id)
+{
+	return get_data().windows.get(id);
+}
+
 void Display::initialize(Mem::Allocator* allocator)
 {
 	// Ensures constructors are call.
-    ConstructObject(Win32Display::data);
-
-	Win32Display::data.allocator = allocator;
-	Win32Display::data.windows = FreeList<Win32Display::WindowData, Display::WindowID>::with_size(allocator, 4);
+    ConstructObject(get_data(), allocator);
 
 	WNDCLASSEXA wc = {};
 	wc.cbSize = sizeof(wc);
@@ -212,17 +217,17 @@ void Display::initialize(Mem::Allocator* allocator)
 	wc.hIconSm = LoadIconA(0, IDI_APPLICATION);
 	RegisterClassExA(&wc);
 
-	GetClientRect(GetDesktopWindow(), &Win32Display::data.fullscreen_rect);
+	GetClientRect(GetDesktopWindow(), &get_data().fullscreen_rect);
 }
 
 void Display::shutdown()
 {
-	Win32Display::data.windows.destroy();
+	DestructObject(get_data());
 }
 
 Display::WindowID Display::window_create()
 {
-	Display::WindowID new_id = Win32Display::data.windows.add(Win32Display::WindowData());
+	Display::WindowID new_id = get_data().windows.add(Win32Display::WindowData());
 	Win32Display::WindowData& new_window = _get_window_data(new_id);
 
 	RECT window_rect = {};
@@ -255,7 +260,7 @@ void Display::window_destroy(WindowID window_id)
 	
 	DestroyWindow(window_data.handle);
 
-	Win32Display::data.windows.remove(window_id);
+	get_data().windows.remove(window_id);
 }
 
 Vector2I Display::window_get_size(Display::WindowID window_id)

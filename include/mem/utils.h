@@ -54,6 +54,9 @@ template<typename T>
 constexpr void set(Slice<T> dest, T value);
 
 template<typename T>
+constexpr void zero(Slice<T> dest);
+
+template<typename T>
 constexpr void swap(T& a, T& b)
 {
     T tmp = a;
@@ -125,19 +128,21 @@ template<typename T>
 constexpr void _copy_impl(Slice<T> dest, const Slice<const T>& src)
 {
     DebugAssert(dest.len >= src.len, "invalid destination");
+    Slice dest_bytes = to_bytes(dest);
+    Slice src_bytes = to_const_bytes(src);
+
 #if BREAD_ENABLE_INTRISICS
     if !consteval
     {
-        Slice dest_bytes = to_bytes(dest);
-        _copy(dest_bytes, to_const_bytes(src));
+        _copy(dest_bytes, src_bytes);
         return;
     }
     else
 #endif
     {
-        for (usize i = 0; i < src.len; i++)
+        for (usize i = 0; i < src_bytes.len; i++)
         {
-            dest[i] = src[i];
+            dest_bytes[i] = src_bytes[i];
         }
     }
 }
@@ -168,6 +173,25 @@ constexpr void set(Slice<T> dest, const T value)
     for (usize i = 0; i < dest.len; i++)
     {
         dest[i] = value;
+    }
+}
+
+template<typename T>
+constexpr void zero(Slice<T> dest)
+{
+    Slice dest_bytes = to_bytes(dest);
+    
+#if BREAD_ENABLE_INTRISICS
+    if !consteval
+    {
+        _set(dest_bytes, 0);
+        return;
+    }
+#endif
+
+    for (usize i = 0; i < dest_bytes.len; i++)
+    {
+        dest_bytes[i] = 0;
     }
 }
 

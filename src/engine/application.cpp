@@ -2,22 +2,19 @@
 
 
 Application::Application(const ApplicationAllocateInfo& alloc_info)
-{
-    data.swap_chain.init(
-        {
-            .allocator = alloc_info.allocator,
-            .device = alloc_info.render_device->get_device(),
-            .present_queue = alloc_info.render_device->get_present_queue(),
-            .window = alloc_info.window,
-            .surface_format = Graphics::SwapChain::DefaultSurfaceFormat,
-        }
-    );
-}
+: swap_chain(
+    {
+        .allocator = alloc_info.allocator,
+        .device = alloc_info.render_device->get_device(),
+        .present_queue = alloc_info.render_device->get_present_queue(),
+        .window = alloc_info.window,
+        .surface_format = Graphics::SwapChain::DefaultSurfaceFormat,
+    }
+)
+{}
 
 Application::~Application()
-{
-    data.swap_chain.destroy();
-}
+{}
 
 void Application::initialize(const ApplicationInitializeInfo&)
 {

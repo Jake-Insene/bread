@@ -8,4 +8,10 @@ struct [[nodiscard]] Pair
 {
     T1 first;
     T2 second;
+
+    Pair() {}
+
+    Pair(T1 _first, T2 _second)
+    : first(_first), second(_second)
+    {}
 };

@@ -4,7 +4,7 @@
 namespace Mem
 {
 
-void StackAllocator::init(const Slice<u8>& new_sp)
+StackAllocator::StackAllocator(const Slice<u8>& new_sp)
 {
     sp = new_sp;
     offset = 0;

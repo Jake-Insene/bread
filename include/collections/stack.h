@@ -8,6 +8,8 @@
 template<typename T>
 struct [[nodiscard]] Stack
 {
+	DisableCopy(Stack);
+	DisableMove(Stack);
 	using Type = T;
 
 	static constexpr usize DefaultCapacity = 4;
@@ -18,30 +20,41 @@ struct [[nodiscard]] Stack
 
 	static Stack with_allocator(Mem::Allocator* allocator)
 	{
-		return Stack
-		{
-			.allocator = allocator,
-			.items = allocator->array<Type>(DefaultCapacity),
-			.sp = 0,
-		};
+		return Stack(allocator, 0, {});
 	}
 
 	static Stack with_size(Mem::Allocator* allocator, usize size)
 	{
-		return Stack
-		{
-			.allocator = allocator,
-			.items = allocator->array<Type>(size),
-			.sp = 0,
-		};
+		return Stack(allocator, size, {});
 	}
 
+	Stack(Mem::Allocator* allocator, usize initial_size, const Slice<Type>& initial_content)
+    : allocator(allocator)
+    {
+        usize initial_capacity = initial_size == 0 ? DefaultCapacity : initial_size;
+        if(initial_size == 0)
+        {
+            initial_capacity = Math::min(DefaultCapacity, initial_content.len);
+        }
 
-	void destroy()
+        items = Mem::from_bytes<Type>(
+            allocator->alloc(sizeof(Type) * initial_capacity, alignof(Type))
+        );
+        sp = 0;
+
+        if(!initial_content.null())
+        {
+            Mem::copy(items, initial_content);
+            sp = initial_content.len;
+        }
+    }
+
+	~Stack()
 	{
 		if (items.ptr())
 		{
 			allocator->free(Mem::to_bytes(items));
+			items = {};
 		}
 	}
 

@@ -50,6 +50,9 @@ static constexpr ResourceTypeSpecification _construct_from_flags(ResourceFlags f
 */
 struct Resource
 {
+    DisableCopy(Resource);
+    DisableMove(Resource);
+    
     RESOURCE(
         RESOURCE_UNKNOWN,
         ResourceFlags::NoResourceFlags, 
@@ -94,8 +97,8 @@ struct Resource
     ResourceType type;
     String path;
     
-    void init(const ResourceCreateInfo& info);
-    void destroy();
+    Resource(const ResourceCreateInfo& info);
+    virtual ~Resource();
 };
 
 

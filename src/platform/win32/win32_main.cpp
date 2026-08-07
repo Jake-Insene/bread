@@ -2,6 +2,7 @@
 
 #include "engine/engine.h"
 #include "debug/log.h"
+#include "mem/generic_allocator.h"
 #include "platform/win32/win32_engine.h"
 
 
@@ -138,33 +139,24 @@ LONG _exception_handler(EXCEPTION_POINTERS* ep)
 	return EXCEPTION_CONTINUE_SEARCH;
 }
 
+alignas(alignof(Win32Engine)) static u8 place_holder_memory[sizeof(Win32Engine)]{};
 
-Win32Engine engine = {};
-
-void engine_loop()
+static Win32Engine& get_engine()
 {
-	// TODO: Accessing engine before initialization!
-	bool enable_console = __get_application_info__().enable_debug_console;
+	return *reinterpret_cast<Win32Engine*>(place_holder_memory);
+}
 
-	if (enable_console)
-	{
-		if (AttachConsole(ATTACH_PARENT_PROCESS) == FALSE)
-		{
-			AllocConsole();
-		}
-	}
-
-	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-
-	Engine::local_data.engine_runtime = &engine;
-	engine.initialize();
+void engine_loop(Mem::Allocator* allocator)
+{
+	Engine::local_data.engine_runtime = &get_engine();
+	ConstructObject(get_engine(), allocator);
 
 	bool quit = false;
 	while(quit == false)
 	{
 		MSG msg;
 
-		engine.pre_step();
+		get_engine().pre_step();
 		while(PeekMessageA(&msg, 0, 0, 0, PM_REMOVE) != 0)
 		{
 			TranslateMessage(&msg);
@@ -181,11 +173,38 @@ void engine_loop()
 			break;
 		}
 
-		engine.step();
+		get_engine().step();
 	}
 
-	engine.shutdown();
-	
+	DestructObject(get_engine());
+}
+
+// Default for Windows
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+{
+	SetUnhandledExceptionFilter(&_exception_handler);
+
+	// TODO: Accessing engine before initialization!
+	bool enable_console = __get_application_info__().enable_debug_console;
+
+	if (enable_console)
+	{
+		if (AttachConsole(ATTACH_PARENT_PROCESS) == FALSE)
+		{
+			AllocConsole();
+		}
+	}
+
+	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+
+	{
+		Mem::GenericAllocator global_allocator;
+		Main::runtime_begin(&global_allocator);
+		engine_loop(&global_allocator);
+		Main::runtime_end();
+	}
+	CoUninitialize();
+
 	if(enable_console)
 	{
 		u8 bytes[2] = {};
@@ -193,14 +212,6 @@ void engine_loop()
 		IO::File::get_stdin().read(bytes);
 	}
 
-	CoUninitialize();
-}
-
-// Default for Windows
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
-{
-	SetUnhandledExceptionFilter(&_exception_handler);
-	engine_loop();
 	ExitProcess(0);
 }
 

@@ -12,9 +12,7 @@ static inline Mem::Allocator* adapter_allocator_owner = nullptr;
 void GPU::initialize(Mem::Allocator* allocator)
 {
 	adapter_allocator_owner = allocator;
-	current_adapter = allocator->object<VulkanAdapter>();
-
-	current_adapter->initialize(allocator);
+	current_adapter = allocator->object<VulkanAdapter>(allocator);
 }
 
 void GPU::initialize_from_adapter(InternalGPU::GPUAdapter* adapter)
@@ -24,7 +22,7 @@ void GPU::initialize_from_adapter(InternalGPU::GPUAdapter* adapter)
 
 void GPU::shutdown()
 {
-	current_adapter->shutdown();
+	DestructObject(*current_adapter);
 
 	// Only the process who calls GPU::initialize owns the memory of current_adapter.
 	if(adapter_allocator_owner != nullptr)

@@ -10,7 +10,8 @@ struct StackAllocator : Mem::Allocator
     Slice<u8> sp;
     usize offset;
 
-    void init(const Slice<u8>& new_sp);
+    StackAllocator(const Slice<u8>& new_sp);
+    
     void reset();
 
     virtual Slice<u8> alloc(usize size, usize alignment) override;

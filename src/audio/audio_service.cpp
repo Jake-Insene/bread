@@ -5,27 +5,22 @@
 #include "resource/sound.h"
 
 
-void AudioService::initialize(const AudioServiceCreateInfo& info)
+AudioService::Mixer::Mixer(Mem::Allocator* allocator, StringView name)
+: name(allocator, 0, name), volume(1.F), plays(allocator, 4, {})
+{}
+
+AudioService::AudioService(Mem::Allocator* allocator)
+: allocator(allocator), mixers(allocator, 4, {}), output_buffer()
 {
-    data.allocator = info.allocator;
     Audio::output_start();
-
-    data.mixers = Array<Mixer>::with_size(data.allocator, 4);
     mixer_create("Master");
-
-    data.output_buffer = data.allocator->array<Audio::Frame>(Audio::output_get_samples_per_sec());
+    
+    output_buffer = allocator->array<Audio::Frame>(Audio::output_get_samples_per_sec());
 }
 
-void AudioService::shutdown()
+AudioService::~AudioService()
 {
-    data.allocator->free(Mem::to_bytes(data.output_buffer));
-
-    (void)data.mixers.iter().for_each([](Mixer& mixer)
-    {
-        mixer.name.destroy();
-        mixer.plays.destroy();
-    });
-    data.mixers.destroy();
+    allocator->free(Mem::to_bytes(output_buffer));
     Audio::output_stop();
 }
 
@@ -37,15 +32,15 @@ void AudioService::update()
         return;
     }
 
-    Slice samples = data.output_buffer.slice(frame_count);
+    Slice samples = output_buffer.slice(frame_count);
 
     // getting enqueue plays
-    Slice mixers = data.mixers.slice();
+    Slice mixers_slice = mixers.slice();
 
     for(usize frame_i = 0; frame_i < frame_count; frame_i++)
     {
         Audio::FrameF frame_f = Audio::FrameF();
-        for(AudioService::Mixer& mixer : mixers)
+        for(AudioService::Mixer& mixer : mixers_slice)
         {
             _mixer_mix(&mixer, &frame_f);
         }
@@ -63,22 +58,15 @@ void AudioService::update()
 
 u32 AudioService::mixer_create(StringView mixer_name)
 {
-    Mixer new_mixer =
-    {
-        .name = String::from_chars(data.allocator, mixer_name),
-        .volume = 1.F,
-        .plays = Array<EnqueuePlay>::with_size(data.allocator, 4),
-    };
-
-    (void)data.mixers.add(new_mixer);
-    return data.mixers.count - 1;
+    (void)mixers.emplace(allocator, mixer_name);
+    return mixers.count - 1;
 }
 
 u32 AudioService::mixer_get_by_name(StringView mixer_name)
 {
-    for(u32 i = 0; i < data.mixers.count; i++)
+    for(u32 i = 0; i < mixers.count; i++)
     {
-        Mixer& mix = data.mixers.get(i);
+        Mixer& mix = mixers.get(i);
         if(mix.name.equals(mixer_name))
         {
             return i;
@@ -90,22 +78,22 @@ u32 AudioService::mixer_get_by_name(StringView mixer_name)
 
 u32 AudioService::mixer_count()
 {
-    return data.mixers.count;
+    return mixers.count;
 }
 
 f32 AudioService::mixer_get_volume(u32 mixer)
 {
-    return data.mixers.get(mixer).volume;
+    return mixers.get(mixer).volume;
 }
 
 void AudioService::mixer_set_volume(u32 mixer, f32 new_volume)
 {
-    data.mixers.get(mixer).volume = new_volume;
+    mixers.get(mixer).volume = new_volume;
 }
 
 void AudioService::mixer_play(u32 mixer, Sound* sound, const PlayInfo& play_info)
 {
-    Mixer& mix = data.mixers.get(mixer);
+    Mixer& mix = mixers.get(mixer);
 
     (void)mix.plays.add(
         EnqueuePlay

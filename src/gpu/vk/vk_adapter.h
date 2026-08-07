@@ -126,6 +126,10 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 		HashMap<VkDriverRenderPassKey, RenderPassCache> render_pass_cache;
 
 		GPU::DeviceID device;
+
+		LogicalDevice(Mem::Allocator* allocator)
+		: vk(), render_pass_cache(allocator, 4)
+		{}
 	};
 
 	struct SwapChainImage
@@ -255,6 +259,9 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 		GPU::DescriptorPoolID descriptor_pool;
 
 		Array<GPU::DescriptorSetID> allocated_sets;
+
+		DescriptorPool(Mem::Allocator* allocator)
+		: allocated_sets(allocator, 4, {}) {}
 	};
 
 	struct DescriptorSet
@@ -349,8 +356,8 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 		return &tmp_allocator;
 	}
 
-    void initialize(Mem::Allocator* _allocator) override;
-    void shutdown() override;
+    VulkanAdapter(Mem::Allocator* _allocator);
+    virtual ~VulkanAdapter() override;
 
 	Slice<GPU::PhysicalDeviceID> physical_devices_enumerate() override;
 	GPU::PhysicalDeviceInfo physical_device_get_info(GPU::PhysicalDeviceID physical_device) override;

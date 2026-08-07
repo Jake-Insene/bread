@@ -69,20 +69,17 @@ struct GPUMemoryAllocator
         Slice<u8> mapped_buffer;
     };
 
-    struct InternalData
-    {
-        Mem::Allocator* allocator;
-        GPU::DeviceID device;
-        GPU::QueueID graphics_queue;
-        GPU::QueueID copy_queue;
+    Mem::Allocator* allocator;
+    GPU::DeviceID device;
+    GPU::QueueID graphics_queue;
+    GPU::QueueID copy_queue;
 
-        Array<Heap> heaps;
-        FreeList<Allocation, GPUMemoryAllocationID> allocations;
-        Array<StagingHeap> staging_heaps;
-    } data;
+    Array<Heap> heaps;
+    FreeList<Allocation, GPUMemoryAllocationID> allocations;
+    Array<StagingHeap> staging_heaps;
 
-    void init(const GPUMemoryAllocatorCreateInfo& info);
-    void destroy();
+    GPUMemoryAllocator(const GPUMemoryAllocatorCreateInfo& info);
+    ~GPUMemoryAllocator();
 
     /*
     * Memory Allocation API

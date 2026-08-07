@@ -17,18 +17,16 @@ struct BaseHashMapEntry
     BaseHashMapEntry* prev;
     BaseHashMapEntry* next;
 
-    void init(Mem::Allocator* allocator, const KeyValue& new_kv, const HashType& new_hash)
+    BaseHashMapEntry(Mem::Allocator* allocator, HashType hash, const KeyValue& kv)
+    : hash(hash), kv(kv), prev(), next()
     {
         Unused(allocator);
-        set_hash(new_hash);
-        kv = new_kv;
-        prev = nullptr;
-        next = nullptr;
     }
 
-    constexpr void destroy(Mem::Allocator* allocator)
+    ~BaseHashMapEntry()
     {
-        Unused(allocator);
+        DestructObject(kv.first);
+        DestructObject(kv.second);
     }
 
     template<typename Self>
@@ -57,6 +55,9 @@ template<typename InHashType, typename InHashMapEntry, Comparable K, typename V>
 requires(IsInteger<InHashType> && IsUnsigned<InHashType>)
 struct [[nodiscard]] BaseHashMap
 {
+    DisableCopy(BaseHashMap);
+    DisableMove(BaseHashMap);
+    
     using HashType = InHashType;
     using MapEntry = InHashMapEntry;
     using KeyValue = Pair<K, V>;
@@ -74,42 +75,27 @@ struct [[nodiscard]] BaseHashMap
     MapEntry* first;
     MapEntry* last;
 
-    static BaseHashMap with_allocator(Mem::Allocator* allocator)
+    BaseHashMap(Mem::Allocator* allocator, usize initial_size)
+    : allocator(allocator), entries(), count(), first(), last()
     {
-        return
-        {
-            .allocator = allocator,
-            .entries = {},
-            .count = 0,
-            .first = nullptr,
-            .last = nullptr,
-        };
+        entries = Mem::from_bytes<MapEntry*>(
+            allocator->alloc(sizeof(MapEntry*) * initial_size, alignof(MapEntry*))
+        );
+        Mem::zero(entries);
     }
     
-    static BaseHashMap with_size(Mem::Allocator* allocator, usize size)
-    {
-        return
-        {
-            .allocator = allocator,
-            .entries = allocator->array<MapEntry*>(size),
-            .count = 0,
-            .first = nullptr,
-            .last = nullptr,
-        };
-    }
-    
-    void destroy()
+    ~BaseHashMap()
     {
         if(entries.ptr() == nullptr)
         {
             return;
         }
 
+        _destruct_objects();
         for(MapEntry* entry : entries)
         {
             if(entry != nullptr)
             {
-                entry->destroy(allocator);
                 allocator->free(Mem::to_bytes(Slice(entry, 1)));
             }
         }
@@ -289,7 +275,7 @@ struct [[nodiscard]] BaseHashMap
                 MapEntry* entry = Mem::from_bytes<MapEntry>(
                     allocator->alloc(sizeof(MapEntry), alignof(MapEntry))
                 ).ptr();
-                entry->init(allocator, KeyValue(key, value), hash);
+                ConstructObject(*entry, allocator, hash, KeyValue(key, value));
 
                 entries[index] = entry;
                 if(first == nullptr)
@@ -311,8 +297,8 @@ struct [[nodiscard]] BaseHashMap
             if(entries[index]->hashvalue() == InvalidHash)
             {
                 MapEntry* entry = entries[index];
-                entry->destroy(allocator);
-                entry->init(allocator, KeyValue(key, value), hash);
+                DestructObject(*entry);
+                ConstructObject(*entry, allocator, hash, KeyValue(key, value));
 
                 if (first == nullptr)
                 {
@@ -331,6 +317,14 @@ struct [[nodiscard]] BaseHashMap
             }
             
             index = (index + 1) % entries.len;
+        }
+    }
+
+    void _destruct_objects()
+    {
+        for(Iterator it = iter().begin(); it != it.end(); ++it)
+        {
+            DestructObject(*it.entry);
         }
     }
 };

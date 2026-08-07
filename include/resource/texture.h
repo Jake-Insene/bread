@@ -14,8 +14,8 @@ struct Texture : Resource
     Graphics::GPUTextureID texture_ref;
     Vector2I size;
     
-    void init(const ResourceCreateInfo& info);
-    void destroy();
+    Texture(const ResourceCreateInfo& info);
+    virtual ~Texture() override;
     
     [[nodiscard]] Vector2I get_size() const;
 };
@@ -24,6 +24,8 @@ struct Texture : Resource
 struct Texture2D : Texture
 {
     RESOURCE(RESOURCE_TEXTURE_2D, ResourceFlags::LoadFromAssets, ResourceExtensions("png"))
+
+    Texture2D(const ResourceCreateInfo& info) : Texture(info) {}
 
     Error load_from_path(StringView file_path);
     Error load_from_image(Image* image);

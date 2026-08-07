@@ -10,6 +10,9 @@ template<typename T, typename SlotID = u32>
 requires(sizeof(T) >= sizeof(SlotID))
 struct [[nodiscard]] FreeList
 {
+    DisableCopy(FreeList);
+    DisableMove(FreeList);
+
     using Type = T;
 
     static constexpr SlotID _GetInvalidSlotValue()
@@ -29,32 +32,24 @@ struct [[nodiscard]] FreeList
 
     Array<Type> array;
     SlotID last_free_element;
-    u32 count;
+    usize count;
 
     static FreeList with_allocator(Mem::Allocator* allocator)
     {
-        return
-        {
-            .array = Array<Type>::with_allocator(allocator),
-            .last_free_element = InvalidSlot,
-            .count = 0,
-        };
+        return FreeList(allocator, 0);
     }
 
     static FreeList with_size(Mem::Allocator* allocator, usize size)
     {
-        return
-        {
-            .array = Array<T>::with_size(allocator, size),
-            .last_free_element = InvalidSlot,
-            .count = 0,
-        };
+        return FreeList(allocator, size);
     }
 
-    void destroy()
-    {
-        array.destroy();
-    }
+    FreeList(Mem::Allocator* allocator, usize initial_size)
+    : array(allocator, initial_size, {}), last_free_element(InvalidSlot), count()
+    {}
+
+    ~FreeList()
+    {}
 
     [[nodiscard]] SlotID add(const T& item)
     {
@@ -79,6 +74,34 @@ struct [[nodiscard]] FreeList
         }
 
         (void)array.add(item);
+        count++;
+        return SlotID((array.count - 1) & SlotBitmask.integer());
+    }
+
+    template<typename... TArgs>
+    [[nodiscard]] SlotID emplace(TArgs&&... args)
+    {
+        if(last_free_element != InvalidSlot)
+        {
+            SlotID id = last_free_element;
+            SlotID* last_element = reinterpret_cast<SlotID*>(
+                &_get_element_at(last_free_element.integer())
+            );
+            if(last_element[0] != InvalidSlot)
+            {
+                last_free_element = last_element[0];
+            }
+            else
+            {
+                last_free_element = InvalidSlot;
+            }
+
+            count++;
+            ConstructObject(*reinterpret_cast<T*>(last_element), Forward<TArgs>(args)...);
+            return id;
+        }
+
+        (void)array.emplace(Forward<TArgs>(args)...);
         count++;
         return SlotID((array.count - 1) & SlotBitmask.integer());
     }

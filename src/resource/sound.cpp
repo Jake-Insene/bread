@@ -52,22 +52,19 @@ static inline drwav_allocation_callbacks alloc_callbacks =
     .onFree = &dr_free,
 };
 
-void Sound::init(const ResourceCreateInfo& info)
+Sound::Sound(const ResourceCreateInfo& info)
+: Resource(info)
 {
-    Resource::init(info);
-
     data.mono = false;
     data.samples = {};
 }
 
-void Sound::destroy()
+Sound::~Sound()
 {
     if(!data.samples.null())
     {
         allocator->free(Mem::to_bytes(data.samples));
     }
-
-    Resource::destroy();
 }
 
 Error Sound::load(StringView file_path)

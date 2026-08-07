@@ -15,8 +15,8 @@ struct Sound : Resource
         Slice<i16> samples;
     } data;
 
-	void init(const ResourceCreateInfo& info);
-    void destroy();
+	Sound(const ResourceCreateInfo& info);
+    virtual ~Sound() override;
 
     Error load(StringView file_path);
 

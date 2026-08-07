@@ -44,20 +44,17 @@ struct GPUResourceManager
         GPUMemoryAllocationID allocation;
     };
 
-    struct InternalData
-    {
-        Mem::Allocator* allocator;
-        GPU::DeviceID device;
-        GPU::QueueID graphics_queue;
-        GPU::QueueID copy_queue;
+    Mem::Allocator* allocator;
+    GPU::DeviceID device;
+    GPU::QueueID graphics_queue;
+    GPU::QueueID copy_queue;
 
-        GPUMemoryAllocator* gpu_memory_allocator;
+    GPUMemoryAllocator* gpu_memory_allocator;
 
-        FreeList<TextureData, GPUTextureID> textures;
-    } data;
+    FreeList<TextureData, GPUTextureID> textures;
 
-    void init(const GPUResourceManagerCreateInfo& info);
-    void destroy();
+    GPUResourceManager(const GPUResourceManagerCreateInfo& info);
+    ~GPUResourceManager();
 
     GPUTextureID create_texture(const TextureAllocateInfo& alloc_info);
     void destroy_texture(GPUTextureID texture_ref);

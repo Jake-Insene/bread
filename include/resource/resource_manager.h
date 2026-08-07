@@ -11,19 +11,15 @@ struct TileSet;
 struct Texture;
 
 
-struct ResourceManagerCreateInfo
-{
-    Mem::Allocator* allocator;
-};
-
 struct ResourceManager
 {
+    DisableCopy(ResourceManager);
+    DisableMove(ResourceManager);
+
     static constexpr usize DefaultFontSize = 32;
     
-    using DestroyResourceFn = void(*)(Resource*);
     struct ResourceAllocation
     {
-        DestroyResourceFn destroy;
         Resource* resource;
     };
 
@@ -32,21 +28,21 @@ struct ResourceManager
 
     [[nodiscard]] Mem::Allocator* get_allocator() const { return allocator; }
 
-    void initialize(const ResourceManagerCreateInfo& info);
-    void shutdown();
+    ResourceManager(Mem::Allocator* allocator);
+    ~ResourceManager();
 
     [[nodiscard]] Result<Resource*, Error> load_resource(ResourceType type,
         ResourceTypeSpecification specification, StringView path);
 
-    [[nodiscard]] bool place_resource(StringView resource_name, DestroyResourceFn destroy, Resource* resource);
+    [[nodiscard]] bool place_resource(StringView resource_name, Resource* resource);
 
     // Implementation
     template<typename T>
     requires(!IsSame<Resource, T>)
     [[nodiscard]] T* _create_resource()
     {
-        T* resource = get_allocator()->object<T>();
-        resource->init(
+        T* resource = get_allocator()->object<T>(
+            Resource::ResourceCreateInfo
             {
                 .allocator = get_allocator(),
                 .resource_type = T::Type,
