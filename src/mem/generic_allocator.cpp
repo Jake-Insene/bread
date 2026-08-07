@@ -422,6 +422,8 @@ void GenericAllocator::_check_integrity(Header* header)
         Log::debug("Page({}) with size {} was corrupted, page_size_accumulator was {}", page.bytes.ptr(), page.bytes.len, page_size_accumulator);
         DebugAssert(page_size_accumulator == page.bytes.len, "the page was corrupted");
     }
+#else
+    Unused(header);
 #endif
 }
     

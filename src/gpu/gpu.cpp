@@ -142,6 +142,7 @@ void GPU::fence_reset(Slice<FenceID> fences)
     GPUValidationCheck(fences.len == 0, "at least one fence is expected");
 	for(FenceID fence : fences)
 	{
+		Unused(fence);
 		GPUValidationCheck(fence.is_valid() == false, "invalid fence");
 	}
 	current_adapter->fence_reset(fences);
@@ -152,6 +153,7 @@ void GPU::fence_wait_for(Slice<FenceID> fences, bool wait_for_all, u64 timeout)
     GPUValidationCheck(fences.len == 0, "at least one fence is expected");
 	for(FenceID fence : fences)
 	{
+		Unused(fence);
 		GPUValidationCheck(fence.is_valid() == false, "invalid fence");
 	}
 	current_adapter->fence_wait_for(fences, wait_for_all, timeout);
@@ -402,6 +404,7 @@ void GPU::descriptor_set_update_descriptors(DeviceID device, const UpdateDescrip
 	for(usize write_index = 0; write_index < update_info.write_infos.len; write_index++)
 	{
 		const WriteDescriptorInfo& write_info = update_info.write_infos[write_index];
+		Unused(write_info);
     	GPUValidationCheck(write_info.descriptor_set.is_valid() == false, "invalid descriptor set");
 		GPUValidationCheck(write_info.type == DescriptorType::Unknown, "invalid descriptor type")
 		GPUValidationCheck(
@@ -424,6 +427,7 @@ GPU::PipelineLayoutID GPU::pipeline_layout_create(DeviceID device, const Pipelin
 
 	for(const ConstantBlock& cb : ci.constant_blocks)
 	{
+		Unused(cb);
 		GPUValidationCheck(cb.size > MaxConstantBlockSize, "a constant block size must be less than or equal to 128 bytes");
     	GPUValidationCheck(
     	    Mem::align_up(cb.size, ConstantBlockAlignment) != cb.size,
@@ -474,7 +478,7 @@ GPU::CommandBufferID GPU::command_buffer_allocate(DeviceID device, const Command
 {
 	GPUValidationCheck(device.is_valid() == false, "invalid device");
     GPUValidationCheck(ci.pool.is_valid() == false, "invalid command pool");
-	return current_adapter->command_buffer_allocate(ci);
+	return current_adapter->command_buffer_allocate(device, ci);
 }
 
 void GPU::command_buffer_free(CommandBufferID command_buffer)

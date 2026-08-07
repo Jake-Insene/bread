@@ -431,7 +431,7 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 	GPU::CommandPoolID command_pool_create(GPU::DeviceID device, const GPU::CommandPoolCreateInfo& ci) override;
 	void command_pool_destroy(GPU::CommandPoolID command_pool) override;
 
-	GPU::CommandBufferID command_buffer_allocate(const GPU::CommandBufferAllocateInfo& ci) override;
+	GPU::CommandBufferID command_buffer_allocate(GPU::DeviceID device, const GPU::CommandBufferAllocateInfo& ci) override;
 	void command_buffer_free(GPU::CommandBufferID command_buffer) override;
 
 	void command_buffer_begin(GPU::CommandBufferID command_buffer) override;

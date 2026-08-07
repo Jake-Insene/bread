@@ -81,7 +81,7 @@ struct GPUAdapter
 	virtual GPU::CommandPoolID command_pool_create(GPU::DeviceID device, const GPU::CommandPoolCreateInfo& ci) = 0;
 	virtual void command_pool_destroy(GPU::CommandPoolID command_pool) = 0;
 		
-	virtual GPU::CommandBufferID command_buffer_allocate(const GPU::CommandBufferAllocateInfo& ci) = 0;
+	virtual GPU::CommandBufferID command_buffer_allocate(GPU::DeviceID device, const GPU::CommandBufferAllocateInfo& ci) = 0;
 	virtual void command_buffer_free(GPU::CommandBufferID command_buffer) = 0;
 
 	virtual void command_buffer_begin(GPU::CommandBufferID command_buffer) = 0;

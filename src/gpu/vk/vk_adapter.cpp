@@ -1874,10 +1874,10 @@ void VulkanAdapter::command_pool_destroy(GPU::CommandPoolID command_pool)
     command_pools.remove(command_pool);
 }
 
-GPU::CommandBufferID VulkanAdapter::command_buffer_allocate(const GPU::CommandBufferAllocateInfo& ci)
+GPU::CommandBufferID VulkanAdapter::command_buffer_allocate(GPU::DeviceID device, const GPU::CommandBufferAllocateInfo& ci)
 {
     CommandPool& cmd_pool = _get_command_pool(ci.pool);
-    LogicalDevice& ld = _get_logical_device(cmd_pool.device);
+    LogicalDevice& ld = _get_logical_device(device);
 
     GPU::CommandBufferID cmd_buffer_id = command_buffers.add(CommandBuffer());
     CommandBuffer& cmd_buffer = _get_command_buffer(cmd_buffer_id);
