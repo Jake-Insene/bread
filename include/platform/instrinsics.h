@@ -13,10 +13,10 @@ struct PlatformIntricics
 {
 
 	template<typename T>
-	requires(IsFloatingPoint<T>)
+	requires(Core::IsFloatingPoint<T>)
 	[[nodiscard]] static T sqrt(T x)
 	{
-		if constexpr (IsSame<T, f32>)
+		if constexpr(Core::IsSame<T, f32>)
 		{
 #if BREAD_X64
 			__m128 mm1 = _mm_set_ss(x);
@@ -30,10 +30,10 @@ struct PlatformIntricics
 	}
 
 	template<typename T>
-	requires(IsFloatingPoint<T>)
+	requires(Core::IsFloatingPoint<T>)
 	[[nodiscard]] static T vecdot(T x1, T y1, T x2, T y2)
 	{
-		if constexpr (IsSame<T, f32>)
+		if constexpr(Core::IsSame<T, f32>)
 		{
 #if BREAD_X64
 			const __m128 v1 = _mm_set_ps(0, 0, y1, x1);
@@ -47,10 +47,10 @@ struct PlatformIntricics
 	}
 
 	template<typename T>
-	requires(IsFloatingPoint<T>)
+	requires(Core::IsFloatingPoint<T>)
 	static void vecnormalize(T& x1, T& y1)
 	{
-		if constexpr (IsSame<T, f32>)
+		if constexpr(Core::IsSame<T, f32>)
 		{
 #if BREAD_X64
 			const __m128 v = _mm_set_ps(0, 0, y1, x1);

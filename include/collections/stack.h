@@ -86,7 +86,7 @@ struct [[nodiscard]] Stack
 		{
 			items.len = new_cap;
 			Slice items_to_construct = items.add(sp);
-			ConstructArray(items_to_construct.ptr(), items_to_construct.len);
+			Mem::zero(items_to_construct);
 		}
 	}
 

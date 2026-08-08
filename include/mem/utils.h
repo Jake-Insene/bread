@@ -1,6 +1,6 @@
 #pragma once
 #include "core/types.h"
-#include "core/templates.h"
+#include "core/Templates.h"
 
 
 template<typename T>
@@ -161,7 +161,7 @@ constexpr void set(Slice<T> dest, const T value)
 #if BREAD_ENABLE_INTRISICS
     if !consteval
     {
-        if constexpr(IsSame<RemoveCVRef<T>, u8>) // for floating point values it works
+        if constexpr(Core::IsSame<Core::RemoveCVRef<T>, u8>) // for floating point values it works
         {
             Slice dest_bytes = to_bytes(dest);
             _set(dest_bytes, value);

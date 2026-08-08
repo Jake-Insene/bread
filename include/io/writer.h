@@ -27,7 +27,7 @@ struct Writer
 template<typename T>
 concept Writable = requires(T&& object, const Slice<const u8>&& bytes)
 {
-    { object.writer() } -> ConvertibleTo<Writer>;
+    { object.writer() } -> Core::ConvertibleTo<Writer>;
     { object.writer().write(bytes) };
 };
 

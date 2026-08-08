@@ -24,7 +24,7 @@
 	}\
 	constexpr void operator|=(enum_type& lhs, enum_type rhs)\
 	{\
-		reinterpret_cast<EnumIntType<enum_type>&>(lhs) |= static_cast<EnumIntType<enum_type>>(rhs);\
+		reinterpret_cast<Core::EnumIntType<enum_type>&>(lhs) |= static_cast<Core::EnumIntType<enum_type>>(rhs);\
 	}\
 	constexpr enum_type operator&(enum_type lhs, enum_type rhs)\
 	{\
@@ -32,7 +32,7 @@
 	}\
 	constexpr void operator&=(enum_type& lhs, enum_type rhs)\
 	{\
-		reinterpret_cast<EnumIntType<enum_type>&>(lhs) &= static_cast<EnumIntType<enum_type>>(rhs);\
+		reinterpret_cast<Core::EnumIntType<enum_type>&>(lhs) &= static_cast<Core::EnumIntType<enum_type>>(rhs);\
 	}\
 	constexpr enum_type operator^(enum_type lhs, enum_type rhs)\
 	{\
@@ -40,6 +40,6 @@
 	}\
 	constexpr void operator^=(enum_type& lhs, enum_type rhs)\
 	{\
-		reinterpret_cast<EnumIntType<enum_type>&>(lhs) ^= static_cast<EnumIntType<enum_type>>(rhs);\
+		reinterpret_cast<Core::EnumIntType<enum_type>&>(lhs) ^= static_cast<Core::EnumIntType<enum_type>>(rhs);\
 	}\
 

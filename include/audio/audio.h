@@ -17,7 +17,7 @@ struct Audio
     static constexpr usize OutputChannels = 2;
 
     template<typename T>
-    requires(IsArithmetic<T>)
+    requires(Core::IsArithmetic<T>)
     struct FrameT
     {
         using Type = T;
@@ -35,7 +35,7 @@ struct Audio
         }
 
         template<typename MT>
-        requires(IsArithmetic<MT>)
+        requires(Core::IsArithmetic<MT>)
         constexpr void mul(const MT value)
         {
             left *= value;

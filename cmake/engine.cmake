@@ -6,8 +6,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # MSVC
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-set(CMAKE_MSVC_RUNTIME_CHECKS OFF)
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    set(CMAKE_MSVC_RUNTIME_CHECKS OFF)
+endif()
 # Expected to be the top directory of the current project
 set(CMAKE_PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -174,7 +176,7 @@ function(bread_project)
         "${CMAKE_SOURCE_DIR}/bread/include"
     )
 
-    target_link_libraries(${PROJECT_NAME} "bread" ${PROJECT_SUBMODULES} ${PROJECT_PACKAGES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE "bread" ${PROJECT_PACKAGES})
 endfunction()
 
 function(bread_package)

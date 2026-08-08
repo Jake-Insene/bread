@@ -1,5 +1,5 @@
 #pragma once
-#include "core/templates.h"
+#include "core/Templates.h"
 #include "debug/fail.h"
 
 
@@ -54,8 +54,8 @@ struct [[nodiscard]] Result
 		return u_error;
 	}
 
-	template<typename F, typename FunctionType = FunctionDecomposed<F>>
-	requires(IsSame<typename FunctionType::ReturnType, T>)
+	template<typename F, typename FunctionType = Core::FunctionDecomposed<F>>
+	requires(Core::IsSame<typename FunctionType::ReturnType, T>)
 	constexpr auto or_else(F&& f) const
 	{
 		if (has_value)

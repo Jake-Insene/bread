@@ -1,9 +1,9 @@
 #pragma once
 #include "core/types.h"
 
-// Required in Clang.
-#include <new>
 
+namespace Core
+{
 
 // Types
 template <typename... TArgs>
@@ -375,9 +375,6 @@ using EnumIntType = Conditional<sizeof(T) == 1, u8,
 
 // Generic Functions
 
-template<typename... TArgs>
-constexpr void Unused(TArgs&&...) {}
-
 template<typename T>
 [[nodiscard]] constexpr T&& Forward(RemoveReference<T>& arg)
 {
@@ -409,11 +406,10 @@ constexpr usize GetArgumentCount()
 }
 
 template<usize N, typename T, typename... TArgs>
-constexpr auto&& GetArgument(T&& first, TArgs&&... args)
+constexpr auto&& GetArgument(T&& first, [[maybe_unused]] TArgs&&... args)
 {
     if constexpr (N == 0)
     {
-        Unused(args...);
         return Move(first);
     }
     else
@@ -423,29 +419,15 @@ constexpr auto&& GetArgument(T&& first, TArgs&&... args)
 }
 
 template<typename T, usize N>
-constexpr auto ArraySize(T(&array)[N])
+constexpr auto ArraySize([[maybe_unused]] T(&array)[N])
 {
-    Unused(array);
     return N;
 }
 
-template<typename T>
-constexpr auto AddressOf(T& reference)
-{
-    if constexpr(IsPointer<T>)
-    {
-        return reference;
-    }
-    else
-    {
-        return &reference;
-    }
-}
-
 template<typename Fn, typename T, typename... TArgs>
-constexpr auto InvokeMember(Fn&& fn, T* instance, TArgs&&... args)
+constexpr auto InvokeMember(Fn&& fn, T& instance, TArgs&&... args)
 {
-    return (instance->*fn)(Forward<TArgs>(args)...);
+    return (instance.*fn)(Forward<TArgs>(args)...);
 }
 
 template<typename Fn, typename... TArgs>
@@ -479,24 +461,6 @@ constexpr bool IsAnyEqual(const T& first, const Ts&&... args)
     return (IsEqual(first, args) || ...);
 }
 
-template<typename T, typename... TArgs>
-constexpr void ConstructObject(T& object, TArgs&&... args)
-{
-    ::new(AddressOf(object)) T(args...);
-}
-
-template<typename T>
-constexpr void DestructObject(T& object)
-{
-    object.~T();
-}
-
-template<typename T>
-constexpr void ConstructArray(T* array_ref, usize len)
-{
-    ::new(array_ref) T[len]{};
-}
-
 template<typename T>
 AddRValueReference<T> DeclVal() noexcept
 {
@@ -508,3 +472,5 @@ concept ConvertibleTo = requires { static_cast<To>(DeclVal<From>()); };
 
 template<typename Type, typename Fn>
 concept Returns = IsSame<typename FunctionDecomposed<Fn>::ReturnType, Type>;
+
+}

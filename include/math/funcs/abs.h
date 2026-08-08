@@ -1,12 +1,12 @@
 #pragma once
-#include "core/templates.h"
+#include "core/Templates.h"
 
 
 namespace Math
 {
 
 template<typename T>
-requires(IsArithmetic<T>)
+requires(Core::IsArithmetic<T>)
 constexpr T abs(T a)
 {
     return a >= 0 ? a : -a;

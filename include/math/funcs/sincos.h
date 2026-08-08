@@ -8,7 +8,7 @@ namespace Math::impl
 {
 
 template<typename T>
-requires(IsArithmetic<T>)
+requires(Core::IsArithmetic<T>)
 constexpr void sincos(T* s, T* c, T rads)
 {
     *s = sin<T>(rads);

@@ -149,7 +149,7 @@ static Win32Engine& get_engine()
 void engine_loop(Mem::Allocator& allocator)
 {
 	Engine::local_data.engine_runtime = &get_engine();
-	ConstructObject(get_engine(), allocator);
+	Core::Mem::Placement(get_engine(), allocator);
 
 	bool quit = false;
 	while(quit == false)
@@ -176,7 +176,7 @@ void engine_loop(Mem::Allocator& allocator)
 		get_engine().step();
 	}
 
-	DestructObject(get_engine());
+	Core::Mem::Destruct(get_engine());
 }
 
 // Default for Windows

@@ -55,9 +55,9 @@ struct Allocator
 template<typename T>
 inline Slice<T> Mem::Allocator::array(usize count)
 {
-    static constexpr usize Alignment = ConditionalValue<usize, alignof(T) == 1, 8, alignof(T)>;
+    static constexpr usize Alignment = Core::ConditionalValue<usize, alignof(T) == 1, 8, alignof(T)>;
     Slice array = Mem::from_bytes<T>(alloc(sizeof(T) * count, Alignment));
-    ConstructArray(array.ptr(), array.len);
+    Core::Mem::PlacementArray(array.ptr(), array.len);
     return array;
 }
 
@@ -66,7 +66,7 @@ inline T* Mem::Allocator::object(TArgs&&... args)
 {
     constexpr usize alignment = alignof(T) == 1 ? 16 : alignof(T);
     T* instance = reinterpret_cast<T*>(alloc(sizeof(T), alignment).items);
-    ConstructObject(*instance, args...);
+    Core::Mem::Placement(*instance, args...);
     return instance;
 }
 

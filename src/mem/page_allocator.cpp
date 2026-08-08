@@ -46,9 +46,9 @@ bool PageAllocator::realloc(const Slice<u8>& ptr, usize new_size, usize)
     return false;
 }
 
-Slice<u8> PageAllocator::remap(const Slice<u8>& ptr, usize new_size, usize alignment)
+Slice<u8> PageAllocator::remap([[maybe_unused]] const Slice<u8>& ptr, [[maybe_unused]] usize new_size,
+    [[maybe_unused]] usize alignment)
 {
-    Unused(ptr, new_size, alignment);
     FailOn(true, "PageAllocator::remap is not implemented yet");
     return {};
 }

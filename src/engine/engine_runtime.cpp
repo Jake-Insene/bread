@@ -114,7 +114,7 @@ EngineRuntime::~EngineRuntime()
     application->unload_resources();
     
     application->shutdown();
-    DestructObject(*application);
+    Core::Mem::Destruct(*application);
     application_state = ApplicationState::Destroyed;
 
     allocator.free(Slice(reinterpret_cast<u8*>(application), 1));

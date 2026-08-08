@@ -56,16 +56,16 @@ struct StringUtility
 	}
 
 	template<typename T>
-		requires(IsInteger<T>)
+	requires(Core::IsInteger<T>)
 	static constexpr StringResult integer_to_string(T integer, i32 base)
 	{
-		using Unsigned = MakeUnsigned<T>;
+		using Unsigned = Core::MakeUnsigned<T>;
 		StringResult result = {};
 		auto end = result.result + 64;
 		usize buffer_index = 0;
 
 		Unsigned u = Unsigned(integer);
-		if constexpr (IsSigned<T>)
+		if constexpr (Core::IsSigned<T>)
 		{
 			u = integer < 0 ? Unsigned(-integer) : u;
 		}
@@ -81,7 +81,7 @@ struct StringUtility
 				buffer_index++;
 			} while (u != 0);
 
-			if constexpr (IsSigned<T>)
+			if constexpr (Core::IsSigned<T>)
 			{
 				if (integer < 0)
 				{
@@ -107,7 +107,7 @@ struct StringUtility
 				buffer_index++;
 			} while (hex_digit_count < (sizeof(T) * 8) / 4);
 
-			if constexpr (IsSigned<T>)
+			if constexpr (Core::IsSigned<T>)
 			{
 				if (integer < 0)
 				{

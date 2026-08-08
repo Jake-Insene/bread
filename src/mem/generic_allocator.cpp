@@ -19,7 +19,7 @@ static inline GenericAllocator::Header* get_header(Slice<u8> ptr)
 
 GenericAllocator::GenericAllocator()
 {
-    ConstructObject(internal_allocator);
+    Core::Mem::Placement(internal_allocator);
     allocated_pages = {};
     page_count = 0;
     next_page_size = DefaultNextPageSize;
@@ -261,7 +261,7 @@ GenericAllocator::Header* GenericAllocator::_search_for_space_in_page(Page& page
     Header* allocated_mem = page.first_header;
     while(allocated_mem != nullptr)
     {
-        if (HasValue(allocated_mem->tags & Allocated))
+        if (Core::HasValue(allocated_mem->tags & Allocated))
         {
             allocated_mem = allocated_mem->next;
             continue;

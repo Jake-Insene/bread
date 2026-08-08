@@ -1,6 +1,6 @@
 #pragma once
 #include "core/types.h"
-#include "core/templates.h"
+#include "core/Templates.h"
 #include "debug/assertion.h"
 
 
@@ -21,7 +21,7 @@ struct [[nodiscard]] Slice
     constexpr Slice() : items(nullptr), len(0) {}
     
     template<typename U>
-    requires(ConvertibleTo<U, T>)
+    requires(Core::ConvertibleTo<U, T>)
     constexpr Slice(const Slice<U>& slice) : items(slice.items), len(slice.len) {}
 
     template<usize N>
@@ -30,7 +30,7 @@ struct [[nodiscard]] Slice
     {}
 
     template<typename U, usize N>
-    requires(ConvertibleTo<U, T>)
+    requires(Core::ConvertibleTo<U, T>)
     constexpr Slice(U(&_items)[N])
         : items(_items), len(N)
     {}
@@ -40,13 +40,13 @@ struct [[nodiscard]] Slice
     {}
 
     template<typename U>
-    requires(ConvertibleTo<U, T>)
+    requires(Core::ConvertibleTo<U, T>)
     constexpr Slice(U* _items, const usize _len)
         : items(_items), len(_len)
     {}
 
     template<typename U>
-    requires(ConvertibleTo<U, T>)
+    requires(Core::ConvertibleTo<U, T>)
     constexpr Slice& operator=(const Slice<U>& slice)
     {
         items = slice.items;
@@ -57,7 +57,7 @@ struct [[nodiscard]] Slice
     [[nodiscard]] constexpr decltype(auto) operator[](this auto&& self, const usize index)
     {
         DebugAssert(index < self.len, "index out of range");
-        return Forward<decltype(self)>(self).items[index];
+        return Core::Forward<decltype(self)>(self).items[index];
     }
 
     [[nodiscard]] constexpr decltype(auto) begin(this auto&& self) { return self.items; };

@@ -36,21 +36,21 @@ struct [[nodiscard]] BaseIterator
 		usize index = 0;
 		for (auto&& item : self)
 		{
-			if constexpr (IsAnyOf<Fn, ItFnComplete1, ItFnComplete2>)
+			if constexpr (Core::IsAnyOf<Fn, ItFnComplete1, ItFnComplete2>)
 			{
-				Invoke(func, item, index++);
+				Core::Invoke(func, item, index++);
 			}
 			else
 			{
-				Invoke(func, item);
+				Core::Invoke(func, item);
 			}
 		}
 
-		return Forward<decltype(self)>(self);
+		return Core::Forward<decltype(self)>(self);
 	}
 
 	template<Iterable Self, typename Fn>
-	requires(Returns<Type, Fn>)
+	requires(Core::Returns<Type, Fn>)
 	constexpr auto transform(this Self&& self, Fn&& opt)
 	{
 		for (auto it = self.begin(); it != self.end(); ++it)
@@ -58,11 +58,11 @@ struct [[nodiscard]] BaseIterator
 			*it = opt(*it);
 		}
 
-		return Forward<decltype(self)>(self);
+		return Core::Forward<decltype(self)>(self);
 	}
 
 	template<Iterable Self, typename Opt, typename Fn>
-	requires(Returns<bool, Opt>)
+	requires(Core::Returns<bool, Opt>)
 	constexpr auto filter(this Self&& self, Opt&& opt, Fn&& func)
 	{
 		for (auto it = self.begin(); it != self.end(); ++it)

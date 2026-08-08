@@ -7,7 +7,7 @@
 
 
 template <typename T>
-requires(IsArithmetic<T>)
+requires(Core::IsArithmetic<T>)
 union [[nodiscard]] Vector2T
 {
     using Type = T;

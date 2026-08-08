@@ -12,19 +12,31 @@ static_assert(sizeof(File) == sizeof(HANDLE));
 
 File& File::get_stderr()
 {
-	static HANDLE handle = GetStdHandle(STD_ERROR_HANDLE);
+	static HANDLE handle = 0;
+	if(handle == 0)
+	{
+		handle = GetStdHandle(STD_ERROR_HANDLE);
+	}
 	return *reinterpret_cast<File*>(&handle);
 }
 
 File& File::get_stdout()
 {
-	static HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+	static HANDLE handle = 0;
+	if(handle == 0)
+	{
+		handle = GetStdHandle(STD_OUTPUT_HANDLE);
+	}
 	return *reinterpret_cast<File*>(&handle);
 }
 
 File& File::get_stdin()
 {
-	static HANDLE handle = GetStdHandle(STD_INPUT_HANDLE);
+	static HANDLE handle = 0;
+	if(handle == 0)
+	{
+		handle = GetStdHandle(STD_INPUT_HANDLE);
+	}
 	return *reinterpret_cast<File*>(&handle);
 }
 
@@ -75,17 +87,17 @@ File::File(Mem::Allocator& allocator, StringView path, OpenMode mode)
 	Mem::copy(tmp, path);
 	UINT access = 0;
 
-	if (HasValue(mode & File::Read))
+	if(Core::HasValue(mode & File::Read))
 	{
 		access |= GENERIC_READ;
 	}
-	if (HasValue(mode & File::Write))
+	if(Core::HasValue(mode & File::Write))
 	{
 		access |= GENERIC_WRITE;
 	}
 
 	UINT open_or_create = 0;
-	if (HasValue(mode & File::Create))
+	if(Core::HasValue(mode & File::Create))
 	{
 		open_or_create |= CREATE_ALWAYS;
 	}
@@ -105,7 +117,7 @@ File::File(Mem::Allocator& allocator, StringView path, OpenMode mode)
 
 File::~File()
 {
-	if (handle == 0
+	if(handle == 0
 		|| handle == GetStdHandle(STD_ERROR_HANDLE)
 		|| handle == GetStdHandle(STD_OUTPUT_HANDLE)
 		|| handle == GetStdHandle(STD_INPUT_HANDLE))
@@ -118,18 +130,28 @@ File::~File()
 
 void File::write(const Slice<const u8>& bytes)
 {
-	DebugAssert(handle != 0, "invalid file handler");
+	DebugAssert(handle != 0
+		|| handle == GetStdHandle(STD_ERROR_HANDLE)
+		|| handle == GetStdHandle(STD_OUTPUT_HANDLE)
+		|| handle == GetStdHandle(STD_INPUT_HANDLE), "invalid file handler");
 	(void)WriteFile(reinterpret_cast<HANDLE>(handle), bytes.ptr(), static_cast<DWORD>(bytes.len), 0, 0);
 }
 
 void File::put(u8 value)
 {
+	DebugAssert(handle != 0
+		|| handle == GetStdHandle(STD_ERROR_HANDLE)
+		|| handle == GetStdHandle(STD_OUTPUT_HANDLE)
+		|| handle == GetStdHandle(STD_INPUT_HANDLE), "invalid file handler");
 	WriteFile(reinterpret_cast<HANDLE>(handle), &value, 1, 0, 0);
 }
 
 void File::read(Slice<u8> bytes)
 {
-	DebugAssert(handle != 0, "invalid file handler");
+	DebugAssert(handle != 0
+		|| handle == GetStdHandle(STD_ERROR_HANDLE)
+		|| handle == GetStdHandle(STD_OUTPUT_HANDLE)
+		|| handle == GetStdHandle(STD_INPUT_HANDLE), "invalid file handler");
 	DWORD bytes_readed = 0;
 	(void)ReadFile(reinterpret_cast<HANDLE>(handle), bytes.ptr(), static_cast<DWORD>(bytes.len), &bytes_readed, 0);
 	DebugAssert(bytes_readed <= bytes.len, "read overflows");
@@ -137,7 +159,10 @@ void File::read(Slice<u8> bytes)
 
 void File::flush()
 {
-	DebugAssert(handle != 0, "invalid file handler");
+	DebugAssert(handle != 0
+		|| handle == GetStdHandle(STD_ERROR_HANDLE)
+		|| handle == GetStdHandle(STD_OUTPUT_HANDLE)
+		|| handle == GetStdHandle(STD_INPUT_HANDLE), "invalid file handler");
 	(void)FlushFileBuffers(reinterpret_cast<HANDLE>(handle));
 }
 

@@ -198,7 +198,7 @@ struct [[nodiscard]] Array final
     [[nodiscard]] Type& emplace(TArgs&&... args)
     {
         ensure_capacity(count+1);
-        ConstructObject(items[count], Forward<TArgs>(args)...);
+        Core::Mem::Placement(items[count], Core::Forward<TArgs>(args)...);
         return items[count++];
     }
 
@@ -219,7 +219,7 @@ struct [[nodiscard]] Array final
     void remove_at(usize index)
     {
         DebugAssert(index < count && count != 0, "index out of range");
-        DestructObject(items[index]);
+        Core::Mem::Destruct(items[index]);
 
         if (count == 1 || index == count - 1)
         {
@@ -266,7 +266,7 @@ struct [[nodiscard]] Array final
     {
         for(Type& item : iter())
         {
-            DestructObject(item);
+            Core::Mem::Destruct(item);
         }
     }
 };

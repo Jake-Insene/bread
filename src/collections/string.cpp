@@ -63,7 +63,7 @@ void String::resize(usize new_size)
     {
         chars.len = new_size;
         Slice chars_to_construct = chars.add(count);
-        ConstructArray(chars_to_construct.ptr(), chars_to_construct.len);
+		Mem::zero(chars_to_construct);
     }
 
     count = new_size;

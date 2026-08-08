@@ -18,7 +18,7 @@ GPUMemoryAllocator::~GPUMemoryAllocator()
 {
     (void)staging_heaps.iter().for_each([](StagingHeap& staging_heap)
     {
-        if(HasValue(staging_heap.flags & StagingFlags::Mapped))
+        if(Core::HasValue(staging_heap.flags & StagingFlags::Mapped))
         {
             GPU::memory_heap_unmap(staging_heap.heap, staging_heap.mapped_buffer);
         }
@@ -109,7 +109,7 @@ GPU::BufferID GPUMemoryAllocator::begin_staging(usize size)
     GPU::BufferID buffer = GPU::BufferID::invalid();
     for(StagingHeap& staging_heap : staging_heaps.iter())
     {
-        if(HasValue(staging_heap.flags & StagingFlags::Allocated))
+        if(Core::HasValue(staging_heap.flags & StagingFlags::Allocated))
         {
             continue;
         }
@@ -177,7 +177,7 @@ Slice<u8> GPUMemoryAllocator::map_staging(GPU::BufferID staging_buffer)
             continue;
         }
 
-        if(!HasValue(staging_heap.flags & StagingFlags::Mapped))
+        if(!Core::HasValue(staging_heap.flags & StagingFlags::Mapped))
         {
             staging_heap.mapped_buffer = GPU::memory_heap_map(staging_heap.heap, 0, staging_heap.heap_size);
             staging_heap.flags |= StagingFlags::Mapped;
@@ -198,7 +198,7 @@ void GPUMemoryAllocator::unmap_staging(GPU::BufferID staging_buffer, const Slice
             continue;
         }
 
-        if(HasValue(staging_heap.flags & StagingFlags::Mapped))
+        if(Core::HasValue(staging_heap.flags & StagingFlags::Mapped))
         {
             GPU::memory_heap_unmap(staging_heap.heap, memory);
             staging_heap.flags ^= StagingFlags::Mapped;
@@ -240,10 +240,8 @@ Slice<u8> GPUMemoryAllocator::allocation_map(GPUMemoryAllocationID allocation)
     return heap.mapped.add(allocation_data.heap_offset).slice(allocation_data.size);
 }
 
-void GPUMemoryAllocator::allocation_unmap(GPUMemoryAllocationID allocation, const Slice<u8>& mapped)
+void GPUMemoryAllocator::allocation_unmap(GPUMemoryAllocationID allocation, [[maybe_unused]] const Slice<u8>& mapped)
 {
-    Unused(mapped);
-
     FailOn(allocation.is_valid() == false, "invalid allocation");
     Allocation& allocation_data = allocations.get(allocation);
     Heap& heap = heaps.get(allocation_data.heap_index);

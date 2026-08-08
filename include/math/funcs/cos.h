@@ -9,7 +9,7 @@ namespace Math::impl
 * Reference: https://www.mathsisfun.com/algebra/taylor-series.html
 */
 template<typename T>
-requires(IsArithmetic<T>)
+requires(Core::IsArithmetic<T>)
 constexpr T cos_approx(T x)
 {
     // Using taylor series for only 5 terms,
@@ -38,7 +38,7 @@ constexpr T cos_approx(T x)
 }
 
 template<typename T>
-requires(IsArithmetic<T>)
+requires(Core::IsArithmetic<T>)
 constexpr T cos(T rads)
 {
     return cos_approx<T>(rads);

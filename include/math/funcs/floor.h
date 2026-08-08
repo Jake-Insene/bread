@@ -1,13 +1,13 @@
 #pragma once
 #include "core/types.h"
-#include "core/templates.h"
+#include "core/Templates.h"
 
 
 namespace Math
 {
 
-template<typename T, typename Integer = Conditional<IsSame<T, f32>, i32, i64>>
-requires(IsFloatingPoint<T>)
+template<typename T, typename Integer = Core::Conditional<Core::IsSame<T, f32>, i32, i64>>
+requires(Core::IsFloatingPoint<T>)
 [[nodiscard]] constexpr Integer floor(T value)
 {
     const Integer i = Integer(value);

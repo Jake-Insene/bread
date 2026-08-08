@@ -282,23 +282,23 @@ VkBufferUsageFlags VkUtils::_vk_get_buffer_usage(GPU::BufferUsage buffer_usage)
 {
     VkBufferUsageFlags vk_flags = 0;
 
-    if(HasValue(buffer_usage & GPU::BufferUsage::VertexBuffer))
+    if(Core::HasValue(buffer_usage & GPU::BufferUsage::VertexBuffer))
     {
         vk_flags |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
     }
-    if(HasValue(buffer_usage & GPU::BufferUsage::IndexBuffer))
+    if(Core::HasValue(buffer_usage & GPU::BufferUsage::IndexBuffer))
     {
         vk_flags |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
     }
-    if(HasValue(buffer_usage & GPU::BufferUsage::UniformBuffer))
+    if(Core::HasValue(buffer_usage & GPU::BufferUsage::UniformBuffer))
     {
         vk_flags |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
     }
-    if(HasValue(buffer_usage & GPU::BufferUsage::TransferSource))
+    if(Core::HasValue(buffer_usage & GPU::BufferUsage::TransferSource))
     {
         vk_flags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     }
-    if(HasValue(buffer_usage & GPU::BufferUsage::TransferDestination))
+    if(Core::HasValue(buffer_usage & GPU::BufferUsage::TransferDestination))
     {
         vk_flags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     }
@@ -349,23 +349,23 @@ VkImageTiling VkUtils::_vk_get_tiling(GPU::TextureTiling texture_tiling)
 VkImageUsageFlags VkUtils::_vk_get_texture_usage(GPU::TextureUsage texture_usage)
 {
     VkImageUsageFlags flags = 0;
-    if(HasValue(texture_usage & GPU::TextureUsage::TransferSource))
+    if(Core::HasValue(texture_usage & GPU::TextureUsage::TransferSource))
     {
         flags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
     }
-    if(HasValue(texture_usage & GPU::TextureUsage::TransferDestination))
+    if(Core::HasValue(texture_usage & GPU::TextureUsage::TransferDestination))
     {
         flags |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     }
-    if(HasValue(texture_usage & GPU::TextureUsage::Sampled))
+    if(Core::HasValue(texture_usage & GPU::TextureUsage::Sampled))
     {
         flags |= VK_IMAGE_USAGE_SAMPLED_BIT;
     }
-    if(HasValue(texture_usage & GPU::TextureUsage::Storage))
+    if(Core::HasValue(texture_usage & GPU::TextureUsage::Storage))
     {
         flags |= VK_IMAGE_USAGE_STORAGE_BIT;
     }
-    if(HasValue(texture_usage & GPU::TextureUsage::RenderOutput))
+    if(Core::HasValue(texture_usage & GPU::TextureUsage::RenderOutput))
     {
         flags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     }
@@ -382,43 +382,43 @@ VkPipelineStageFlags VkUtils::_vk_get_pipeline_stages(GPU::PipelineStages stages
 {
     VkPipelineStageFlags vk_flags = 0;
 
-    if(HasValue(stages & GPU::PipelineStages::Begin))
+    if(Core::HasValue(stages & GPU::PipelineStages::Begin))
     {
         vk_flags |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
     }
-    if(HasValue(stages & GPU::PipelineStages::VertexInput))
+    if(Core::HasValue(stages & GPU::PipelineStages::VertexInput))
     {
         vk_flags |= VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
     }
-    if (HasValue(stages & GPU::PipelineStages::VertexShader))
+    if (Core::HasValue(stages & GPU::PipelineStages::VertexShader))
     {
         vk_flags |= VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
     }
-    if (HasValue(stages & GPU::PipelineStages::FragmentShader))
+    if (Core::HasValue(stages & GPU::PipelineStages::FragmentShader))
     {
         vk_flags |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
     }
-    if (HasValue(stages & GPU::PipelineStages::EarlyFragmentTestShader))
+    if (Core::HasValue(stages & GPU::PipelineStages::EarlyFragmentTestShader))
     {
         vk_flags |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
     }
-    if (HasValue(stages & GPU::PipelineStages::LateFragmentTestShader))
+    if (Core::HasValue(stages & GPU::PipelineStages::LateFragmentTestShader))
     {
         vk_flags |= VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
     }
-    if (HasValue(stages & GPU::PipelineStages::ComputeShader))
+    if (Core::HasValue(stages & GPU::PipelineStages::ComputeShader))
     {
         vk_flags |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
     }
-    if(HasValue(stages & GPU::PipelineStages::RenderOutput))
+    if(Core::HasValue(stages & GPU::PipelineStages::RenderOutput))
     {
         vk_flags |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     }
-    if (HasValue(stages & GPU::PipelineStages::Transfer))
+    if (Core::HasValue(stages & GPU::PipelineStages::Transfer))
     {
         vk_flags |= VK_PIPELINE_STAGE_TRANSFER_BIT;
     }
-    if(HasValue(stages & GPU::PipelineStages::End))
+    if(Core::HasValue(stages & GPU::PipelineStages::End))
     {
         vk_flags |= VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
     }
@@ -430,15 +430,15 @@ VkImageAspectFlags VkUtils::_vk_get_aspect_masks(GPU::TextureAspect aspects)
 {
     VkImageAspectFlags vk_aspects = 0;
 
-    if (HasValue(aspects & GPU::TextureAspect::Color))
+    if (Core::HasValue(aspects & GPU::TextureAspect::Color))
     {
         vk_aspects |= VK_IMAGE_ASPECT_COLOR_BIT;
     }
-    if (HasValue(aspects & GPU::TextureAspect::Depth))
+    if (Core::HasValue(aspects & GPU::TextureAspect::Depth))
     {
         vk_aspects |= VK_IMAGE_ASPECT_DEPTH_BIT;
     }
-    if (HasValue(aspects & GPU::TextureAspect::Stencil))
+    if (Core::HasValue(aspects & GPU::TextureAspect::Stencil))
     {
         vk_aspects |= VK_IMAGE_ASPECT_STENCIL_BIT;
     }
@@ -450,27 +450,27 @@ VkAccessFlags VkUtils::_vk_get_access_masks(GPU::AccessMasks access_masks)
 {
     VkAccessFlags vk_access_masks = 0;
 
-    if (HasValue(access_masks & GPU::AccessMasks::RenderAttachmentRead))
+    if (Core::HasValue(access_masks & GPU::AccessMasks::RenderAttachmentRead))
     {
         vk_access_masks |= VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
     }
-    if (HasValue(access_masks & GPU::AccessMasks::RenderAttachmentWrite))
+    if (Core::HasValue(access_masks & GPU::AccessMasks::RenderAttachmentWrite))
     {
         vk_access_masks |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
     }
-    if (HasValue(access_masks & GPU::AccessMasks::TransferRead))
+    if (Core::HasValue(access_masks & GPU::AccessMasks::TransferRead))
     {
         vk_access_masks |= VK_ACCESS_TRANSFER_READ_BIT;
     }
-    if (HasValue(access_masks & GPU::AccessMasks::TransferWrite))
+    if (Core::HasValue(access_masks & GPU::AccessMasks::TransferWrite))
     {
         vk_access_masks |= VK_ACCESS_TRANSFER_WRITE_BIT;
     }
-    if (HasValue(access_masks & GPU::AccessMasks::ShaderRead))
+    if (Core::HasValue(access_masks & GPU::AccessMasks::ShaderRead))
     {
         vk_access_masks |= VK_ACCESS_SHADER_READ_BIT;
     }
-    if (HasValue(access_masks & GPU::AccessMasks::ShaderWrite))
+    if (Core::HasValue(access_masks & GPU::AccessMasks::ShaderWrite))
     {
         vk_access_masks |= VK_ACCESS_SHADER_WRITE_BIT;
     }
@@ -487,12 +487,12 @@ VkShaderStageFlags VkUtils::_vk_get_shader_stage(GPU::ShaderStage shader_stage)
 {
     VkShaderStageFlags vk_flags = 0;
     
-    if(HasValue(shader_stage & GPU::ShaderStage::Vertex))
+    if(Core::HasValue(shader_stage & GPU::ShaderStage::Vertex))
     {
         vk_flags |= VK_SHADER_STAGE_VERTEX_BIT;
     }
 
-    if(HasValue(shader_stage & GPU::ShaderStage::Fragment))
+    if(Core::HasValue(shader_stage & GPU::ShaderStage::Fragment))
     {
         vk_flags |= VK_SHADER_STAGE_FRAGMENT_BIT;
     }
@@ -554,22 +554,22 @@ VkColorComponentFlags VkUtils::_vk_get_color_component_flags(GPU::ColorComponent
 {
     VkColorComponentFlags vk_flags = 0;
     
-    if(HasValue(color_components & GPU::ColorComponentFlags::R))
+    if(Core::HasValue(color_components & GPU::ColorComponentFlags::R))
     {
         vk_flags |= VK_COLOR_COMPONENT_R_BIT;
     }
 
-    if(HasValue(color_components & GPU::ColorComponentFlags::G))
+    if(Core::HasValue(color_components & GPU::ColorComponentFlags::G))
     {
         vk_flags |= VK_COLOR_COMPONENT_G_BIT;
     }
 
-    if(HasValue(color_components & GPU::ColorComponentFlags::B))
+    if(Core::HasValue(color_components & GPU::ColorComponentFlags::B))
     {
         vk_flags |= VK_COLOR_COMPONENT_B_BIT;
     }
 
-    if(HasValue(color_components & GPU::ColorComponentFlags::A))
+    if(Core::HasValue(color_components & GPU::ColorComponentFlags::A))
     {
         vk_flags |= VK_COLOR_COMPONENT_A_BIT;
     }

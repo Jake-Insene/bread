@@ -1,5 +1,5 @@
 #pragma once
-#include "core/templates.h"
+#include "core/Templates.h"
 
 
 // TODO: Rewrite this, understand this and improve this(maybe)
@@ -75,10 +75,10 @@ constexpr i64 __pow_integer(FP base, i64 exp)
 }
 
 template<typename T>
-requires(IsArithmetic<T>)
+requires(Core::IsArithmetic<T>)
 [[nodiscard]] constexpr T pow(T x, T y)
 {
-    if constexpr (IsInteger<T>)
+    if constexpr(Core::IsInteger<T>)
     {
         return T(__pow_integer<f64>(f64(x), i64(y)));
     }

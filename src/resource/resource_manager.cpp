@@ -32,7 +32,7 @@ ResourceManager::~ResourceManager()
     for(auto& it : resources.iter())
     {
         RMDebugInfo("Destroying the resource '{}'", it.first);
-        DestructObject(*it.second.resource);
+        Core::Mem::Destruct(*it.second.resource);
         allocator.free(
             Mem::to_bytes(Slice(it.second.resource, 1))
         );

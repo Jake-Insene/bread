@@ -15,7 +15,7 @@ Mem::Allocator& Win32OS::get_allocator() { return get_data().allocator; }
 void OS::initialize(Mem::Allocator& allocator)
 {
     // Ensures constructors are call.
-    ConstructObject(get_data(), allocator);
+    Core::Mem::Placement(get_data(), allocator);
     
     // For get_time()
     LARGE_INTEGER platform_time;
@@ -31,7 +31,7 @@ void OS::initialize(Mem::Allocator& allocator)
 
 void OS::shutdown()
 {
-    DestructObject(get_data());
+    Core::Mem::Destruct(get_data());
 }
 
 f64 OS::get_time()

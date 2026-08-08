@@ -8,7 +8,7 @@ namespace Math::impl
 
 // TODO: I don't know how this works.
 template<typename T>
-requires(IsArithmetic<T>)
+requires(Core::IsArithmetic<T>)
 constexpr T atan2_approx(T y, T x)
 {
     if (x == T(0.0))

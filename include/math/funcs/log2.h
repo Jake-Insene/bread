@@ -6,10 +6,10 @@ namespace Math
 {
 
 template<typename T>
-requires(IsArithmetic<T>)
+requires(Core::IsArithmetic<T>)
 [[nodiscard]] constexpr T log2(T n)
 {
-    if constexpr (IsInteger<T>)
+    if constexpr(Core::IsInteger<T>)
     {
         T result = 0;
         while (n >>= 1)

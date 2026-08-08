@@ -1,6 +1,6 @@
 #include "gpu/vk/vk_adapter.h"
 
-#include "core/templates.h"
+#include "core/Templates.h"
 #include "display/display.h"
 #include "gpu/gpu.h"
 #include "gpu/vk/vk_utils.h"
@@ -213,13 +213,13 @@ void VulkanAdapter::surface_destroy(GPU::SurfaceID surface)
     surfaces.remove(surface);
 }
 
-GPU::DeviceID VulkanAdapter::device_create(GPU::PhysicalDeviceID physical_device, const GPU::DeviceCreateInfo& ci)
+GPU::DeviceID VulkanAdapter::device_create(GPU::PhysicalDeviceID physical_device,
+    [[maybe_unused]] const GPU::DeviceCreateInfo& ci)
 {
     VKFailOn(
         physical_device.integer() >= physical_devices.len, 
         "invalid physical device"
     );
-    Unused(ci);
 
     PhysicalDevice& pd = physical_devices[physical_device.integer()];
     Mem::Allocator& allocator = acquire_tmp_allocator();
@@ -710,10 +710,9 @@ void VulkanAdapter::fence_wait_for(Slice<GPU::FenceID> fences, bool wait_for_all
     VKFailOn(result != VK_SUCCESS, "vkWaitForFences({})", Vulkan::result_as_string(result));   
 }
 
-GPU::SemaphoreID VulkanAdapter::semaphore_create(GPU::DeviceID device, const GPU::SemaphoreCreateInfo &ci)
+GPU::SemaphoreID VulkanAdapter::semaphore_create(GPU::DeviceID device, 
+    [[maybe_unused]] const GPU::SemaphoreCreateInfo &ci)
 {
-    Unused(ci);
-    
     GPU::SemaphoreID semaphore_id = semaphores.add(Semaphore());
     Semaphore& sem = _get_semaphore(semaphore_id);
     LogicalDevice& ld = _get_logical_device(device);
@@ -946,9 +945,9 @@ Slice<u8> VulkanAdapter::memory_heap_map(GPU::MemoryHeapID memory_heap, usize of
     return Slice(reinterpret_cast<u8*>(ptr), len);
 }
 
-void VulkanAdapter::memory_heap_unmap(GPU::MemoryHeapID memory_heap, const Slice<u8>& memory)
+void VulkanAdapter::memory_heap_unmap(GPU::MemoryHeapID memory_heap,
+    [[maybe_unused]] const Slice<u8>& memory)
 {
-    Unused(memory);
     MemoryHeap& heap = _get_memory_heap(memory_heap);
     LogicalDevice& ld = _get_logical_device(heap.device);
 
@@ -1023,7 +1022,7 @@ GPU::MemoryRequirements VulkanAdapter::buffer_get_memory_requirements(GPU::Buffe
 
     for(uint32_t i = 0; i < ld.vk_physical_device_memory_properties.memoryTypeCount; i++)
     {
-        if(!HasValue((1 << i) & vk_memory_requirements.memoryRequirements.memoryTypeBits))
+        if(!Core::HasValue((1 << i) & vk_memory_requirements.memoryRequirements.memoryTypeBits))
         {
             continue;
         }
@@ -1184,7 +1183,7 @@ GPU::MemoryRequirements VulkanAdapter::texture_get_memory_requirements(GPU::Text
 
     for(uint32_t i = 0; i < ld.vk_physical_device_memory_properties.memoryTypeCount; i++)
     {
-        if(!HasValue((1 << i) & vk_memory_requirements.memoryRequirements.memoryTypeBits))
+        if(!Core::HasValue((1 << i) & vk_memory_requirements.memoryRequirements.memoryTypeBits))
         {
             continue;
         }
@@ -1761,7 +1760,7 @@ GPU::PipelineID VulkanAdapter::pipeline_create(GPU::DeviceID device, const GPU::
         .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
-        .dynamicStateCount = static_cast<uint32_t>(ArraySize(vk_dynamic_states)),
+        .dynamicStateCount = static_cast<uint32_t>(Core::ArraySize(vk_dynamic_states)),
         .pDynamicStates = vk_dynamic_states,
     };
 
@@ -2097,10 +2096,9 @@ void VulkanAdapter::command_buffer_begin_renderpass(GPU::CommandBufferID command
     }
 }
 
-void VulkanAdapter::command_buffer_end_renderpass(GPU::CommandBufferID command_buffer, const GPU::RenderPassEndInfo& end_info)
+void VulkanAdapter::command_buffer_end_renderpass(GPU::CommandBufferID command_buffer,
+    [[maybe_unused]] const GPU::RenderPassEndInfo& end_info)
 {
-    Unused(end_info);
-
     CommandBuffer& cmd_buffer = _get_command_buffer(command_buffer);
     LogicalDevice& ld = _get_logical_device(cmd_buffer.device);
 
@@ -2783,15 +2781,15 @@ GPU::HeapUsage VulkanAdapter::_vk_memory_property_to_heap_usage(VkMemoryProperty
     VkMemoryPropertyFlags gpu_exclusive = VkUtils::_vk_get_memory_properties(GPU::HeapUsage::GPUExclusive);
     VkMemoryPropertyFlags cpu_gpu_coherent = VkUtils::_vk_get_memory_properties(GPU::HeapUsage::CPUGPUCoherent);
 
-    if(HasValue(vk_memory_properties & cpu_exclusive))
+    if(Core::HasValue(vk_memory_properties & cpu_exclusive))
     {
         return GPU::HeapUsage::CPUExclusive;
     }
-    if(HasValue(vk_memory_properties & gpu_exclusive))
+    if(Core::HasValue(vk_memory_properties & gpu_exclusive))
     {
         return GPU::HeapUsage::GPUExclusive;
     }
-    if(HasValue(vk_memory_properties & cpu_gpu_coherent))
+    if(Core::HasValue(vk_memory_properties & cpu_gpu_coherent))
     {
         return GPU::HeapUsage::CPUGPUCoherent;
     }

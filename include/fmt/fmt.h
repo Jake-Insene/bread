@@ -31,7 +31,7 @@ struct FmtInterval
 template<typename... TArgs>
 struct FormatString
 {
-	static constexpr usize ArgumentCount = GetArgumentCount<TArgs...>();
+	static constexpr usize ArgumentCount = Core::GetArgumentCount<TArgs...>();
 	static constexpr FormatType ArgumentTypes[ArgumentCount + 1] = { __GetFormatType<TArgs>()...};
 	static constexpr usize WriteIntervalCount = ArgumentCount + 1;
 
@@ -119,7 +119,7 @@ struct FormatString
 };
 
 template<bool NewLine, typename... TArgs>
-void format(const IO::Writer& writer, const FormatString<TypeIdentity<TArgs>&&...>& fmt, TArgs&&... args);
+void format(const IO::Writer& writer, const FormatString<Core::TypeIdentity<TArgs>&&...>& fmt, TArgs&&... args);
 
 }
 
@@ -139,7 +139,7 @@ StringView FormatString<TArgs...>::view() const
 }
 
 template<usize Base>
-inline constexpr bool IsValidBase = IsAnyOfValue<usize, Base, 2, 10, 16>;
+inline constexpr bool IsValidBase = Core::IsAnyOfValue<usize, Base, 2, 10, 16>;
 
 template<usize Base, typename T>
 	requires(IsValidBase<Base>)
@@ -200,7 +200,7 @@ void __format_single_argument(const IO::Writer& writer, T&& arg)
 	else if constexpr (type == Format::FormatType::CString)
 	{
 		// A CString always contains an extra byte for '\0'
-		static constexpr usize len = Extent<T> - 1;
+		static constexpr usize len = Core::Extent<T> - 1;
 		writer.write(Mem::to_const_bytes(Slice(arg, len)));
 	}
 	else if constexpr (type == Format::FormatType::Slice)
@@ -212,24 +212,24 @@ void __format_single_argument(const IO::Writer& writer, T&& arg)
 			{
 				writer.write(Mem::to_const_bytes(StringView(", ")));
 			}
-			__format_single_argument<typename RemoveReference<decltype(arg)>::Type>(writer, Move(arg[i]));
+			__format_single_argument<typename Core::RemoveReference<decltype(arg)>::Type>(writer, Move(arg[i]));
 		}
 		writer.write(Mem::to_const_bytes(StringView("]")));
 	}
 	else
 	{
-		Formatter<RemoveCVRef<T>>::format_custom(writer, Forward<T>(arg));
+		Formatter<Core::RemoveCVRef<T>>::format_custom(writer, Forward<T>(arg));
 	}
 }
 
 template<usize IntervalRemain, typename... TArgs>
-void __format_argument(const IO::Writer& writer, const StringView view, const Format::FormatString<TypeIdentity<TArgs>&&...>& fmtstring, TArgs&&... args)
+void __format_argument(const IO::Writer& writer, const StringView view,
+	const Format::FormatString<Core::TypeIdentity<TArgs>&&...>& fmtstring, [[maybe_unused]] TArgs&&... args)
 {
-	using FString = Format::FormatString<TypeIdentity<TArgs>...>;
+	using FString = Format::FormatString<Core::TypeIdentity<TArgs>...>;
 
 	if constexpr (IntervalRemain == 1)
 	{
-		Unused(args...);
 		const auto interval_range = fmtstring.intervals[FString::WriteIntervalCount - 1];
 		const StringView interval = StringView(view.ptr() + interval_range.start, interval_range.len);
 		writer.write(Mem::to_const_bytes(interval));
@@ -240,15 +240,15 @@ void __format_argument(const IO::Writer& writer, const StringView view, const Fo
 		const StringView interval = StringView(view.ptr() + interval_range.start, interval_range.len);
 		writer.write(Mem::to_const_bytes(interval));
 
-		__format_single_argument(writer, Move(GetArgument<FString::WriteIntervalCount - IntervalRemain>(Forward<TArgs>(args)...)));
-		__format_argument<IntervalRemain - 1, TArgs...>(writer, view, fmtstring, Forward<TArgs>(args)...);
+		__format_single_argument(writer, Core::Move(Core::GetArgument<FString::WriteIntervalCount - IntervalRemain>(Core::Forward<TArgs>(args)...)));
+		__format_argument<IntervalRemain - 1, TArgs...>(writer, view, fmtstring, Core::Forward<TArgs>(args)...);
 	}
 }
 
 template<bool NewLine, typename... TArgs>
-void format(const IO::Writer& writer, const FormatString<TypeIdentity<TArgs>&&...>& fmtstring, TArgs&&... args)
+void format(const IO::Writer& writer, const FormatString<Core::TypeIdentity<TArgs>&&...>& fmtstring, TArgs&&... args)
 {
-	using FString = FormatString<TypeIdentity<TArgs>...>;
+	using FString = FormatString<Core::TypeIdentity<TArgs>...>;
 	StringView view = fmtstring.view();
 
 	if constexpr (FString::WriteIntervalCount == 1)
@@ -257,7 +257,7 @@ void format(const IO::Writer& writer, const FormatString<TypeIdentity<TArgs>&&..
 	}
 	else
 	{
-		__format_argument<FString::WriteIntervalCount, TArgs...>(writer, view, fmtstring, Forward<TArgs>(args)...);
+		__format_argument<FString::WriteIntervalCount, TArgs...>(writer, view, fmtstring, Core::Forward<TArgs>(args)...);
 	}
 
 	if constexpr (NewLine)

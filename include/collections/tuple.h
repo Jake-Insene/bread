@@ -1,5 +1,5 @@
 #pragma once
-#include "core/templates.h"
+#include "core/Templates.h"
 
 
 template<typename... TArgs>
@@ -45,7 +45,7 @@ struct [[nodiscard]] Tuple<T, TArgs...> : Tuple<TArgs...>
 
 
 template<typename Fn, typename TupleT, usize... Seq>
-constexpr decltype(auto) ApplyImpl(Fn&& fn, TupleT&& tuple, Sequence<Seq...>)
+constexpr decltype(auto) ApplyImpl(Fn&& fn, TupleT&& tuple, Core::Sequence<Seq...>)
 {
     return Forward<Fn>(fn)(Forward<TupleT>(tuple).template get<Seq>()...);
 }
@@ -54,14 +54,14 @@ constexpr decltype(auto) ApplyImpl(Fn&& fn, TupleT&& tuple, Sequence<Seq...>)
 template<typename Fn, typename TupleT>
 constexpr decltype(auto) Apply(Fn&& fn, TupleT&& tuple)
 {
-    static constexpr usize ArgCount = TupleSize<RemoveConst<RemoveReference<TupleT>>>;
-    using Seq = BuildSequence<ArgCount>;
+    static constexpr usize ArgCount = TupleSize<Core::RemoveConst<Core::RemoveReference<TupleT>>>;
+    using Seq = Core::BuildSequence<ArgCount>;
 
     return ApplyImpl(Forward<Fn>(fn), Forward<TupleT>(tuple), Seq());
 }
 
 template<typename Fn, typename T, typename TupleT, usize... Seq>
-constexpr decltype(auto) ApplyMemberImpl(Fn&& fn, T* instance, TupleT&& tuple, Sequence<Seq...>)
+constexpr decltype(auto) ApplyMemberImpl(Fn&& fn, T* instance, TupleT&& tuple, Core::Sequence<Seq...>)
 {
     return (instance->*fn)(tuple.template get<Seq>()...);
 }
@@ -69,8 +69,8 @@ constexpr decltype(auto) ApplyMemberImpl(Fn&& fn, T* instance, TupleT&& tuple, S
 template<typename Fn, typename T, typename TupleT>
 constexpr decltype(auto) ApplyMember(Fn&& fn, T* instance, TupleT&& tuple)
 {
-    static constexpr usize ArgCount = TupleSize<RemoveConst<RemoveReference<TupleT>>>;
-    using Seq = BuildSequence<ArgCount>;
+    static constexpr usize ArgCount = TupleSize<Core::RemoveConst<Core::RemoveReference<TupleT>>>;
+    using Seq = Core::BuildSequence<ArgCount>;
 
     return ApplyMemberImpl(Forward<Fn>(fn), instance, Forward<Tuple>(tuple), Seq());
 }

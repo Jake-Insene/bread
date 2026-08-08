@@ -1,5 +1,5 @@
 #pragma once
-#include "core/templates.h"
+#include "core/Templates.h"
 #include "debug/assertion.h"
 
 
@@ -39,14 +39,14 @@ struct FunctionStorage<RT(T::*)(TArgs...) const, false>
 template<typename Fn, bool UseInstance = true>
 struct [[nodiscard]] Function
 {
-	using Decomposed = FunctionDecomposed<Fn>;
+	using Decomposed = Core::FunctionDecomposed<Fn>;
 	using ReturnType = Decomposed::ReturnType;
 
 	FunctionStorage<Fn, UseInstance> storage;
 
 	template<typename T>
 	constexpr void bind(T func)
-	requires(!IsMemberFunction<Fn>)
+	requires(!Core::IsMemberFunction<Fn>)
 	{
 		storage.func = static_cast<Fn>(func);
 	}
@@ -60,7 +60,7 @@ struct [[nodiscard]] Function
 
 	template<typename T, typename Fn2>
 	constexpr void bind(T* instance, Fn2 func)
-	requires(IsMemberFunction<Fn> && UseInstance)
+	requires(Core::IsMemberFunction<Fn> && UseInstance)
 	{
 		storage.instance = reinterpret_cast<decltype(storage.instance)>(instance);
 		storage.func = reinterpret_cast<Fn>(func);
@@ -70,16 +70,16 @@ struct [[nodiscard]] Function
 	constexpr ReturnType call(TArgs&&... args) const
 	{
 		DebugAssert(storage.func != nullptr, "function pointer don't set");
-		if constexpr (IsMemberFunction<Fn> && UseInstance)
+		if constexpr(Core::IsMemberFunction<Fn> && UseInstance)
 		{
 			DebugAssert(storage.instance != nullptr, "instance pointer don't set");
 		}
 
-		if constexpr (IsMemberFunction<Fn> && UseInstance)
+		if constexpr(Core::IsMemberFunction<Fn> && UseInstance)
 		{
 			return (storage.instance->*storage.func)(args...);
 		}
-		else if constexpr (IsMemberFunction<Fn> && !UseInstance)
+		else if constexpr(Core::IsMemberFunction<Fn> && !UseInstance)
 		{
 			return _call_method<Decomposed>(args...);
 		}
@@ -90,7 +90,7 @@ struct [[nodiscard]] Function
 	}
 
 	template<typename DecomposedFn, typename... TArgs>
-	requires(IsMemberFunction<Fn>)
+	requires(Core::IsMemberFunction<Fn>)
 	constexpr ReturnType _call_method(DecomposedFn::ObjectType* instance, TArgs&&... args) const
 	{
 		return (instance->*storage.func)(args...);

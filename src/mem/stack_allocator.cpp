@@ -35,21 +35,19 @@ Slice<u8> StackAllocator::alloc(usize size, usize alignment)
     return ptr;
 }
 
-bool StackAllocator::realloc(const Slice<u8>& ptr, usize new_size, usize alignment)
+bool StackAllocator::realloc([[maybe_unused]] const Slice<u8>& ptr, [[maybe_unused]] usize new_size,
+    [[maybe_unused]] usize alignment)
 {
-    Unused(ptr, new_size, alignment);
     return false;
 }
 
-Slice<u8> StackAllocator::remap(const Slice<u8>& ptr, usize new_size, usize alignment)
+Slice<u8> StackAllocator::remap([[maybe_unused]] const Slice<u8>& ptr, [[maybe_unused]] usize new_size,
+    [[maybe_unused]] usize alignment)
 {
-    Unused(ptr, new_size, alignment);
     return {};
 }
 
-void StackAllocator::free(const Slice<u8>& ptr)
-{
-    Unused(ptr);
-}
+void StackAllocator::free([[maybe_unused]] const Slice<u8>& ptr)
+{}
 
 }

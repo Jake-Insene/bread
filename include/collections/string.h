@@ -1,6 +1,6 @@
 #pragma once
 #include "collections/string_view.h"
-#include "core/templates.h"
+#include "core/Templates.h"
 #include "mem/allocator.h"
 
 
@@ -47,24 +47,24 @@ struct [[nodiscard]] String
     template<typename T>
     void set(T&& arg)
     {
-        using Type = RemoveCVRef<T>;
-        if constexpr (IsSame<Type, StringView>)
+        using Type = Core::RemoveCVRef<T>;
+        if constexpr (Core::IsSame<Type, StringView>)
         {
             _set_str_view(arg);
         }
-        else if constexpr (IsArrayOf<T, char>)
+        else if constexpr (Core::IsArrayOf<T, char>)
         {
             _set_str_view(arg);
         }
-        else if constexpr (IsInteger<Type> && IsSigned<Type>)
+        else if constexpr (Core::IsInteger<Type> && Core::IsSigned<Type>)
         {
             _set_from_signed(arg);
         }
-        else if constexpr (IsInteger<Type> && IsUnsigned<Type>)
+        else if constexpr (Core::IsInteger<Type> && Core::IsUnsigned<Type>)
         {
             _set_from_unsigned(arg);
         }
-        else if constexpr (IsFloatingPoint<Type>)
+        else if constexpr (Core::IsFloatingPoint<Type>)
         {
             _set_from_float(arg);
         }
@@ -77,20 +77,20 @@ struct [[nodiscard]] String
     template<typename T>
     void add(T&& arg)
     {
-        using TypeNoCR = RemoveConst<RemoveReference<T>>;
-        if constexpr (IsSame<TypeNoCR, StringView> || IsArrayOf<T, char>)
+        using TypeNoCR = Core::RemoveConst<Core::RemoveReference<T>>;
+        if constexpr (Core::IsSame<TypeNoCR, StringView> || Core::IsArrayOf<T, char>)
         {
             _add_str_view(arg);
         }
-        else if constexpr (IsInteger<TypeNoCR> && IsSigned<TypeNoCR>)
+        else if constexpr (Core::IsInteger<TypeNoCR> && Core::IsSigned<TypeNoCR>)
         {
             _add_from_signed(arg);
         }
-        else if constexpr (IsInteger<TypeNoCR> && IsUnsigned<TypeNoCR>)
+        else if constexpr (Core::IsInteger<TypeNoCR> && Core::IsUnsigned<TypeNoCR>)
         {
             _add_from_unsigned(arg);
         }
-        else if constexpr (IsFloatingPoint<TypeNoCR>)
+        else if constexpr (Core::IsFloatingPoint<TypeNoCR>)
         {
             _add_from_float(arg);
         }

@@ -206,7 +206,7 @@ static inline Win32Display::WindowData& _get_window_data(Display::WindowID id)
 void Display::initialize(Mem::Allocator& allocator)
 {
 	// Ensures constructors are call.
-    ConstructObject(get_data(), allocator);
+    Core::Mem::Placement(get_data(), allocator);
 
 	WNDCLASSEXA wc = {};
 	wc.cbSize = sizeof(wc);
@@ -222,7 +222,7 @@ void Display::initialize(Mem::Allocator& allocator)
 
 void Display::shutdown()
 {
-	DestructObject(get_data());
+	Core::Mem::Destruct(get_data());
 }
 
 Display::WindowID Display::window_create()

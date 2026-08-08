@@ -17,7 +17,7 @@ struct [[nodiscard]] FreeList
 
     static constexpr SlotID _GetInvalidSlotValue()
     {
-        if constexpr (IsSame<SlotID, u64>)
+        if constexpr(Core::IsSame<SlotID, u64>)
         {
             return SlotID(0xEEFFEEFF'EEFFEEFFULL);
         }
@@ -97,11 +97,11 @@ struct [[nodiscard]] FreeList
             }
 
             count++;
-            ConstructObject(*reinterpret_cast<T*>(last_element), Forward<TArgs>(args)...);
+            Core::Mem::Placement(*reinterpret_cast<T*>(last_element), Core::Forward<TArgs>(args)...);
             return id;
         }
 
-        (void)array.emplace(Forward<TArgs>(args)...);
+        (void)array.emplace(Core::Forward<TArgs>(args)...);
         count++;
         return SlotID((array.count - 1) & SlotBitmask.integer());
     }
@@ -117,7 +117,7 @@ struct [[nodiscard]] FreeList
         count--;
 
         T& item = get(slot);
-        DestructObject(item);
+        Core::Mem::Destruct(item);
 
         if(last_free_element == InvalidSlot)
         {

@@ -22,7 +22,7 @@ void GPU::initialize_from_adapter(InternalGPU::GPUAdapter* adapter)
 
 void GPU::shutdown()
 {
-	DestructObject(*current_adapter);
+	Core::Mem::Destruct(*current_adapter);
 
 	// Only the process who calls GPU::initialize owns the memory of current_adapter.
 	if(adapter_allocator_owner != nullptr)
@@ -140,9 +140,8 @@ bool GPU::fence_get_state(FenceID fence)
 void GPU::fence_reset(Slice<FenceID> fences)
 {
     GPUValidationCheck(fences.len == 0, "at least one fence is expected");
-	for(FenceID fence : fences)
+	for([[maybe_unused]] FenceID fence : fences)
 	{
-		Unused(fence);
 		GPUValidationCheck(fence.is_valid() == false, "invalid fence");
 	}
 	current_adapter->fence_reset(fences);
@@ -151,9 +150,8 @@ void GPU::fence_reset(Slice<FenceID> fences)
 void GPU::fence_wait_for(Slice<FenceID> fences, bool wait_for_all, u64 timeout)
 {
     GPUValidationCheck(fences.len == 0, "at least one fence is expected");
-	for(FenceID fence : fences)
+	for([[maybe_unused]] FenceID fence : fences)
 	{
-		Unused(fence);
 		GPUValidationCheck(fence.is_valid() == false, "invalid fence");
 	}
 	current_adapter->fence_wait_for(fences, wait_for_all, timeout);
@@ -403,17 +401,16 @@ void GPU::descriptor_set_update_descriptors(DeviceID device, const UpdateDescrip
     GPUValidationCheck(device.is_valid() == false, "invalid device");
 	for(usize write_index = 0; write_index < update_info.write_infos.len; write_index++)
 	{
-		const WriteDescriptorInfo& write_info = update_info.write_infos[write_index];
-		Unused(write_info);
+		[[maybe_unused]] const WriteDescriptorInfo& write_info = update_info.write_infos[write_index];
     	GPUValidationCheck(write_info.descriptor_set.is_valid() == false, "invalid descriptor set");
 		GPUValidationCheck(write_info.type == DescriptorType::Unknown, "invalid descriptor type")
 		GPUValidationCheck(
-			IsAnyEqual(write_info.type, DescriptorType::UniformBuffer, DescriptorType::StorageBuffer)
+			Core::IsAnyEqual(write_info.type, DescriptorType::UniformBuffer, DescriptorType::StorageBuffer)
 			&& write_info.buffers.len == 0,
 			"invalid buffers len, at least one is expected"
 		);
 		GPUValidationCheck(
-			IsAnyEqual(write_info.type, DescriptorType::CombinedTextureSampler)
+			Core::IsAnyEqual(write_info.type, DescriptorType::CombinedTextureSampler)
 			&& write_info.textures.len == 0,
 			"invalid textures len, at least one is expected"
 		);
@@ -425,9 +422,8 @@ GPU::PipelineLayoutID GPU::pipeline_layout_create(DeviceID device, const Pipelin
 {
 	GPUValidationCheck(device.is_valid() == false, "invalid device");
 
-	for(const ConstantBlock& cb : ci.constant_blocks)
+	for([[maybe_unused]] const ConstantBlock& cb : ci.constant_blocks)
 	{
-		Unused(cb);
 		GPUValidationCheck(cb.size > MaxConstantBlockSize, "a constant block size must be less than or equal to 128 bytes");
     	GPUValidationCheck(
     	    Mem::align_up(cb.size, ConstantBlockAlignment) != cb.size,

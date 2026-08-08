@@ -6,7 +6,7 @@
 * Use a row major matrix2x3, rotation is handled in radians
 */
 template <typename T>
-requires(IsArithmetic<T>)
+requires(Core::IsArithmetic<T>)
 struct [[nodiscard]] Transform2DT
 {
     using Type = T;

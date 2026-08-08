@@ -33,7 +33,7 @@ static constexpr ResourceTypeSpecification _construct_from_flags(ResourceFlags f
 {
     return ResourceTypeSpecification
     {
-        .LoadFromAssets = HasValue(flags & ResourceFlags::LoadFromAssets),
+        .LoadFromAssets = Core::HasValue(flags & ResourceFlags::LoadFromAssets),
         .Extensions = extensions,
     };
 }
@@ -71,7 +71,7 @@ struct Resource
     * Try to load the resource of the given type, can return nullptr
     */
     template<typename T>
-    requires(!IsSame<Resource, T> && IsBaseOf<Resource, T>)
+    requires(!Core::IsSame<Resource, T> && Core::IsBaseOf<Resource, T>)
     [[nodiscard]] static Result<T*, Error> try_load(StringView path)
     {
         Result<Resource*, Error> resource = _load_resource(T::Type, T::Specification, path);
@@ -87,7 +87,7 @@ struct Resource
     * Load the resource of the given type, can return nullptr.
     */
     template<typename T>
-    requires(!IsSame<Resource, T> && IsBaseOf<Resource, T>)
+    requires(!Core::IsSame<Resource, T> && Core::IsBaseOf<Resource, T>)
     [[nodiscard]] static T* load(StringView path)
     {
         return reinterpret_cast<T*>(_load_resource(T::Type, T::Specification, path).value());

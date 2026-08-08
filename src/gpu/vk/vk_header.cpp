@@ -249,7 +249,7 @@ VkInstance Vulkan::create_instance(VulkanAdapter* adapter)
     {
         .sType = VK_STRUCTURE_TYPE_LAYER_SETTINGS_CREATE_INFO_EXT,
         .pNext = nullptr,
-        .settingCount = static_cast<uint32_t>(ArraySize(layer_settings)),
+        .settingCount = static_cast<uint32_t>(Core::ArraySize(layer_settings)),
         .pSettings = layer_settings,
     };
     (void)layer_settings_create_info;
@@ -266,13 +266,13 @@ VkInstance Vulkan::create_instance(VulkanAdapter* adapter)
         .flags = 0,
         .pApplicationInfo = &application_info,
 #if defined(BREAD_SHOW_DEBUG_INFO) && defined(BREAD_WIN32)
-        .enabledLayerCount = static_cast<uint32_t>(ArraySize(vk_layers)),
+        .enabledLayerCount = static_cast<uint32_t>(Core::ArraySize(vk_layers)),
         .ppEnabledLayerNames = vk_layers,
 #else
         .enabledLayerCount = 0,
         .ppEnabledLayerNames = nullptr,
 #endif
-        .enabledExtensionCount = static_cast<uint32_t>(ArraySize(VkInstanceExtensions)),
+        .enabledExtensionCount = static_cast<uint32_t>(Core::ArraySize(VkInstanceExtensions)),
         .ppEnabledExtensionNames = VkInstanceExtensions,
     };
 
@@ -355,7 +355,7 @@ Vulkan::AdditionalExtensionSupport Vulkan::check_device_extensions(Mem::Allocato
     }
 
     VKFailOn(
-        finded_count != ArraySize(VkCoreDeviceExtensions),
+        finded_count != Core::ArraySize(VkCoreDeviceExtensions),
         "the required extensions were not found"
     );
 
@@ -405,22 +405,21 @@ void Vulkan::check_device_features(VkPhysicalDevice physical_device)
     );
 }
 
-const char** Vulkan::get_device_extensions(Mem::Allocator& allocator, VkPhysicalDevice physical_device,
+const char** Vulkan::get_device_extensions(Mem::Allocator& allocator, [[maybe_unused]] VkPhysicalDevice physical_device,
     const AdditionalExtensionSupport& add_ext, uint32_t* extension_count)
 {
-    Unused(physical_device);
     usize additional_extension_count = 0;
     if(add_ext.has_dynamic_rendering)
     {
         additional_extension_count += 3;
     }
 
-    Slice extensions = allocator.array<const char*>(ArraySize(VkCoreDeviceExtensions) + additional_extension_count);
-    for(usize i = 0; i < ArraySize(VkCoreDeviceExtensions); i++)
+    Slice extensions = allocator.array<const char*>(Core::ArraySize(VkCoreDeviceExtensions) + additional_extension_count);
+    for(usize i = 0; i < Core::ArraySize(VkCoreDeviceExtensions); i++)
     {
         extensions[i] = VkCoreDeviceExtensions[i];
     }
-    usize index = ArraySize(VkCoreDeviceExtensions);
+    usize index = Core::ArraySize(VkCoreDeviceExtensions);
     if(add_ext.has_dynamic_rendering)
     {
         extensions[index++] = VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME;
@@ -484,21 +483,19 @@ bool Vulkan::_has_extension(const Slice<VkExtensionProperties>& vk_device_extens
 }
 
 VkBool32 VKAPI_PTR Vulkan::_vk_debug_utils_callback(
-	VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-	VkDebugUtilsMessageTypeFlagsEXT messageTypes,
+	[[maybe_unused]] VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+	[[maybe_unused]] VkDebugUtilsMessageTypeFlagsEXT messageTypes,
 	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-	void* pUserData)
+	[[maybe_unused]] void* pUserData)
 {
-	Unused(messageSeverity, messageTypes, pUserData);
     StringView msg_view = Vulkan::vulkan_string_to_sv(pCallbackData->pMessage);
     VKDebugInfo("{}", msg_view);
  	return VK_FALSE;
 }
 
-void* VKAPI_PTR Vulkan::_vk_driver_allocate(void* pUserData, size_t size, size_t alignment, VkSystemAllocationScope allocationScope)
+void* VKAPI_PTR Vulkan::_vk_driver_allocate(void* pUserData, size_t size, size_t alignment,
+    [[maybe_unused]] VkSystemAllocationScope allocationScope)
 {
-	Unused(allocationScope);
-
     if(size == 0)
     {
         return nullptr;
@@ -513,10 +510,9 @@ void* VKAPI_PTR Vulkan::_vk_driver_allocate(void* pUserData, size_t size, size_t
     return bytes.ptr();
 }
 
-void* VKAPI_PTR Vulkan::_vk_driver_reallocate(void* pUserData, void* pOriginal, size_t size, size_t alignment, VkSystemAllocationScope allocationScope)
+void* VKAPI_PTR Vulkan::_vk_driver_reallocate(void* pUserData, void* pOriginal, size_t size, size_t alignment,
+    [[maybe_unused]] VkSystemAllocationScope allocationScope)
 {
-	Unused(allocationScope);
-
     if(pOriginal == nullptr)
     {
         return _vk_driver_allocate(pUserData, size, alignment, allocationScope);
@@ -537,10 +533,8 @@ void* VKAPI_PTR Vulkan::_vk_driver_reallocate(void* pUserData, void* pOriginal, 
     return new_mem.ptr();
 }
 
-void VKAPI_PTR Vulkan::_vk_driver_free(void* pUserData, void* pMemory)
+void VKAPI_PTR Vulkan::_vk_driver_free([[maybe_unused]] void* pUserData, void* pMemory)
 {
-	Unused(pUserData);
-
 	if(pMemory == nullptr)
 	{
         return;
@@ -554,16 +548,16 @@ void VKAPI_PTR Vulkan::_vk_driver_free(void* pUserData, void* pMemory)
     allocator.free(Slice<u8>(reinterpret_cast<u8*>(pMemory), 1));
 }
 
-void VKAPI_PTR Vulkan::_vk_driver_internal_allocate(void* pUserData, size_t size, VkInternalAllocationType allocationType, VkSystemAllocationScope allocationScope)
+void VKAPI_PTR Vulkan::_vk_driver_internal_allocate([[maybe_unused]] void* pUserData, [[maybe_unused]] size_t size,
+    [[maybe_unused]] VkInternalAllocationType allocationType, [[maybe_unused]] VkSystemAllocationScope allocationScope)
 {
     VKDebugInfo("driver allocated {} bytes", size);
-	Unused(pUserData, size, allocationType, allocationScope);
 }
 
-void VKAPI_PTR Vulkan::_vk_driver_internal_free(void* pUserData, size_t size, VkInternalAllocationType allocationType, VkSystemAllocationScope allocationScope)
+void VKAPI_PTR Vulkan::_vk_driver_internal_free([[maybe_unused]] void* pUserData, [[maybe_unused]] size_t size,
+    [[maybe_unused]] VkInternalAllocationType allocationType, [[maybe_unused]] VkSystemAllocationScope allocationScope)
 {
     VKDebugInfo("driver deletes {} bytes", size);
-	Unused(pUserData, size, allocationType, allocationScope);
 }
 
 void Vulkan::_check_instance_extensions(Mem::Allocator& allocator)

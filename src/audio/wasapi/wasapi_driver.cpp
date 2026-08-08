@@ -29,7 +29,7 @@ void WASAPIDriver::initialize(Mem::Allocator& allocator)
     WASAPIDebugInfo("Initializing WASAPI Driver...");
 
     // Ensures constructors are call.
-    ConstructObject(get_data(), allocator);
+    Core::Mem::Placement(get_data(), allocator);
 
     IMMDeviceEnumerator* enumerator = nullptr;
 
@@ -140,7 +140,7 @@ void WASAPIDriver::shutdown()
     get_data().output_device.audio_client->Release();
     get_data().output_device.device->Release();
 
-    DestructObject(get_data());
+    Core::Mem::Destruct(get_data());
 }
 
 u32 WASAPIDriver::output_get_samples_per_sec()

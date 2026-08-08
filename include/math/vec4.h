@@ -6,7 +6,7 @@
 
 
 template <typename T>
-requires(IsArithmetic<T>)
+requires(Core::IsArithmetic<T>)
 union [[nodiscard]] Vector4T
 {
     T comp[4];

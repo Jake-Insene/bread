@@ -7,16 +7,14 @@
 #include <external/dr_wav.h>
 
 
-static inline void* dr_alloc(size_t size, void* user_data)
+static inline void* dr_alloc(size_t size, [[maybe_unused]] void* user_data)
 {
-    Unused(user_data);
     Mem::Allocator& allocator = Engine::get_resource_manager()->get_allocator();
     return allocator.alloc(size, 16).items;
 }
 
-static inline void* dr_realloc(void* mem, size_t new_size, void* user_data)
+static inline void* dr_realloc(void* mem, size_t new_size, [[maybe_unused]] void* user_data)
 {
-    Unused(user_data);
  
     Slice old_mem = Slice(reinterpret_cast<u8*>(mem), 1);
     Mem::Allocator& allocator = Engine::get_resource_manager()->get_allocator();
@@ -34,10 +32,8 @@ static inline void* dr_realloc(void* mem, size_t new_size, void* user_data)
     return new_mem.items;
 }
 
-static inline void dr_free(void* mem, void* user_data)
+static inline void dr_free(void* mem, [[maybe_unused]] void* user_data)
 {
-    Unused(user_data);
-
     Mem::Allocator& allocator = Engine::get_resource_manager()->get_allocator();
     allocator.free(
         Slice(reinterpret_cast<u8*>(mem), 1)

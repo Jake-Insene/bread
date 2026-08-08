@@ -9,7 +9,7 @@ namespace Math::impl
 * Reference: https://www.mathsisfun.com/algebra/taylor-series.html
 */
 template<typename T>
-requires(IsArithmetic<T>)
+requires(Core::IsArithmetic<T>)
 constexpr T sin_approx(T x)
 {
     // Using taylor series for only 5 terms,
@@ -48,7 +48,7 @@ constexpr T sin_approx(T x)
 
 
 template<typename T>
-requires(IsArithmetic<T>)
+requires(Core::IsArithmetic<T>)
 constexpr T sin(T rads)
 {
     return sin_approx<T>(rads);

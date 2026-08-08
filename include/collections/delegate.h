@@ -40,7 +40,7 @@ struct Delegate<T(TArgs...)>
     void bind(Fn&& fn)
     {
         _try_reserve(sizeof(Fn));
-        ConstructObject(*reinterpret_cast<Fn*>(reserved.ptr()), fn);
+        Core::Mem::Placement(*reinterpret_cast<Fn*>(reserved.ptr()), fn);
 
         func = [](Opaque* opaque, TArgs&&... args)
         {
@@ -51,7 +51,7 @@ struct Delegate<T(TArgs...)>
 
     T call(TArgs&&... args)
     {
-        return func(reinterpret_cast<Opaque*>(reserved.ptr()), Forward<TArgs>(args)...);
+        return func(reinterpret_cast<Opaque*>(reserved.ptr()), Core::Forward<TArgs>(args)...);
     }
 
     void _try_reserve(usize size)

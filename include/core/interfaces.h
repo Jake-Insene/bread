@@ -1,5 +1,5 @@
 #pragma once
-#include "core/templates.h"
+#include "core/Templates.h"
 
 
 template<typename T>
@@ -25,7 +25,7 @@ struct HashOfType
 template<typename T>
 concept Hashable = requires(T&& hashable1)
 {
-    { HashOfType<T>::hashfunc(hashable1) } -> ConvertibleTo<HashCode>;
+    { HashOfType<T>::hashfunc(hashable1) } -> Core::ConvertibleTo<HashCode>;
 };
 
 template<typename T>
@@ -44,5 +44,5 @@ struct Comparator
 template<typename T>
 concept Comparable = requires(T&& value1, T&& value2)
 {
-    { Comparator<T>::compare(value1, value2) } -> ConvertibleTo<bool>;
+    { Comparator<T>::compare(value1, value2) } -> Core::ConvertibleTo<bool>;
 };

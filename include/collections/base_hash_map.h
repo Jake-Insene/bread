@@ -17,16 +17,14 @@ struct BaseHashMapEntry
     BaseHashMapEntry* prev;
     BaseHashMapEntry* next;
 
-    BaseHashMapEntry(Mem::Allocator& allocator, HashType hash, const KeyValue& kv)
+    BaseHashMapEntry([[maybe_unused]] Mem::Allocator& allocator, HashType hash, const KeyValue& kv)
     : hash(hash), kv(kv), prev(), next()
-    {
-        Unused(allocator);
-    }
+    {}
 
     ~BaseHashMapEntry()
     {
-        DestructObject(kv.first);
-        DestructObject(kv.second);
+        Core::Mem::Destruct(kv.first);
+        Core::Mem::Destruct(kv.second);
     }
 
     template<typename Self>
@@ -52,7 +50,7 @@ struct BaseHashMapEntry
 };
 
 template<typename InHashType, typename InHashMapEntry, Comparable K, typename V>
-requires(IsInteger<InHashType> && IsUnsigned<InHashType>)
+requires(Core::IsInteger<InHashType> && Core::IsUnsigned<InHashType>)
 struct [[nodiscard]] BaseHashMap
 {
     DisableCopy(BaseHashMap);
@@ -275,7 +273,7 @@ struct [[nodiscard]] BaseHashMap
                 MapEntry* entry = Mem::from_bytes<MapEntry>(
                     allocator.alloc(sizeof(MapEntry), alignof(MapEntry))
                 ).ptr();
-                ConstructObject(*entry, allocator, hash, KeyValue(key, value));
+                Core::Mem::Placement(*entry, allocator, hash, KeyValue(key, value));
 
                 entries[index] = entry;
                 if(first == nullptr)
@@ -297,8 +295,8 @@ struct [[nodiscard]] BaseHashMap
             if(entries[index]->hashvalue() == InvalidHash)
             {
                 MapEntry* entry = entries[index];
-                DestructObject(*entry);
-                ConstructObject(*entry, allocator, hash, KeyValue(key, value));
+                Core::Mem::Destruct(*entry);
+                Core::Mem::Placement(*entry, allocator, hash, KeyValue(key, value));
 
                 if (first == nullptr)
                 {
@@ -324,7 +322,7 @@ struct [[nodiscard]] BaseHashMap
     {
         for(Iterator it = iter().begin(); it != it.end(); ++it)
         {
-            DestructObject(*it.entry);
+            Core::Mem::Destruct(*it.entry);
         }
     }
 };

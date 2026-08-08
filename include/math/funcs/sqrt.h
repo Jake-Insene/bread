@@ -9,7 +9,7 @@ namespace Math
 
 //TODO: Make the constexpr version perfomance
 template<typename T>
-requires(IsFloatingPoint<T>)
+requires(Core::IsFloatingPoint<T>)
 [[nodiscard]] constexpr T sqrt(T n)
 {
 #if BREAD_ENABLE_INTRISICS

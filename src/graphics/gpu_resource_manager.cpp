@@ -52,7 +52,7 @@ GPUTextureID GPUResourceManager::create_texture(const TextureAllocateInfo& alloc
     );
 
     GPU::ComponentMapping mapping = GPU::ComponentMapping::identity();
-    if(HasValue(alloc_info.flags & TextureAllocateFlags::ViewR8All))
+    if(Core::HasValue(alloc_info.flags & TextureAllocateFlags::ViewR8All))
     {
         mapping = GPU::ComponentMapping(GPU::ComponentSwizzle::Red, GPU::ComponentSwizzle::Red,
             GPU::ComponentSwizzle::Red, GPU::ComponentSwizzle::Red);

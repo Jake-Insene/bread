@@ -38,7 +38,7 @@ struct ResourceManager
 
     // Implementation
     template<typename T>
-    requires(!IsSame<Resource, T>)
+    requires(!Core::IsSame<Resource, T>)
     [[nodiscard]] T* _create_resource()
     {
         T* resource = get_allocator().object<T>(
