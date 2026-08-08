@@ -1,7 +1,9 @@
 #pragma once
-#include "core/doc.h"
-#include "core/types.h"
+#include "Core/Types.h"
 
+
+namespace Core
+{
 
 /*
 * Use it to operate with memory of unknown type.
@@ -27,8 +29,10 @@ struct Opaque
     * @tparam Type the type of the object to cast to.
     */
     template<typename Type, typename Self>
-    [[nodiscard]] Type cast(this Self& self) Function(Behaviour::Unsafe)
+    [[nodiscard]] Type cast(this Self& self)
     {
         return reinterpret_cast<Type>(&self);
     };
 };
+
+}

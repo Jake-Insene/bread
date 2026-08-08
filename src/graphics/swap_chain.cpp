@@ -37,7 +37,7 @@ bool SwapChain::acquire_image(u32* image_index, GPU::SemaphoreID present_complet
     GPU::AcquireResult result = GPU::swap_chain_acquire_next_image(
         swap_chain,
         {
-            .timeout = MaxValue<u64>,
+            .timeout = Core::MaxValue<u64>,
             .semaphore = present_complete,
             .fence = GPU::FenceID::invalid(),
         }, 

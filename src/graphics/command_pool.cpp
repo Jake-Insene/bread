@@ -133,7 +133,7 @@ void CommandPool::wait_for_all()
         fences[i] = work_submited.get(i).fence;
     }
 
-    GPU::fence_wait_for(fences, true, MaxValue<u64>);
+    GPU::fence_wait_for(fences, true, Core::MaxValue<u64>);
     allocator.free(Mem::to_bytes(fences));
     _remove_finished_work();
 }

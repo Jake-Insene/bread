@@ -34,12 +34,12 @@ struct Vulkan
 
     static StringView result_as_string(VkResult result)
     {
-        return StringView(string_VkResult(result), __string_len(string_VkResult(result)));
+        return StringView(string_VkResult(result), Core::NullTerminatedLen(string_VkResult(result)));
     }
     
     static StringView vulkan_string_to_sv(const char* vk_str)
     {
-        return StringView(vk_str, __string_len(vk_str));
+        return StringView(vk_str, Core::NullTerminatedLen(vk_str));
     }
     
     static VkAllocationCallbacks* allocation_callbacks(VulkanAdapter* adapter);

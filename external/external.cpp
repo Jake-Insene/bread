@@ -113,7 +113,7 @@ static u32 _lrotl(u32 x, int y)
 #define STBTT_free(ptr, u) ((void)u, _free(ptr))
 
 #define STBTT_assert(x)
-#define STBTT_strlen(x) __string_len(x)
+#define STBTT_strlen(x) Core::NullTerminatedLen(x)
 
 #define STBTT_memcpy(dest, src, size) __bread_memcpy(dest, src, size)
 #define STBTT_memset(dest, value, size) __bread_memset(dest, value, size)

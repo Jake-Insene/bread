@@ -31,7 +31,7 @@ struct StringHashMapEntry
 
     ~StringHashMapEntry()
     {
-        hash = MaxValue<HashCode>;
+        hash = Core::MaxValue<HashCode>;
         allocator.free(Slice(reinterpret_cast<u8*>(const_cast<char*>(kv.first.items)), 1));
     }
 

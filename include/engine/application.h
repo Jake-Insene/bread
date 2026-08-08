@@ -18,7 +18,7 @@ struct ApplicationInfo
 {
     usize size_in_bytes;
     usize alignment;
-    void(*constructor)(Opaque*, const ApplicationAllocateInfo&);
+    void(*constructor)(Core::Opaque*, const ApplicationAllocateInfo&);
     Vector2I initial_window_size;
     bool enable_debug_console;
 };

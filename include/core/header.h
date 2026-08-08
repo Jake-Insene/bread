@@ -1,14 +1,14 @@
 #pragma once
 
-#include "core/Mem/Mem.hpp"
+#include "Core/Mem/Mem.hpp"
 
-#include "core/doc.h"
-#include "core/functions.h"
-#include "core/id.h"
-#include "core/interfaces.h"
-#include "core/macros.h"
-#include "core/opaque.h"
-#include "core/Templates.h"
-#include "core/values.h"
-#include "core/version.h"
+#include "Core/Functions.h"
+#include "Core/ID.h"
+#include "Core/Interfaces.h"
+#include "Core/Macros.h"
+#include "Core/Opaque.h"
+#include "Core/Templates.h"
+#include "Core/Types.h"
+#include "Core/Values.h"
+#include "Core/Version.h"
 

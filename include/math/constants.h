@@ -1,6 +1,6 @@
 #pragma once
-#include "core/macros.h"
-#include "core/Templates.h"
+#include "Core/Header.h"
+
 
 namespace Math
 {

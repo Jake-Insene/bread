@@ -1,5 +1,5 @@
 #pragma once
-#include "core/Templates.h"
+#include "Core/Templates.h"
 
 
 template<typename T>

@@ -91,7 +91,7 @@ main_queue(allocator, DefaultMainQueueSize)
             get_application_info().alignment
         ).ptr()
     );
-    get_application_info().constructor(Opaque::from(*application),
+    get_application_info().constructor(Core::Opaque::from(*application),
         {
             .allocator = allocator,
             .render_device = get_render_device(),

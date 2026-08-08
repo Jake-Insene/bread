@@ -3,14 +3,14 @@
 #include "platform/win32/win32_os.h"
 
 
-static inline Win32Thread* _get_thread_data(Opaque* impl)
+static inline Win32Thread* _get_thread_data(Core::Opaque* impl)
 {
     return impl->cast<Win32Thread*>();
 }
 
 static inline DWORD WINAPI _thread_handler(void* _arg)
 {
-    Win32Thread* data = _get_thread_data(reinterpret_cast<Opaque*>(_arg));
+    Win32Thread* data = _get_thread_data(reinterpret_cast<Core::Opaque*>(_arg));
 
     AcquireSRWLockExclusive(&data->srw);
     data->state = Win32Thread::ThreadState::Running;
@@ -25,7 +25,7 @@ static inline DWORD WINAPI _thread_handler(void* _arg)
     ExitThread(0);
 }
 
-Thread Thread::create(ThreadFn fn, Opaque* arg)
+Thread Thread::create(ThreadFn fn, Core::Opaque* arg)
 {
     Thread thread = {};
 
@@ -43,7 +43,7 @@ Thread Thread::create(ThreadFn fn, Opaque* arg)
 
     ResumeThread(data->thread);
     
-    thread.impl = Opaque::from(*data);
+    thread.impl = Core::Opaque::from(*data);
     return thread;
 }
 

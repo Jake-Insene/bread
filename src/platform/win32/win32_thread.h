@@ -18,5 +18,5 @@ struct Win32Thread
 
     ThreadState state;
     Thread::ThreadFn fn;
-    Opaque* arg;
+    Core::Opaque* arg;
 };

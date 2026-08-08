@@ -1,15 +1,15 @@
 #pragma once
-#include "core/header.h"
+#include "Core/Header.h"
 
 
 
 struct [[nodiscard]] Thread
 {
-    using ThreadFn = void(*)(Opaque*);
+    using ThreadFn = void(*)(Core::Opaque*);
 	
-	Opaque* impl;
+	Core::Opaque* impl;
 
-	static Thread create(ThreadFn fn, Opaque* arg);
+	static Thread create(ThreadFn fn, Core::Opaque* arg);
 
 	void destroy() const;
 

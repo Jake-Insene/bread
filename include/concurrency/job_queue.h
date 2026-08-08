@@ -10,8 +10,8 @@ struct [[nodiscard]] JobQueue
 {
 	struct JobInfo
 	{
-		void(*func)(Opaque* arg);
-		Opaque* arg;
+		void(*func)(Core::Opaque* arg);
+		Core::Opaque* arg;
 	};
 
 	Mem::Allocator& allocator;
@@ -36,8 +36,8 @@ struct [[nodiscard]] JobQueue
 
 		JobInfo job =
 		{
-			.func = [](Opaque* arg) { Invoke(*arg->cast<Fn*>()); },
-			.arg = reinterpret_cast<Opaque*>(fn_mem),
+			.func = [](Core::Opaque* arg) { Invoke(*arg->cast<Fn*>()); },
+			.arg = reinterpret_cast<Core::Opaque*>(fn_mem),
 		};
 
 		job_stack.push(job);

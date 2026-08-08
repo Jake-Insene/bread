@@ -1,9 +1,13 @@
 #pragma once
-#include "core/types.h"
+#include "Core/Templates.h"
 
+
+namespace Core
+{
 
 template<typename T>
-constexpr usize __string_len(const T* str)
+requires(IsPrimitive<T>)
+constexpr usize NullTerminatedLen(const T* str)
 {
     usize len = 0;
     while (*str++)
@@ -27,3 +31,4 @@ constexpr usize MiB(T n)
     return KiB(n) * 1024;
 }
 
+}

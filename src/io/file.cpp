@@ -10,8 +10,8 @@ namespace IO
 Writer File::writer()
 {
     Writer writer = {};
-    writer.writable = reinterpret_cast<Opaque*>(this);
-    writer.write_fn = [](Opaque* self, const Slice<const u8>& bytes) -> void
+    writer.writable = Core::Opaque::from(*this);
+    writer.write_fn = [](Core::Opaque* self, const Slice<const u8>& bytes) -> void
     {
         File& file = *self->cast<File*>();
         file.write(bytes);

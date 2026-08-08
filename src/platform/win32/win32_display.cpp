@@ -9,7 +9,7 @@ static inline Win32Display::WindowData& _get_window_data(Display::WindowID id);
 static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	Display::WindowID window_id = Display::WindowID(
-		GetWindowLongPtrA(handle, GWLP_USERDATA) & MaxValue<Display::WindowID::Type>
+		GetWindowLongPtrA(handle, GWLP_USERDATA) & Core::MaxValue<Display::WindowID::Type>
 	);
 
 	switch (msg)

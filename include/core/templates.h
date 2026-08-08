@@ -1,5 +1,5 @@
 #pragma once
-#include "core/types.h"
+#include "Core/Types.h"
 
 
 namespace Core
@@ -180,6 +180,10 @@ inline constexpr bool IsFloatingPoint = IsAnyOf<
 template<typename T>
 inline constexpr bool IsArithmetic = 
     IsInteger<T> || IsFloatingPoint<T>;
+
+template<typename T>
+inline constexpr bool IsPrimitive =
+    IsArithmetic<T>;
 
 template<typename T>
 inline constexpr bool IsConst = IsAnyOf<T, const T, T* const, const T*>;

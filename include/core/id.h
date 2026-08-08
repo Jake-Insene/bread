@@ -1,6 +1,6 @@
 #pragma once
-#include "core/types.h"
-#include "core/values.h"
+#include "Core/Types.h"
+#include "Core/Values.h"
 
 
 /**
@@ -14,7 +14,7 @@ struct [[nodiscard]] ID
 {
     using Type = T;
 
-    static constexpr Type InvalidID = MaxValue<T>;
+    static constexpr Type InvalidID = Core::MaxValue<T>;
     
     static constexpr ID invalid() { return ID(InvalidID); }
     

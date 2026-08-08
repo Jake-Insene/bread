@@ -1,10 +1,10 @@
 #pragma once
-#include "core/header.h"
+#include "Core/Header.h"
 
 
 struct [[nodiscard]] Semaphore
 {
-    Opaque* impl;
+    Core::Opaque* impl;
     
     static Semaphore create(usize initial_value);
 

@@ -36,7 +36,7 @@ GenericAllocator::~GenericAllocator()
     }
     
     Log::debug("[Memory]: Allocated pages {}, total memory usage of {} MiB",
-        page_count, f32(accumulator) / MiB(1));
+        page_count, f32(accumulator) / Core::MiB(1));
   
     for(usize i = 0; i < page_count; i++)
     {

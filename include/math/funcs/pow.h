@@ -1,5 +1,5 @@
 #pragma once
-#include "core/Templates.h"
+#include "Core/Templates.h"
 
 
 // TODO: Rewrite this, understand this and improve this(maybe)

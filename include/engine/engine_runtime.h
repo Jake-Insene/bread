@@ -25,7 +25,7 @@ struct EngineRuntime
     };
     
     Mem::Allocator& allocator;
-    Version engine_version;
+    Core::Version engine_version;
     ApplicationInfo application_info;
     Application* application;
     ApplicationState application_state;

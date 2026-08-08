@@ -6,8 +6,8 @@
 Semaphore Semaphore::create(usize initial_value)
 {
     Semaphore semaphore = {};
-    semaphore.impl = reinterpret_cast<Opaque*>(
-        CreateSemaphoreA(nullptr, LONG(initial_value), MaxValue<i32>, nullptr)
+    semaphore.impl = reinterpret_cast<Core::Opaque*>(
+        CreateSemaphoreA(nullptr, LONG(initial_value), Core::MaxValue<i32>, nullptr)
     );
     DebugAssert(semaphore.impl != nullptr, "can't create a new semaphore");
     return semaphore;

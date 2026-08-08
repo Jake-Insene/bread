@@ -73,7 +73,7 @@ u32 AudioService::mixer_get_by_name(StringView mixer_name)
         }
     }
 
-    return MaxValue<u32>;
+    return Core::MaxValue<u32>;
 }
 
 u32 AudioService::mixer_count()

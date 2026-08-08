@@ -1,7 +1,5 @@
 #pragma once
-#include "core/Templates.h"
-#include "core/macros.h"
-#include "core/test.h"
+#include "Core/Header.h"
 
 #include "math/funcs/abs.h"
 #include "math/funcs/acos.h"
@@ -15,7 +13,6 @@
 #include "math/funcs/sqrt.h"
 #include "math/funcs/tan.h"
 
-#include <cmath>
 
 namespace Math
 {

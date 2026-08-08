@@ -1,6 +1,9 @@
 #pragma once
-#include "core/Templates.h"
+#include "Core/Templates.h"
 
+
+namespace Core
+{
 
 template<typename T>
 inline constexpr T MinValue = 0;
@@ -29,3 +32,5 @@ inline constexpr i64 MaxValue<i64> = 0x7FFFFFFF'FFFFFFFF;
 template<>
 // Not too extact
 inline constexpr f32 MaxValue<f32> = 3.4028235E38f;
+
+}

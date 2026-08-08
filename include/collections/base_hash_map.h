@@ -63,8 +63,8 @@ struct [[nodiscard]] BaseHashMap
     using Hasher = HashOfType<K>;
     using TComparator = Comparator<K>;
 
-    static constexpr HashType InvalidHash = MaxValue<HashType>;
-    static constexpr usize InvalidPos = MaxValue<usize>;
+    static constexpr HashType InvalidHash = Core::MaxValue<HashType>;
+    static constexpr usize InvalidPos = Core::MaxValue<usize>;
     static constexpr usize DefaultCapacity = 16;
 
     Mem::Allocator& allocator;

@@ -46,7 +46,7 @@ extern "C"
 	#pragma function(strlen)
 	usize __cdecl strlen(const char* str)
 	{
-		return __string_len(str);
+		return Core::NullTerminatedLen(str);
 	}
 }
 
@@ -113,7 +113,7 @@ LONG _exception_handler(EXCEPTION_POINTERS* ep)
 
 		if (SymGetSymFromAddr64(process, frame.AddrPC.Offset, NULL, symbol) != 0)
 		{
-			function_name = StringView(symbol->Name, __string_len(symbol->Name));
+			function_name = StringView(symbol->Name, Core::NullTerminatedLen(symbol->Name));
 		}
 
 		DWORD offset = 0;
@@ -121,7 +121,7 @@ LONG _exception_handler(EXCEPTION_POINTERS* ep)
 		line_hlp.SizeOfStruct = sizeof(IMAGEHLP_LINE);
 		if (SymGetLineFromAddr64(process, frame.AddrPC.Offset, &offset, &line_hlp) != 0)
 		{
-			file_name = StringView(line_hlp.FileName, __string_len(line_hlp.FileName));
+			file_name = StringView(line_hlp.FileName, Core::NullTerminatedLen(line_hlp.FileName));
 			line = line_hlp.LineNumber;
 
 			index = file_name.len - 1;

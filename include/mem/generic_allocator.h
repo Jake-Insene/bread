@@ -7,7 +7,7 @@ namespace Mem
     
 struct GenericAllocator : Mem::Allocator
 {
-    static constexpr u16 MaxPageCount = MaxValue<u16>;
+    static constexpr u16 MaxPageCount = Core::MaxValue<u16>;
     static constexpr usize DefaultPageListSize = 128ULL;
     static constexpr usize DirectPageAllocationSize = 32ULL * 1024ULL; // 256 KB
     static constexpr usize DefaultNextPageSize = 1024ULL * 16ULL; // 16 KB

@@ -12,7 +12,7 @@ struct RenderDevice;
 struct ResourceManager;
 struct SystemManager;
 
-inline constexpr Version EngineVersion = Version::make_variant(0, 1, 0, 0);
+inline constexpr Core::Version EngineVersion = Core::Version::make_variant(0, 1, 0, 0);
 
 struct Engine
 {

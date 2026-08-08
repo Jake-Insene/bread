@@ -1,5 +1,5 @@
 #pragma once
-#include "core/header.h"
+#include "Core/Header.h"
 
 
 template<typename T>
@@ -13,8 +13,8 @@ namespace IO
 */
 struct Writer
 {
-    Opaque* writable;
-    void(*write_fn)(Opaque*, const Slice<const u8>&);
+    Core::Opaque* writable;
+    void(*write_fn)(Core::Opaque*, const Slice<const u8>&);
 
     /*
     * Writes the given bytes to the object/segment.

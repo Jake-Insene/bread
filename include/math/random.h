@@ -1,6 +1,6 @@
 #pragma once
-#include "core/Templates.h"
-#include "core/values.h"
+#include "Core/Header.h"
+
 
 namespace Math
 {
@@ -23,7 +23,7 @@ template<typename T>
 	}
 	else if (Core::IsUnsigned<T>)
 	{
-		return random_u64() & MaxValue<T>;
+		return random_u64() & Core::MaxValue<T>;
 	}
 	else if (Core::IsSame<T, f64>)
 	{

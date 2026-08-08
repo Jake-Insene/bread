@@ -87,8 +87,8 @@ StringView String::view() const
 IO::Writer String::writer()
 {
     IO::Writer writer = {};
-    writer.writable = reinterpret_cast<Opaque*>(this);
-    writer.write_fn = [](Opaque* self, const Slice<const u8>& bytes) -> void
+    writer.writable = reinterpret_cast<Core::Opaque*>(this);
+    writer.write_fn = [](Core::Opaque* self, const Slice<const u8>& bytes) -> void
     {
         String& str = *self->cast<String*>();
         str.add(StringView(reinterpret_cast<const char*>(bytes.ptr()), bytes.len));

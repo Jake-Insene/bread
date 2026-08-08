@@ -1,5 +1,5 @@
 #pragma once
-#include "core/header.h"
+#include "Core/Header.h"
 #include "gpu/gpu.h"
 #include "mem/allocator.h"
 #include "math/vec2.h"
@@ -24,7 +24,7 @@ struct Display
         WindowID(*window_create)();
         Vector2I(*window_get_size)(WindowID);
         void(*window_set_size)(const Vector2I&);
-        Opaque(*window_get_native_handle)(WindowID);
+        Core::Opaque(*window_get_native_handle)(WindowID);
     };
 
     static inline VTable vtable;

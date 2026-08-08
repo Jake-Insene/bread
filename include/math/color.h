@@ -1,7 +1,9 @@
 #pragma once
-#include "core/types.h"
+#include "Core/Header.h"
+
 
 template<typename T>
+requires(Core::IsArithmetic<T>)
 struct [[nodiscard]] ColorT
 {
     T r;

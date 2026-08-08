@@ -1,6 +1,5 @@
 #include "gpu/vk/vk_adapter.h"
 
-#include "core/Templates.h"
 #include "display/display.h"
 #include "gpu/gpu.h"
 #include "gpu/vk/vk_utils.h"
@@ -257,16 +256,16 @@ GPU::DeviceID VulkanAdapter::device_create(GPU::PhysicalDeviceID physical_device
     vk.vkGetPhysicalDeviceQueueFamilyProperties2(pd.vk_physical_device, &vk_family_count, vk_families.ptr());    
 
     // 0->graphics, 1->compute, 2->copy, 3->present
-    uint32_t vk_graphics_index = MaxValue<uint32_t>;
-    uint32_t vk_compute_index = MaxValue<uint32_t>;
-    uint32_t vk_copy_index = MaxValue<uint32_t>;
-    uint32_t vk_present_index = MaxValue<uint32_t>;
+    uint32_t vk_graphics_index = Core::MaxValue<uint32_t>;
+    uint32_t vk_compute_index = Core::MaxValue<uint32_t>;
+    uint32_t vk_copy_index = Core::MaxValue<uint32_t>;
+    uint32_t vk_present_index = Core::MaxValue<uint32_t>;
 
     Array vk_queue_infos = Array<VkDeviceQueueCreateInfo>(allocator, 4, {});
     f32 priority = 1.F;
 
     vk_graphics_index = _get_queue_family_for(vk_families, vk_acquired, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT);
-    VKFailOn(vk_graphics_index == MaxValue<uint32_t>, "couldn't find the graphics queue");
+    VKFailOn(vk_graphics_index == Core::MaxValue<uint32_t>, "couldn't find the graphics queue");
     vk_acquired[vk_graphics_index] = 1;
     (void)vk_queue_infos.add(
         VkDeviceQueueCreateInfo
@@ -281,7 +280,7 @@ GPU::DeviceID VulkanAdapter::device_create(GPU::PhysicalDeviceID physical_device
     );
 
     vk_compute_index = _get_queue_family_for(vk_families, vk_acquired, VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT);
-    if(vk_compute_index != MaxValue<uint32_t>)
+    if(vk_compute_index != Core::MaxValue<uint32_t>)
     {
         vk_acquired[vk_compute_index] = 1;
 
@@ -299,7 +298,7 @@ GPU::DeviceID VulkanAdapter::device_create(GPU::PhysicalDeviceID physical_device
     }
 
     vk_copy_index = _get_queue_family_for(vk_families, vk_acquired, VK_QUEUE_TRANSFER_BIT);
-    if(vk_copy_index != MaxValue<uint32_t>)
+    if(vk_copy_index != Core::MaxValue<uint32_t>)
     {
         vk_acquired[vk_copy_index] = 1;
 
@@ -317,7 +316,7 @@ GPU::DeviceID VulkanAdapter::device_create(GPU::PhysicalDeviceID physical_device
     }
 
     vk_present_index = _get_queue_family_for_present(ld.vk_physical_device, dummy_surface, vk_families);
-    VKFailOn(vk_graphics_index == MaxValue<uint32_t> || vk_present_index == MaxValue<uint32_t>,
+    VKFailOn(vk_graphics_index == Core::MaxValue<uint32_t> || vk_present_index == Core::MaxValue<uint32_t>,
         "graphics and present queues are required");
     if(vk_present_index != vk_graphics_index && vk_present_index != vk_compute_index && vk_present_index != vk_copy_index)
     {
@@ -400,7 +399,7 @@ GPU::DeviceID VulkanAdapter::device_create(GPU::PhysicalDeviceID physical_device
         LogicalDevice::QueueFamily& family = ld.families[i];
 
         family.vk_family_index = vk_family_indices[i];
-        if(vk_family_indices[i] == MaxValue<uint32_t>)
+        if(vk_family_indices[i] == Core::MaxValue<uint32_t>)
         {
             continue;
         }
@@ -878,7 +877,7 @@ GPU::MemoryHeapID VulkanAdapter::memory_heap_create(GPU::DeviceID device, const 
     heap.device = device;
     heap.memory_heap = memory_heap_id;
 
-    uint32_t vk_type_index = MaxValue<uint32_t>;
+    uint32_t vk_type_index = Core::MaxValue<uint32_t>;
     VkMemoryPropertyFlags vk_memory_flags = VkUtils::_vk_get_memory_properties(ci.heap_usage);
 
     for(uint32_t i = 0; i < ld.vk_physical_device_memory_properties.memoryTypeCount; i++)
@@ -891,7 +890,7 @@ GPU::MemoryHeapID VulkanAdapter::memory_heap_create(GPU::DeviceID device, const 
         }
     }
 
-    if(vk_type_index == MaxValue<uint32_t> && ci.heap_usage == GPU::HeapUsage::CPUGPUCoherent)
+    if(vk_type_index == Core::MaxValue<uint32_t> && ci.heap_usage == GPU::HeapUsage::CPUGPUCoherent)
     {
         vk_memory_flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
         for(uint32_t i = 0; i < ld.vk_physical_device_memory_properties.memoryTypeCount; i++)
@@ -2801,7 +2800,7 @@ GPU::HeapUsage VulkanAdapter::_vk_memory_property_to_heap_usage(VkMemoryProperty
 uint32_t VulkanAdapter::_get_queue_family_for(const Slice<VkQueueFamilyProperties2>& vk_families,
     const Slice<u32>& acquired, VkQueueFlags vk_queue_flags)
 {
-    uint32_t best_match_index = MaxValue<uint32_t>;
+    uint32_t best_match_index = Core::MaxValue<uint32_t>;
 
     for(usize i = 0; i < vk_families.len; i++)
     {
@@ -2824,7 +2823,7 @@ uint32_t VulkanAdapter::_get_queue_family_for(const Slice<VkQueueFamilyPropertie
 uint32_t VulkanAdapter::_get_queue_family_for_present(VkPhysicalDevice vk_physical_device, VkSurfaceKHR vk_surface,
     const Slice<VkQueueFamilyProperties2>& vk_families)
 {
-    uint32_t best_match_index = MaxValue<uint32_t>;
+    uint32_t best_match_index = Core::MaxValue<uint32_t>;
     for(usize i = 0; i < vk_families.len; i++)
     {
         VkBool32 supported = VK_FALSE;
@@ -2875,7 +2874,7 @@ VkSurfaceCapabilitiesKHR VulkanAdapter::_vk_get_surface_capabilities(VkPhysicalD
 
 VkExtent2D VulkanAdapter::_vk_get_swap_chain_extent(const Vector2U& size, const VkSurfaceCapabilitiesKHR& vk_capabilities)
 {
-    if(vk_capabilities.currentExtent.width != MaxValue<uint32_t>)
+    if(vk_capabilities.currentExtent.width != Core::MaxValue<uint32_t>)
     {
         return vk_capabilities.currentExtent;
     }

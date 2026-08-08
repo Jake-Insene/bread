@@ -1,5 +1,5 @@
 #pragma once
-#include "core/header.h"
+#include "Core/Header.h"
 #include "collections/map_iterator.h"
 #include "collections/base_hash_map.h"
 #include "collections/pair.h"

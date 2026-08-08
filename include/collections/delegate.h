@@ -11,7 +11,7 @@ struct Delegate<T(TArgs...)>
 {
     Mem::Allocator& allocator;
 
-    T(*func)(Opaque*, TArgs&&...);
+    T(*func)(Core::Opaque*, TArgs&&...);
     Slice<u8> reserved;
 
     static Delegate create(Mem::Allocator& allocator)
@@ -42,7 +42,7 @@ struct Delegate<T(TArgs...)>
         _try_reserve(sizeof(Fn));
         Core::Mem::Placement(*reinterpret_cast<Fn*>(reserved.ptr()), fn);
 
-        func = [](Opaque* opaque, TArgs&&... args)
+        func = [](Core::Opaque* opaque, TArgs&&... args)
         {
             Fn* func = opaque->cast<Fn*>();
             (*func)(args...);
@@ -51,7 +51,7 @@ struct Delegate<T(TArgs...)>
 
     T call(TArgs&&... args)
     {
-        return func(reinterpret_cast<Opaque*>(reserved.ptr()), Core::Forward<TArgs>(args)...);
+        return func(reinterpret_cast<Core::Opaque*>(reserved.ptr()), Core::Forward<TArgs>(args)...);
     }
 
     void _try_reserve(usize size)

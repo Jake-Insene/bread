@@ -1,6 +1,9 @@
 #pragma once
-#include "core/types.h"
+#include "Core/Types.h"
 
+
+namespace Core
+{
 
 /**
 * Simple version utility.
@@ -53,3 +56,5 @@ union Version
         return v1.major == v2.major;
     }
 };
+
+}
