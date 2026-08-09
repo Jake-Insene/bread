@@ -12,7 +12,7 @@ template<typename T>
 inline constexpr usize TupleSize = 0;
 
 template<typename... TArgs>
-inline constexpr usize TupleSize<Tuple<TArgs...>> = GetArgumentCount<TArgs...>();
+inline constexpr usize TupleSize<Tuple<TArgs...>> = Core::GetArgumentCount<TArgs...>();
 
 template<>
 struct [[nodiscard]] Tuple<>
@@ -44,12 +44,26 @@ struct [[nodiscard]] Tuple<T, TArgs...> : Tuple<TArgs...>
 };
 
 
+template<typename T, typename TupleT, usize... Seq>
+constexpr decltype(auto) FromTupleImpl(TupleT&& tuple, Core::Sequence<Seq...>)
+{
+    return T(Core::Forward<TupleT>(tuple).template get<Seq>()...);
+}
+
+template<typename T, typename TupleT>
+constexpr decltype(auto) FromTuple(TupleT&& tuple)
+{
+    static constexpr usize ArgCount = TupleSize<Core::RemoveConst<Core::RemoveReference<TupleT>>>;
+    using Seq = Core::BuildSequence<ArgCount>;
+
+    return FromTupleImpl<T>(Core::Forward<TupleT>(tuple), Seq());
+}
+
 template<typename Fn, typename TupleT, usize... Seq>
 constexpr decltype(auto) ApplyImpl(Fn&& fn, TupleT&& tuple, Core::Sequence<Seq...>)
 {
     return Forward<Fn>(fn)(Forward<TupleT>(tuple).template get<Seq>()...);
 }
-
 
 template<typename Fn, typename TupleT>
 constexpr decltype(auto) Apply(Fn&& fn, TupleT&& tuple)

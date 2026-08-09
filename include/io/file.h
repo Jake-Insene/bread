@@ -1,8 +1,7 @@
 #pragma once
+#include "collections/string_view.h"
 #include "os/os.h"
 
-
-struct StringView;
 
 template<typename T>
 struct Slice;

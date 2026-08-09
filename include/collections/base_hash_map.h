@@ -10,32 +10,22 @@ template<typename K, typename V, typename HashType>
 struct BaseHashMapEntry
 {
     using KeyValue = Pair<K, V>;
-    
+
     HashType hash;
     KeyValue kv;
 
     BaseHashMapEntry* prev;
     BaseHashMapEntry* next;
 
-    BaseHashMapEntry([[maybe_unused]] Mem::Allocator& allocator, HashType hash, const KeyValue& kv)
-    : hash(hash), kv(kv), prev(), next()
+    template<typename... TArgs1, typename... TArgs2>
+    BaseHashMapEntry([[maybe_unused]] Mem::Allocator& allocator, HashType hash, Tuple<TArgs1...> args1, Tuple<TArgs2...> args2)
+    : hash(hash), kv(args1, args2), prev(), next()
     {}
-
-    ~BaseHashMapEntry()
-    {
-        Core::Mem::Destruct(kv.first);
-        Core::Mem::Destruct(kv.second);
-    }
 
     template<typename Self>
     constexpr auto& keyvalue(this Self& self)
     {
         return self.kv;
-    }
-
-    constexpr void set_value(const V& new_value)
-    {
-        kv.second = new_value;
     }
 
     constexpr const HashType& hashvalue() const
@@ -168,6 +158,12 @@ struct [[nodiscard]] BaseHashMap
         return _insert_or_replace(key, value)->keyvalue().second;
     }
 
+    template<typename... TArgs>
+    V& emplace(const K& key, TArgs&&... args)
+    {
+        return _try_emplace(key, Core::Forward<TArgs>(args)...)->keyvalue().second;
+    }
+
     void remove(const K& key)
     {
         HashType hash = Hasher::hashfunc(key);
@@ -261,7 +257,7 @@ struct [[nodiscard]] BaseHashMap
         usize pos = InvalidPos;
         if (_find_entry(hash, key, pos))
         {
-            entries[pos]->set_value(value);
+            entries[pos]->keyvalue().second = value;
             return entries[pos];
         }
 
@@ -273,7 +269,7 @@ struct [[nodiscard]] BaseHashMap
                 MapEntry* entry = Mem::from_bytes<MapEntry>(
                     allocator.alloc(sizeof(MapEntry), alignof(MapEntry))
                 ).ptr();
-                Core::Mem::Placement(*entry, allocator, hash, KeyValue(key, value));
+                Core::Mem::Placement(*entry, allocator, hash, Tuple(key), Tuple(value));
 
                 entries[index] = entry;
                 if(first == nullptr)
@@ -296,7 +292,81 @@ struct [[nodiscard]] BaseHashMap
             {
                 MapEntry* entry = entries[index];
                 Core::Mem::Destruct(*entry);
-                Core::Mem::Placement(*entry, allocator, hash, KeyValue(key, value));
+                Core::Mem::Placement(*entry, allocator, hash, Tuple(key), Tuple(value));
+
+                if (first == nullptr)
+                {
+                    first = entry;
+                    last = entry;
+                }
+                else
+                {
+                    last->next = entry;
+                    entry->prev = last;
+                    last = entry;
+                }
+
+                ++count;
+                return entry;
+            }
+            
+            index = (index + 1) % entries.len;
+        }
+    }
+
+    template<typename... TArgs>
+    [[nodiscard]] MapEntry* _try_emplace(const K& key, TArgs&&... args)
+    {
+        if (count >= entries.len)
+        {
+            resize(entries.len << 1);
+        }
+        else if (entries.len == 0)
+        {
+            resize(DefaultCapacity);
+        }
+
+        HashType hash = Hasher::hashfunc(key);
+        usize pos = InvalidPos;
+        if (_find_entry(hash, key, pos))
+        {
+            return entries[pos];
+        }
+
+        usize index = hash & (entries.len - 1);
+        while(true)
+        {
+            if(entries[index] == nullptr)
+            {
+                MapEntry* entry = Mem::from_bytes<MapEntry>(
+                    allocator.alloc(sizeof(MapEntry), alignof(MapEntry))
+                ).ptr();
+                Core::Mem::Placement(*entry, allocator, hash, Tuple(key),
+                    Tuple<TArgs...>(Core::Forward<TArgs>(args)...));
+
+                entries[index] = entry;
+                if(first == nullptr)
+                {
+                    first = entry;
+                    last = entry;
+                }
+                else
+                {
+                    last->next = entry;
+                    entry->prev = last;
+                    last = entry;
+                }
+
+                ++count;
+                return entry;
+            }
+            
+            if(entries[index]->hashvalue() == InvalidHash)
+            {
+                MapEntry* entry = entries[index];
+                Core::Mem::Destruct(*entry);
+                Core::Mem::Placement(*entry, allocator, hash, Tuple(key),
+                    Tuple<TArgs...>(Core::Forward<TArgs>(args)...));
 
                 if (first == nullptr)
                 {

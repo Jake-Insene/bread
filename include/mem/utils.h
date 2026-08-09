@@ -1,4 +1,5 @@
 #pragma once
+#include "collections/slice.h"
 #include "Core/Templates.h"
 
 
@@ -64,10 +65,6 @@ constexpr void swap(T& a, T& b)
 }
 
 }
-
-
-#include "collections/slice.h"
-#include "debug/debug.h"
 
 namespace Mem
 {

@@ -207,7 +207,7 @@ def __lldb_init_module(debugger, _):
 
     # StringView
     debugger.HandleCommand(
-        "type summary add -x '^StringView$' "
+        "type summary add -x '^BaseStringView<.*>$' "
         "-F lldb_fmt.string_view_summary"
     )
 

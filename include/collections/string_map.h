@@ -11,7 +11,7 @@ template<typename V>
 struct StringHashMapEntry
 {
     using KeyValue = Pair<StringView, V>;
-    
+
     HashCode hash;
     KeyValue kv;
 
@@ -20,13 +20,13 @@ struct StringHashMapEntry
 
     Mem::Allocator& allocator;
 
-    StringHashMapEntry(Mem::Allocator& allocator, HashCode hash, const KeyValue& new_kv)
-    : hash(hash), kv(), prev(), next(), allocator(allocator)
+    template<typename... TArgs>
+    StringHashMapEntry(Mem::Allocator& allocator, HashCode hash, Tuple<StringView> new_key, Tuple<TArgs...> args)
+    : hash(hash), kv(Tuple(new_key), args), prev(), next(), allocator(allocator)
     {
-        Slice<char> new_chars = allocator.array<char>(new_kv.first.len);
-        Mem::copy(new_chars, new_kv.first);
+        Slice<char> new_chars = allocator.array<char>(new_key.value.len);
+        Mem::copy(new_chars, new_key.value);
         kv.first = new_chars;
-        kv.second = new_kv.second;
     }
 
     ~StringHashMapEntry()
@@ -39,11 +39,6 @@ struct StringHashMapEntry
     constexpr auto& keyvalue(this Self& self)
     {
         return self.kv;
-    }
-    
-    constexpr void set_value(const V& new_value)
-    {
-        kv.second = new_value;
     }
 
     constexpr HashCode hashvalue() const

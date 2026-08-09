@@ -1,9 +1,8 @@
 #pragma once
+#include "collections/string_view.h"
 #include "Core/Header.h"
 
 
-struct StringView;
-struct String;
 
 
 namespace Format
@@ -18,7 +17,6 @@ enum class FormatType
 	Float32,
 	Float64,
 	Pointer,
-	String,
 	StringView,
 	CString,
 	Slice
@@ -58,10 +56,6 @@ constexpr FormatType __GetFormatType()
 	else if constexpr(Core::IsPointer<TypeNoCR>)
 	{
 		return FormatType::Pointer;
-	}
-	else if constexpr(Core::IsSame<TypeNoCR, String>)
-	{
-		return FormatType::String;
 	}
 	else if constexpr(Core::IsSame<TypeNoCR, StringView>)
 	{

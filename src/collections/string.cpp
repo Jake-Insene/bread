@@ -71,12 +71,12 @@ void String::resize(usize new_size)
 
 bool String::equals(StringView str) const
 {
-    return StringView(chars.ptr(), count).equals(str);
+    return view().equals(str);
 }
 
 bool String::ends_with(StringView str) const
 {
-    return StringView(chars.ptr(), count).ends_with(str);
+    return view().ends_with(str);
 }
 
 StringView String::view() const

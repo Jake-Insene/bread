@@ -1,10 +1,9 @@
 #pragma once
 #include "Core/Header.h"
 #include "collections/string_view.h"
+#include "fmt/fmt.h"
 #include "mem/allocator.h"
 
-
-struct StringView;
 
 namespace IO
 {
@@ -118,3 +117,16 @@ struct [[nodiscard]] String
     void _add_from_float(f64 fp);
 };
 
+namespace Format
+{
+
+template<>
+struct Formatter<String>
+{
+	static void format_custom(const IO::Writer& writer, const String& str)
+    {
+        format<false>(writer, "{}", str.view());
+    }
+};
+
+}

@@ -1,7 +1,6 @@
 #pragma once
 #include "fmt/fmt_types.h"
 
-struct StringView;
 
 namespace IO
 {
@@ -188,10 +187,6 @@ void __format_single_argument(const IO::Writer& writer, T&& arg)
 	else if constexpr(type == Format::FormatType::Pointer)
 	{
 		__format_integer<16, usize>(writer, usize(arg));
-	}
-	else if constexpr(type == Format::FormatType::String)
-	{
-		writer.write(Mem::to_const_bytes(arg.view()));
 	}
 	else if constexpr(type == Format::FormatType::StringView)
 	{
