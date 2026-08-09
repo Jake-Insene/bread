@@ -13,11 +13,11 @@ void random_seed_default();
 template<typename T>
 [[nodiscard]] inline T random()
 {
-	if constexpr (Core::IsAnyOf<T, i64, u64>)
+	if constexpr(Core::IsAnyOf<T, i64, u64>)
 	{
 		return T(random_u64());
 	}
-	if constexpr (Core::IsSigned<T>)
+	if constexpr(Core::IsSigned<T>)
 	{
 		return random_u64() & ((u64(1) << (sizeof(T) * 8)) -1);
 	}

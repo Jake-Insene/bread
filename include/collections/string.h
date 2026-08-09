@@ -48,23 +48,23 @@ struct [[nodiscard]] String
     void set(T&& arg)
     {
         using Type = Core::RemoveCVRef<T>;
-        if constexpr (Core::IsSame<Type, StringView>)
+        if constexpr(Core::IsSame<Type, StringView>)
         {
             _set_str_view(arg);
         }
-        else if constexpr (Core::IsArrayOf<T, char>)
+        else if constexpr(Core::IsArrayOf<T, char>)
         {
             _set_str_view(arg);
         }
-        else if constexpr (Core::IsInteger<Type> && Core::IsSigned<Type>)
+        else if constexpr(Core::IsInteger<Type> && Core::IsSigned<Type>)
         {
             _set_from_signed(arg);
         }
-        else if constexpr (Core::IsInteger<Type> && Core::IsUnsigned<Type>)
+        else if constexpr(Core::IsInteger<Type> && Core::IsUnsigned<Type>)
         {
             _set_from_unsigned(arg);
         }
-        else if constexpr (Core::IsFloatingPoint<Type>)
+        else if constexpr(Core::IsFloatingPoint<Type>)
         {
             _set_from_float(arg);
         }
@@ -78,19 +78,19 @@ struct [[nodiscard]] String
     void add(T&& arg)
     {
         using TypeNoCR = Core::RemoveConst<Core::RemoveReference<T>>;
-        if constexpr (Core::IsSame<TypeNoCR, StringView> || Core::IsArrayOf<T, char>)
+        if constexpr(Core::IsSame<TypeNoCR, StringView> || Core::IsArrayOf<T, char>)
         {
             _add_str_view(arg);
         }
-        else if constexpr (Core::IsInteger<TypeNoCR> && Core::IsSigned<TypeNoCR>)
+        else if constexpr(Core::IsInteger<TypeNoCR> && Core::IsSigned<TypeNoCR>)
         {
             _add_from_signed(arg);
         }
-        else if constexpr (Core::IsInteger<TypeNoCR> && Core::IsUnsigned<TypeNoCR>)
+        else if constexpr(Core::IsInteger<TypeNoCR> && Core::IsUnsigned<TypeNoCR>)
         {
             _add_from_unsigned(arg);
         }
-        else if constexpr (Core::IsFloatingPoint<TypeNoCR>)
+        else if constexpr(Core::IsFloatingPoint<TypeNoCR>)
         {
             _add_from_float(arg);
         }
