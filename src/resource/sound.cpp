@@ -63,17 +63,17 @@ Sound::~Sound()
     }
 }
 
-Error Sound::load(StringView file_path)
+Error Sound::load(StringView path)
 {
-    if (!IO::File::exists(allocator, file_path))
+    if (!IO::File::exists(allocator, path))
     {
-        RMDebugInfo("Couldn't load the font '{}'", file_path);
+        RMDebugInfo("Couldn't load the font '{}'", path);
         return MakeError(ErrorCode::FileNotFound);
     }
     
-    path.set(file_path);
+    Resource::path.set(path);
 
-    Slice content = IO::File::read_all(allocator, file_path);
+    Slice content = IO::File::read_all(allocator, path);
 
     drwav wav = {};
     drwav_init_memory(&wav, content.ptr(), content.len, &alloc_callbacks);
@@ -81,7 +81,7 @@ Error Sound::load(StringView file_path)
     if(wav.channels != 1 && wav.channels != 2)
     {
         RMDebugInfo("The WAV file({}) contains a not supported channel count, find({}) expected 1 or 2",
-            file_path, wav.channels
+            path, wav.channels
         );
     }
 

@@ -22,15 +22,15 @@ Image::~Image()
     }
 }
 
-Error Image::load_from_path(StringView file_path)
+Error Image::load_from_path(StringView path)
 {
-    if (!IO::File::exists(allocator, file_path))
+    if (!IO::File::exists(allocator, path))
     {
-        RMDebugInfo("Couldn't load the font '{}'", file_path);
+        RMDebugInfo("Couldn't load the font '{}'", path);
         return MakeError(ErrorCode::FileNotFound);
     }
 
-    Slice buffer = IO::File::read_all(allocator, file_path);
+    Slice buffer = IO::File::read_all(allocator, path);
     
     i32 channels = 0;
     data.pixels.items = reinterpret_cast<u8*>(stbi_load_from_memory(

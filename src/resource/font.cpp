@@ -100,17 +100,17 @@ Font::Font(const ResourceCreateInfo& info)
 Font::~Font()
 {}
 
-Error Font::load(StringView file_path)
+Error Font::load(StringView path)
 {
-    if (!IO::File::exists(allocator, file_path))
+    if (!IO::File::exists(allocator, path))
     {
-        RMDebugInfo("Couldn't load the font '{}'", file_path);
+        RMDebugInfo("Couldn't load the font '{}'", path);
         return MakeError(ErrorCode::FileNotFound);
     }
 
-    path.set(file_path);
+    Resource::path.set(path);
 
-    Slice content = IO::File::read_all(allocator, file_path);
+    Slice content = IO::File::read_all(allocator, path);
 
     stbtt_fontinfo font;
     stbtt_InitFont(&font, content.ptr(), stbtt_GetFontOffsetForIndex(content.ptr(), 0));

@@ -10,7 +10,7 @@ Shader::Shader(Mem::Allocator& allocator, const ShaderInfo& info)
 : allocator(allocator), shader_info(info), shader_code(), shader_stages()
 {
     shader_info = info;
-    shader_code = IO::File::read_all(allocator, info.file_path);
+    shader_code = IO::File::read_all(allocator, info.path);
 
     shader_stages[0] = GPU::ShaderStageInfo
     {

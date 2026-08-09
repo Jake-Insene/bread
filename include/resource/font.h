@@ -39,7 +39,7 @@ struct Font : Resource
 	Font(const ResourceCreateInfo& info);
 	virtual ~Font() override;
 
-	Error load(StringView file_path);
+	Error load(StringView _path);
 
 	[[nodiscard]] const FontTheme& get_font_theme(i32 font_size);
 

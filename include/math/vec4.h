@@ -155,3 +155,4 @@ union [[nodiscard]] Vector4T
 };
 
 using Vector4 = Vector4T<f32>;
+using Vector4I = Vector4T<i32>;

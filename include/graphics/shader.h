@@ -8,7 +8,7 @@ namespace Graphics
 
 struct ShaderInfo
 {
-    StringView file_path;
+    StringView path;
 
     StringView vertex_name;
     StringView fragment_name;
