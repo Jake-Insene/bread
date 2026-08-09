@@ -32,7 +32,7 @@ struct [[nodiscard]] Tuple<T, TArgs...> : Tuple<TArgs...>
     template<usize Index>
     constexpr decltype(auto) get() const
     {
-        if constexpr (Index == 0)
+        if constexpr(Index == 0)
         {
             return value;
         }

@@ -65,7 +65,7 @@ struct StringUtility
 		usize buffer_index = 0;
 
 		Unsigned u = Unsigned(integer);
-		if constexpr (Core::IsSigned<T>)
+		if constexpr(Core::IsSigned<T>)
 		{
 			u = integer < 0 ? Unsigned(-integer) : u;
 		}
@@ -81,7 +81,7 @@ struct StringUtility
 				buffer_index++;
 			} while (u != 0);
 
-			if constexpr (Core::IsSigned<T>)
+			if constexpr(Core::IsSigned<T>)
 			{
 				if (integer < 0)
 				{
@@ -107,7 +107,7 @@ struct StringUtility
 				buffer_index++;
 			} while (hex_digit_count < (sizeof(T) * 8) / 4);
 
-			if constexpr (Core::IsSigned<T>)
+			if constexpr(Core::IsSigned<T>)
 			{
 				if (integer < 0)
 				{

@@ -412,7 +412,7 @@ constexpr usize GetArgumentCount()
 template<usize N, typename T, typename... TArgs>
 constexpr auto&& GetArgument(T&& first, [[maybe_unused]] TArgs&&... args)
 {
-    if constexpr (N == 0)
+    if constexpr(N == 0)
     {
         return Move(first);
     }

@@ -36,7 +36,7 @@ struct [[nodiscard]] BaseIterator
 		usize index = 0;
 		for (auto&& item : self)
 		{
-			if constexpr (Core::IsAnyOf<Fn, ItFnComplete1, ItFnComplete2>)
+			if constexpr(Core::IsAnyOf<Fn, ItFnComplete1, ItFnComplete2>)
 			{
 				Core::Invoke(func, item, index++);
 			}

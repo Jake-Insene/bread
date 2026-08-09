@@ -90,7 +90,7 @@ template<typename T, typename... TArgs>
 requires(Core::IsArithmetic<T> && (Core::IsArithmetic<TArgs> && ...))
 [[nodiscard]] constexpr T min(T a, TArgs... args)
 {
-    if constexpr (sizeof...(args) == 0)
+    if constexpr(sizeof...(args) == 0)
     {
         return a;
     }
@@ -104,7 +104,7 @@ template<typename T, typename... TArgs>
 requires(Core::IsArithmetic<T> && (Core::IsArithmetic<TArgs> && ...))
 [[nodiscard]] constexpr T max(T a, TArgs... args)
 {
-    if constexpr (sizeof...(args) == 0)
+    if constexpr(sizeof...(args) == 0)
     {
         return a;
     }
@@ -134,7 +134,7 @@ template<typename T>
 requires(Core::IsArithmetic<T>)
 [[nodiscard]] constexpr T mod(T a, T b)
 {
-    if constexpr (Core::IsInteger<T>)
+    if constexpr(Core::IsInteger<T>)
     {
         return a % b;
     }

@@ -166,44 +166,44 @@ template<typename T>
 void __format_single_argument(const IO::Writer& writer, T&& arg)
 {
 	static constexpr Format::FormatType type = Format::__GetFormatType<T>();
-	if constexpr (type == Format::FormatType::Bool)
+	if constexpr(type == Format::FormatType::Bool)
 	{
 		static constexpr StringView true_str = "true";
 		static constexpr StringView false_str = "false";
 		Slice str = Mem::to_const_bytes(arg ? true_str : false_str);
 		writer.write(str);
 	}
-	else if constexpr (type == Format::FormatType::Signed || type == Format::FormatType::Unsigned)
+	else if constexpr(type == Format::FormatType::Signed || type == Format::FormatType::Unsigned)
 	{
 		__format_integer<10, T>(writer, arg);
 	}
-	else if constexpr (type == Format::FormatType::Float32)
+	else if constexpr(type == Format::FormatType::Float32)
 	{
 		__format_floating_point<f32>(writer, arg, 6);
 	}
-	else if constexpr (type == Format::FormatType::Float64)
+	else if constexpr(type == Format::FormatType::Float64)
 	{
 		__format_floating_point<f64>(writer, arg, 6);
 	}
-	else if constexpr (type == Format::FormatType::Pointer)
+	else if constexpr(type == Format::FormatType::Pointer)
 	{
 		__format_integer<16, usize>(writer, usize(arg));
 	}
-	else if constexpr (type == Format::FormatType::String)
+	else if constexpr(type == Format::FormatType::String)
 	{
 		writer.write(Mem::to_const_bytes(arg.view()));
 	}
-	else if constexpr (type == Format::FormatType::StringView)
+	else if constexpr(type == Format::FormatType::StringView)
 	{
 		writer.write(Mem::to_const_bytes(arg));
 	}
-	else if constexpr (type == Format::FormatType::CString)
+	else if constexpr(type == Format::FormatType::CString)
 	{
 		// A CString always contains an extra byte for '\0'
 		static constexpr usize len = Core::Extent<T> - 1;
 		writer.write(Mem::to_const_bytes(Slice(arg, len)));
 	}
-	else if constexpr (type == Format::FormatType::Slice)
+	else if constexpr(type == Format::FormatType::Slice)
 	{
 		writer.write(Mem::to_const_bytes(StringView("[")));
 		for (usize i = 0; i < arg.len; i++)
@@ -228,7 +228,7 @@ void __format_argument(const IO::Writer& writer, const StringView view,
 {
 	using FString = Format::FormatString<Core::TypeIdentity<TArgs>...>;
 
-	if constexpr (IntervalRemain == 1)
+	if constexpr(IntervalRemain == 1)
 	{
 		const auto interval_range = fmtstring.intervals[FString::WriteIntervalCount - 1];
 		const StringView interval = StringView(view.ptr() + interval_range.start, interval_range.len);
@@ -251,7 +251,7 @@ void format(const IO::Writer& writer, const FormatString<Core::TypeIdentity<TArg
 	using FString = FormatString<Core::TypeIdentity<TArgs>...>;
 	StringView view = fmtstring.view();
 
-	if constexpr (FString::WriteIntervalCount == 1)
+	if constexpr(FString::WriteIntervalCount == 1)
 	{
 		writer.write(Mem::to_const_bytes(view));
 	}
@@ -260,7 +260,7 @@ void format(const IO::Writer& writer, const FormatString<Core::TypeIdentity<TArg
 		__format_argument<FString::WriteIntervalCount, TArgs...>(writer, view, fmtstring, Core::Forward<TArgs>(args)...);
 	}
 
-	if constexpr (NewLine)
+	if constexpr(NewLine)
 	{
 		u8 _character = '\n';
 		Slice new_line = Slice(&_character, 1);

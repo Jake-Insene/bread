@@ -14,7 +14,7 @@ struct [[nodiscard]] StaticFreeList
 
     static constexpr SlotID _GetInvalidSlotValue()
     {
-        if constexpr (IsSame<SlotID, u64>)
+        if constexpr(IsSame<SlotID, u64>)
         {
             return SlotID(0xEEFFEEFF'EEFFEEFFULL);
         }
