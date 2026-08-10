@@ -1,4 +1,5 @@
 #pragma once
+#include "collections/tuple.h"
 #include "fmt/fmt_types.h"
 
 
@@ -32,26 +33,13 @@ struct FormatString
 {
 	static constexpr usize ArgumentCount = Core::GetArgumentCount<TArgs...>();
 	static constexpr FormatType ArgumentTypes[ArgumentCount + 1] = { __GetFormatType<TArgs>()...};
-	static constexpr usize WriteIntervalCount = ArgumentCount + 1;
 
-	struct FIntervalType
-	{
-		FmtInterval intervals[WriteIntervalCount];
-
-		template<typename Self>
-		constexpr auto& operator[](this Self& self, usize index)
-		{
-			return self.intervals[index];
-		}
-	};
-	
 	const char* chars;
 	usize len;
-	FIntervalType intervals;
 
 	template<usize N>
 	consteval FormatString(const char(&str)[N])
-		: chars(str), len(N - 1), intervals(get_intervals())
+	: chars(str), len(N - 1)
 	{
 		__check_format();
 	}
@@ -65,13 +53,15 @@ struct FormatString
 		{
 			if (chars[i] == '{')
 			{
-				Format::__fail_compile_time_on(
-					i + 1 == len || type_index >= ArgumentCount || chars[i + 1] != '}',
-					"invalid string format"
-				);
-
+				if(i + 1 != len && chars[i + 1] != '{')
+				{
+					Format::__fail_compile_time_on(
+						i + 1 == len || chars[i + 1] != '}',
+						"invalid string format"
+					);
+					type_index++;
+				}
 				i += 2;
-				type_index++;
 			}
 			else
 			{
@@ -80,38 +70,6 @@ struct FormatString
 		}
 
 		Format::__fail_compile_time_on(type_index != ArgumentCount, "too much/few arguments");
-	}
-
-	consteval FIntervalType get_intervals()
-	{
-		FIntervalType intervals_l = {};
-
-		usize i = 0;
-		usize start = 0;
-		usize interval_index = 0;
-
-		while (i < len)
-		{
-			if (chars[i] == '{')
-			{
-				intervals_l[interval_index] = { start, i - start };
-				i += 2;
-
-				start = i;
-				interval_index++;
-			}
-			else
-			{
-				i++;
-			}
-		}
-
-		if (start != i)
-		{
-			intervals_l[interval_index] = { start, i - start };
-		}
-
-		return intervals_l;
 	}
 
 	StringView view() const;
@@ -217,43 +175,102 @@ void __format_single_argument(const IO::Writer& writer, T&& arg)
 	}
 }
 
-template<usize IntervalRemain, typename... TArgs>
-void __format_argument(const IO::Writer& writer, const StringView view,
-	const Format::FormatString<Core::TypeIdentity<TArgs>&&...>& fmtstring, [[maybe_unused]] TArgs&&... args)
+template<usize Index = 0, typename Tuple>
+inline void __format_argument_at(
+    const IO::Writer& writer,
+    usize target,
+    Tuple&& tuple)
 {
-	using FString = Format::FormatString<Core::TypeIdentity<TArgs>...>;
+    if constexpr (Index < TupleSize<Core::RemoveReference<Tuple>>)
+    {
+        if (target == Index)
+        {
+            __format_single_argument(
+                writer,
+                tuple.template get<Index>()
+            );
+            return;
+        }
 
-	if constexpr(IntervalRemain == 1)
-	{
-		const auto interval_range = fmtstring.intervals[FString::WriteIntervalCount - 1];
-		const StringView interval = StringView(view.ptr() + interval_range.start, interval_range.len);
-		writer.write(Mem::to_const_bytes(interval));
-	}
-	else
-	{
-		const auto interval_range = fmtstring.intervals[FString::WriteIntervalCount - IntervalRemain];
-		const StringView interval = StringView(view.ptr() + interval_range.start, interval_range.len);
-		writer.write(Mem::to_const_bytes(interval));
+        __format_argument_at<Index + 1>(
+            writer,
+            target,
+            Core::Forward<Tuple>(tuple)
+        );
+    }
+}
 
-		__format_single_argument(writer, Core::Move(Core::GetArgument<FString::WriteIntervalCount - IntervalRemain>(Core::Forward<TArgs>(args)...)));
-		__format_argument<IntervalRemain - 1, TArgs...>(writer, view, fmtstring, Core::Forward<TArgs>(args)...);
-	}
+template<typename... TArgs>
+void __format_arguments(
+    const IO::Writer& writer,
+    StringView view,
+    TArgs&&... args)
+{
+    Tuple tuple = Tuple(
+        Core::Forward<TArgs>(args)...
+    );
+
+    usize start = 0;
+    usize argument_index = 0;
+
+    for (usize i = 0; i < view.len; ++i)
+    {
+        if (view[i] != '{')
+        {
+			continue;
+		}
+
+        // {{
+        if (i + 1 < view.len && view[i + 1] == '{')
+        {
+			writer.write(
+				Mem::to_const_bytes(
+					view.add(start).slice(i - start)
+				)
+			);
+			
+            ++i;
+			start = i;
+            continue;
+        }
+
+        // {}
+        if (i + 1 < view.len && view[i + 1] == '}')
+        {
+            writer.write(
+                Mem::to_const_bytes(
+                    view.add(start).slice(i - start)
+                )
+            );
+
+            __format_argument_at(
+                writer,
+                argument_index,
+                tuple
+            );
+
+            ++argument_index;
+            ++i;
+            start = i + 1;
+        }
+    }
+
+    if (start < view.len)
+    {
+        writer.write(
+            Mem::to_const_bytes(
+                view.add(start).slice(view.len - start)
+            )
+        );
+    }
 }
 
 template<bool NewLine, typename... TArgs>
 void format(const IO::Writer& writer, const FormatString<Core::TypeIdentity<TArgs>&&...>& fmtstring, TArgs&&... args)
 {
-	using FString = FormatString<Core::TypeIdentity<TArgs>...>;
 	StringView view = fmtstring.view();
 
-	if constexpr(FString::WriteIntervalCount == 1)
-	{
-		writer.write(Mem::to_const_bytes(view));
-	}
-	else
-	{
-		__format_argument<FString::WriteIntervalCount, TArgs...>(writer, view, fmtstring, Core::Forward<TArgs>(args)...);
-	}
+	__format_arguments<TArgs...>(writer, view, Core::Forward<TArgs>(args)...);
 
 	if constexpr(NewLine)
 	{
