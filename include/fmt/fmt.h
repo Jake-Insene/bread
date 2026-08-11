@@ -99,10 +99,10 @@ template<usize Base>
 inline constexpr bool IsValidBase = Core::IsAnyOfValue<usize, Base, 2, 10, 16>;
 
 template<usize Base, typename T>
-	requires(IsValidBase<Base>)
+requires(IsValidBase<Base>)
 inline void __format_integer(const IO::Writer& writer, T arg)
 {
-	StringResult result = StringUtility::integer_to_string<T>(arg, Base);
+	StringResult result = StringUtility::integer_to_string(arg, Base);
 	writer.write(Mem::to_const_bytes(Slice(result.result + result.begin, result.len)));
 }
 

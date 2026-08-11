@@ -59,13 +59,14 @@ struct StringUtility
 	requires(Core::IsInteger<T>)
 	static constexpr StringResult integer_to_string(T integer, i32 base)
 	{
-		using Unsigned = Core::MakeUnsigned<T>;
+		using Type = Core::RemoveCVRef<T>;
+		using Unsigned = Core::MakeUnsigned<Type>;
 		StringResult result = {};
 		auto end = result.result + 64;
 		usize buffer_index = 0;
 
 		Unsigned u = Unsigned(integer);
-		if constexpr(Core::IsSigned<T>)
+		if constexpr(Core::IsSigned<Type>)
 		{
 			u = integer < 0 ? Unsigned(-integer) : u;
 		}
@@ -81,7 +82,7 @@ struct StringUtility
 				buffer_index++;
 			} while (u != 0);
 
-			if constexpr(Core::IsSigned<T>)
+			if constexpr(Core::IsSigned<Type>)
 			{
 				if (integer < 0)
 				{
@@ -105,9 +106,9 @@ struct StringUtility
 				u >>= 4;
 				hex_digit_count++;
 				buffer_index++;
-			} while (hex_digit_count < (sizeof(T) * 8) / 4);
+			} while (hex_digit_count < (sizeof(Type) * 8) / 4);
 
-			if constexpr(Core::IsSigned<T>)
+			if constexpr(Core::IsSigned<Type>)
 			{
 				if (integer < 0)
 				{

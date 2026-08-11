@@ -21,7 +21,7 @@ struct StringHashMapEntry
     Mem::Allocator& allocator;
 
     template<typename... TArgs>
-    StringHashMapEntry(Mem::Allocator& allocator, HashCode hash, Tuple<StringView> new_key, Tuple<TArgs...> args)
+    StringHashMapEntry(Mem::Allocator& allocator, HashCode hash, Tuple<const StringView&> new_key, Tuple<TArgs...> args)
     : hash(hash), kv(Tuple(new_key), args), prev(), next(), allocator(allocator)
     {
         Slice<char> new_chars = allocator.array<char>(new_key.value.len);
