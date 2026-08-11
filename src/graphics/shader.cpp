@@ -15,14 +15,14 @@ Shader::Shader(Mem::Allocator& allocator, const ShaderInfo& info)
     shader_stages[0] = GPU::ShaderStageInfo
     {
         .stage = GPU::ShaderStage::Vertex,
-        .code = shader_code,
+        .code = Mem::to_const_bytes(shader_code),
         .name = info.vertex_name,
     };
 
     shader_stages[1] = GPU::ShaderStageInfo
     {
         .stage = GPU::ShaderStage::Fragment,
-        .code = shader_code,
+        .code = Mem::to_const_bytes(shader_code),
         .name = info.fragment_name,
     };
 }

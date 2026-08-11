@@ -19,39 +19,14 @@ struct [[nodiscard]] Slice
     
     constexpr Slice() : items(nullptr), len(0) {}
     
-    template<typename U>
-    requires(Core::ConvertibleTo<U, T>)
-    constexpr Slice(const Slice<U>& slice) : items(slice.items), len(slice.len) {}
-
     template<usize N>
     constexpr Slice(T(&_items)[N])
-        : items(_items), len(N)
-    {}
-
-    template<typename U, usize N>
-    requires(Core::ConvertibleTo<U, T>)
-    constexpr Slice(U(&_items)[N])
         : items(_items), len(N)
     {}
 
     constexpr Slice(T* _items, const usize _len)
         : items(_items), len(_len)
     {}
-
-    template<typename U>
-    requires(Core::ConvertibleTo<U, T>)
-    constexpr Slice(U* _items, const usize _len)
-        : items(_items), len(_len)
-    {}
-
-    template<typename U>
-    requires(Core::ConvertibleTo<U, T>)
-    constexpr Slice& operator=(const Slice<U>& slice)
-    {
-        items = slice.items;
-        len = slice.len;
-        return *this;
-    }
 
     [[nodiscard]] constexpr decltype(auto) operator[](this auto&& self, const usize index)
     {
@@ -85,5 +60,10 @@ struct [[nodiscard]] Slice
     {
         DebugAssert(count <= len, "items out of range");
         return Slice(items, count);
+    }
+
+    constexpr Slice<const Type> as_const() const
+    {
+        return Slice<const Type>(items, len);
     }
 };

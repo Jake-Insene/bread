@@ -96,7 +96,7 @@ GPUTextureID GPUResourceManager::create_texture(const TextureAllocateInfo& alloc
                     )
                 );
 
-                GPU::BufferTextureCopyRegion region = GPU::BufferTextureCopyRegion::region(
+                const GPU::BufferTextureCopyRegion region = GPU::BufferTextureCopyRegion::region(
                     0, GPU::TextureSubresourceLayers::color(0, 0, 1),
                     Vector3I(), alloc_info.extent
                 );
@@ -167,7 +167,7 @@ void GPUResourceManager::_submit_and_wait(GPU::QueueID queue, GPU::QueueUsage us
         }
     );
 
-    GPU::CommandBufferID cmd = GPU::command_buffer_allocate(
+    const GPU::CommandBufferID cmd = GPU::command_buffer_allocate(
         device,
         {
             .pool = pool,

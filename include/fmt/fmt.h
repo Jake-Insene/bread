@@ -274,8 +274,8 @@ void format(const IO::Writer& writer, const FormatString<Core::TypeIdentity<TArg
 
 	if constexpr(NewLine)
 	{
-		u8 _character = '\n';
-		Slice new_line = Slice(&_character, 1);
+		const u8 _character = '\n';
+		const Slice new_line = Slice(&_character, 1);
 		writer.write(new_line);
 	}
 }

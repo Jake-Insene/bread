@@ -75,7 +75,7 @@ struct SwapChain
     * @param wait_semaphores A list of semaphores to wait before presenting.
     * @return If the image can be presented.
     */
-    bool present(u32 image_index, const Slice<const GPU::SemaphoreID>& wait_semaphores);
+    bool present(const u32 image_index, const Slice<const GPU::SemaphoreID>& wait_semaphores);
 
     /**
     * This triggers a invalidation.

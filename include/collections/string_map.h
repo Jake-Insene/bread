@@ -26,7 +26,7 @@ struct StringHashMapEntry
     {
         Slice<char> new_chars = allocator.array<char>(new_key.value.len);
         Mem::copy(new_chars, new_key.value);
-        kv.first = new_chars;
+        kv.first = StringView(new_chars.items, new_chars.len);
     }
 
     ~StringHashMapEntry()

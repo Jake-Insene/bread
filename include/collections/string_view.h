@@ -16,22 +16,24 @@ struct [[nodiscard]] BaseStringView : Slice<const T>
     template<usize N>
     constexpr BaseStringView(const Char(&str)[N]) : Base(str, N-1) {}
 
-    constexpr BaseStringView(const Slice<Char>& str) : Base(str.items, str.len) {}
-    
-    constexpr BaseStringView(const Slice<const Char>& str) : Base(str.items, str.len) {}
-
-    [[nodiscard]] constexpr const Char* ptr() const { return Base::items; }
+    constexpr BaseStringView(const Slice<const T>& slice) : Base(slice.items, slice.len) {}
 
     constexpr BaseStringView add(const usize offset) const
     {
-        DebugAssert(ptr() && ((Base::len - offset) > 0 || (Base::len - offset) <= Base::len), "invalid offset");
+        DebugAssert(Base::ptr() && ((Base::len - offset) > 0 || (Base::len - offset) <= Base::len), "invalid offset");
         return BaseStringView(Base::items + offset, Base::len - offset);
     }
 
     constexpr BaseStringView sub(const usize offset) const
     {
-        DebugAssert(ptr() && ((Base::len + offset) >= Base::len), "invalid offset");
+        DebugAssert(Base::ptr() && ((Base::len + offset) >= Base::len), "invalid offset");
         return BaseStringView(Base::items - offset, Base::len + offset);
+    }
+
+    constexpr BaseStringView slice(usize count) const
+    {
+        DebugAssert(count <= Base::len, "items out of range");
+        return BaseStringView(Base::items, count);
     }
     
     [[nodiscard]] constexpr bool equals(const BaseStringView& str) const
