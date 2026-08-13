@@ -1,6 +1,6 @@
 #pragma once
-#include "collections/array.h"
-#include "collections/stack.h"
+#include "Collections/Array.hpp"
+#include "Collections/Stack.hpp"
 #include "gpu/gpu.h"
 
 
@@ -42,9 +42,9 @@ struct CommandPool
     GPU::DeviceID device;
     GPU::QueueUsage queue_usage;
     GPU::CommandPoolID gpu_command_pool;
-    Array<GPU::CommandBufferID> command_buffers;
-    Array<GPU::FenceID> gpu_work_fences;
-    Array<WorkSubmit> work_submited;
+    Collections::Array<GPU::CommandBufferID> command_buffers;
+    Collections::Array<GPU::FenceID> gpu_work_fences;
+    Collections::Array<WorkSubmit> work_submited;
         
     Stack<GPU::FenceID> gpu_free_fences;
     Stack<GPU::CommandBufferID> free_command_buffers;

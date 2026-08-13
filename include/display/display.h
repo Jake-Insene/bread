@@ -1,7 +1,7 @@
 #pragma once
-#include "Core/Header.h"
+#include "Core/Header.hpp"
 #include "gpu/gpu.h"
-#include "mem/allocator.h"
+#include "Mem/Allocator.hpp"
 #include "math/vec2.h"
 
 

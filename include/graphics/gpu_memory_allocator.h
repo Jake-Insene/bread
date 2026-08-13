@@ -1,8 +1,8 @@
 #pragma once
-#include "collections/array.h"
-#include "collections/free_list.h"
+#include "Collections/Array.hpp"
+#include "Collections/FreeList.hpp"
 #include "gpu/gpu.h"
-#include "mem/allocator.h"
+#include "Mem/Allocator.hpp"
 #include "graphics/gpu_memory_allocator_types.h"
 
 
@@ -74,9 +74,9 @@ struct GPUMemoryAllocator
     GPU::QueueID graphics_queue;
     GPU::QueueID copy_queue;
 
-    Array<Heap> heaps;
+    Collections::Array<Heap> heaps;
     FreeList<Allocation, GPUMemoryAllocationID> allocations;
-    Array<StagingHeap> staging_heaps;
+    Collections::Array<StagingHeap> staging_heaps;
 
     GPUMemoryAllocator(const GPUMemoryAllocatorCreateInfo& info);
     ~GPUMemoryAllocator();

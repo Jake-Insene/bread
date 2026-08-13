@@ -1,5 +1,5 @@
 #pragma once
-#include "collections/error.h"
+#include "Collections/Error.hpp"
 #include "resource/resource.h"
 #include "math/vec2.h"
 

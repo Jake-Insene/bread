@@ -1,8 +1,8 @@
 #pragma once
-#include "collections/error.h"
-#include "collections/result.h"
-#include "collections/string.h"
-#include "collections/string_view.h"
+#include "Collections/Error.hpp"
+#include "Collections/Result.hpp"
+#include "Collections/String.hpp"
+#include "Collections/StringView.hpp"
 
 
 enum ResourceType

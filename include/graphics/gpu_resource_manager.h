@@ -1,5 +1,5 @@
 #pragma once
-#include "collections/free_list.h"
+#include "Collections/FreeList.hpp"
 #include "gpu/gpu.h"
 #include "graphics/gpu_resource_types.h"
 #include "graphics/gpu_memory_allocator_types.h"

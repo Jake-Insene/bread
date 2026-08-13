@@ -1,5 +1,5 @@
 #pragma once
-#include "collections/tuple.h"
+#include "Collections/Tuple.hpp"
 #include "fmt/fmt_types.h"
 
 
@@ -81,9 +81,9 @@ void format(const IO::Writer& writer, const FormatString<Core::TypeIdentity<TArg
 }
 
 
-#include "collections/string_utility.h"
-#include "collections/string_view.h"
-#include "mem/utils.h"
+#include "Collections/StringUtility.hpp"
+#include "Collections/StringView.hpp"
+#include "Mem/Utils.hpp"
 #include "io/writer.h"
 
 namespace Format

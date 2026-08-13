@@ -1,8 +1,8 @@
 #pragma once
 #include "audio/audio.h"
-#include "collections/array.h"
-#include "collections/string.h"
-#include "mem/allocator.h"
+#include "Collections/Array.hpp"
+#include "Collections/String.hpp"
+#include "Mem/Allocator.hpp"
 
 
 struct Sound;
@@ -31,14 +31,14 @@ struct AudioService
         String name;
         f32 volume;
 
-        Array<EnqueuePlay> plays;
+        Collections::Array<EnqueuePlay> plays;
 
         Mixer(Mem::Allocator& allocator, StringView name);
     };
 
     Mem::Allocator& allocator;
     
-    Array<Mixer> mixers;
+    Collections::Array<Mixer> mixers;
     Slice<Audio::Frame> output_buffer;
 
     AudioService(Mem::Allocator& allocator);

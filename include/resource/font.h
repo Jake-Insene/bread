@@ -1,6 +1,6 @@
 #pragma once
-#include "collections/array.h"
-#include "collections/error.h"
+#include "Collections/Array.hpp"
+#include "Collections/Error.hpp"
 #include "graphics/gpu_resource_types.h"
 #include "resource/resource.h"
 #include "math/rect_2d.h"
@@ -25,7 +25,7 @@ struct Font : Resource
 
 	struct FontTheme
 	{
-		Array<Glyph> glyphs;
+		Collections::Array<Glyph> glyphs;
 		i32 font_size;
 		Vector2 atlas_size;
 		Graphics::GPUTextureID font_atlas;
@@ -34,7 +34,7 @@ struct Font : Resource
 		~FontTheme();
 	};
 
-	Array<FontTheme> themes;
+	Collections::Array<FontTheme> themes;
 
 	Font(const ResourceCreateInfo& info);
 	virtual ~Font() override;

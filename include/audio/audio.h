@@ -1,6 +1,6 @@
 #pragma once
-#include "Core/Header.h"
-#include "mem/allocator.h"
+#include "Core/Header.hpp"
+#include "Mem/Allocator.hpp"
 
 
 namespace InternalAudio

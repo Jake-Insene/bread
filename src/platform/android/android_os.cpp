@@ -1,6 +1,6 @@
 #include "platform/android/android_os.h"
 
-#include "Core/Header.h"
+#include "Core/Header.hpp"
 #include "debug/fail.h"
 #include "platform/platform_header.h"
 

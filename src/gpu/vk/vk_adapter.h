@@ -1,10 +1,10 @@
 #pragma once
-#include "collections/free_list.h"
-#include "collections/hash_map.h"
+#include "Collections/FreeList.hpp"
+#include "Collections/HashMap.hpp"
 #include "gpu/gpu_adapter.h"
 #include "gpu/vk/vk_header.h"
 #include "math/hash.h"
-#include "mem/stack_allocator.h"
+#include "Mem/LinearAllocator.hpp"
 #include "os/os.h"
 #include "os/mutex.h"
 
@@ -37,7 +37,7 @@ struct VkDriverRenderPassKey
 };
 
 template<>
-struct HashOfType<VkDriverRenderPassKey>
+struct Core::HashOfType<VkDriverRenderPassKey>
 {
 	[[nodiscard]] static constexpr u64 hashfunc(const VkDriverRenderPassKey& k)
     {
@@ -51,11 +51,11 @@ struct HashOfType<VkDriverRenderPassKey>
 };
 
 template<>
-struct Comparator<VkDriverRenderPassKey>
+struct Core::Comparator<VkDriverRenderPassKey>
 {
 	[[nodiscard]] static constexpr bool compare(const VkDriverRenderPassKey& k1, const VkDriverRenderPassKey& k2)
     {
-		return Mem::compare(
+		return ::Mem::compare(
 			Slice(reinterpret_cast<const u8*>(&k1), sizeof(k1)),
 			Slice(reinterpret_cast<const u8*>(&k2), sizeof(k2))
 		);
@@ -258,7 +258,7 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 		GPU::DeviceID device;
 		GPU::DescriptorPoolID descriptor_pool;
 
-		Array<GPU::DescriptorSetID> allocated_sets;
+		Collections::Array<GPU::DescriptorSetID> allocated_sets;
 
 		DescriptorPool(Mem::Allocator& allocator)
 		: allocated_sets(allocator, 4, {}) {}
@@ -312,7 +312,7 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 
 	Mem::Allocator& internal_allocator;
 	Mutex allocator_mutex;
-	Mem::StackAllocator tmp_allocator;
+	Mem::LinearAllocator tmp_allocator;
 
 	Slice<PhysicalDevice> physical_devices;
 	Slice<GPU::PhysicalDeviceID> physical_device_ids;
@@ -323,7 +323,7 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 	FreeList<Semaphore, GPU::SemaphoreID> semaphores;
 
 	// Device will allocate more queue infos, so the GPU::QueueID can be unique per device created.
-	Array<Queue> queues;
+	Collections::Array<Queue> queues;
 	FreeList<MemoryHeap, GPU::MemoryHeapID> memory_heaps;
 	FreeList<Buffer, GPU::BufferID> buffers;
 	FreeList<Sampler, GPU::SamplerID> samplers;

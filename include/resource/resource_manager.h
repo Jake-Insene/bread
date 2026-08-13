@@ -1,7 +1,7 @@
 #pragma once
-#include "collections/error.h"
-#include "collections/hash_map.h"
-#include "collections/string_map.h"
+#include "Collections/Error.hpp"
+#include "Collections/HashMap.hpp"
+#include "Collections/StringMap.hpp"
 #include "resource/resource.h"
 
 

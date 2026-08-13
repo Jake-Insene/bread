@@ -1,5 +1,5 @@
 #pragma once
-#include "Core/Templates.h"
+#include "Core/Templates.hpp"
 
 // Required in Clang.
 #include <new>
@@ -34,7 +34,6 @@ constexpr void PlacementArray(T* array, usize len, TArgs&&... args)
 }
 
 template<typename T>
-requires(std::is_object_v<T>)
 constexpr void Destruct(T& object)
 {
     object.~T();

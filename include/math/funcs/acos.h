@@ -1,5 +1,5 @@
 #pragma once
-#include "Core/Templates.h"
+#include "Core/Templates.hpp"
 
 
 namespace Math::impl

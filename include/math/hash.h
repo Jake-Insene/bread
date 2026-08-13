@@ -1,15 +1,15 @@
 #pragma once
-#include "Core/Header.h"
-#include "collections/slice.h"
+#include "Core/Header.hpp"
+#include "Collections/Slice.hpp"
 
 
 namespace Math::Hash
 {
 
 // FNV-1a
-static constexpr HashCode fnv1a(const Slice<const u8>& bytes)
+static constexpr Core::HashCode fnv1a(const Slice<const u8>& bytes)
 {
-    HashCode hash = 0xcbf29ce484222325ULL;
+    Core::HashCode hash = 0xcbf29ce484222325ULL;
     for(usize index = 0; index < bytes.len; index++)
     {
         hash ^= bytes[index];

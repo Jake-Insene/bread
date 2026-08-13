@@ -1,6 +1,6 @@
 #pragma once
-#include "collections/string_view.h"
-#include "Core/Header.h"
+#include "Collections/StringView.hpp"
+#include "Core/Header.hpp"
 
 
 

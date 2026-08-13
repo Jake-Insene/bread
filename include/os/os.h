@@ -1,6 +1,7 @@
 #pragma once
-#include "Core/Header.h"
-#include "collections/string.h"
+#include "Core/Header.hpp"
+#include "Collections/StringView.hpp"
+#include "Mem/Allocator.hpp"
 
 
 struct OS

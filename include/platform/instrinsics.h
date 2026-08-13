@@ -1,5 +1,5 @@
 #pragma once
-#include "collections/slice.h"
+#include "Collections/Slice.hpp"
 
 #if BREAD_X64
 #include <smmintrin.h>

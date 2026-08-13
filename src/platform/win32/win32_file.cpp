@@ -1,7 +1,7 @@
 #include "platform/win32/win32_file.h"
 
-#include "collections/string_view.h"
-#include "mem/allocator.h"
+#include "Collections/StringView.hpp"
+#include "Mem/Allocator.hpp"
 #include "platform/platform_header.h"
 
 

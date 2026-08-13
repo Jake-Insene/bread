@@ -1,5 +1,5 @@
 #pragma once
-#include "collections/array.h"
+#include "Collections/Array.hpp"
 #include "display/display.h"
 #include "gpu/gpu.h"
 
@@ -52,7 +52,7 @@ struct SwapChain
     Vector2I image_size;
         
     GPU::SwapChainID swap_chain;
-    Array<ImageInfo> images;
+    Collections::Array<ImageInfo> images;
 
     bool is_valid_swap_chain;
     bool pending_rebuild;

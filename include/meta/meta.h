@@ -1,6 +1,6 @@
 #pragma once
-#include "Core/Header.h"
-#include "collections/string_view.h"
+#include "Core/Header.hpp"
+#include "Collections/StringView.hpp"
 
 
 namespace Meta

@@ -261,7 +261,7 @@ GPU::DeviceID VulkanAdapter::device_create(GPU::PhysicalDeviceID physical_device
     uint32_t vk_copy_index = Core::MaxValue<uint32_t>;
     uint32_t vk_present_index = Core::MaxValue<uint32_t>;
 
-    Array vk_queue_infos = Array<VkDeviceQueueCreateInfo>(allocator, 4, {});
+    Collections::Array vk_queue_infos = Collections::Array<VkDeviceQueueCreateInfo>(allocator, 4, {});
     f32 priority = 1.F;
 
     vk_graphics_index = _get_queue_family_for(vk_families, vk_acquired, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT);

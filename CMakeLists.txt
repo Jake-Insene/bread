@@ -24,9 +24,6 @@ file(GLOB ENGINE_SRC
     src/audio/audio_service.cpp
     src/audio/audio.cpp
 
-    src/collections/error.cpp
-    src/collections/string.cpp
-    
     src/concurrency/job_queue.cpp
 
     src/debug/debug.cpp
@@ -52,10 +49,10 @@ file(GLOB ENGINE_SRC
     src/io/file.cpp
     src/io/writer.cpp
 
-    src/mem/utils.cpp
-    src/mem/generic_allocator.cpp
-    src/mem/page_allocator.cpp
-    src/mem/stack_allocator.cpp
+    src/Mem/Utils.cpp
+    src/Mem/GenericAllocator.cpp
+    src/Mem/PageAllocator.cpp
+    src/Mem/LinearAllocator.cpp
 
     src/platform/intrinsics.cpp
 

@@ -2,7 +2,7 @@
 
 #include "gpu/vk/vk_adapter.h"
 #include "gpu/vk/vk_vtable.h"
-#include "mem/utils.h"
+#include "Mem/Utils.hpp"
 #include "os/os.h"
 #include "platform/platform_header.h"
 

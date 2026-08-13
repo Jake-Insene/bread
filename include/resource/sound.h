@@ -1,6 +1,6 @@
 #pragma once
 #include "audio/audio.h"
-#include "collections/error.h"
+#include "Collections/Error.hpp"
 #include "resource/resource.h"
 
 

@@ -1,6 +1,6 @@
 #include "io/file.h"
 
-#include "collections/slice.h"
+#include "Collections/Slice.hpp"
 #include "io/writer.h"
 
 
