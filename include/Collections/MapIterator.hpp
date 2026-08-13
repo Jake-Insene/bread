@@ -1,6 +1,9 @@
 #pragma once
 
 
+namespace Collections
+{
+
 template<typename EntryType, typename KeyValue>
 struct [[nodiscard]] MapIterator
 {
@@ -37,3 +40,5 @@ struct [[nodiscard]] MapIterator
     MapIterator begin() const { return *this; }
     MapIterator end() const { return MapIterator(nullptr); }
 };
+
+}

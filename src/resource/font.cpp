@@ -100,7 +100,7 @@ Font::Font(const ResourceCreateInfo& info)
 Font::~Font()
 {}
 
-Error Font::load(StringView path)
+Error Font::load(Collections::StringView path)
 {
     if (!IO::File::exists(allocator, path))
     {

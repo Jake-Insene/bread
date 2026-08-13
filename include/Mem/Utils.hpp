@@ -1,5 +1,5 @@
 #pragma once
-#include "Collections/Slice.hpp"
+#include "Core/Slice.hpp"
 #include "Core/Templates.hpp"
 
 

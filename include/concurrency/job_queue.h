@@ -15,7 +15,7 @@ struct [[nodiscard]] JobQueue
 	};
 
 	Mem::Allocator& allocator;
-	Stack<JobInfo> job_stack;
+	Collections::Stack<JobInfo> job_stack;
 	Mutex mutex;
 
 	static JobQueue with_allocator(Mem::Allocator& allocator);

@@ -1,6 +1,6 @@
 #pragma once
 #include "Core/Header.hpp"
-#include "Collections/Slice.hpp"
+#include "Core/Slice.hpp"
 
 
 namespace Math::Hash

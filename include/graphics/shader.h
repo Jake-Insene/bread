@@ -8,10 +8,10 @@ namespace Graphics
 
 struct ShaderInfo
 {
-    StringView path;
+    Collections::StringView path;
 
-    StringView vertex_name;
-    StringView fragment_name;
+    Collections::StringView vertex_name;
+    Collections::StringView fragment_name;
 };
 
 struct Shader

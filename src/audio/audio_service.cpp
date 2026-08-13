@@ -5,7 +5,7 @@
 #include "resource/sound.h"
 
 
-AudioService::Mixer::Mixer(Mem::Allocator& allocator, StringView name)
+AudioService::Mixer::Mixer(Mem::Allocator& allocator, Collections::StringView name)
 : name(allocator, 0, name), volume(1.F), plays(allocator, 4, {})
 {}
 
@@ -56,13 +56,13 @@ void AudioService::update()
     Audio::output_send_frames(samples);
 }
 
-u32 AudioService::mixer_create(StringView mixer_name)
+u32 AudioService::mixer_create(Collections::StringView mixer_name)
 {
     (void)mixers.emplace(allocator, mixer_name);
     return mixers.count - 1;
 }
 
-u32 AudioService::mixer_get_by_name(StringView mixer_name)
+u32 AudioService::mixer_get_by_name(Collections::StringView mixer_name)
 {
     for(u32 i = 0; i < mixers.count; i++)
     {

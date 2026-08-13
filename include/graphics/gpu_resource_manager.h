@@ -51,7 +51,7 @@ struct GPUResourceManager
 
     GPUMemoryAllocator* gpu_memory_allocator;
 
-    FreeList<TextureData, GPUTextureID> textures;
+    Collections::FreeList<TextureData, GPUTextureID> textures;
 
     GPUResourceManager(const GPUResourceManagerCreateInfo& info);
     ~GPUResourceManager();

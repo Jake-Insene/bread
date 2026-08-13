@@ -1,5 +1,5 @@
 #pragma once
-#include "Collections/Tuple.hpp"
+#include "Core/Tuple.hpp"
 #include "fmt/fmt_types.h"
 
 
@@ -72,7 +72,7 @@ struct FormatString
 		Format::__fail_compile_time_on(type_index != ArgumentCount, "too much/few arguments");
 	}
 
-	StringView view() const;
+	Collections::StringView view() const;
 };
 
 template<bool NewLine, typename... TArgs>
@@ -90,9 +90,9 @@ namespace Format
 {
 
 template<typename... TArgs>
-StringView FormatString<TArgs...>::view() const
+Collections::StringView FormatString<TArgs...>::view() const
 {
-	return StringView(chars, len);
+	return Collections::StringView(chars, len);
 }
 
 template<usize Base>
@@ -102,14 +102,14 @@ template<usize Base, typename T>
 requires(IsValidBase<Base>)
 inline void __format_integer(const IO::Writer& writer, T arg)
 {
-	StringResult result = StringUtility::integer_to_string(arg, Base);
+	Collections::StringResult result = Collections::StringUtility::integer_to_string(arg, Base);
 	writer.write(Mem::to_const_bytes(Slice(result.result + result.begin, result.len)));
 }
 
 template<typename T>
 inline void __format_floating_point(const IO::Writer& writer, T arg, i32 decimals)
 {
-	StringResult result = StringUtility::fp_to_string<T>(arg, decimals);
+	Collections::StringResult result = Collections::StringUtility::fp_to_string<T>(arg, decimals);
 	writer.write(Mem::to_const_bytes(Slice(result.result, result.len)));
 }
 
@@ -125,8 +125,8 @@ void __format_single_argument(const IO::Writer& writer, T&& arg)
 	static constexpr Format::FormatType type = Format::__GetFormatType<T>();
 	if constexpr(type == Format::FormatType::Bool)
 	{
-		static constexpr StringView true_str = "true";
-		static constexpr StringView false_str = "false";
+		static constexpr Collections::StringView true_str = "true";
+		static constexpr Collections::StringView false_str = "false";
 		Slice str = Mem::to_const_bytes(arg ? true_str : false_str);
 		writer.write(str);
 	}
@@ -181,7 +181,7 @@ inline void __format_argument_at(
     usize target,
     Tuple&& tuple)
 {
-    if constexpr (Index < TupleSize<Core::RemoveReference<Tuple>>)
+    if constexpr (Index < Core::TupleSize<Core::RemoveReference<Tuple>>)
     {
         if (target == Index)
         {
@@ -203,12 +203,12 @@ inline void __format_argument_at(
 template<typename... TArgs>
 void __format_arguments(
     const IO::Writer& writer,
-    StringView view,
+    Collections::StringView view,
     TArgs&&... args)
 {
-    Tuple tuple = Tuple(
+    Core::Tuple tuple{
         Core::Forward<TArgs>(args)...
-    );
+	};
 
     usize start = 0;
     usize argument_index = 0;
@@ -268,7 +268,7 @@ void __format_arguments(
 template<bool NewLine, typename... TArgs>
 void format(const IO::Writer& writer, const FormatString<Core::TypeIdentity<TArgs>&&...>& fmtstring, TArgs&&... args)
 {
-	StringView view = fmtstring.view();
+	Collections::StringView view = fmtstring.view();
 
 	__format_arguments<TArgs...>(writer, view, Core::Forward<TArgs>(args)...);
 

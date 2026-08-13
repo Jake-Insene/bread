@@ -63,7 +63,7 @@ Sound::~Sound()
     }
 }
 
-Error Sound::load(StringView path)
+Error Sound::load(Collections::StringView path)
 {
     if (!IO::File::exists(allocator, path))
     {

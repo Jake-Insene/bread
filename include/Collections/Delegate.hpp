@@ -1,7 +1,10 @@
 #pragma once
-#include "Collections/Tuple.hpp"
+#include "Core/Tuple.hpp"
 #include "Mem/Allocator.hpp"
 
+
+namespace Collections
+{
 
 template<typename Fn>
 struct Delegate;
@@ -69,3 +72,5 @@ struct Delegate<T(TArgs...)>
         reserved = allocator.array<u8>(size);
     }
 };
+
+}

@@ -35,13 +35,13 @@ struct OS
     static void exit(u64 code);
     static usize get_page_size();
 
-    static Handle load_library(StringView lib_path);
+    static Handle load_library(Collections::StringView lib_path);
     static void unload_library(Handle library);
-    static VoidFunction get_proc_address(Handle library, StringView symbol_name);
+    static VoidFunction get_proc_address(Handle library, Collections::StringView symbol_name);
 
     static Slice<u8> map_memory(usize memory_size, MapAccess access);
     static void unmap_memory(const Slice<u8>& memory);
     static QueryMemory query_memory(const Slice<u8>& memory);
 
-    static bool set_current_directory(StringView dir);
+    static bool set_current_directory(Collections::StringView dir);
 };

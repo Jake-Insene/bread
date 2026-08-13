@@ -4,7 +4,8 @@
 #include "engine/engine.h"
 
 
-Result<Resource*, Error> Resource::_load_resource(ResourceType type, ResourceTypeSpecification spec, StringView path)
+Collections::Result<Resource*, Error> Resource::_load_resource(ResourceType type,
+    ResourceTypeSpecification spec, Collections::StringView path)
 {
     return Engine::get_resource_manager()->load_resource(type, spec, path);
 }

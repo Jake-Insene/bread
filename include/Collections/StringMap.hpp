@@ -1,16 +1,41 @@
 #pragma once
-#include "Collections/String.hpp"
+#include "Collections/StringView.hpp"
 #include "Collections/BaseHashMap.hpp"
-#include "Collections/Pair.hpp"
+#include "Core/Pair.hpp"
 #include "Mem/Allocator.hpp"
 #include "Mem/Utils.hpp"
 #include "math/hash.h"
 
 
+
+template<>
+struct Core::HashOfType<Collections::StringView>
+{
+    // FNV-1a
+    [[nodiscard]] static constexpr Core::HashCode hashfunc(const Collections::StringView& key)
+    {
+        return Math::Hash::fnv1a(
+            ::Mem::to_const_bytes(key)
+        );
+    }
+};
+
+template<>
+struct Core::Comparator<Collections::StringView>
+{
+    [[nodiscard]] static constexpr bool compare(const Collections::StringView& value1,
+        const Collections::StringView& value2)
+    {
+        return value1.equals(value2);
+    }
+};
+namespace Collections
+{
+
 template<typename V>
 struct StringHashMapEntry
 {
-    using KeyValue = Pair<StringView, V>;
+    using KeyValue = Core::Pair<Collections::StringView, V>;
 
     Core::HashCode hash;
     KeyValue kv;
@@ -21,8 +46,9 @@ struct StringHashMapEntry
     Mem::Allocator& allocator;
 
     template<typename... TArgs>
-    StringHashMapEntry(Mem::Allocator& allocator, Core::HashCode hash, Tuple<const StringView&> new_key, Tuple<TArgs...> args)
-    : hash(hash), kv(Tuple(new_key), args), prev(), next(), allocator(allocator)
+    StringHashMapEntry(Mem::Allocator& allocator, Core::HashCode hash,
+        Core::Tuple<const StringView&> new_key, Core::Tuple<TArgs...> args)
+    : hash(hash), kv(Core::Tuple(new_key), args), prev(), next(), allocator(allocator)
     {
         Slice<char> new_chars = allocator.array<char>(new_key.value.len);
         Mem::copy(new_chars, new_key.value);
@@ -52,31 +78,10 @@ struct StringHashMapEntry
     }
 };
 
-
-template<>
-struct Core::HashOfType<StringView>
-{
-    // FNV-1a
-    [[nodiscard]] static constexpr Core::HashCode hashfunc(const StringView& key)
-    {
-        return Math::Hash::fnv1a(
-            ::Mem::to_const_bytes(key)
-        );
-    }
-};
-
-template<>
-struct Core::Comparator<StringView>
-{
-    [[nodiscard]] static constexpr bool compare(const StringView& value1, const StringView& value2)
-    {
-        return value1.equals(value2);
-    }
-};
-
 /*
 * A collection of items referenced as a string.
 */
 template<typename V>
 using StringMap = BaseHashMap<Core::HashCode, StringHashMapEntry<V>, StringView, V>;
 
+}

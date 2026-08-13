@@ -1,6 +1,5 @@
 #pragma once
 #include "Core/Header.hpp"
-#include "Collections/Slice.hpp"
 #include "Debug/Assertion.hpp"
 #include "Mem/Utils.hpp"
 

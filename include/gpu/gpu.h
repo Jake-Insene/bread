@@ -46,25 +46,25 @@ namespace GPU
 
 	using IntegralIDType = u32;
 
-	using PhysicalDeviceID = ID<IntegralIDType, struct _PhysicalDeviceTag>;
-	using SurfaceID = ID<IntegralIDType, struct _SurfaceTag>;
-	using DeviceID = ID<IntegralIDType, struct _DeviceTag>;
-	using SwapChainID = ID<IntegralIDType, struct _SwapChainTag>;
-	using FenceID = ID<IntegralIDType, struct _FenceID>;
-	using SemaphoreID = ID<IntegralIDType, struct _SemaphoreD>;
-	using QueueID = ID<IntegralIDType, struct _QueueID>;
-	using MemoryHeapID = ID<IntegralIDType, struct _MemoryHeapTag>;
-	using BufferID = ID<IntegralIDType, struct _BufferTag>;
-	using SamplerID = ID<IntegralIDType, struct _SamplerTag>;
-	using TextureID = ID<IntegralIDType, struct _TextureTag>;
-	using TextureViewID = ID<IntegralIDType, struct _TextureViewTag>;
-	using DescriptorSetLayoutID = ID<IntegralIDType, struct _DescriptorSetLayout>;
-	using DescriptorPoolID = ID<IntegralIDType, struct _DescriptorPoolTag>;
-	using DescriptorSetID = ID<IntegralIDType, struct _DescriptorSet>;
-	using PipelineLayoutID = ID<IntegralIDType, struct _PipelineLayoutTag>;
-	using PipelineID = ID<IntegralIDType, struct _PipelineTag>;
-	using CommandPoolID = ID<IntegralIDType, struct _CommandPoolID>;
-	using CommandBufferID = ID<IntegralIDType, struct _CommandBufferTag>;
+	using PhysicalDeviceID = Collections::ID<IntegralIDType, struct _PhysicalDeviceTag>;
+	using SurfaceID = Collections::ID<IntegralIDType, struct _SurfaceTag>;
+	using DeviceID = Collections::ID<IntegralIDType, struct _DeviceTag>;
+	using SwapChainID = Collections::ID<IntegralIDType, struct _SwapChainTag>;
+	using FenceID = Collections::ID<IntegralIDType, struct _FenceID>;
+	using SemaphoreID = Collections::ID<IntegralIDType, struct _SemaphoreD>;
+	using QueueID = Collections::ID<IntegralIDType, struct _QueueID>;
+	using MemoryHeapID = Collections::ID<IntegralIDType, struct _MemoryHeapTag>;
+	using BufferID = Collections::ID<IntegralIDType, struct _BufferTag>;
+	using SamplerID = Collections::ID<IntegralIDType, struct _SamplerTag>;
+	using TextureID = Collections::ID<IntegralIDType, struct _TextureTag>;
+	using TextureViewID = Collections::ID<IntegralIDType, struct _TextureViewTag>;
+	using DescriptorSetLayoutID = Collections::ID<IntegralIDType, struct _DescriptorSetLayout>;
+	using DescriptorPoolID = Collections::ID<IntegralIDType, struct _DescriptorPoolTag>;
+	using DescriptorSetID = Collections::ID<IntegralIDType, struct _DescriptorSet>;
+	using PipelineLayoutID = Collections::ID<IntegralIDType, struct _PipelineLayoutTag>;
+	using PipelineID = Collections::ID<IntegralIDType, struct _PipelineTag>;
+	using CommandPoolID = Collections::ID<IntegralIDType, struct _CommandPoolID>;
+	using CommandBufferID = Collections::ID<IntegralIDType, struct _CommandBufferTag>;
 
     void initialize(Mem::Allocator& allocator);
     void initialize_from_adapter(InternalGPU::GPUAdapter* adapter);
@@ -1142,7 +1142,7 @@ namespace GPU
 	{
 		ShaderStage stage;
 		Slice<const u8> code;
-		StringView name;
+		Collections::StringView name;
 	};
 
 	struct VertexBinding

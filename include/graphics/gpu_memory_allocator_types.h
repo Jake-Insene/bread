@@ -1,5 +1,5 @@
 #pragma once
-#include "Core/Header.hpp"
+#include "Collections/ID.hpp"
 
 
-using GPUMemoryAllocationID = ID<u32, struct _AllocationTag>;
+using GPUMemoryAllocationID = Collections::ID<u32, struct _AllocationTag>;

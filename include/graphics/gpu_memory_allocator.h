@@ -75,7 +75,7 @@ struct GPUMemoryAllocator
     GPU::QueueID copy_queue;
 
     Collections::Array<Heap> heaps;
-    FreeList<Allocation, GPUMemoryAllocationID> allocations;
+    Collections::FreeList<Allocation, GPUMemoryAllocationID> allocations;
     Collections::Array<StagingHeap> staging_heaps;
 
     GPUMemoryAllocator(const GPUMemoryAllocatorCreateInfo& info);

@@ -28,12 +28,12 @@ struct AudioService
 
     struct Mixer
     {
-        String name;
+        Collections::String name;
         f32 volume;
 
         Collections::Array<EnqueuePlay> plays;
 
-        Mixer(Mem::Allocator& allocator, StringView name);
+        Mixer(Mem::Allocator& allocator, Collections::StringView name);
     };
 
     Mem::Allocator& allocator;
@@ -46,8 +46,8 @@ struct AudioService
 
     void update();
 
-    u32 mixer_create(StringView mixer_name);
-    u32 mixer_get_by_name(StringView mixer_name);
+    u32 mixer_create(Collections::StringView mixer_name);
+    u32 mixer_get_by_name(Collections::StringView mixer_name);
     u32 mixer_count();
     
     f32 mixer_get_volume(u32 mixer);

@@ -3,6 +3,9 @@
 #include "Debug/Fail.hpp"
 
 
+namespace Collections
+{
+
 template<typename E>
 struct BadResult
 {
@@ -68,4 +71,4 @@ struct [[nodiscard]] Result
 	
 };
 
-
+}

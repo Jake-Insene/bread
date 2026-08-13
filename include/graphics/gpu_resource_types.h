@@ -5,6 +5,6 @@
 namespace Graphics
 {
 
-using GPUTextureID = ID<u32, struct _GPUTextureTag>;
+using GPUTextureID = Collections::ID<u32, struct _GPUTextureTag>;
     
 }

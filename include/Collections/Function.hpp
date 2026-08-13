@@ -3,6 +3,9 @@
 #include "Debug/Assertion.hpp"
 
 
+namespace Collections
+{
+
 template<typename Fn, bool UseInstance>
 struct FunctionStorage
 {
@@ -99,3 +102,4 @@ struct [[nodiscard]] Function
 	constexpr bool has_func() const { return storage.func != nullptr; }
 };
 
+}

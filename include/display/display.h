@@ -14,7 +14,7 @@ struct Display
 
     static constexpr const char* DefaultTitle = "Bread!!!";
 
-    using WindowID = ID<u32, struct __WindowTag>;
+    using WindowID = Collections::ID<u32, struct __WindowTag>;
 
     struct VTable
     {

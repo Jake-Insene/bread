@@ -1,7 +1,10 @@
 #pragma once
-#include "Collections/Slice.hpp"
+#include "Core/Slice.hpp"
 #include "Mem/Utils.hpp"
 
+
+namespace Collections
+{
 
 template<typename T>
 struct [[nodiscard]] BaseStringView : Slice<const T>
@@ -96,3 +99,5 @@ struct [[nodiscard]] BaseStringView : Slice<const T>
 };
 
 using StringView = BaseStringView<char>;
+
+}

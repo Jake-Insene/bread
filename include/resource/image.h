@@ -28,7 +28,7 @@ struct Image : Resource
     Image(const ResourceCreateInfo& info);
     virtual ~Image() override;
     
-    Error load_from_path(StringView path);
+    Error load_from_path(Collections::StringView path);
     void unload();
 
     Slice<u8> get_raw_pixels() const { return data.pixels; }

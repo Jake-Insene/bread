@@ -24,17 +24,17 @@ struct ResourceManager
     };
 
     Mem::Allocator& allocator;
-    StringMap<ResourceAllocation> resources;
+    Collections::StringMap<ResourceAllocation> resources;
 
     [[nodiscard]] Mem::Allocator& get_allocator() const { return allocator; }
 
     ResourceManager(Mem::Allocator& allocator);
     ~ResourceManager();
 
-    [[nodiscard]] Result<Resource*, Error> load_resource(ResourceType type,
-        ResourceTypeSpecification specification, StringView path);
+    [[nodiscard]] Collections::Result<Resource*, Error> load_resource(ResourceType type,
+        ResourceTypeSpecification specification, Collections::StringView path);
 
-    [[nodiscard]] bool place_resource(StringView resource_name, Resource* resource);
+    [[nodiscard]] bool place_resource(Collections::StringView resource_name, Resource* resource);
 
     // Implementation
     template<typename T>
@@ -51,10 +51,10 @@ struct ResourceManager
         return resource;
     }
 
-    [[nodiscard]] Result<Resource*, Error> _load_image(StringView path);
-    [[nodiscard]] Result<Resource*, Error> _load_texture_2d(StringView path);
-    [[nodiscard]] Result<Resource*, Error> _load_sound(StringView path);
-    [[nodiscard]] Result<Resource*, Error> _load_font(StringView path);
+    [[nodiscard]] Collections::Result<Resource*, Error> _load_image(Collections::StringView path);
+    [[nodiscard]] Collections::Result<Resource*, Error> _load_texture_2d(Collections::StringView path);
+    [[nodiscard]] Collections::Result<Resource*, Error> _load_sound(Collections::StringView path);
+    [[nodiscard]] Collections::Result<Resource*, Error> _load_font(Collections::StringView path);
 };
 
 

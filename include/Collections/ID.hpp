@@ -3,6 +3,9 @@
 #include "Core/Values.hpp"
 
 
+namespace Collections
+{
+
 /**
 * Use to create custom ID types.
 * 
@@ -30,3 +33,4 @@ struct [[nodiscard]] ID
     [[nodiscard]] constexpr Type integer() const { return Type(id); }
 };
 
+}

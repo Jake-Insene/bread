@@ -1,8 +1,9 @@
 #pragma once
-#include "Core/Header.hpp"
-#include "Collections/Tuple.hpp"
+#include "Core/Tuple.hpp"
 
 
+namespace Core
+{
 
 template<typename T1, typename T2>
 struct [[nodiscard]] Pair
@@ -21,3 +22,5 @@ struct [[nodiscard]] Pair
     : first(FromTuple<T1>(args1)), second(FromTuple<T2>(args2))
     {}
 };
+
+}

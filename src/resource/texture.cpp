@@ -24,7 +24,7 @@ Vector2I Texture::get_size() const
     return size;
 }
 
-Error Texture2D::load_from_path(StringView path)
+Error Texture2D::load_from_path(Collections::StringView path)
 {
     if (!IO::File::exists(allocator, path))
     {

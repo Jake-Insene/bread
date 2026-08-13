@@ -50,7 +50,7 @@ usize OS::get_page_size()
     return get_data().page_size;
 }
 
-OS::Handle OS::load_library(StringView lib_path)
+OS::Handle OS::load_library(Collections::StringView lib_path)
 {
     Slice path = Win32OS::get_allocator().array<char>(lib_path.len + 1);
     Mem::copy(path, lib_path);
@@ -66,7 +66,7 @@ void OS::unload_library(OS::Handle library)
     FreeLibrary(reinterpret_cast<HMODULE>(library));
 }
 
-OS::VoidFunction OS::get_proc_address(OS::Handle library, StringView symbol_name)
+OS::VoidFunction OS::get_proc_address(OS::Handle library, Collections::StringView symbol_name)
 {
     Slice symbol = Win32OS::get_allocator().array<char>(symbol_name.len + 1);
     Mem::copy(symbol, symbol_name);
@@ -134,7 +134,7 @@ OS::QueryMemory OS::query_memory(const Slice<u8>& memory)
     };    
 }
 
-bool OS::set_current_directory(StringView dir)
+bool OS::set_current_directory(Collections::StringView dir)
 {
     Slice path = Win32OS::get_allocator().array<char>(dir.len + 1);
     Mem::copy(path, dir);

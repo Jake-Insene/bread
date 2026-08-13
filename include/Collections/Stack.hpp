@@ -5,6 +5,9 @@
 #include "math/funcs.h"
 
 
+namespace Collections
+{
+
 template<typename T>
 struct [[nodiscard]] Stack
 {
@@ -111,4 +114,4 @@ struct [[nodiscard]] Stack
 	}
 };
 
-
+}

@@ -81,9 +81,9 @@ LONG _exception_handler(EXCEPTION_POINTERS* ep)
 	frame.AddrStack.Offset = ep->ContextRecord->Rsp;
 	frame.AddrStack.Mode = AddrModeFlat;
 
-	StringView module_name = StringView();
-	StringView function_name = StringView();
-	StringView file_name = StringView();
+	Collections::StringView module_name{};
+	Collections::StringView function_name{};
+	Collections::StringView file_name{};
 	char module_name_buff[260]{};
 
 	CONTEXT new_context = *ep->ContextRecord;
@@ -96,7 +96,7 @@ LONG _exception_handler(EXCEPTION_POINTERS* ep)
 		DWORD module_name_len = GetModuleFileNameA(
 			reinterpret_cast<HINSTANCE>(module_base), module_name_buff, MAX_PATH
 		);
-		module_name = StringView(module_name_buff, module_name_len);
+		module_name = Collections::StringView(module_name_buff, module_name_len);
 
 		usize index = module_name_len - 1;
 		while (module_name[index] != '\\' && index > 0)
@@ -104,7 +104,7 @@ LONG _exception_handler(EXCEPTION_POINTERS* ep)
 			index--;
 		}
 
-		module_name = StringView(module_name_buff + index + 1, module_name_len - index - 1);
+		module_name = Collections::StringView(module_name_buff + index + 1, module_name_len - index - 1);
 
 		char symbol_buffer[sizeof(IMAGEHLP_SYMBOL64) + 255];
 		PIMAGEHLP_SYMBOL64 symbol = reinterpret_cast<PIMAGEHLP_SYMBOL64>(symbol_buffer);
@@ -113,7 +113,7 @@ LONG _exception_handler(EXCEPTION_POINTERS* ep)
 
 		if (SymGetSymFromAddr64(process, frame.AddrPC.Offset, NULL, symbol) != 0)
 		{
-			function_name = StringView(symbol->Name, Core::NullTerminatedLen(symbol->Name));
+			function_name = Collections::StringView(symbol->Name, Core::NullTerminatedLen(symbol->Name));
 		}
 
 		DWORD offset = 0;
@@ -121,7 +121,7 @@ LONG _exception_handler(EXCEPTION_POINTERS* ep)
 		line_hlp.SizeOfStruct = sizeof(IMAGEHLP_LINE);
 		if (SymGetLineFromAddr64(process, frame.AddrPC.Offset, &offset, &line_hlp) != 0)
 		{
-			file_name = StringView(line_hlp.FileName, Core::NullTerminatedLen(line_hlp.FileName));
+			file_name = Collections::StringView(line_hlp.FileName, Core::NullTerminatedLen(line_hlp.FileName));
 			line = line_hlp.LineNumber;
 
 			index = file_name.len - 1;
@@ -130,7 +130,7 @@ LONG _exception_handler(EXCEPTION_POINTERS* ep)
 				index--;
 			}
 
-			file_name = StringView(file_name.items + index + 1, file_name.len - index - 1);
+			file_name = Collections::StringView(file_name.items + index + 1, file_name.len - index - 1);
 		}
 
 		Log::error("\t{}: {} at line {}: {}", file_name, function_name, line, module_name);

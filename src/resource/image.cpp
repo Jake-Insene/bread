@@ -22,7 +22,7 @@ Image::~Image()
     }
 }
 
-Error Image::load_from_path(StringView path)
+Error Image::load_from_path(Collections::StringView path)
 {
     if (!IO::File::exists(allocator, path))
     {

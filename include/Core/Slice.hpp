@@ -1,5 +1,6 @@
 #pragma once
-#include "Core/Header.hpp"
+#include "Core/Types.hpp"
+#include "Core/Templates.hpp"
 #include "Debug/Assertion.hpp"
 
 

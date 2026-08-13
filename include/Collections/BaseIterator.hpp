@@ -2,6 +2,8 @@
 #include "Core/Header.hpp"
 
 
+namespace Collections
+{
 
 /**
 * Contains simple routines for iterators.
@@ -76,3 +78,5 @@ struct [[nodiscard]] BaseIterator
 		return Forward<decltype(self)>(self);
 	}
 };
+
+}

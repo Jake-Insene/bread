@@ -1,6 +1,9 @@
 #pragma once
-#include "Collections/BaseIterator.h"
+#include "Collections/BaseIterator.hpp"
 
+
+namespace Collections
+{
 
 template<typename T>
 struct [[nodiscard]] ReverseIterator : BaseIterator<T>
@@ -47,4 +50,4 @@ struct [[nodiscard]] ReverseIterator : BaseIterator<T>
     }
 };
 
-
+}

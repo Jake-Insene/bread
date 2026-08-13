@@ -40,7 +40,7 @@ File& File::get_stdin()
 	return *reinterpret_cast<File*>(&handle);
 }
 
-Slice<u8> File::read_all(Mem::Allocator& allocator, StringView path)
+Slice<u8> File::read_all(Mem::Allocator& allocator, Collections::StringView path)
 {
 	Slice tmp = allocator.array<char>(path.len + 1);
 	Mem::copy(tmp, path);
@@ -65,7 +65,7 @@ Slice<u8> File::read_all(Mem::Allocator& allocator, StringView path)
     return bytes;
 }
 
-bool File::exists(Mem::Allocator& allocator, StringView path)
+bool File::exists(Mem::Allocator& allocator, Collections::StringView path)
 {
 	Slice tmp = allocator.array<char>(path.len + 1);
 	Mem::copy(tmp, path);
@@ -81,7 +81,7 @@ bool File::exists(Mem::Allocator& allocator, StringView path)
 	return finded;
 }
 
-File::File(Mem::Allocator& allocator, StringView path, OpenMode mode)
+File::File(Mem::Allocator& allocator, Collections::StringView path, OpenMode mode)
 {
 	Slice tmp = allocator.array<char>(path.len + 1);
 	Mem::copy(tmp, path);

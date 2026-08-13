@@ -19,7 +19,7 @@ enum ResourceType
 struct ResourceTypeSpecification
 {
     bool LoadFromAssets = false;
-    StringView Extensions = "";
+    Collections::StringView Extensions = "";
 };
 
 enum class ResourceFlags : u32
@@ -29,7 +29,8 @@ enum class ResourceFlags : u32
 };
 EnableBitOp(ResourceFlags)
 
-static constexpr ResourceTypeSpecification _construct_from_flags(ResourceFlags flags, StringView extensions)
+static constexpr ResourceTypeSpecification _construct_from_flags(ResourceFlags flags,
+    Collections::StringView extensions)
 {
     return ResourceTypeSpecification
     {
@@ -65,16 +66,17 @@ struct Resource
     };
 
     
-    static Result<Resource*, Error> _load_resource(ResourceType type, ResourceTypeSpecification spec, StringView path);
+    static Collections::Result<Resource*, Error> _load_resource(ResourceType type,
+        ResourceTypeSpecification spec, Collections::StringView path);
 
     /*
     * Try to load the resource of the given type, can return nullptr
     */
     template<typename T>
     requires(!Core::IsSame<Resource, T> && Core::IsBaseOf<Resource, T>)
-    [[nodiscard]] static Result<T*, Error> try_load(StringView path)
+    [[nodiscard]] static Collections::Result<T*, Error> try_load(Collections::StringView path)
     {
-        Result<Resource*, Error> resource = _load_resource(T::Type, T::Specification, path);
+        Collections::Result<Resource*, Error> resource = _load_resource(T::Type, T::Specification, path);
         if (resource)
         {
             return reinterpret_cast<T*>(resource.value());
@@ -88,14 +90,14 @@ struct Resource
     */
     template<typename T>
     requires(!Core::IsSame<Resource, T> && Core::IsBaseOf<Resource, T>)
-    [[nodiscard]] static T* load(StringView path)
+    [[nodiscard]] static T* load(Collections::StringView path)
     {
         return reinterpret_cast<T*>(_load_resource(T::Type, T::Specification, path).value());
     };
     
     Mem::Allocator& allocator;
     ResourceType type;
-    String path;
+    Collections::String path;
     
     Resource(const ResourceCreateInfo& info);
     virtual ~Resource();

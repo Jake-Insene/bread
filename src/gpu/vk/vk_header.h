@@ -14,8 +14,8 @@ struct VulkanAdapter;
 
 struct Vulkan
 {
-    static constexpr StringView VkApplicationName = "Game";
-    static constexpr StringView VkEngineName = "Bread";
+    static constexpr Collections::StringView VkApplicationName = "Game";
+    static constexpr Collections::StringView VkEngineName = "Bread";
 
     static constexpr const char* VkCoreDeviceExtensions[] =
     {
@@ -32,14 +32,14 @@ struct Vulkan
         bool has_dynamic_rendering;
     };
 
-    static StringView result_as_string(VkResult result)
+    static Collections::StringView result_as_string(VkResult result)
     {
-        return StringView(string_VkResult(result), Core::NullTerminatedLen(string_VkResult(result)));
+        return Collections::StringView(string_VkResult(result), Core::NullTerminatedLen(string_VkResult(result)));
     }
     
-    static StringView vulkan_string_to_sv(const char* vk_str)
+    static Collections::StringView vulkan_string_to_sv(const char* vk_str)
     {
-        return StringView(vk_str, Core::NullTerminatedLen(vk_str));
+        return Collections::StringView(vk_str, Core::NullTerminatedLen(vk_str));
     }
     
     static VkAllocationCallbacks* allocation_callbacks(VulkanAdapter* adapter);

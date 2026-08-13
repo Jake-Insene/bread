@@ -39,8 +39,8 @@ ResourceManager::~ResourceManager()
     }
 }
 
-Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
-    ResourceTypeSpecification, StringView path)
+Collections::Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
+    ResourceTypeSpecification, Collections::StringView path)
 {
     switch (type)
     {
@@ -65,7 +65,7 @@ Result<Resource*, Error> ResourceManager::load_resource(ResourceType type,
 }
 
 
-bool ResourceManager::place_resource(StringView resource_name, Resource* resource)
+bool ResourceManager::place_resource(Collections::StringView resource_name, Resource* resource)
 {
     if (resources.has(resource_name))
     {
@@ -81,7 +81,7 @@ bool ResourceManager::place_resource(StringView resource_name, Resource* resourc
     return true;
 }
 
-Result<Resource*, Error> ResourceManager::_load_image(StringView path)
+Collections::Result<Resource*, Error> ResourceManager::_load_image(Collections::StringView path)
 {
     Image* image = nullptr;
     if (resources.has(path))
@@ -109,8 +109,7 @@ Result<Resource*, Error> ResourceManager::_load_image(StringView path)
     return image;
 }
 
-
-Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path)
+Collections::Result<Resource*, Error> ResourceManager::_load_texture_2d(Collections::StringView path)
 {
     Texture2D* tex = nullptr;
     if(resources.has(path))
@@ -139,7 +138,7 @@ Result<Resource*, Error> ResourceManager::_load_texture_2d(StringView path)
     return tex;
 }
 
-Result<Resource*, Error> ResourceManager::_load_sound(StringView path)
+Collections::Result<Resource*, Error> ResourceManager::_load_sound(Collections::StringView path)
 {
     if (resources.has(path))
     {
@@ -161,7 +160,7 @@ Result<Resource*, Error> ResourceManager::_load_sound(StringView path)
     return new_sound;
 }
 
-Result<Resource*, Error> ResourceManager::_load_font(StringView path)
+Collections::Result<Resource*, Error> ResourceManager::_load_font(Collections::StringView path)
 {
     if (resources.has(path))
     {

@@ -18,7 +18,7 @@ struct Sound : Resource
 	Sound(const ResourceCreateInfo& info);
     virtual ~Sound() override;
 
-    Error load(StringView path);
+    Error load(Collections::StringView path);
 
     bool is_mono() const { return data.mono; }
     bool is_stereo() const { return !data.mono; }

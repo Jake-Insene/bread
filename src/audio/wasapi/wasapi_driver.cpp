@@ -126,7 +126,8 @@ void WASAPIDriver::initialize(Mem::Allocator& allocator)
         "\n\tChannels: {}"
         "\n\tSamplesPerSec: {}"
         "\n\tBitsPerSample: {}",
-        get_data().output_device.wave_format == WAVE_FORMAT_PCM ? StringView("I32") : StringView("Float"),
+        get_data().output_device.wave_format == WAVE_FORMAT_PCM ?
+        Collections::StringView("I32") : Collections::StringView("Float"),
         get_data().output_device.channels,
         get_data().output_device.samples_per_sec,
         get_data().output_device.bits_per_sample

@@ -27,7 +27,7 @@ struct Texture2D : Texture
 
     Texture2D(const ResourceCreateInfo& info) : Texture(info) {}
 
-    Error load_from_path(StringView path);
+    Error load_from_path(Collections::StringView path);
     Error load_from_image(Image* image);
     Error load_from_raw(Image::ImageFormat image_format, const Vector2I& image_size, const Slice<u8>& pixels);
 };

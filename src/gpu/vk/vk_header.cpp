@@ -488,7 +488,7 @@ VkBool32 VKAPI_PTR Vulkan::_vk_debug_utils_callback(
 	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 	[[maybe_unused]] void* pUserData)
 {
-    StringView msg_view = Vulkan::vulkan_string_to_sv(pCallbackData->pMessage);
+    Collections::StringView msg_view = Vulkan::vulkan_string_to_sv(pCallbackData->pMessage);
     VKDebugInfo("{}", msg_view);
  	return VK_FALSE;
 }
@@ -583,7 +583,7 @@ void Vulkan::_check_instance_extensions(Mem::Allocator& allocator)
     for (const char* ext : VkInstanceExtensions)
     {
         bool finded = false;
-        StringView ext_view = Vulkan::vulkan_string_to_sv(ext);
+        Collections::StringView ext_view = Vulkan::vulkan_string_to_sv(ext);
         for (VkExtensionProperties& act_ext : instance_extensions)
         {
             if (ext_view.equals(Vulkan::vulkan_string_to_sv(act_ext.extensionName)))

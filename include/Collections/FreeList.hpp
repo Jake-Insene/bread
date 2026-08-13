@@ -2,6 +2,9 @@
 #include "Collections/Array.hpp"
 
 
+namespace Collections
+{
+
 /*
 * A array that can reuse empty slots.
 * Useful for local system resource referenced as an ID.
@@ -154,3 +157,5 @@ struct [[nodiscard]] FreeList
 
     T& _get_element_at(usize index) { return array.get(index); }
 };
+
+}

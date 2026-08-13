@@ -46,8 +46,8 @@ struct CommandPool
     Collections::Array<GPU::FenceID> gpu_work_fences;
     Collections::Array<WorkSubmit> work_submited;
         
-    Stack<GPU::FenceID> gpu_free_fences;
-    Stack<GPU::CommandBufferID> free_command_buffers;
+    Collections::Stack<GPU::FenceID> gpu_free_fences;
+    Collections::Stack<GPU::CommandBufferID> free_command_buffers;
 
     CommandPool(const CommandPoolInfo& info);
     ~CommandPool();

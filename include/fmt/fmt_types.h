@@ -1,6 +1,6 @@
 #pragma once
-#include "Collections/StringView.hpp"
 #include "Core/Header.hpp"
+#include "Collections/StringView.hpp"
 
 
 
@@ -57,7 +57,7 @@ constexpr FormatType __GetFormatType()
 	{
 		return FormatType::Pointer;
 	}
-	else if constexpr(Core::IsSame<TypeNoCR, StringView>)
+	else if constexpr(Core::IsSame<TypeNoCR, Collections::StringView>)
 	{
 		return FormatType::StringView;
 	}

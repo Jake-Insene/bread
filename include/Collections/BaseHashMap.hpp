@@ -1,15 +1,17 @@
 #pragma once
 #include "Collections/MapIterator.hpp"
-#include "Collections/Pair.hpp"
+#include "Core/Pair.hpp"
 #include "Mem/Allocator.hpp"
 #include "Mem/Utils.hpp"
 
 
+namespace Collections
+{
 
 template<typename K, typename V, typename HashType>
 struct BaseHashMapEntry
 {
-    using KeyValue = Pair<K, V>;
+    using KeyValue = Core::Pair<K, V>;
 
     HashType hash;
     KeyValue kv;
@@ -18,7 +20,8 @@ struct BaseHashMapEntry
     BaseHashMapEntry* next;
 
     template<typename... TArgs1, typename... TArgs2>
-    BaseHashMapEntry([[maybe_unused]] Mem::Allocator& allocator, HashType hash, Tuple<TArgs1...> args1, Tuple<TArgs2...> args2)
+    BaseHashMapEntry([[maybe_unused]] Mem::Allocator& allocator, HashType hash,
+        Core::Tuple<TArgs1...> args1, Core::Tuple<TArgs2...> args2)
     : hash(hash), kv(args1, args2), prev(), next()
     {}
 
@@ -48,7 +51,7 @@ struct [[nodiscard]] BaseHashMap
     
     using HashType = InHashType;
     using MapEntry = InHashMapEntry;
-    using KeyValue = Pair<K, V>;
+    using KeyValue = Core::Pair<K, V>;
     using Iterator = MapIterator<InHashMapEntry, KeyValue>;
     using Hasher = Core::HashOfType<K>;
     using TComparator = Core::Comparator<K>;
@@ -269,7 +272,7 @@ struct [[nodiscard]] BaseHashMap
                 MapEntry* entry = Mem::from_bytes<MapEntry>(
                     allocator.alloc(sizeof(MapEntry), alignof(MapEntry))
                 ).ptr();
-                Core::Mem::Placement(*entry, allocator, hash, Tuple(key), Tuple(value));
+                Core::Mem::Placement(*entry, allocator, hash, Core::Tuple(key), Core::Tuple(value));
 
                 entries[index] = entry;
                 if(first == nullptr)
@@ -292,7 +295,7 @@ struct [[nodiscard]] BaseHashMap
             {
                 MapEntry* entry = entries[index];
                 Core::Mem::Destruct(*entry);
-                Core::Mem::Placement(*entry, allocator, hash, Tuple(key), Tuple(value));
+                Core::Mem::Placement(*entry, allocator, hash, Core::Tuple(key), Core::Tuple(value));
 
                 if (first == nullptr)
                 {
@@ -341,8 +344,8 @@ struct [[nodiscard]] BaseHashMap
                 MapEntry* entry = Mem::from_bytes<MapEntry>(
                     allocator.alloc(sizeof(MapEntry), alignof(MapEntry))
                 ).ptr();
-                Core::Mem::Placement(*entry, allocator, hash, Tuple(key),
-                    Tuple<TArgs...>(Core::Forward<TArgs>(args)...));
+                Core::Mem::Placement(*entry, allocator, hash, Core::Tuple(key),
+                    Core::Tuple<TArgs...>(Core::Forward<TArgs>(args)...));
 
                 entries[index] = entry;
                 if(first == nullptr)
@@ -365,8 +368,8 @@ struct [[nodiscard]] BaseHashMap
             {
                 MapEntry* entry = entries[index];
                 Core::Mem::Destruct(*entry);
-                Core::Mem::Placement(*entry, allocator, hash, Tuple(key),
-                    Tuple<TArgs...>(Core::Forward<TArgs>(args)...));
+                Core::Mem::Placement(*entry, allocator, hash, Core::Tuple(key),
+                    Core::Tuple<TArgs...>(Core::Forward<TArgs>(args)...));
 
                 if (first == nullptr)
                 {
@@ -396,3 +399,5 @@ struct [[nodiscard]] BaseHashMap
         }
     }
 };
+
+}

@@ -2,6 +2,9 @@
 #include "Core/Header.hpp"
 
 
+namespace Collections
+{
+
 struct StringResult
 {
 	u8 result[64];
@@ -128,4 +131,4 @@ struct StringUtility
 	}
 };
 
-
+}

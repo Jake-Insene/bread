@@ -87,8 +87,8 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 	};
 
 	// RenderPass Hash
-	using RenderPassEntry = HashMap<VkDriverRenderPassKey, RenderPassCache>::KeyValue;
-	using FramebufferEntry = HashMap<VkImageView, VkFramebuffer>::KeyValue;
+	using RenderPassEntry = Collections::HashMap<VkDriverRenderPassKey, RenderPassCache>::KeyValue;
+	using FramebufferEntry = Collections::HashMap<VkImageView, VkFramebuffer>::KeyValue;
 
 	enum class FeatureLevel
 	{
@@ -123,7 +123,7 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 		FeatureLevel feature_level;
 
 		// device resources
-		HashMap<VkDriverRenderPassKey, RenderPassCache> render_pass_cache;
+		Collections::HashMap<VkDriverRenderPassKey, RenderPassCache> render_pass_cache;
 
 		GPU::DeviceID device;
 
@@ -316,26 +316,26 @@ struct VulkanAdapter final : InternalGPU::GPUAdapter
 
 	Slice<PhysicalDevice> physical_devices;
 	Slice<GPU::PhysicalDeviceID> physical_device_ids;
-	FreeList<Surface, GPU::SurfaceID> surfaces;
-	FreeList<LogicalDevice, GPU::DeviceID> devices;
-	FreeList<SwapChain, GPU::SwapChainID> swap_chains;
-	FreeList<Fence, GPU::FenceID> fences;
-	FreeList<Semaphore, GPU::SemaphoreID> semaphores;
+	Collections::FreeList<Surface, GPU::SurfaceID> surfaces;
+	Collections::FreeList<LogicalDevice, GPU::DeviceID> devices;
+	Collections::FreeList<SwapChain, GPU::SwapChainID> swap_chains;
+	Collections::FreeList<Fence, GPU::FenceID> fences;
+	Collections::FreeList<Semaphore, GPU::SemaphoreID> semaphores;
 
 	// Device will allocate more queue infos, so the GPU::QueueID can be unique per device created.
 	Collections::Array<Queue> queues;
-	FreeList<MemoryHeap, GPU::MemoryHeapID> memory_heaps;
-	FreeList<Buffer, GPU::BufferID> buffers;
-	FreeList<Sampler, GPU::SamplerID> samplers;
-	FreeList<Texture, GPU::TextureID> textures;
-	FreeList<TextureView, GPU::TextureViewID> texture_views;
-	FreeList<DescriptorSetLayout, GPU::DescriptorSetLayoutID> descriptor_set_layouts;
-	FreeList<DescriptorPool, GPU::DescriptorPoolID> descriptor_pools;
-	FreeList<DescriptorSet, GPU::DescriptorSetID> descriptor_sets;
-	FreeList<PipelineLayout, GPU::PipelineLayoutID> pipeline_layouts;
-	FreeList<Pipeline, GPU::PipelineID> pipelines;
-	FreeList<CommandPool, GPU::CommandPoolID> command_pools;
-	FreeList<CommandBuffer, GPU::CommandBufferID> command_buffers;
+	Collections::FreeList<MemoryHeap, GPU::MemoryHeapID> memory_heaps;
+	Collections::FreeList<Buffer, GPU::BufferID> buffers;
+	Collections::FreeList<Sampler, GPU::SamplerID> samplers;
+	Collections::FreeList<Texture, GPU::TextureID> textures;
+	Collections::FreeList<TextureView, GPU::TextureViewID> texture_views;
+	Collections::FreeList<DescriptorSetLayout, GPU::DescriptorSetLayoutID> descriptor_set_layouts;
+	Collections::FreeList<DescriptorPool, GPU::DescriptorPoolID> descriptor_pools;
+	Collections::FreeList<DescriptorSet, GPU::DescriptorSetID> descriptor_sets;
+	Collections::FreeList<PipelineLayout, GPU::PipelineLayoutID> pipeline_layouts;
+	Collections::FreeList<Pipeline, GPU::PipelineID> pipelines;
+	Collections::FreeList<CommandPool, GPU::CommandPoolID> command_pools;
+	Collections::FreeList<CommandBuffer, GPU::CommandBufferID> command_buffers;
 
 	struct
 	{

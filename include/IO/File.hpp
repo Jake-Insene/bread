@@ -34,10 +34,10 @@ struct File
     static File& get_stdout();
     static File& get_stdin();
 
-    static Slice<u8> read_all(Mem::Allocator& allocator, StringView path);
-    static bool exists(Mem::Allocator& allocator, StringView path);
+    static Slice<u8> read_all(Mem::Allocator& allocator, Collections::StringView path);
+    static bool exists(Mem::Allocator& allocator, Collections::StringView path);
 
-    File(Mem::Allocator& allocator, StringView path, OpenMode mode);
+    File(Mem::Allocator& allocator, Collections::StringView path, OpenMode mode);
     ~File();
 
     void write(const Slice<const u8>& bytes);

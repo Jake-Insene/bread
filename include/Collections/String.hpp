@@ -7,6 +7,9 @@
 #include "Mem/Allocator.hpp"
 
 
+namespace Collections
+{
+
 struct [[nodiscard]] String
 {
     DisableCopy(String);
@@ -195,13 +198,15 @@ struct [[nodiscard]] String
     }
 };
 
+}
+
 namespace Format
 {
 
 template<>
-struct Formatter<String>
+struct Formatter<Collections::String>
 {
-	static void format_custom(const IO::Writer& writer, const String& str)
+	static void format_custom(const IO::Writer& writer, const Collections::String& str)
     {
         format<false>(writer, "{}", str.view());
     }

@@ -1,6 +1,6 @@
 #include "IO/File.hpp"
 
-#include "Collections/Slice.hpp"
+#include "Core/Slice.hpp"
 #include "IO/Writer.hpp"
 
 
