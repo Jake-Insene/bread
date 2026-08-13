@@ -22,11 +22,11 @@ void GPU::initialize_from_adapter(InternalGPU::GPUAdapter* adapter)
 
 void GPU::shutdown()
 {
-	Core::Mem::Destruct(*current_adapter);
-
-	// Only the process who calls GPU::initialize owns the memory of current_adapter.
+	// TODO: Move this out
+	// Only the thread who calls GPU::initialize owns the memory of current_adapter.
 	if(adapter_allocator_owner != nullptr)
 	{
+		Core::Mem::Destruct(*current_adapter);
 		adapter_allocator_owner->free(Slice(reinterpret_cast<u8*>(current_adapter), 1));
 	}
 }
