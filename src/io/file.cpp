@@ -1,7 +1,7 @@
-#include "io/file.h"
+#include "IO/File.hpp"
 
 #include "Collections/Slice.hpp"
-#include "io/writer.h"
+#include "IO/Writer.hpp"
 
 
 namespace IO

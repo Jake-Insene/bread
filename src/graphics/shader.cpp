@@ -1,6 +1,6 @@
 #include "graphics/shader.h"
 
-#include "io/file.h"
+#include "IO/File.hpp"
 
 
 namespace Graphics

@@ -1,7 +1,7 @@
 #include "platform/platform_header.h"
 
 #include "debug/debug.h"
-#include "debug/fail.h"
+#include "Debug/Fail.hpp"
 #include "engine/engine.h"
 #include "log/log.h"
 #include "platform/android/android_display.h"

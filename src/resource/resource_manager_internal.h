@@ -1,6 +1,5 @@
 #pragma once
-#include "debug/fail.h"
-#include "debug/debug.h"
+#include "Debug/Fail.hpp"
 
 
 #define RMDebugInfo(...) Log::debug("[ResourceManager]: " __VA_ARGS__)

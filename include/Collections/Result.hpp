@@ -1,6 +1,6 @@
 #pragma once
 #include "Core/Header.hpp"
-#include "debug/fail.h"
+#include "Debug/Fail.hpp"
 
 
 template<typename E>

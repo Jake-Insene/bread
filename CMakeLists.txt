@@ -26,9 +26,8 @@ file(GLOB ENGINE_SRC
 
     src/concurrency/job_queue.cpp
 
-    src/debug/debug.cpp
-    src/log/log.cpp
-    
+    src/Debug/Assertion.cpp
+
     src/display/display.cpp
     src/display/window.cpp
     
@@ -46,8 +45,8 @@ file(GLOB ENGINE_SRC
 
     src/input/input.cpp
     
-    src/io/file.cpp
-    src/io/writer.cpp
+    src/IO/File.cpp
+    src/IO/Writer.cpp
 
     src/Mem/Utils.cpp
     src/Mem/GenericAllocator.cpp

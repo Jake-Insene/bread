@@ -1,6 +1,6 @@
 #pragma once
 #include "Core/Header.hpp"
-#include "debug/assertion.h"
+#include "Debug/Assertion.hpp"
 #include "fmt/fmt.h"
 #include "math/funcs.h"
 #include "platform/instrinsics.h"
@@ -193,7 +193,7 @@ union [[nodiscard]] Vector2T
         {
             Type x1 = x;
             Type y1 = y;
-            PlatformIntricics::vecnormalize(x1, y1);
+            PlatformIntrisics::vecnormalize(x1, y1);
             return Vector2T(x1, y1);
         }
 #endif
@@ -217,7 +217,7 @@ union [[nodiscard]] Vector2T
 #if BREAD_ENABLE_INTRISICS
         if !consteval
         {
-            PlatformIntricics::vecnormalize(x, y);
+            PlatformIntrisics::vecnormalize(x, y);
             return;
         }
 #endif

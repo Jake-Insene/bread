@@ -3,7 +3,6 @@
 #include "platform/instrinsics.h"
 
 
-
 namespace Math
 {
 
@@ -15,7 +14,7 @@ requires(Core::IsFloatingPoint<T>)
 #if BREAD_ENABLE_INTRISICS
     if !consteval
     {
-        return PlatformIntricics::sqrt(n);
+        return PlatformIntrisics::sqrt(n);
     }
 #endif
 

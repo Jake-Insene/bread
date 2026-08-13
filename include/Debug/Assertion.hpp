@@ -18,3 +18,15 @@ struct Debug
     
 };
 
+
+#if defined(DEBUG) || defined(BREAD_ENABLE_ASSERTIONS)
+#define DebugAssert(cond, msg, ...) \
+    if(!(cond))\
+    {\
+        Debug::assert_info(__FILE__, sizeof(__FILE__) - 1, __LINE__, msg, sizeof(msg));\
+        Debug::breakpoint();\
+    }
+#else
+#define DebugAssert(...)
+#endif
+

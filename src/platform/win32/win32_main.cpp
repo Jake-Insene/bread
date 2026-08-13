@@ -1,7 +1,7 @@
 #include "platform/platform_header.h"
 
 #include "engine/engine.h"
-#include "debug/log.h"
+#include "Debug/Log.hpp"
 #include "Mem/GenericAllocator.hpp"
 #include "platform/win32/win32_engine.h"
 
@@ -26,7 +26,7 @@ extern "C"
 	#pragma function(memset)
 	void* __cdecl memset(void* dest, int c, size_t count)
 	{
-		PlatformIntricics::set(
+		PlatformIntrisics::set(
 			Slice(reinterpret_cast<u8*>(dest), count),
 			static_cast<u8>(c)
 		);

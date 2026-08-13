@@ -2,8 +2,8 @@
 #include "audio/audio_adapter.h"
 #include "audio/audio.h"
 #include "debug/debug.h"
-#include "debug/fail.h"
-#include "debug/log.h"
+#include "Debug/Fail.hpp"
+#include "Debug/Log.hpp"
 #include "platform/platform_header.h"
 
 

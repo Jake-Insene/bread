@@ -1,6 +1,6 @@
 #include "platform/win32/win32_os.h"
 
-#include "debug/fail.h"
+#include "Debug/Fail.hpp"
 
 
 alignas(alignof(Win32OS::InternalData)) static u8 place_holder_memory[sizeof(Win32OS::InternalData)]{};

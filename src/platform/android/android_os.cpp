@@ -1,7 +1,7 @@
 #include "platform/android/android_os.h"
 
 #include "Core/Header.hpp"
-#include "debug/fail.h"
+#include "Debug/Fail.hpp"
 #include "platform/platform_header.h"
 
 

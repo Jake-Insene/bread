@@ -84,7 +84,7 @@ void format(const IO::Writer& writer, const FormatString<Core::TypeIdentity<TArg
 #include "Collections/StringUtility.hpp"
 #include "Collections/StringView.hpp"
 #include "Mem/Utils.hpp"
-#include "io/writer.h"
+#include "IO/Writer.hpp"
 
 namespace Format
 {

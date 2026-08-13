@@ -1,12 +1,12 @@
 #include "engine/engine_runtime.h"
 
 #include "audio/audio.h"
-#include "debug/profiler.h"
+#include "Debug/Profiler.hpp"
 #include "display/display.h"
 #include "engine/engine.h"
 #include "gpu/gpu.h"
 #include "input/input.h"
-#include "debug/log.h"
+#include "Debug/Log.hpp"
 #include "os/os.h"
 #include "resource/resource_manager.h"
 

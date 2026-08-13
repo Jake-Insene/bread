@@ -1,6 +1,6 @@
 #include "platform/win32/win32_semaphore.h"
 
-#include "debug/assertion.h"
+#include "Debug/Assertion.hpp"
 
 
 Semaphore Semaphore::create(usize initial_value)

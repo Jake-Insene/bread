@@ -1,6 +1,6 @@
 #include "resource/image.h"
 
-#include "io/file.h"
+#include "IO/File.hpp"
 #include "resource/resource_manager_internal.h"
 
 #include <external/stb_image.h>

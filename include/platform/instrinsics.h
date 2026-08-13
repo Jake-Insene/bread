@@ -9,9 +9,8 @@
 #endif
 
 
-struct PlatformIntricics
+struct PlatformIntrisics
 {
-
 	template<typename T>
 	requires(Core::IsFloatingPoint<T>)
 	[[nodiscard]] static T sqrt(T x)

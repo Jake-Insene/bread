@@ -1,7 +1,7 @@
 #include "platform/instrinsics.h"
 
 
-void PlatformIntricics::copy(Slice<u8> dest, Slice<const u8> src)
+void PlatformIntrisics::copy(Slice<u8> dest, Slice<const u8> src)
 {
 	usize i = 0;
 	for (i = 0; i < src.len; i += 16)
@@ -26,7 +26,7 @@ void PlatformIntricics::copy(Slice<u8> dest, Slice<const u8> src)
     }
 }
 
-void PlatformIntricics::set(Slice<u8> dest, u8 value)
+void PlatformIntrisics::set(Slice<u8> dest, u8 value)
 {
 	usize i = 0;
 #if BREAD_X64

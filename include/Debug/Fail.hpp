@@ -1,5 +1,5 @@
 #pragma once
-#include "debug/log.h"
+#include "Debug/Log.hpp"
 
 
 #define Fatal(...) Log::error(__VA_ARGS__); Debug::breakpoint();

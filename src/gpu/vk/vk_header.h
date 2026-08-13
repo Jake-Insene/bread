@@ -1,8 +1,8 @@
 #pragma once
 #include "Collections/StringView.hpp"
-#include "debug/fail.h"
+#include "Debug/Fail.hpp"
 #include "gpu/vk/vk_vtable.h"
-#include "debug/log.h"
+#include "Debug/Log.hpp"
 #include "os/os.h"
 
 

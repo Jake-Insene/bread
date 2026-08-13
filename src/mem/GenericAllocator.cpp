@@ -1,7 +1,7 @@
 #include "Mem/GenericAllocator.hpp"
 
-#include "debug/fail.h"
-#include "debug/log.h"
+#include "Debug/Fail.hpp"
+#include "Debug/Log.hpp"
 #include "Mem/Utils.hpp"
 #include "os/os.h"
 

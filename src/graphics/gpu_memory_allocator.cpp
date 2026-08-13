@@ -1,6 +1,6 @@
 #include "graphics/gpu_memory_allocator.h"
 
-#include "debug/fail.h"
+#include "Debug/Fail.hpp"
 
 
 namespace Graphics

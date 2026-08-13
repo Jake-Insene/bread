@@ -1,6 +1,6 @@
 #include "Mem/PageAllocator.hpp"
 
-#include "debug/fail.h"
+#include "Debug/Fail.hpp"
 #include "Mem/Utils.hpp"
 #include "os/os.h"
 

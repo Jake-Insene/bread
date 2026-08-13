@@ -1,7 +1,7 @@
 #include "resource/resource_manager.h"
 
 #include "engine/engine.h"
-#include "io/file.h"
+#include "IO/File.hpp"
 #include "resource/resource_manager_internal.h"
 #include "resource/font.h"
 #include "resource/image.h"

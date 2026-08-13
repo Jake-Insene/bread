@@ -1,6 +1,6 @@
 #pragma once
 #include "Core/Header.hpp"
-#include "debug/assertion.h"
+#include "Debug/Assertion.hpp"
 #include "math/funcs.h"
 #include "math/vec2.h"
 

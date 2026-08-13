@@ -1,7 +1,7 @@
 #include "audio/audio.h"
 
 #include "audio/audio_adapter.h"
-#include "debug/fail.h"
+#include "Debug/Fail.hpp"
 
 
 #if defined(BREAD_WIN32)
