@@ -240,7 +240,7 @@ GPU::DeviceID VulkanAdapter::device_create(GPU::PhysicalDeviceID physical_device
     }
 
     // Checking for required extensions and features use by the driver.
-    Vulkan::AdditionalExtensionSupport add_ext = Vulkan::check_device_extensions(allocator, pd.vk_physical_device);
+    Vulkan::AdditionalExtensionSupport add_ext = Vulkan::check_device_extensions(device_extensions);
     Vulkan::check_device_features(pd.vk_physical_device);
 
     u32 vk_family_count;
@@ -333,19 +333,64 @@ GPU::DeviceID VulkanAdapter::device_create(GPU::PhysicalDeviceID physical_device
         );
     }
 
-    uint32_t extension_count = 0;
-    const char** extensions = Vulkan::get_device_extensions(allocator, pd.vk_physical_device, add_ext, &extension_count);
+    // Getting extensions
+    Collections::Array<const char*> enabled_extensions{allocator, Core::ArraySize(Vulkan::VkCoreDeviceExtensions), {}};
+    for(usize i = 0; i < Core::ArraySize(Vulkan::VkCoreDeviceExtensions); i++)
+    {
+        (void)enabled_extensions.add(Vulkan::VkCoreDeviceExtensions[i]);
+    }
+
+    if(add_ext.has_dynamic_rendering)
+    {
+        (void)enabled_extensions.add(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
+        (void)enabled_extensions.add(VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME);
+    }
+
+    // Features
+    VkPhysicalDeviceDynamicRenderingFeaturesKHR vk_dynamic_rendering_features = {};
+    VkPhysicalDeviceShaderFloat16Int8FeaturesKHR vk_float16_features = {};
+    VkPhysicalDeviceImagelessFramebufferFeaturesKHR vk_imageless_framebuffer = {};
+    VkPhysicalDeviceVulkan11Features vk_1_1_features = {};
+    VkPhysicalDeviceFeatures2 vk_features = {};
+
+    void* next_info = nullptr;
+
+    if(add_ext.has_dynamic_rendering)
+    {
+        vk_dynamic_rendering_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
+        vk_dynamic_rendering_features.pNext = next_info;
+        vk_dynamic_rendering_features.dynamicRendering = VK_TRUE;
+        next_info = &vk_dynamic_rendering_features;
+    }
+
+    vk_float16_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES_KHR;
+    vk_float16_features.pNext = next_info;
+    vk_float16_features.shaderFloat16 = VK_TRUE;
+
+    vk_imageless_framebuffer.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGELESS_FRAMEBUFFER_FEATURES_KHR;
+    vk_imageless_framebuffer.pNext = &vk_float16_features;
+    vk_imageless_framebuffer.imagelessFramebuffer = VK_TRUE;
+
+    vk_1_1_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+    vk_1_1_features.pNext = &vk_imageless_framebuffer;
+    vk_1_1_features.shaderDrawParameters = VK_TRUE;
+    vk_1_1_features.storageInputOutput16 = VK_TRUE;
+
+    vk_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    vk_features.pNext = &vk_1_1_features;
+    vk_features.features.samplerAnisotropy = VK_TRUE;
+
     VkDeviceCreateInfo vk_device_info =
     {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        .pNext = Vulkan::get_device_features(allocator, add_ext),
+        .pNext = &vk_features,
         .flags = 0,
         .queueCreateInfoCount = static_cast<uint32_t>(vk_queue_infos.count),
         .pQueueCreateInfos = vk_queue_infos.slice().ptr(),
         .enabledLayerCount = 0,
         .ppEnabledLayerNames = nullptr,
-        .enabledExtensionCount = extension_count,
-        .ppEnabledExtensionNames = extensions,
+        .enabledExtensionCount = static_cast<uint32_t>(enabled_extensions.count),
+        .ppEnabledExtensionNames = enabled_extensions.slice().ptr(),
         .pEnabledFeatures = nullptr,
     };
 

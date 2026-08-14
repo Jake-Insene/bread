@@ -1,5 +1,6 @@
 #include "gpu/vk/vk_header.h"
 
+#include "Collections/Array.hpp"
 #include "gpu/vk/vk_adapter.h"
 #include "gpu/vk/vk_vtable.h"
 #include "Mem/Utils.hpp"
@@ -335,14 +336,8 @@ VkSurfaceKHR Vulkan::create_surface(VulkanAdapter* adapter, VkInstance instance,
     return vk_surface;
 }
 
-Vulkan::AdditionalExtensionSupport Vulkan::check_device_extensions(Mem::Allocator& allocator, VkPhysicalDevice physical_device)
+Vulkan::AdditionalExtensionSupport Vulkan::check_device_extensions(Slice<VkExtensionProperties> vk_device_extensions)
 {
-    u32 extension_count;
-    vk.vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, nullptr);
-    
-    Slice vk_device_extensions = allocator.array<VkExtensionProperties>(extension_count);
-    vk.vkEnumerateDeviceExtensionProperties(physical_device, nullptr, &extension_count, vk_device_extensions.ptr());
-
     usize finded_count = 0;
     for (const char* ext : VkCoreDeviceExtensions)
     {
@@ -362,7 +357,6 @@ Vulkan::AdditionalExtensionSupport Vulkan::check_device_extensions(Mem::Allocato
     AdditionalExtensionSupport additional_extension_support = {};
     additional_extension_support.has_dynamic_rendering = _has_extension(vk_device_extensions, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
     
-    allocator.free(Mem::to_bytes(vk_device_extensions));
     return additional_extension_support;
 }
 
@@ -403,71 +397,6 @@ void Vulkan::check_device_features(VkPhysicalDevice physical_device)
     VKFailOn(vk_features.features.samplerAnisotropy == VK_FALSE,
         "VkPhysicalDeviceFeatures2::samplerAnisotropy was required"
     );
-}
-
-const char** Vulkan::get_device_extensions(Mem::Allocator& allocator, [[maybe_unused]] VkPhysicalDevice physical_device,
-    const AdditionalExtensionSupport& add_ext, uint32_t* extension_count)
-{
-    usize additional_extension_count = 0;
-    if(add_ext.has_dynamic_rendering)
-    {
-        additional_extension_count += 3;
-    }
-
-    Slice extensions = allocator.array<const char*>(Core::ArraySize(VkCoreDeviceExtensions) + additional_extension_count);
-    for(usize i = 0; i < Core::ArraySize(VkCoreDeviceExtensions); i++)
-    {
-        extensions[i] = VkCoreDeviceExtensions[i];
-    }
-    usize index = Core::ArraySize(VkCoreDeviceExtensions);
-    if(add_ext.has_dynamic_rendering)
-    {
-        extensions[index++] = VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME;
-        extensions[index++] = VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME;
-    }
-
-    *extension_count = index;
-    return extensions.ptr();
-}
-
-VkPhysicalDeviceFeatures2* Vulkan::get_device_features(Mem::Allocator& allocator, const AdditionalExtensionSupport& add_ext)
-{
-    VkPhysicalDeviceDynamicRenderingFeaturesKHR* vk_dynamic_rendering_features = nullptr;
-    if(add_ext.has_dynamic_rendering)
-    {
-        vk_dynamic_rendering_features =
-            allocator.object<VkPhysicalDeviceDynamicRenderingFeaturesKHR>();
-        vk_dynamic_rendering_features->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
-        vk_dynamic_rendering_features->dynamicRendering = VK_TRUE;
-    }
-
-    VkPhysicalDeviceShaderFloat16Int8FeaturesKHR* vk_float16_features =
-        allocator.object<VkPhysicalDeviceShaderFloat16Int8FeaturesKHR>();
-    vk_float16_features->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES_KHR;
-    vk_float16_features->pNext = vk_dynamic_rendering_features;
-    vk_float16_features->shaderFloat16 = VK_TRUE;
-
-    VkPhysicalDeviceImagelessFramebufferFeaturesKHR* vk_imageless_framebuffer =
-        allocator.object<VkPhysicalDeviceImagelessFramebufferFeaturesKHR>();
-    vk_imageless_framebuffer->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGELESS_FRAMEBUFFER_FEATURES_KHR;
-    vk_imageless_framebuffer->pNext = vk_float16_features;
-    vk_imageless_framebuffer->imagelessFramebuffer = VK_TRUE;
-
-    VkPhysicalDeviceVulkan11Features* vk_1_1_features =
-        allocator.object<VkPhysicalDeviceVulkan11Features>();
-    vk_1_1_features->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
-    vk_1_1_features->pNext = vk_imageless_framebuffer;
-    vk_1_1_features->shaderDrawParameters = VK_TRUE;
-    vk_1_1_features->storageInputOutput16 = VK_TRUE;
-
-    VkPhysicalDeviceFeatures2* vk_features =
-        allocator.object<VkPhysicalDeviceFeatures2>();
-
-    vk_features->sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-    vk_features->pNext = vk_1_1_features;
-    vk_features->features.samplerAnisotropy = VK_TRUE;
-
-    return vk_features;
 }
 
 bool Vulkan::_has_extension(const Slice<VkExtensionProperties>& vk_device_extensions, const char* ext_name)

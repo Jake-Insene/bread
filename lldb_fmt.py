@@ -174,40 +174,29 @@ def __lldb_init_module(debugger, _):
 
     # Array<T>
     debugger.HandleCommand(
-        "type synthetic add -x '^Array<.*>$' "
+        "type synthetic add -x '^Collections::Array<.*>$' "
         "-l lldb_fmt.ArraySyntheticProvider"
     )
 
     debugger.HandleCommand(
-        "type summary add -x '^Array<.*>$' "
+        "type summary add -x '^Collections::Array<.*>$' "
         "-F lldb_fmt.array_summary"
-    )
-
-    # StaticArray<T, N>
-    debugger.HandleCommand(
-        "type synthetic add -x '^StaticArray<.*,.*>$' "
-        "-l lldb_fmt.StaticArraySyntheticProvider"
-    )
-
-    debugger.HandleCommand(
-        "type summary add -x '^StaticArray<.*,.*>$' "
-        "-F lldb_fmt.static_array_summary"
     )
 
     # Stack<T>
     debugger.HandleCommand(
-        "type synthetic add -x '^Stack<.*>$' "
+        "type synthetic add -x '^Collections::Stack<.*>$' "
         "-l lldb_fmt.StackSyntheticProvider"
     )
 
     debugger.HandleCommand(
-        "type summary add -x '^Stack<.*>$' "
+        "type summary add -x '^Collections::Stack<.*>$' "
         "-F lldb_fmt.stack_summary"
     )
 
     # StringView
     debugger.HandleCommand(
-        "type summary add -x '^BaseStringView<.*>$' "
+        "type summary add -x '^Collections::BaseStringView<.*>$' "
         "-F lldb_fmt.string_view_summary"
     )
 
