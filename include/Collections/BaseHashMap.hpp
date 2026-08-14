@@ -138,22 +138,14 @@ struct [[nodiscard]] BaseHashMap
         return _find_entry(hash, key, pos);
     }
     
-    [[nodiscard]] V& get(const K& key)
+    template<typename Self>
+    [[nodiscard]] auto& get(this Self& self, const K& key)
     {
         HashType hash = Hasher::hashfunc(key);
         usize pos = InvalidPos;
-        (void)_find_entry(hash, key, pos);
+        (void)self._find_entry(hash, key, pos);
         DebugAssert(pos != InvalidPos, "the item don't exists!");
-        return entries[pos]->keyvalue().second;
-    }
-    
-    [[nodiscard]] const V& get(const K& key) const
-    {
-        HashType hash = Hasher::hashfunc(key);
-        usize pos = InvalidPos;
-        (void)_find_entry(hash, key, pos);
-        DebugAssert(pos != InvalidPos, "the item don't exists!");
-        return entries[pos]->keyvalue().second;
+        return self.entries[pos]->keyvalue().second;
     }
     
     V& insert(const K& key, const V& value)
