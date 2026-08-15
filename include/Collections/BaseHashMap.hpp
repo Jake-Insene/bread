@@ -199,6 +199,8 @@ struct [[nodiscard]] BaseHashMap
 
     void clear()
     {
+        _destruct_objects();
+        
         for (MapEntry* entry : entries)
         {
             if (entry)
@@ -286,7 +288,6 @@ struct [[nodiscard]] BaseHashMap
             if(entries[index]->hashvalue() == InvalidHash)
             {
                 MapEntry* entry = entries[index];
-                Core::Mem::Destruct(*entry);
                 Core::Mem::Placement(*entry, allocator, hash, Core::Tuple(key), Core::Tuple(value));
 
                 if (first == nullptr)
@@ -359,7 +360,6 @@ struct [[nodiscard]] BaseHashMap
             if(entries[index]->hashvalue() == InvalidHash)
             {
                 MapEntry* entry = entries[index];
-                Core::Mem::Destruct(*entry);
                 Core::Mem::Placement(*entry, allocator, hash, Core::Tuple(key),
                     Core::Tuple<TArgs...>(Core::Forward<TArgs>(args)...));
 
@@ -387,7 +387,10 @@ struct [[nodiscard]] BaseHashMap
     {
         for(Iterator it = iter().begin(); it != it.end(); ++it)
         {
-            Core::Mem::Destruct(*it.entry);
+            if(it.entry->hashvalue() != InvalidHash)
+            {
+                Core::Mem::Destruct(*it.entry);
+            }
         }
     }
 };

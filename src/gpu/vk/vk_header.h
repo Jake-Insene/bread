@@ -105,7 +105,5 @@ struct Vulkan
         VkInternalAllocationType allocationType,
         VkSystemAllocationScope allocationScope
     );
-
-    static void _check_instance_extensions(Mem::Allocator& allocator);
 };
 

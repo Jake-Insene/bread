@@ -203,7 +203,41 @@ uint32_t Vulkan::get_api_version()
 
 VkInstance Vulkan::create_instance(VulkanAdapter* adapter)
 {
-    _check_instance_extensions(adapter->get_allocator());
+    uint32_t extension_count = 0;
+    vk.vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
+    Collections::Array<VkExtensionProperties> vk_instance_extensions{adapter->get_allocator(), extension_count, {}};
+    vk_instance_extensions.resize(extension_count);
+
+    vk.vkEnumerateInstanceExtensionProperties(
+        nullptr, &extension_count, vk_instance_extensions.slice().ptr()
+    );
+
+    VKDebugInfo("Vulkan Extensions");
+    for (VkExtensionProperties& extension : vk_instance_extensions.iter())
+    {
+        VKDebugInfo("{}",
+            Vulkan::vulkan_string_to_sv(extension.extensionName)
+        );
+    }
+
+    // Checking required extensions
+    for (const char* ext : VkInstanceExtensions)
+    {
+        bool finded = false;
+        Collections::StringView ext_view = Vulkan::vulkan_string_to_sv(ext);
+        for (VkExtensionProperties& act_ext : vk_instance_extensions.iter())
+        {
+            if (ext_view.equals(Vulkan::vulkan_string_to_sv(act_ext.extensionName)))
+            {
+                finded = true;
+                break;
+            }
+        }
+
+        VKFailOn(finded == false,
+            "{} was required", ext_view
+        );
+    }
 
     VkApplicationInfo application_info =
     {
@@ -487,46 +521,5 @@ void VKAPI_PTR Vulkan::_vk_driver_internal_free([[maybe_unused]] void* pUserData
     [[maybe_unused]] VkInternalAllocationType allocationType, [[maybe_unused]] VkSystemAllocationScope allocationScope)
 {
     VKDebugInfo("driver deletes {} bytes", size);
-}
-
-void Vulkan::_check_instance_extensions(Mem::Allocator& allocator)
-{
-    uint32_t extension_count = 0;
-    vk.vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
-
-    Slice instance_extensions = allocator.array<VkExtensionProperties>(extension_count);
-    vk.vkEnumerateInstanceExtensionProperties(
-        nullptr, &extension_count, instance_extensions.ptr()
-    );
-
-    VKDebugInfo("Vulkan Extensions");
-    for (VkExtensionProperties& extension : instance_extensions)
-    {
-        VKDebugInfo("{}",
-            Vulkan::vulkan_string_to_sv(extension.extensionName)
-        );
-    }
-
-    // Checking required extensions
-
-    for (const char* ext : VkInstanceExtensions)
-    {
-        bool finded = false;
-        Collections::StringView ext_view = Vulkan::vulkan_string_to_sv(ext);
-        for (VkExtensionProperties& act_ext : instance_extensions)
-        {
-            if (ext_view.equals(Vulkan::vulkan_string_to_sv(act_ext.extensionName)))
-            {
-                finded = true;
-                break;
-            }
-        }
-
-        VKFailOn(finded == false,
-            "{} was required", ext_view
-        );
-    }
-
-    allocator.free(Mem::to_bytes(instance_extensions));
 }
 
