@@ -1,5 +1,4 @@
 #pragma once
-#include "audio/audio_service.h"
 #include "concurrency/job_queue.h"
 #include "display/display.h"
 #include "display/window.h"
@@ -42,8 +41,6 @@ struct Application
         Core::Version runtime_version;
         ApplicationInfo application_info;
 
-        AudioService audio_service;
-
         GPU::PhysicalDeviceID selected_physical_device;
 
         JobQueue main_queue;
@@ -70,9 +67,8 @@ struct Application
 
         InternalData(Mem::Allocator& allocator)
         : allocator(allocator), runtime_version(Core::RuntimeVersion),
-        audio_service(allocator), main_queue(allocator, DefaultMainQueueSize)
-        {
-        }
+        main_queue(allocator, DefaultMainQueueSize)
+        {}
     } data;
 
     Window window;

@@ -14,7 +14,6 @@ if(MSVC)
 endif()
 
 file(GLOB ENGINE_SRC
-    src/audio/audio_service.cpp
     src/audio/audio.cpp
 
     src/concurrency/job_queue.cpp

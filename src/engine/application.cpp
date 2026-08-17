@@ -66,8 +66,6 @@ void Application::tick()
         return;
     }
 
-    data.audio_service.update();
-    
     f32 current = f32(OS::get_time());
     data.delta_time = current - data.last_time;
     data.last_time = current;
