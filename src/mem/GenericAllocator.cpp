@@ -110,6 +110,11 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
         index++;
         allocated_mem_header->index = index;
 
+        if(index == 115)
+        {
+            Log::debug("Finded");
+        }
+
 #if defined(DEBUG)
         Mem::set(Slice(base, size), u8(0xCD));
 #endif
@@ -158,6 +163,11 @@ Slice<u8> GenericAllocator::alloc(usize size, usize alignment)
 
     index++;
     allocation_header->index = index;
+
+    if(index == 115)
+    {
+        Log::debug("Finded");
+    }
 
 #if defined(DEBUG)
     Mem::set(Slice(aligned_mem, size), u8(0xCD));

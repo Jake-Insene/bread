@@ -223,7 +223,7 @@ GPU::DeviceID VulkanAdapter::device_create(GPU::PhysicalDeviceID physical_device
     PhysicalDevice& pd = physical_devices[physical_device.integer()];
     Mem::Allocator& allocator = acquire_tmp_allocator();
     
-    GPU::DeviceID device_id = devices.emplace(allocator);
+    GPU::DeviceID device_id = devices.emplace(get_allocator());
     LogicalDevice& ld = _get_logical_device(device_id);
     ld.vk_physical_device = pd.vk_physical_device;
 

@@ -1,8 +1,9 @@
 #include "platform/win32/win32_display.h"
 
-#include "engine/engine.h"
 #include "input/input.h"
 
+
+void bread_handle_event(const Event& event);
 
 static inline Win32Display::WindowData& _get_window_data(Display::WindowID id);
 
@@ -22,7 +23,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		InputEventWindowClose event = {};
 		event.type = EventType::WindowClose;
 		event.window = window_id;
-		Engine::local_data.engine_runtime->handle_event(event);
+		bread_handle_event(event);
 	}
 		break;
 	case WM_CAPTURECHANGED:
@@ -53,7 +54,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 			event.position = Input::get_mouse_position();
 			event.pressed = false;
 			event.button = btn;
-			Engine::local_data.engine_runtime->handle_event(event);
+			bread_handle_event(event);
 		}
 	}
 		break;
@@ -111,7 +112,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		event.position = screen_space_position;
 		event.pressed = Input::get_mouse_state(button);
 		event.button = button;
-		Engine::local_data.engine_runtime->handle_event(event);
+		bread_handle_event(event);
 		return 0;
 	}
 	case WM_SYSKEYDOWN:
@@ -147,7 +148,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		event.pressed = Input::get_key_state(Key(wparam)) == KeyState::Pressed;
 		event.key = static_cast<Key>(wparam);
 
-		Engine::local_data.engine_runtime->handle_event(event);
+		bread_handle_event(event);
 		return 0;
 	}
 	break;
@@ -164,7 +165,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 			window_data.window_rect.bottom - window_data.window_rect.top
 		);
 		
-		Engine::local_data.engine_runtime->handle_event(event);
+		bread_handle_event(event);
 
 		return 0;
 	}
@@ -183,7 +184,7 @@ static inline LRESULT WINAPI _default_window_proc(HWND handle, UINT msg, WPARAM 
 		InputEventMouseMove event = {};
 		event.type = EventType::MouseMove;
 		event.position = screen_space_position;
-		Engine::local_data.engine_runtime->handle_event(event);
+		bread_handle_event(event);
 		return 0;
 	}
 	break;

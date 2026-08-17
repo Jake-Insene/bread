@@ -1,9 +1,8 @@
 #include "platform/platform_header.h"
 
-#include "engine/engine.h"
 #include "Debug/Log.hpp"
 #include "Mem/GenericAllocator.hpp"
-#include "platform/win32/win32_engine.h"
+#include "platform/instrinsics.h"
 
 
 extern "C"
@@ -139,78 +138,52 @@ LONG _exception_handler(EXCEPTION_POINTERS* ep)
 	return EXCEPTION_CONTINUE_SEARCH;
 }
 
-alignas(alignof(Win32Engine)) static u8 place_holder_memory[sizeof(Win32Engine)]{};
-
-static Win32Engine& get_engine()
+bool Platform_Poll()
 {
-	return *reinterpret_cast<Win32Engine*>(place_holder_memory);
-}
-
-void engine_loop(Mem::Allocator& allocator)
-{
-	Engine::local_data.engine_runtime = &get_engine();
-	Core::Mem::Placement(get_engine(), allocator);
-
-	bool quit = false;
-	while(quit == false)
+	MSG msg;
+	while(PeekMessageA(&msg, 0, 0, 0, PM_REMOVE) != 0)
 	{
-		MSG msg;
-
-		get_engine().pre_step();
-		while(PeekMessageA(&msg, 0, 0, 0, PM_REMOVE) != 0)
+		TranslateMessage(&msg);
+		DispatchMessageA(&msg);
+		if (msg.message == WM_QUIT)
 		{
-			TranslateMessage(&msg);
-			DispatchMessageA(&msg);
-			if (msg.message == WM_QUIT)
-			{
-				quit = true;
-				break;
-			}
+			return true;
 		}
-
-		if(quit)
-		{
-			break;
-		}
-
-		get_engine().step();
 	}
 
-	Core::Mem::Destruct(get_engine());
+	return false;
 }
+
+void bread_main();
 
 // Default for Windows
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
 	SetUnhandledExceptionFilter(&_exception_handler);
 
-	// TODO: Accessing engine before initialization!
-	bool enable_console = __get_application_info__().enable_debug_console;
-
-	if (enable_console)
+#if DEBUG
 	{
 		if (AttachConsole(ATTACH_PARENT_PROCESS) == FALSE)
 		{
 			AllocConsole();
 		}
 	}
+#endif
 
 	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
 	{
-		Mem::GenericAllocator global_allocator;
-		Main::runtime_begin(global_allocator);
-		engine_loop(global_allocator);
-		Main::runtime_end();
+		bread_main();
 	}
 	CoUninitialize();
 
-	if(enable_console)
+#if DEBUG
 	{
 		u8 bytes[2] = {};
 		Format::format<false>(IO::File::get_stdout().writer(), "Press enter to close the console...");
 		IO::File::get_stdin().read(bytes);
 	}
+#endif
 
 	ExitProcess(0);
 }

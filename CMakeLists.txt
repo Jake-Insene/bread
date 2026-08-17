@@ -13,13 +13,6 @@ if(MSVC)
     endforeach()
 endif()
 
-# Dependencies
-# External sources
-file(GLOB EXTERNAL_SRC
-    # stb
-    external/external.cpp
-)
-
 file(GLOB ENGINE_SRC
     src/audio/audio_service.cpp
     src/audio/audio.cpp
@@ -32,16 +25,8 @@ file(GLOB ENGINE_SRC
     src/display/window.cpp
     
     src/engine/application.cpp
-    src/engine/engine_runtime.cpp
 
     src/gpu/gpu.cpp
-
-    src/graphics/command_pool.cpp
-    src/graphics/gpu_memory_allocator.cpp
-    src/graphics/gpu_resource_manager.cpp
-    src/graphics/render_device.cpp
-    src/graphics/shader.cpp
-    src/graphics/swap_chain.cpp
 
     src/input/input.cpp
     
@@ -55,12 +40,7 @@ file(GLOB ENGINE_SRC
 
     src/platform/intrinsics.cpp
 
-    src/resource/font.cpp
-    src/resource/image.cpp
-    src/resource/resource.cpp
-    src/resource/resource_manager.cpp
-    src/resource/sound.cpp
-    src/resource/texture.cpp
+    src/Main.cpp
 )
 
 file(GLOB VULKAN_ADAPTER_SRC
@@ -93,7 +73,6 @@ elseif(WIN32)
 
         src/platform/win32/win32_atomic.cpp
         src/platform/win32/win32_display.cpp
-        src/platform/win32/win32_engine.cpp
         src/platform/win32/win32_file.cpp
         src/platform/win32/win32_main.cpp
         src/platform/win32/win32_math.cpp

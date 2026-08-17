@@ -2,7 +2,6 @@
 
 #include "audio/audio.h"
 #include "math/funcs.h"
-#include "resource/sound.h"
 
 
 AudioService::Mixer::Mixer(Mem::Allocator& allocator, Collections::StringView name)
@@ -105,42 +104,42 @@ void AudioService::mixer_play(u32 mixer, Sound* sound, const PlayInfo& play_info
     );
 }
 
-void AudioService::_mixer_mix(Mixer* mixer, Audio::FrameF* frame)
+void AudioService::_mixer_mix(Mixer* mixer, Audio::FrameF*)
 {
     if(mixer->plays.count == 0)
     {
         return;
     }
 
-    f32 normalize = 1 / f32(mixer->plays.count);
-    for(usize play_i = 0; play_i < mixer->plays.count; play_i++)
+    //f32 normalize = 1 / f32(mixer->plays.count);
+    //for(usize play_i = 0; play_i < mixer->plays.count; play_i++)
     {
-        AudioService::EnqueuePlay& enqueue_play = mixer->plays.get(play_i);
+        //AudioService::EnqueuePlay& enqueue_play = mixer->plays.get(play_i);
 
-        if(enqueue_play.frame_index >= enqueue_play.sound->get_frame_count())
+        //if(enqueue_play.frame_index >= enqueue_play.sound->get_frame_count())
         {
-            if(enqueue_play.play_info.loop)
-            {
-                enqueue_play.frame_index = 0;
-            }
-            else
-            {
-                // remove
-                mixer->plays.remove_at(play_i);
-                play_i--;
-                continue;
-            }
+            //if(enqueue_play.play_info.loop)
+            //{
+            //    enqueue_play.frame_index = 0;
+            //}
+            //else
+            //{
+            //    // remove
+            //    mixer->plays.remove_at(play_i);
+            //    play_i--;
+            //    continue;
+            //}
         }
 
-        const Audio::Frame sample = enqueue_play.sound->get_frame(enqueue_play.frame_index);
-        Audio::FrameF sample_f = Audio::FrameF(
-            sample.left,
-            sample.right
-        );
+        //const Audio::Frame sample = enqueue_play.sound->get_frame(enqueue_play.frame_index);
+        //Audio::FrameF sample_f = Audio::FrameF(
+        //    sample.left,
+        //    sample.right
+        //);
 
-        sample_f.mul(mixer->volume * enqueue_play.play_info.volume * normalize);
-        frame->add(sample_f);
+        //sample_f.mul(mixer->volume * enqueue_play.play_info.volume * normalize);
+        //frame->add(sample_f);
 
-        enqueue_play.frame_index += 1;
+        //enqueue_play.frame_index += 1;
     }
 }

@@ -57,4 +57,6 @@ union Version
     }
 };
 
+static constexpr Version RuntimeVersion = Version::make_variant(0, BREAD_MAJOR, BREAD_MINOR, BREAD_PATCH);
+
 }
