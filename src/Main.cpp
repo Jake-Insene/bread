@@ -1,10 +1,10 @@
 #include "audio/audio.h"
 #include "display/display.h"
 #include "Debug/Fail.hpp"
-#include "engine/application.h"
 #include "gpu/gpu.h"
 #include "Mem/GenericAllocator.hpp"
 #include "os/os.h"
+#include "Runtime/Application.hpp"
 
 
 void* operator new(size_t)
@@ -31,7 +31,6 @@ void operator delete[](void*)
 
 extern ApplicationInfo RegisterApplication();
 
-bool Platform_Poll();
 Application* app;
 
 void app_loop(Mem::Allocator& allocator)
@@ -42,25 +41,7 @@ void app_loop(Mem::Allocator& allocator)
         allocator.alloc(app_info.size_in_bytes, app_info.alignment).ptr());
 
     app_info.constructor(Core::Opaque::from(*app), {.allocator = allocator});
-
-    app->initialize({.allocator = allocator});
-
-    bool quit = false;
-    while(!quit)
-    {
-        app->pre_tick();
-
-        if(Platform_Poll())
-        {
-            quit = true;
-        }
-        else
-        {
-            app->tick();
-        }
-    }
-
-    app->shutdown();
+    app->run();
     Core::Mem::Destruct(*app);
     allocator.free(Mem::to_bytes(Slice(app, 1)));
 }

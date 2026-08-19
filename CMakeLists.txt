@@ -23,22 +23,22 @@ file(GLOB ENGINE_SRC
     src/display/display.cpp
     src/display/window.cpp
     
-    src/engine/application.cpp
-
     src/gpu/gpu.cpp
-
+    
     src/input/input.cpp
     
     src/IO/File.cpp
     src/IO/Writer.cpp
-
+    
     src/Mem/Utils.cpp
     src/Mem/GenericAllocator.cpp
     src/Mem/PageAllocator.cpp
     src/Mem/LinearAllocator.cpp
-
+    
     src/platform/intrinsics.cpp
-
+    
+    src/Runtime/Application.cpp
+    
     src/Main.cpp
 )
 

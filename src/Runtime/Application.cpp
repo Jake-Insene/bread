@@ -1,4 +1,4 @@
-#include "engine/application.h"
+#include "Runtime/Application.hpp"
 
 #include "Debug/Log.hpp"
 #include "Debug/Profiler.hpp"
@@ -78,14 +78,11 @@ void Application::tick()
         Log::info(
             "Frame Info: FPS: {}\n"
             "\tAvg Frame Time: {}\n"
-            "\tInternal Update Time: {}\n"
             "\tUpdate Time: {}\n"
-            "\tRender Time: {}\n"
-            "\tPresent Time: {}",
-            data.fps_counter, data.delta_time, data.debug_time.internal_update_time,
+            "\tRender Time: {}\n",
+            data.fps_counter, data.delta_time,
             data.debug_time.update_time, 
-            data.debug_time.render_time,
-            data.debug_time.present_time
+            data.debug_time.render_time
         );
 
         data.fps_accum = 0;
@@ -110,4 +107,28 @@ void Application::tick()
     }
 
     data.main_queue.run();
+}
+
+bool Platform_Poll();
+
+void Application::run()
+{
+    initialize({.allocator = data.allocator});
+
+    bool quit = false;
+    while(!quit)
+    {
+        pre_tick();
+
+        if(Platform_Poll())
+        {
+            quit = true;
+        }
+        else
+        {
+            tick();
+        }
+    }
+
+    shutdown();
 }

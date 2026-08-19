@@ -49,10 +49,8 @@ struct Application
 
         struct
         {
-            f64 internal_update_time = 0;
             f64 update_time = 0;
             f64 render_time = 0;
-            f64 present_time = 0;
         } debug_time;
 
         f32 last_time = 0;
@@ -87,4 +85,6 @@ struct Application
     void handle_event(const Event& e);
     void pre_tick();
     void tick();
+
+    void run();
 };
