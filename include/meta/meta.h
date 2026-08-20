@@ -7,11 +7,11 @@ namespace Meta
 {
 
 template<typename T>
-constexpr StringView get_type_name()
+constexpr Collections::StringView get_type_name()
 {
-    constexpr StringView function_sig = StringView(__PRETTY_FUNCTION__, sizeof(__PRETTY_FUNCTION__) - 1);
-    usize type_name_begin = MaxValue<usize>;
-    usize type_name_end = MaxValue<usize>;
+    constexpr Collections::StringView function_sig = StringView(__PRETTY_FUNCTION__, sizeof(__PRETTY_FUNCTION__) - 1);
+    usize type_name_begin = Core::MaxValue<usize>;
+    usize type_name_end = Core::MaxValue<usize>;
     for(usize i = 0; i < function_sig.len; i++)
     {
         if(function_sig.add(i).len == 0)
@@ -24,7 +24,7 @@ constexpr StringView get_type_name()
             type_name_begin = i + 4;
         }
 
-        if(function_sig.add(i).equals("]") && type_name_begin != MaxValue<usize>)
+        if(function_sig.add(i).equals("]") && type_name_begin != Core::MaxValue<usize>)
         {
             type_name_end = i;
         }

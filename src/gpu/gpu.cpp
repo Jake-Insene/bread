@@ -11,8 +11,8 @@ static inline Mem::Allocator* adapter_allocator_owner = nullptr;
 
 void GPU::initialize(Mem::Allocator& allocator)
 {
-	adapter_allocator_owner = &allocator;
 	current_adapter = allocator.object<VulkanAdapter>(allocator);
+	adapter_allocator_owner = &allocator;
 }
 
 void GPU::initialize_from_adapter(InternalGPU::GPUAdapter* adapter)

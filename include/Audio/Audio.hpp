@@ -46,7 +46,7 @@ struct Audio
     using Frame = FrameT<f32>;
     
     static void initialize(Mem::Allocator& allocator);
-    static void initialize_from_adapter(const InternalAudio::AudioAdapter* adapter);
+    static void initialize_from_adapter(InternalAudio::AudioAdapter* adapter);
     static void shutdown();
     
     static InternalAudio::AudioAdapter* get_adapter();
