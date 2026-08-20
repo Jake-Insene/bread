@@ -1,4 +1,4 @@
-#include "audio/wasapi/wasapi_driver.h"
+#include "Audio/WASAPI/WASAPIDriver.hpp"
 
 #include "math/funcs.h"
 
@@ -191,8 +191,8 @@ void WASAPIDriver::output_send_frames(const Slice<Audio::Frame>& frames)
             {
                 Audio::Frame frame = frames[i];
 
-                buffer_out_f[(i * get_data().output_device.channels) + 0] = f32(frame.left) / 32768.F;
-                buffer_out_f[(i * get_data().output_device.channels) + 1] = f32(frame.right) / 32768.f;
+                buffer_out_f[(i * get_data().output_device.channels) + 0] = frame.left;
+                buffer_out_f[(i * get_data().output_device.channels) + 1] = frame.right;
                 
                 for(usize j = Audio::OutputChannels; j < get_data().output_device.channels; i++)
                 {
@@ -206,15 +206,11 @@ void WASAPIDriver::output_send_frames(const Slice<Audio::Frame>& frames)
             {
                 Audio::Frame frame = frames[i];
 
-                f32 normal = (f32(frame.left + frame.right) / 2.F) / 32768.F;
-                if(normal > 1.F)
-                {
-                    normal = 1.F;
-                }
-                else if(normal < -1.F)
-                {
-                    normal = -1.F;
-                }
+                f32 normal = Math::clamp(
+                    f32(frame.left + frame.right) / 2.F,
+                    -1.F, 1.F
+                );
+
                 buffer_out_f[i] = normal;
             }
         }

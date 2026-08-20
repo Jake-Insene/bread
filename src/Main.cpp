@@ -1,4 +1,4 @@
-#include "audio/audio.h"
+#include "Audio/Audio.hpp"
 #include "display/display.h"
 #include "Debug/Fail.hpp"
 #include "gpu/gpu.h"
@@ -54,7 +54,7 @@ void bread_main()
 
     OS::initialize(global_allocator);
     Display::initialize(global_allocator);
-    Audio::initialize(global_allocator, Audio::DriverType::Default);
+    Audio::initialize(global_allocator);
     GPU::initialize(global_allocator);
 
     app_loop(global_allocator);

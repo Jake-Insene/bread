@@ -1,6 +1,6 @@
 #pragma once
-#include "audio/audio_adapter.h"
-#include "audio/audio.h"
+#include "Audio/AudioAdapter.hpp"
+#include "Audio/Audio.hpp"
 #include "Debug/Fail.hpp"
 #include "Debug/Log.hpp"
 #include "platform/platform_header.h"

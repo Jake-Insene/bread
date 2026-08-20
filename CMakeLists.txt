@@ -14,7 +14,7 @@ if(MSVC)
 endif()
 
 file(GLOB ENGINE_SRC
-    src/audio/audio.cpp
+    src/Audio/Audio.cpp
 
     src/concurrency/job_queue.cpp
 
@@ -67,8 +67,7 @@ if(ANDROID)
     set(PLATFORM_LIBRARIES GLESv3 EGL android log)
 elseif(WIN32)
     file(GLOB PLATFORM_SRC
-        # Audio drivers
-        src/audio/wasapi/wasapi_driver.cpp
+        src/audio/wasapi/WASAPIDriver.cpp
 
         src/platform/win32/win32_atomic.cpp
         src/platform/win32/win32_display.cpp

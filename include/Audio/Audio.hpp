@@ -8,9 +8,9 @@ namespace InternalAudio
 struct AudioAdapter;
 }
 
-/*
-* For the audio services and engine, try to load i16 pcm frames
-* and convert them to device format at the end. Always feed the Audio driver with 2 channels.
+/**
+* For the audio services and engine, submit normalized floating point values [-1, 1].
+* Always feed the Audio driver with 2 channels.
 */
 struct Audio
 {
@@ -43,24 +43,9 @@ struct Audio
         }
     };
 
-    using Frame = FrameT<i16>;
-    using FrameF = FrameT<f32>;
+    using Frame = FrameT<f32>;
     
-    enum class DriverType
-    {
-        Unknown = 0,
-
-        Wasapi,
-        AAudio,
-
-#if defined(BREAD_WIN32)
-        Default = Wasapi,
-#elif defined(BREAD_ANDROID)
-        Default = AAudio,
-#endif
-    };
-
-    static void initialize(Mem::Allocator& allocator, DriverType driver);
+    static void initialize(Mem::Allocator& allocator);
     static void initialize_from_adapter(const InternalAudio::AudioAdapter* adapter);
     static void shutdown();
     

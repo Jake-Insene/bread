@@ -79,7 +79,7 @@ void Application::tick()
             "Frame Info: FPS: {}\n"
             "\tAvg Frame Time: {}\n"
             "\tUpdate Time: {}\n"
-            "\tRender Time: {}\n",
+            "\tRender Time: {}",
             data.fps_counter, data.delta_time,
             data.debug_time.update_time, 
             data.debug_time.render_time

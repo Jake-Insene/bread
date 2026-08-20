@@ -1,11 +1,11 @@
-#include "audio/audio.h"
+#include "Audio/Audio.hpp"
 
-#include "audio/audio_adapter.h"
+#include "Audio/AudioAdapter.hpp"
 #include "Debug/Fail.hpp"
 
 
 #if defined(BREAD_WIN32)
-#include "audio/wasapi/wasapi_driver.h"
+#include "Audio/WASAPI/WASAPIDriver.hpp"
 #elif defined(BREAD_ANDROID)
 #include "audio/aaudio/aaudio_driver.h"
 #endif
@@ -13,24 +13,15 @@
 
 static inline InternalAudio::AudioAdapter current_adapter = {};
 
-void Audio::initialize(Mem::Allocator& allocator, DriverType driver)
+void Audio::initialize(Mem::Allocator& allocator)
 {
-	switch (driver)
-	{
-	case Audio::DriverType::Wasapi:
 #if defined(BREAD_WIN32)
-		current_adapter = WASAPIDriver::get_vtable();
+	current_adapter = WASAPIDriver::get_vtable();
+#elif defined(BREAD_ANDROID)
+	current_adapter = AAudioDriver::get_vtable();
+#else
+#error "Platform don't implemented"
 #endif
-		break;
-	case Audio::DriverType::AAudio:
-#if defined(BREAD_ANDROID)
-		current_adapter = AAudioDriver::get_vtable();
-#endif
-		break;
-	default:
-		FailOn(true, "unknown audio driver");
-		break;
-	}
 
 	current_adapter.initialize(allocator);
 }
