@@ -232,9 +232,12 @@ struct [[nodiscard]] Array final
     }
 
     void resize(const usize new_size)
+    requires(Core::ConstructibleFrom<Type>)
     {
         _ensure_capacity(new_size);
         count = new_size;
+
+        Core::Mem::PlacementArray(items.ptr(), count);
     }
 
     void reserve(const usize new_capacity)
