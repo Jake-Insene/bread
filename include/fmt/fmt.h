@@ -171,7 +171,7 @@ void __format_single_argument(const IO::Writer& writer, T&& arg)
 	}
 	else
 	{
-		Formatter<Core::RemoveCVRef<T>>::format_custom(writer, Forward<T>(arg));
+		Formatter<Core::RemoveCVRef<T>>::format_custom(writer, Core::Forward<T>(arg));
 	}
 }
 
