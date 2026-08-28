@@ -1,0 +1,66 @@
+#pragma once
+#include "Core/Header.hpp"
+#include "Debug/Assertion.hpp"
+#include "Mem/Utils.hpp"
+
+
+template<typename T>
+struct Slice;
+
+namespace Mem
+{
+
+struct Allocator
+{
+    static constexpr usize DefaultAlignment = sizeof(MemoryAddress) * 2;
+    
+    /*
+    * Allocator API
+    */
+
+    /*
+    * Allocates a slice of bytes of len size, the base address is aligned to alignment.
+    * The return slice is not garanted to be all zero.
+    */
+    virtual Slice<u8> alloc(usize size, usize alignment) = 0;
+    /*
+    * Try to expand the memory block, if it is expanded, the new memory is not garanted to be all zero.
+    * It will return whenever the memory block is expanded, otherwise it will return false.
+    */
+    virtual bool realloc(const Slice<u8>& ptr, usize new_size, usize alignment) = 0;
+
+    /*
+    * Try to expand the memory block, if it is expanded, the new memory is not garanted to be all zero.
+    * otherwise it will allocate a new memory block and copy the old data to the new one, and free the old memory block.
+    * The return slice is not garanted to be all zero.
+    */
+    virtual Slice<u8> remap(const Slice<u8>& ptr, usize new_size, usize alignment) = 0;
+
+    /*
+    * Frees the memory block, the ptr must be allocated by this allocator.
+    */
+    virtual void free(const Slice<u8>& ptr) = 0;
+
+    template<typename T>
+    requires(Core::ConstructibleFrom<T>)
+    Slice<T> array(usize count)
+    {
+        static constexpr usize Alignment = Core::ConditionalValue<usize, alignof(T) == 1, 8, alignof(T)>;
+        Slice array = Mem::from_bytes<T>(alloc(sizeof(T) * count, Alignment));
+        Core::Mem::PlacementArray(array.ptr(), array.len);
+        return array;
+    }
+
+    template<typename T, typename... TArgs>
+    requires(Core::ConstructibleFrom<T, TArgs...>)
+    T* object(TArgs&&... args)
+    {
+        constexpr usize alignment = alignof(T) == 1 ? 16 : alignof(T);
+        T* instance = reinterpret_cast<T*>(alloc(sizeof(T), alignment).items);
+        Core::Mem::Placement(*instance, args...);
+        return instance;
+    }
+};
+
+}
+
