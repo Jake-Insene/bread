@@ -1,0 +1,22 @@
+#pragma once
+#include "os/thread.h"
+#include "Platform/platform_header.h"
+
+
+struct Win32Thread
+{
+    enum class ThreadState
+    {
+        Unknown = 0,
+        Running,
+        Terminated,
+    };
+
+
+    HANDLE thread;
+    SRWLOCK srw;
+
+    ThreadState state;
+    Thread::ThreadFn fn;
+    Core::Opaque* arg;
+};
