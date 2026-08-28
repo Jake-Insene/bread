@@ -2,7 +2,7 @@
 #include "Core/Header.hpp"
 #include "gpu/gpu.h"
 #include "Mem/Allocator.hpp"
-#include "math/vec2.h"
+#include "Math/vec2.h"
 
 
 struct SurfaceID;

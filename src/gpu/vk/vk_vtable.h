@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/platform_header.h"
+#include "Platform/platform_header.h"
 
 #define VK_NO_PROTOTYPES
 #include <vulkan/vulkan.h>

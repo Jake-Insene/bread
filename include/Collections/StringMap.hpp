@@ -4,7 +4,7 @@
 #include "Core/Pair.hpp"
 #include "Mem/Allocator.hpp"
 #include "Mem/Utils.hpp"
-#include "math/hash.h"
+#include "Math/hash.h"
 
 
 

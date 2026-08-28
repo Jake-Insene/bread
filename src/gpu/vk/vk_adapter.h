@@ -3,7 +3,7 @@
 #include "Collections/HashMap.hpp"
 #include "gpu/gpu_adapter.h"
 #include "gpu/vk/vk_header.h"
-#include "math/hash.h"
+#include "Math/hash.h"
 #include "Mem/LinearAllocator.hpp"
 #include "os/os.h"
 #include "os/mutex.h"

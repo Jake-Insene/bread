@@ -3,7 +3,7 @@
 #include "Collections/BaseIterator.hpp"
 #include "Mem/Allocator.hpp"
 #include "Mem/Utils.hpp"
-#include "math/funcs.h"
+#include "Math/funcs.h"
 
 
 namespace Collections

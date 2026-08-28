@@ -2,9 +2,9 @@
 #include "Collections/ID.hpp"
 #include "Collections/StringView.hpp"
 #include "Mem/Allocator.hpp"
-#include "math/vec2.h"
-#include "math/vec3.h"
-#include "math/vec4.h"
+#include "Math/vec2.h"
+#include "Math/vec3.h"
+#include "Math/vec4.h"
 
 
 namespace InternalGPU

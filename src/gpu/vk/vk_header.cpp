@@ -5,7 +5,7 @@
 #include "gpu/vk/vk_vtable.h"
 #include "Mem/Utils.hpp"
 #include "os/os.h"
-#include "platform/platform_header.h"
+#include "Platform/platform_header.h"
 
 
 static constexpr const char* VkInstanceExtensions[] =

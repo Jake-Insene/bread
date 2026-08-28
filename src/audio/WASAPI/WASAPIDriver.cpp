@@ -1,6 +1,6 @@
 #include "Audio/WASAPI/WASAPIDriver.hpp"
 
-#include "math/funcs.h"
+#include "Math/funcs.h"
 
 
 alignas(alignof(WASAPIDriver::InternalData)) static u8 place_holder_memory[sizeof(WASAPIDriver::InternalData)]{};

@@ -4,7 +4,7 @@
 #include "debug/debug.h"
 #include "Debug/Fail.hpp"
 #include "Debug/Log.hpp"
-#include "platform/platform_header.h"
+#include "Platform/platform_header.h"
 
 
 #define AAudioDebugInfo(...) Log::debug("[WASAPIDriver]: " __VA_ARGS__)

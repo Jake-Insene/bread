@@ -3,7 +3,7 @@
 #include "Collections/StringView.hpp"
 #include "fmt/fmt.h"
 #include "IO/Writer.hpp"
-#include "math/funcs.h"
+#include "Math/funcs.h"
 #include "Mem/Allocator.hpp"
 
 

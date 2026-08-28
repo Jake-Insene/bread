@@ -2,7 +2,7 @@
 #include "concurrency/job_queue.h"
 #include "display/display.h"
 #include "display/window.h"
-#include "math/vec2.h"
+#include "Math/vec2.h"
 
 
 struct Event;

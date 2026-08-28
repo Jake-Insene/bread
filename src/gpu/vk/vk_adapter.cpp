@@ -3,7 +3,7 @@
 #include "display/display.h"
 #include "gpu/gpu.h"
 #include "gpu/vk/vk_utils.h"
-#include "math/funcs.h"
+#include "Math/funcs.h"
 #include "os/os.h"
 
 
