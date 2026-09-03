@@ -1,8 +1,8 @@
 #pragma once
 #include "Core/Header.hpp"
 #include "Debug/Assertion.hpp"
+#include "fmt/fmt.h"
 #include "Math/funcs.h"
-#include "Math/vec2.h"
 
 
 template <typename T>
@@ -156,3 +156,17 @@ union [[nodiscard]] Vector4T
 
 using Vector4 = Vector4T<f32>;
 using Vector4I = Vector4T<i32>;
+
+namespace Format
+{
+
+template<typename T>
+struct Formatter<Vector4T<T>>
+{
+	static void format_custom(const IO::Writer& writer, const Vector4T<T>& vec)
+    {
+        format<false>(writer, "({}, {}, {}, {})", vec.x, vec.y, vec.z, vec.w);
+    }
+};
+
+}

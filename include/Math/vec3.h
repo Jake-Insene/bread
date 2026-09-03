@@ -1,6 +1,7 @@
 #pragma once
 #include "Core/Header.hpp"
 #include "Debug/Assertion.hpp"
+#include "fmt/fmt.h"
 #include "Math/funcs.h"
 
 
@@ -164,3 +165,17 @@ union [[nodiscard]] Vector3T
 using Vector3 = Vector3T<f32>;
 using Vector3I = Vector3T<i32>;
 using Vector3U = Vector3T<u32>;
+
+namespace Format
+{
+
+template<typename T>
+struct Formatter<Vector3T<T>>
+{
+	static void format_custom(const IO::Writer& writer, const Vector3T<T>& vec)
+    {
+        format<false>(writer, "({}, {}, {})", vec.x, vec.y, vec.z);
+    }
+};
+
+}
