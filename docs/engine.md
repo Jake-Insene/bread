@@ -7,11 +7,11 @@
 * Some code for vtables.
 * Function tags for documentation.
 * Max/Min values of primitive types.
+* Slice primitives.
 
 ## Collections
-* Basic collections like HashMap, Tuple, Array, StringMap, String, StringView, Slice.
+* Basic collections like HashMap, Tuple, Array, StringMap, String, StringView.
 * Iterator interface.
-* Static collections for non-heap collections.
 
 ## Concurrency
 * Multithread task execution.

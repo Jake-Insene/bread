@@ -1,7 +1,7 @@
 #pragma once
 #include "Core/Templates.hpp"
 
-// Required in Clang.
+// Required in Clang for placement new.
 #include <new>
 
 
