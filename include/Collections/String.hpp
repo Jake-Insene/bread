@@ -35,10 +35,7 @@ struct [[nodiscard]] String
     : allocator(allocator), chars(), count()
     {
         usize initial_capacity = initial_size == 0 ? DefaultCapacity : initial_size;
-        if(initial_size == 0)
-        {
-            initial_capacity = Math::min(DefaultCapacity, initial_content.len);
-        }
+        initial_capacity = Math::max(initial_capacity, initial_content.len);
 
         chars = Mem::from_bytes<char>(
             allocator.alloc(sizeof(char) * initial_capacity, alignof(char))

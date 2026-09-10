@@ -91,10 +91,7 @@ struct [[nodiscard]] Array final
     : allocator(allocator), items(), count()
     {
         usize initial_capacity = initial_size == 0 ? DefaultCapacity : initial_size;
-        if(initial_size == 0)
-        {
-            initial_capacity = Math::max(DefaultCapacity, initial_content.len);
-        }
+        initial_capacity = Math::max(initial_capacity, initial_content.len);
 
         items = Mem::from_bytes<Type>(
             allocator.alloc(sizeof(Type) * initial_capacity, alignof(Type))
