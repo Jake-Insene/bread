@@ -4,6 +4,7 @@ This document defines how you must work.
 
 * [Documentation](docs/main.md): This path contains documentation related with the entire project.
 * Do not use the STL. Any exception must be in the same file where it is used.
+* Use the collections already inside bread.
 * Prefer a single visible path.
 * Do not add dependencies. Only platform libraries are allowed (vulkan, win32, x11, etc...).
 * Classes must have only one constructor.

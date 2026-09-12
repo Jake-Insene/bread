@@ -11,7 +11,9 @@ struct [[nodiscard]] JobQueue
 	struct JobInfo
 	{
 		void(*func)(Core::Opaque* arg);
+		void(*destruct)(Core::Opaque* arg);
 		Core::Opaque* arg;
+		usize size;
 	};
 
 	Mem::Allocator& allocator;
@@ -37,7 +39,9 @@ struct [[nodiscard]] JobQueue
 		JobInfo job =
 		{
 			.func = [](Core::Opaque* arg) { Invoke(*arg->cast<Fn*>()); },
+			.destruct = [](Core::Opaque* arg) { Core::Mem::Destruct(*arg->cast<Fn*>()); },
 			.arg = reinterpret_cast<Core::Opaque*>(fn_mem),
+			.size = sizeof(Fn),
 		};
 
 		job_stack.push(job);

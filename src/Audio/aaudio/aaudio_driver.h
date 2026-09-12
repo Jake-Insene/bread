@@ -1,16 +1,16 @@
 #pragma once
-#include "audio/audio_adapter.h"
-#include "audio/audio.h"
-#include "debug/debug.h"
+#include "Audio/AudioAdapter.hpp"
+#include "Audio/Audio.hpp"
+#include "Debug/Assertion.hpp"
 #include "Debug/Fail.hpp"
 #include "Debug/Log.hpp"
 #include "Platform/platform_header.h"
 
 
-#define AAudioDebugInfo(...) Log::debug("[WASAPIDriver]: " __VA_ARGS__)
-#define AAudioDebugAssert(cond, ...) DebugAssert(cond, "[WASAPIDriver]: " __VA_ARGS__)
-#define AAudioFailOn(cond, ...) FailOn(cond, "[WASAPIDriver]: " __VA_ARGS__)
-#define AAudioFatal(...) Fatal("[WASAPIDriver]: " __VA_ARGS__)
+#define AAudioDebugInfo(...) Log::debug("[AAudioDriver]: " __VA_ARGS__)
+#define AAudioDebugAssert(cond, ...) DebugAssert(cond, "[AAudioDriver]: " __VA_ARGS__)
+#define AAudioFailOn(cond, ...) FailOn(cond, "[AAudioDriver]: " __VA_ARGS__)
+#define AAudioFatal(...) Fatal("[AAudioDriver]: " __VA_ARGS__)
 
 
 struct AAudioDriver

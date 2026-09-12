@@ -105,7 +105,6 @@ target_include_directories(
     "src"
     "include"
     "."
-    "external/freetype/include"
     ${ANDROID_NDK}/sources/android/native_app_glue
     $ENV{VULKAN_SDK}/Include
 )

@@ -19,7 +19,8 @@ void JobQueue::run()
 	{
 		JobInfo job = job_stack.pop();
 		job.func(job.arg);
-		allocator.free(Slice(job.arg->cast<u8*>(), 1));
+		job.destruct(job.arg);
+		allocator.free(Slice(job.arg->cast<u8*>(), job.size));
 	}
 
 	mutex.unlock();
