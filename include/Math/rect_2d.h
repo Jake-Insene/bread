@@ -51,16 +51,21 @@ struct [[nodiscard]] Rect2DT
 
     [[nodiscard]] constexpr bool is_colliding(const Rect2DT& other_rect)
     {
+        if(size.x == 0 || size.y == 0 || other_rect.size.x == 0 || other_rect.size.y == 0)
+        {
+            return false;
+        }
+
         const VectorType min = position;
         const VectorType max = position + VectorType(size.x, size.y);
 
-        const VectorType min_r = other_rect.position;
-        const VectorType max_r = other_rect.position + VectorType(other_rect.size.x, other_rect.size.y);
+        const VectorType min_other = other_rect.position;
+        const VectorType max_other = other_rect.position + VectorType(other_rect.size.x, other_rect.size.y);
 
-        return min.x < max_r.x &&
-            max.x > min_r.x &&
-            min.y > max_r.y &&
-            max.y < min_r.x;
+        return min.x < max_other.x &&
+            max.x > min_other.x &&
+            min.y < max_other.y &&
+            max.y > min_other.y;
     }
 
     constexpr VectorType center() const
